@@ -1,118 +1,102 @@
-# ====================================
-# Python / Django
-# ====================================
-*.py[cod]
+# Dependencies
+node_modules/
 __pycache__/
-*.log
-*.pot
 *.pyc
 *.pyo
 *.pyd
 .Python
-db.sqlite3
-local_settings.py
-secrets.json
-gen/
-cert.pem
-key.pem
 
-# Bytecode cache
-.mypy_cache/
-.pytest_cache/
-.django-cache/
+# Build outputs
+dist/
+build/
+*.egg-info/
+.eggs/
 
-# Virtual environments
-env/
-venv/
-ENV/
-.venv/
-env.bak/
-venv.bak/
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Static / Media files
-media/
-static/
-staticfiles/
-collected_static/
+# SSL certificates and keys
+ssl/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
 
-# ====================================
-# PyCharm (JetBrains IDEs)
-# ====================================
-*.idea/
-*.iml
-*.iws
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+database.db
 
-# ====================================
-# PostgreSQL
-# ====================================
-*.pgsql
-*.sql
-*.dump
-pgdata/
-*.backup
-postgres_data
-
-# ====================================
-# Node.js / React
-# ====================================
-frontend/node_modules/
-frontend/build/
-frontend/dist/
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnp.*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# dotenv environment variables
-backend/.env
-.env.*
-*.env
-!backend/example.env
-
-# ====================================
-# Docker
-# ====================================
+# Runtime data
+pids/
 *.pid
-*.tar
-docker-compose.override.yml
-__docker_cache__/
-*.db
+*.seed
+*.pid.lock
 
-# ====================================
-# ML / Data files
-# ====================================
-*.pkl
-*.h5
-*.joblib
-*.csv
-*.tsv
-*.xlsx
-*.xls
-*.json
-backend/ml_model/__pycache__/
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
 
-# ====================================
-# OS files
-# ====================================
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# ====================================
-# Coverage / Testing
-# ====================================
-.coverage
-.coverage.*
-htmlcov/
-.cache
-.tox/
-.nox/
-tests/__pycache__/
-coverage.xml
+# Package manager lock files (optional, залежить від команди)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# ====================================
-# Logs
-# ====================================
-*.log
-logs/
-*.out
+# Temporary files
+.tmp/
+temp/
+
+# Python specific
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+
+# C compilation files
+*.o
+*.so
+*.dll
+*.exe
+
+# TypeScript compilation
+*.tsbuildinfo
+
+# React/Vite specific
+.vite/
+/backend/docker-compose.yml

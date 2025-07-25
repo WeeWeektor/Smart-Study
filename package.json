@@ -1,0 +1,35 @@
+{
+  "name": "smartstudy",
+  "version": "1.0.0",
+  "description": "Smart Study - Django + React application",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && python manage.py runserver_plus --cert-file ../ssl/cert.pem --key-file ../ssl/key.pem 127.0.0.1:8000",
+    "dev:frontend": "cd frontend && npm run dev -- --port 5173",
+    "dev:https": "concurrently \"npm run dev:backend-https\" \"npm run dev:frontend-https\"",
+    "dev:backend-https": "cd backend && python manage.py runserver 127.0.0.1:8000",
+    "dev:frontend-https": "cd frontend && vite --host",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "test:frontend": "cd frontend && npm run test",
+    "ssl:generate": "powershell -ExecutionPolicy Bypass -File generate-ssl.ps1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "django",
+    "react",
+    "vite",
+    "smartstudy"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@radix-ui/react-label": "^2.1.7"
+  }
+}
