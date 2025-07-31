@@ -1,1 +1,2 @@
-export * from './LogoutButton'
+export { LogoutButton } from './LogoutButton'
+export { default as LogoutSuccessNotification } from './LogoutSuccessNotification'

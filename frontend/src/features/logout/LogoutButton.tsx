@@ -4,20 +4,21 @@ import { Button } from '@/shared/ui'
 import { authService } from '../auth'
 
 export const LogoutButton = () => {
-  const navigate = useNavigate()
+	const navigate = useNavigate()
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout()
-      navigate('/')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
+	const handleLogout = async () => {
+		try {
+			await authService.logout()
+			navigate('/?showLogoutSuccess=true')
+		} catch (error) {
+			console.error('Logout failed:', error)
+			navigate('/?showLogoutSuccess=true')
+		}
+	}
 
-  return (
-    <Button variant="ghost" size="sm" onClick={handleLogout}>
-      <LogOut className="w-4 h-4" />
-    </Button>
-  )
+	return (
+		<Button variant="ghost" size="sm" onClick={handleLogout}>
+			<LogOut className="w-4 h-4" />
+		</Button>
+	)
 }
