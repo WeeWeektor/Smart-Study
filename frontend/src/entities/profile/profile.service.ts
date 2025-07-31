@@ -1,7 +1,6 @@
-import { apiClient } from '../../shared/api/api-client'
-import type { ApiResponse } from '../../shared/api/api'
+import { apiClient, tokenService } from '@/shared/api'
+import type { ApiResponse } from '@/shared/api'
 import { type ProfileData, type UpdateProfileRequest } from './model'
-import { tokenService } from '../../shared/api/token-manager'
 
 function getCookie(name: string): string | undefined {
   const value = `; ${document.cookie}`
@@ -88,7 +87,6 @@ class ProfileService {
     try {
       const csrfToken = await this.ensureCsrfToken()
 
-      // Створюємо FormData для відправки файлу
       const formData = new FormData()
       formData.append('profile_picture', file)
       console.log('formData entries:', [...formData.entries()])

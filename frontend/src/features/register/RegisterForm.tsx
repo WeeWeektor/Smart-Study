@@ -1,33 +1,26 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { authService } from '../../features/auth'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { authService } from '@/features/auth'
 import {
   Button,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Input,
   Label,
   Checkbox,
-  Alert,
-  AlertDescription,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../shared/ui'
-import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
-import { UserFields } from '@/shared/ui/user-fields'
-import { EmailField } from '@/shared/ui/email-field'
-import { PasswordField } from '@/shared/ui/password-field'
+} from '@/shared/ui'
+import { Eye, EyeOff } from 'lucide-react'
 import { FormAlert } from '@/shared/ui/form-alert'
 import { AuthCard } from '@/shared/ui/auth-card'
 import { SocialAuth } from '@/features/social-auth'
+import { tokenService } from '@/shared/api'
 
 export const RegisterForm = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -39,12 +32,80 @@ export const RegisterForm = () => {
     confirmPassword: '',
     role: '',
     agreeToTerms: false,
-    subscribeNewsletter: false,
+    subscribeNewsletter: true,
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  // Видалено socialError
+  const [isGoogleRegistration, setIsGoogleRegistration] = useState(false)
+  const [googleCredential, setGoogleCredential] = useState<string>('')
+
+  useEffect(() => {
+    const googleName = searchParams.get('name')
+    const googleSurname = searchParams.get('surname')
+    const googleEmail = searchParams.get('email')
+    const googleCredential = searchParams.get('google_credential')
+
+    if (googleName && googleSurname && googleEmail && googleCredential) {
+      setFormData(prev => ({
+        ...prev,
+        name: googleName,
+        surname: googleSurname,
+        email: googleEmail,
+        password: generateRandomPassword(),
+        confirmPassword: generateRandomPassword(),
+        agreeToTerms: false,
+        subscribeNewsletter: true,
+      }))
+      setGoogleCredential(googleCredential)
+      setIsGoogleRegistration(true)
+    }
+  }, [searchParams])
+
+  const generateRandomPassword = () => {
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+    let password = ''
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return password
+  }
+
+  const handleGoogleDataReceived = (data: {
+    name: string
+    surname: string
+    email: string
+    credential: string
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      name: data.name,
+      surname: data.surname,
+      email: data.email,
+      password: generateRandomPassword(),
+      confirmPassword: generateRandomPassword(),
+      agreeToTerms: false,
+      subscribeNewsletter: true,
+    }))
+    setGoogleCredential(data.credential)
+    setIsGoogleRegistration(true)
+  }
+
+  const handleUserExists = (userData: {
+    access?: string
+    refresh?: string
+    user?: any
+    message?: string
+  }) => {
+    if (userData.access) {
+      tokenService.setToken(userData.access)
+    }
+    if (userData.refresh) {
+      tokenService.setRefreshToken(userData.refresh)
+    }
+    navigate('/profile')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,13 +113,16 @@ export const RegisterForm = () => {
     setSuccess('')
     setIsLoading(true)
 
-    if (formData.password !== formData.confirmPassword) {
+    if (
+      !isGoogleRegistration &&
+      formData.password !== formData.confirmPassword
+    ) {
       setError('Паролі не співпадають')
       setIsLoading(false)
       return
     }
 
-    if (formData.password.length < 8) {
+    if (!isGoogleRegistration && formData.password.length < 8) {
       setError('Пароль повинен містити принаймні 8 символів')
       setIsLoading(false)
       return
@@ -71,41 +135,92 @@ export const RegisterForm = () => {
     }
 
     try {
-      const response = await authService.register({
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        surname: formData.surname,
-        phone_number: formData.phoneNumber || null,
-        role: formData.role as 'student' | 'teacher',
-        email_notifications: formData.subscribeNewsletter,
-        push_notifications: formData.subscribeNewsletter,
-      })
-
-      setSuccess('Акаунт успішно створено!')
-
-      if (response.data.user) {
-        const userRole = response.data.user.role
-
-        if (userRole === 'teacher') {
-          navigate('/dashboard/teacher')
-        } else {
-          navigate('/dashboard/student')
+      if (isGoogleRegistration) {
+        if (!googleCredential) {
+          setError('Відсутній Google credential. Спробуйте ще раз.')
+          setIsLoading(false)
+          return
         }
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message || 'Помилка при створенні акаунта')
+
+        const response = await authService.googleOAuth({
+          credential: googleCredential,
+          role: formData.role as 'student' | 'teacher',
+          name: formData.name,
+          surname: formData.surname,
+          phone_number: formData.phoneNumber.trim()
+            ? formData.phoneNumber
+            : null,
+          email_notifications: formData.subscribeNewsletter,
+          push_notifications: formData.subscribeNewsletter,
+        })
+
+        if (response.access) {
+          tokenService.setToken(response.access)
+        }
+        if (response.refresh) {
+          tokenService.setRefreshToken(response.refresh)
+        }
+
+        setSuccess('Реєстрація через Google успішна!')
+        navigate('/profile')
       } else {
-        setError('Сталася невідома помилка')
+        const registrationData: any = {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          surname: formData.surname,
+          role: formData.role as 'student' | 'teacher',
+          email_notifications: formData.subscribeNewsletter,
+          push_notifications: formData.subscribeNewsletter,
+          phone_number: formData.phoneNumber.trim()
+            ? formData.phoneNumber
+            : null,
+        }
+        const response = await authService.register(registrationData)
+
+        if (response.data.token) {
+          tokenService.setToken(response.data.token)
+        }
+
+        setSuccess('Акаунт успішно створено!')
+        navigate('/profile')
       }
+    } catch (error: any) {
+      console.error('Registration error:', error)
+
+      let errorMessage = 'Помилка при створенні акаунта'
+
+      if (error.response) {
+        if (error.response.data && error.response.data.error) {
+          errorMessage = error.response.data.error
+        } else if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        } else if (error.response.status === 400) {
+          errorMessage = 'Перевірте правильність введених даних'
+        } else if (error.response.status === 409) {
+          errorMessage = 'Користувач з таким email вже існує'
+        } else if (error.response.status === 403) {
+          errorMessage = 'Помилка CSRF перевірки. Спробуйте оновити сторінку'
+        } else {
+          errorMessage = `Помилка сервера: ${error.response.status}`
+        }
+      } else if (error.request) {
+        errorMessage = "Сервер не відповідає. Перевірте з'єднання з інтернетом"
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
   return (
@@ -116,36 +231,127 @@ export const RegisterForm = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <FormAlert type="error" message={error} />}
         {success && <FormAlert type="success" message={success} />}
-        <UserFields
-          formData={{
-            name: formData.name,
-            surname: formData.surname,
-            phone: formData.phoneNumber,
-            email: formData.email,
-            role: formData.role,
-          }}
-          onChange={(field, value) =>
-            handleInputChange(field === 'phone' ? 'phoneNumber' : field, value)
-          }
-          isEditing={true}
-          showEmail={true}
-          showRole={true}
-          requiredFields={['name', 'surname', 'email', 'role']}
-        />
-        <PasswordField
-          value={formData.password}
-          onChange={value => handleInputChange('password', value)}
-          required
-          label="Пароль"
-          placeholder="Створіть надійний пароль"
-        />
-        <PasswordField
-          value={formData.confirmPassword}
-          onChange={value => handleInputChange('confirmPassword', value)}
-          required
-          label="Підтвердження паролю"
-          placeholder="Повторіть пароль"
-        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="name">Ім'я</Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={e => handleInputChange('name', e.target.value)}
+              placeholder="Ваше ім'я"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="surname">Прізвище</Label>
+            <Input
+              id="surname"
+              type="text"
+              value={formData.surname}
+              onChange={e => handleInputChange('surname', e.target.value)}
+              placeholder="Ваше прізвище"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="email">Email адреса</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={e => handleInputChange('email', e.target.value)}
+            placeholder="your.email@example.com"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="phoneNumber">Номер телефону</Label>
+          <Input
+            id="phoneNumber"
+            type="tel"
+            value={formData.phoneNumber}
+            onChange={e => handleInputChange('phoneNumber', e.target.value)}
+            placeholder="+380 XX XXX XX XX"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="role">Роль</Label>
+          <Select
+            value={formData.role}
+            onValueChange={value => handleInputChange('role', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Оберіть свою роль" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="student">Студент</SelectItem>
+              <SelectItem value="teacher">Викладач</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {!isGoogleRegistration && (
+          <>
+            <div>
+              <Label htmlFor="password">Пароль</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={e => handleInputChange('password', e.target.value)}
+                  placeholder="Створіть надійний пароль"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="confirmPassword">Підтвердження паролю</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={e =>
+                    handleInputChange('confirmPassword', e.target.value)
+                  }
+                  placeholder="Повторіть пароль"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -173,6 +379,7 @@ export const RegisterForm = () => {
               </Link>
             </Label>
           </div>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="subscribeNewsletter"
@@ -189,6 +396,7 @@ export const RegisterForm = () => {
             </Label>
           </div>
         </div>
+
         <Button
           type="submit"
           className="w-full bg-brand-600 hover:bg-brand-700 text-white"
@@ -197,8 +405,13 @@ export const RegisterForm = () => {
           {isLoading ? 'Створення акаунта...' : 'Створити акаунт'}
         </Button>
       </form>
-      <div className="mt-6">
-        <SocialAuth onError={setError} />
+
+      <div className="mt-4">
+        <SocialAuth
+          onError={setError}
+          onGoogleDataReceived={handleGoogleDataReceived}
+          onUserExists={handleUserExists}
+        />
       </div>
     </AuthCard>
   )

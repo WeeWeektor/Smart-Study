@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { authService } from '../../features/auth'
-import { Button, Label, Checkbox } from '../../shared/ui'
+import { authService } from '@/features/auth'
+import { Button, Label, Checkbox } from '@/shared/ui'
 import { EmailField } from '@/shared/ui/email-field'
 import { PasswordField } from '@/shared/ui/password-field'
 import { FormAlert } from '@/shared/ui/form-alert'
@@ -19,7 +19,36 @@ export const LoginForm = () => {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  // Видалено socialError
+
+  const handleGoogleDataReceived = (googleData: {
+    name: string
+    surname: string
+    email: string
+    credential: string
+  }) => {
+    const params = new URLSearchParams({
+      name: googleData.name,
+      surname: googleData.surname,
+      email: googleData.email,
+      google_credential: googleData.credential,
+    })
+    navigate(`/register?${params.toString()}`)
+  }
+
+  const handleUserExists = (data: {
+    access?: string
+    refresh?: string
+    user?: any
+    message?: string
+  }) => {
+    if (data.access || data.user || data.message) {
+      console.log(
+        '[LoginForm] Користувач існує, перенаправляємо на профіль:',
+        data
+      )
+      navigate('/profile')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,7 +129,11 @@ export const LoginForm = () => {
         </Button>
       </form>
       <div className="mt-6">
-        <SocialAuth onError={setError} />
+        <SocialAuth
+          onError={setError}
+          onGoogleDataReceived={handleGoogleDataReceived}
+          onUserExists={handleUserExists}
+        />
       </div>
     </AuthCard>
   )

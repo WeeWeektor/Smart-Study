@@ -1,1 +1,1 @@
-export * from './types'
+export type { ProfileData, UpdateProfileRequest } from './types'

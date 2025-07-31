@@ -1,11 +1,5 @@
 import { Link } from 'react-router-dom'
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../../shared/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@/shared/ui'
 import { Shield, Lock, Eye, Database } from 'lucide-react'
 
 export const PrivacyPolicyContent = () => {

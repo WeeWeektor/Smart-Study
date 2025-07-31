@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-} from '../../shared/ui'
+} from '@/shared/ui'
 import * as React from 'react'
 import { UserFields } from '@/shared/ui/user-fields'
 import { ProfileExtraFields } from '@/shared/ui/profile-extra-fields'

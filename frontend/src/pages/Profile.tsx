@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { profileService } from '@/entities/profile/profile.service'
-import {
-  type ProfileData,
-  type UpdateProfileRequest,
-} from '@/entities/profile/model'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { profileService } from '@/entities/profile'
+import { type ProfileData, type UpdateProfileRequest } from '@/entities/profile'
 import { authService } from '@/features/auth'
 import { Button, Alert, AlertDescription } from '@/shared/ui'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
@@ -19,6 +16,7 @@ import { learningStats } from '@/shared/lib/mock-data'
 
 const Profile = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,7 +34,7 @@ const Profile = () => {
     organization: '',
     specialization: '',
     bio: '',
-    profile_picture: '',
+    profile_picture: '' as string,
     education_level: '',
     email_notifications: true,
     push_notifications: true,
@@ -50,6 +48,14 @@ const Profile = () => {
   useEffect(() => {
     loadProfile()
   }, [])
+
+  useEffect(() => {
+    const emailVerified = searchParams.get('emailVerified')
+    if (emailVerified === 'true') {
+      setSuccess('Email успішно підтверджено!')
+      navigate('/profile', { replace: true })
+    }
+  }, [searchParams, navigate])
 
   useEffect(() => {
     return () => {
@@ -85,7 +91,10 @@ const Profile = () => {
           organization: response.data.profile?.organization || '',
           specialization: response.data.profile?.specialization || '',
           bio: response.data.profile?.bio || '',
-          profile_picture: response.data.profile?.profile_picture || '',
+          profile_picture:
+            typeof response.data.profile?.profile_picture === 'string'
+              ? response.data.profile.profile_picture
+              : '',
           education_level: response.data.profile?.education_level || '',
           email_notifications: response.data.settings.email_notifications,
           push_notifications: response.data.settings.push_notifications,
@@ -107,31 +116,27 @@ const Profile = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Перевірка типу файлу
       if (!file.type.startsWith('image/')) {
         setError('Будь ласка, оберіть файл зображення')
         return
       }
 
-      // Перевірка розміру (максимум 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Розмір файлу не повинен перевищувати 5MB')
         return
       }
 
-      // Очищуємо попередній URL перед створенням нового
       if (previewUrl && previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl)
       }
 
       setSelectedFile(file)
 
-      // Створення URL для попереднього перегляду
       const url = URL.createObjectURL(file)
       setPreviewUrl(url)
       setFormData(prev => ({
         ...prev,
-        profile_picture: url, // тільки string
+        profile_picture: url as string,
       }))
     }
   }
@@ -142,14 +147,12 @@ const Profile = () => {
       setError('')
       setSuccess('')
 
-      // Перевірка обов'язкових полів
       if (!formData.name.trim() || !formData.surname.trim()) {
         setError("Ім'я та прізвище є обов'язковими полями")
         return
       }
 
       let profilePictureUrl = formData.profile_picture
-      // Якщо вибрано новий файл, спочатку завантажуємо його
       if (selectedFile) {
         const uploadResponse =
           await profileService.uploadProfilePicture(selectedFile)
@@ -160,7 +163,6 @@ const Profile = () => {
           return
         }
       }
-      // Гарантуємо, що profilePictureUrl - це string
       if (typeof profilePictureUrl !== 'string') {
         profilePictureUrl = ''
       }
@@ -208,7 +210,6 @@ const Profile = () => {
         setSelectedFile(null)
         await loadProfile()
 
-        // Очищення URL попереднього перегляду
         if (previewUrl && previewUrl.startsWith('blob:')) {
           URL.revokeObjectURL(previewUrl)
           setPreviewUrl('')

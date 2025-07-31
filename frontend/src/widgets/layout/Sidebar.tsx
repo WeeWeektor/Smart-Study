@@ -7,8 +7,8 @@ import {
   Home,
   Calendar,
 } from 'lucide-react'
-import { LogoutButton } from '../../features/logout'
-import { getInitials } from '../../shared/lib/utils'
+import { LogoutButton } from '@/features/logout'
+import { getInitials } from '@/shared/lib'
 
 interface UserInfo {
   name: string

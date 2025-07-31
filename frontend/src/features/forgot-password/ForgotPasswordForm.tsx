@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { authService } from '../../features/auth'
+import { authService } from '@/features/auth'
 import {
   Button,
   Card,
@@ -12,7 +12,7 @@ import {
   Label,
   Alert,
   AlertDescription,
-} from '../../shared/ui'
+} from '@/shared/ui'
 import { Mail, CheckCircle, AlertCircle } from 'lucide-react'
 import { EmailField } from '@/shared/ui/email-field'
 import { FormAlert } from '@/shared/ui/form-alert'

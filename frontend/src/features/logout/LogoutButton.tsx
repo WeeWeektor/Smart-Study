@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
-import { Button } from '../../shared/ui'
+import { Button } from '@/shared/ui'
 import { authService } from '../auth'
 
 export const LogoutButton = () => {
@@ -12,7 +12,6 @@ export const LogoutButton = () => {
       navigate('/')
     } catch (error) {
       console.error('Logout failed:', error)
-      // Можна додати обробку помилки, наприклад, показати сповіщення
     }
   }
 

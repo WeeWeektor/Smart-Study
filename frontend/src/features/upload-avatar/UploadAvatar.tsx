@@ -1,4 +1,4 @@
-import { Button } from '../../shared/ui/button'
+import { Button } from '@/shared/ui'
 import { Camera } from 'lucide-react'
 import * as React from 'react'
 

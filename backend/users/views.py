@@ -11,6 +11,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.shortcuts import redirect
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.http import JsonResponse
+from django.utils.crypto import get_random_string
 
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
@@ -108,8 +109,8 @@ class VerifyEmailView(View):
                 user.is_verified_email = True
                 user.is_active = True
                 user.save()
-                login(request, user)
-                return redirect(f"{settings.FRONTEND_URL}/")
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return redirect(f"{settings.FRONTEND_URL}/verify-email?token={token}")
             except CustomUser.DoesNotExist:
                 return error_response("Користувача з таким email не знайдено.")
         except SignatureExpired:
@@ -147,7 +148,7 @@ class LoginView(View):
             if not user.is_verified_email:
                 return error_response('Email не підтверджено. Перевірте вашу пошту.', 400)
 
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return success_response({
                 "user": {
                     "id": str(user.id),
@@ -217,10 +218,20 @@ class GoogleAuthView(APIView):
                 role=role,
                 phone_number=phone_number,
                 email=email,
-                password=User.objects.make_random_password(),
+                password=get_random_string(12),
                 is_verified_email=True,
                 is_active=True,
             )
+
+            email_notifications = data.get('email_notifications', True)
+            push_notifications = data.get('push_notifications', True)
+            
+            UserSettings.objects.create(
+                user=user,
+                email_notifications=email_notifications,
+                push_notifications=push_notifications,
+            )
+            
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return JsonResponse({
                 'user': {
@@ -371,7 +382,7 @@ class ChangePasswordView(View):
 
             user.set_password(new_password)
             user.save()
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             return success_response({"message": "Пароль успішно змінено."})
         except json.JSONDecodeError:

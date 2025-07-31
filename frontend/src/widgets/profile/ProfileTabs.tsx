@@ -177,7 +177,6 @@ export const ProfileTabs = ({
   onSettingsChange,
   onDeleteAccount,
 }: ProfileTabsProps) => {
-  // --- Додаємо стейт для зміни паролю ---
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')

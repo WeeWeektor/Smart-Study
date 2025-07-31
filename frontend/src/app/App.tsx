@@ -1,14 +1,17 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Login from '@/pages/Login'
-import Register from '@/pages/Register'
-import ForgotPassword from '@/pages/ForgotPassword'
-import NotFound from '@/pages/NotFound'
-import Index from '@/pages/Index'
-import ResetPassword from '@/pages/ResetPassword'
-import TermsOfService from '@/pages/TermsOfService'
-import PrivacyPolicy from '@/pages/PrivacyPolicy'
-import Profile from '@/pages/Profile'
-import { tokenService } from '@/shared/api/token-manager'
+import {
+  Login,
+  Register,
+  ForgotPassword,
+  NotFound,
+  Index,
+  ResetPassword,
+  TermsOfService,
+  PrivacyPolicy,
+  Profile,
+  EmailVerification,
+} from '@/pages'
+import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
 
 const App = () => {
@@ -27,6 +30,7 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

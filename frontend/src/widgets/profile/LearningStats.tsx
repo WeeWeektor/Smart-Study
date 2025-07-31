@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui'
 import { TrendingUp } from 'lucide-react'
 
 interface LearningStatsProps {

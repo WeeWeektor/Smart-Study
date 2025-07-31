@@ -13,7 +13,6 @@ def handle_profile_picture(user_profile, profile_picture):
     if profile_picture.size > 5 * 1024 * 1024:
         raise ValidationError("Розмір файлу перевищує 5MB.")
 
-    # Видаляємо старий файл з Supabase, якщо він існує
     if user_profile.profile_picture:
         try:
             folder_path = f"usersavatarts/{user_profile.user.id}/"

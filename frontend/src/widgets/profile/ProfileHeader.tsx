@@ -1,4 +1,4 @@
-import { Button } from '../../shared/ui/button'
+import { Button } from '@/shared/ui'
 import { Loader2, Save, Edit, User, Bell } from 'lucide-react'
 
 interface ProfileHeaderProps {

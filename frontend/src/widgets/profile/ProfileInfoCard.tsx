@@ -1,7 +1,12 @@
-import { Card, CardContent } from '../../shared/ui/card'
-import { Badge } from '../../shared/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '../../shared/ui/avatar'
-import { Button } from '../../shared/ui/button'
+import {
+  Card,
+  CardContent,
+  Badge,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Button,
+} from '@/shared/ui'
 import {
   Mail,
   Phone,
@@ -35,7 +40,7 @@ interface ProfileInfoCardProps {
   }
   previewUrl: string
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void
-  isEditing: boolean // Додаємо проп isEditing
+  isEditing: boolean
 }
 
 const getInitials = (name: string, surname: string) => {
@@ -106,7 +111,6 @@ export const ProfileInfoCard = ({
         </div>
 
         <div className="space-y-4 mt-6">
-          {/* Основна інформація у потрібному порядку */}
           {profileData?.user?.email && (
             <div className="flex items-center text-sm text-slate-600">
               <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -131,7 +135,6 @@ export const ProfileInfoCard = ({
             </div>
           )}
 
-          {/* Додаткові поля */}
           {showMore && (
             <>
               {profileData?.profile?.location && (
