@@ -1,5 +1,6 @@
 import uuid
 import time
+import logging
 from django.core.exceptions import ValidationError
 from smartStudy_backend import settings
 from users.user_utils import supabase
@@ -15,13 +16,12 @@ def handle_profile_picture(user_profile, profile_picture):
 
     if user_profile.profile_picture:
         try:
-            folder_path = f"usersavatarts/{user_profile.user.id}/"
-            files = supabase.storage.from_(settings.SUPABASE_BUCKET).list(folder_path)
-            if files:
-                file_paths = [f"{folder_path}{file['name']}" for file in files]
-                supabase.storage.from_(settings.SUPABASE_BUCKET).remove(file_paths)
-        except Exception:
-            pass
+            delete_profile_picture(user_profile.user.id, delete_folder=False)
+        # except Exception:
+        #     pass
+        except (FileNotFoundError, ValidationError, Exception) as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Не вдалося видалити попереднє фото: {str(e)}")
 
     file_extension = profile_picture.name.split('.')[-1].lower()
     unique_filename = f"{uuid.uuid4()}_{int(time.time())}.{file_extension}"
@@ -41,3 +41,20 @@ def handle_profile_picture(user_profile, profile_picture):
         user_profile.save()
     except Exception as e:
         raise ValidationError(f"Помилка при завантаженні файлу в Supabase: {str(e)}")
+
+
+def delete_profile_picture(user_id, delete_folder=False):
+    try:
+        folder_path = f"usersavatarts/{user_id}/"
+        files = supabase.storage.from_(settings.SUPABASE_BUCKET).list(folder_path)
+        if files:
+            file_paths = [f"{folder_path}{file['name']}" for file in files]
+            supabase.storage.from_(settings.SUPABASE_BUCKET).remove(file_paths)
+
+        if delete_folder:
+            supabase.storage.from_(settings.SUPABASE_BUCKET).remove([folder_path])
+
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Помилка при видаленні файлу з Supabase: {str(e)}")
+        raise ValidationError(f"Не вдалося видалити фото профілю: {str(e)}")

@@ -3,6 +3,7 @@ from typing import Optional
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils.decorators import method_decorator
@@ -16,10 +17,17 @@ from django.utils.crypto import get_random_string
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
 from .user_utils import send_verification_email, error_response, success_response, send_password_reset_email
-from .utils.validators import email_validator, phone_validator
+from .utils.validators import cached_email_validator, phone_validator
 from .utils.request_parsing import parse_request_data
-from .services.profile_picture_service import handle_profile_picture
-from .services.profile_cache_service import get_cached_profile, invalidate_cache
+from .services.profile_picture_service import handle_profile_picture, delete_profile_picture
+from .services.profile_cache_service import (
+    get_cached_profile,
+    invalidate_user_cache,
+    warm_user_cache,
+    get_allowed_roles,
+    get_user_existence_cache,
+    invalidate_user_existence_cache, invalidate_all_user_caches
+)
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 
 from rest_framework.views import APIView
@@ -41,7 +49,7 @@ class RegisterView(View):
                     return error_response(f"Відсутнє обов'язкове поле: {field}")
 
             try:
-                email_validator(data['email'])
+                cached_email_validator(data['email'])
             except ValidationError as e:
                 return error_response(str(e))
 
@@ -56,8 +64,8 @@ class RegisterView(View):
             except ValidationError as e:
                 return error_response(str(e))
 
-            if data['role'] not in settings.ALLOWED_ROLES:
-                return error_response(f'Невірна роль. Допустимі значення: {", ".join(settings.ALLOWED_ROLES)}')
+            if data['role'] not in get_allowed_roles():
+                return error_response(f'Невірна роль. Допустимі значення: {", ".join(get_allowed_roles())}')
 
             if not data['name'].strip() or not data['surname'].strip():
                 return error_response("Ім'я та прізвище не можуть бути порожніми.")
@@ -72,6 +80,8 @@ class RegisterView(View):
             )
             user.is_active = False
             user.save()
+
+            invalidate_user_existence_cache(data['email'])
 
             UserSettings.objects.create(
                 user=user,
@@ -109,6 +119,11 @@ class VerifyEmailView(View):
                 user.is_verified_email = True
                 user.is_active = True
                 user.save()
+
+                invalidate_user_existence_cache(email)
+
+                warm_user_cache(user)
+
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return redirect(f"{settings.FRONTEND_URL}/verify-email?token={token}")
             except CustomUser.DoesNotExist:
@@ -133,7 +148,7 @@ class LoginView(View):
             password = data['password']
 
             try:
-                email_validator(email)
+                cached_email_validator(email)
             except ValidationError as e:
                 return error_response(str(e))
 
@@ -149,6 +164,9 @@ class LoginView(View):
                 return error_response('Email не підтверджено. Перевірте вашу пошту.', 400)
 
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+            warm_user_cache(user)
+
             return success_response({
                 "user": {
                     "id": str(user.id),
@@ -171,8 +189,6 @@ class LoginView(View):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class GoogleAuthView(APIView):
-    permission_classes = []
-
     @staticmethod
     def post(request):
         try:
@@ -188,18 +204,33 @@ class GoogleAuthView(APIView):
         if not token:
             return JsonResponse({'error': 'No credential provided'}, status=400)
         try:
-            idinfo = id_token.verify_oauth2_token(token, requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
+            cache_key = f"google_token_{hash(token)}"
+            idinfo = cache.get(cache_key)
+
+            if not idinfo:
+                idinfo = id_token.verify_oauth2_token(
+                    token, requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+                )
+                cache.set(cache_key, idinfo, timeout=15*60)
+
             email = idinfo['email']
             google_name = idinfo.get('given_name') or idinfo.get('name') or name or ''
             google_surname = idinfo.get('family_name') or surname or ''
+
             User = get_user_model()
             user = User.objects.filter(email=email).first()
+
             if user:
                 if not user.is_verified_email:
                     user.is_verified_email = True
                 if not user.is_active:
                     user.is_active = True
                 user.save()
+
+                invalidate_user_existence_cache(email)
+
+                warm_user_cache(user)
+
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return JsonResponse({
                     'user': {
@@ -210,8 +241,15 @@ class GoogleAuthView(APIView):
                     },
                     'message': 'Успішна авторизація через Google (сесія)'
                 }, status=200)
+
             if not role or not google_surname:
                 return JsonResponse({'error': 'Необхідно вказати role та surname'}, status=400)
+
+            if role not in get_allowed_roles():
+                return JsonResponse({
+                    "error": f"Невірна роль. Допустимі значення: {', '.join(get_allowed_roles())}"
+                }, status=400)
+
             user = User.objects.create_user(
                 name=google_name,
                 surname=google_surname,
@@ -223,6 +261,8 @@ class GoogleAuthView(APIView):
                 is_active=True,
             )
 
+            invalidate_user_existence_cache(email)
+
             email_notifications = data.get('email_notifications', True)
             push_notifications = data.get('push_notifications', True)
             
@@ -231,6 +271,8 @@ class GoogleAuthView(APIView):
                 email_notifications=email_notifications,
                 push_notifications=push_notifications,
             )
+
+            warm_user_cache(user)
             
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return JsonResponse({
@@ -258,22 +300,33 @@ class ForgotPasswordView(View):
                 return error_response("Відсутня електронна пошта.")
 
             try:
-                email_validator(email)
+                cached_email_validator(email)
             except ValidationError as e:
                 return error_response(str(e))
 
-            try:
-                user = CustomUser.objects.get(email=email)
-            except CustomUser.DoesNotExist:
-                return error_response("Користувача з таким email не знайдено.", 404)
+            cache_key = f"forgot_reset_{hash(email)}"
+            if cache.get(cache_key):
+                return error_response(
+                    "Запит на скидання паролю вже надіслано. Будь ласка, перевірте вашу пошту, або спробуйте через 5 хвилин.",
+                    429
+                )
 
-            if not user.is_active:
-                return error_response('Обліковий запис неактивний.', 400)
+            user_data = get_user_existence_cache(email)
 
-            if not user.is_verified_email:
+            if not user_data['exists']:
+                return error_response('Користувача з таким email не знайдено.', 404)
+
+            if not user_data['is_active']:
+                return error_response("Обліковий запис неактивний.", 400)
+
+            if not user_data['is_verified']:
                 return error_response("Email не підтверджено. Перевірте вашу пошту.", 400)
 
+            user = CustomUser.objects.get(email=email)
             send_password_reset_email(user)
+
+            cache.set(cache_key, True, timeout=5*60)
+
             return success_response({"message": "Будь ласка, перевірте вашу пошту для скидання паролю."})
         except KeyError:
             return error_response("Відсутнє поле: email")
@@ -329,6 +382,8 @@ class ResetPasswordView(View):
                     user.set_password(password)
                     user.save()
 
+                    invalidate_all_user_caches(user.id, user.email)
+
                     return success_response({"message": "Пароль успішно змінено"})
                 except CustomUser.DoesNotExist:
                     return error_response("Користувача з таким email не знайдено.", 404)
@@ -382,6 +437,9 @@ class ChangePasswordView(View):
 
             user.set_password(new_password)
             user.save()
+
+            invalidate_user_cache(user.id)
+
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             return success_response({"message": "Пароль успішно змінено."})
@@ -393,8 +451,6 @@ class ChangePasswordView(View):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ProfileView(View):
-    CACHE_TIMEOUT = 60 * 0.5
-
     @staticmethod
     def get(request):
         if not request.user.is_authenticated:
@@ -420,7 +476,7 @@ class ProfileView(View):
             user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
             handle_profile_picture(user_profile, profile_picture)
-            invalidate_cache(request.user.id)
+            invalidate_user_cache(request.user.id)
 
             return success_response({
                 "url": user_profile.profile_picture,
@@ -449,7 +505,7 @@ class ProfileView(View):
                 user_profile = UserProfile.objects.get(user=user)
                 handle_profile_picture(user_profile, request.FILES['profile_picture'])
 
-            invalidate_cache(user.id)
+            invalidate_user_cache(user.id)
             updated_profile_data = get_cached_profile(user)
 
             return success_response({
@@ -472,10 +528,13 @@ class ProfileView(View):
         try:
             user = request.user
             user_id = user.id
+            user_email = user.email
 
             logout(request)
+            delete_profile_picture(user_id, delete_folder=True)
             user.delete()
-            invalidate_cache(user_id)
+
+            invalidate_all_user_caches(user_id, user_email)
 
             return success_response({"message": "Обліковий запис успішно видалено."})
         except Exception as e:
