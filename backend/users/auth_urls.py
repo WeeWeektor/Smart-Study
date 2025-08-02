@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import RegisterView, LoginView, VerifyEmailView, LogoutView, ForgotPasswordView, ResetPasswordView, \
-    GoogleAuthView
+    GoogleAuthView, FacebookAuthView
 from .utils.csrf_token import CSRFTokenView
 
 
@@ -11,6 +11,7 @@ urlpatterns = [
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("login/", LoginView.as_view(), name="login"),
     path('google-oauth/', GoogleAuthView.as_view(), name='google-oauth'),
+    path('facebook-oauth/', FacebookAuthView.as_view(), name='facebook-oauth'),
     path("forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
     path("logout/", LogoutView.as_view(), name="logout"),

@@ -16,6 +16,7 @@ from django.utils.crypto import get_random_string
 
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
+from .services.oauth_service import handle_oauth_login
 from .user_utils import send_verification_email, error_response, success_response, send_password_reset_email
 from .utils.validators import cached_email_validator, phone_validator
 from .utils.request_parsing import parse_request_data
@@ -188,104 +189,38 @@ class LoginView(View):
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class GoogleAuthView(APIView):
-    @staticmethod
-    def post(request):
+class BaseAuthView(APIView):
+    provider = None
+
+    def post(self, request):
         try:
             data = request.data if hasattr(request, 'data') else json.loads(request.body)
-        except Exception:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+            token = data.get('credential')
 
-        token = data.get('credential')
-        role = data.get('role')
-        surname = data.get('surname')
-        name = data.get('name')
-        phone_number = data.get('phone_number')
-        if not token:
-            return JsonResponse({'error': 'No credential provided'}, status=400)
-        try:
-            cache_key = f"google_token_{hash(token)}"
-            idinfo = cache.get(cache_key)
+            if not token:
+                return JsonResponse({'error': 'No credential provided'}, status=400)
 
-            if not idinfo:
-                idinfo = id_token.verify_oauth2_token(
-                    token, requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-                )
-                cache.set(cache_key, idinfo, timeout=15*60)
-
-            email = idinfo['email']
-            google_name = idinfo.get('given_name') or idinfo.get('name') or name or ''
-            google_surname = idinfo.get('family_name') or surname or ''
-
-            User = get_user_model()
-            user = User.objects.filter(email=email).first()
-
-            if user:
-                if not user.is_verified_email:
-                    user.is_verified_email = True
-                if not user.is_active:
-                    user.is_active = True
-                user.save()
-
-                invalidate_user_existence_cache(email)
-
-                warm_user_cache(user)
-
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                return JsonResponse({
-                    'user': {
-                        'email': user.email,
-                        'name': user.name,
-                        'surname': user.surname,
-                        'role': user.role,
-                    },
-                    'message': 'Успішна авторизація через Google (сесія)'
-                }, status=200)
-
-            if not role or not google_surname:
-                return JsonResponse({'error': 'Необхідно вказати role та surname'}, status=400)
-
-            if role not in get_allowed_roles():
-                return JsonResponse({
-                    "error": f"Невірна роль. Допустимі значення: {', '.join(get_allowed_roles())}"
-                }, status=400)
-
-            user = User.objects.create_user(
-                name=google_name,
-                surname=google_surname,
-                role=role,
-                phone_number=phone_number,
-                email=email,
-                password=get_random_string(12),
-                is_verified_email=True,
-                is_active=True,
+            return handle_oauth_login(
+                request=request,
+                token=token,
+                provider=self.provider,
+                name=data.get('name'),
+                surname=data.get('surname'),
+                role=data.get('role'),
+                phone_number=data.get('phone_number'),
+                email_notifications=data.get('email_notifications', True),
+                push_notifications=data.get('push_notifications', True),
             )
-
-            invalidate_user_existence_cache(email)
-
-            email_notifications = data.get('email_notifications', True)
-            push_notifications = data.get('push_notifications', True)
-            
-            UserSettings.objects.create(
-                user=user,
-                email_notifications=email_notifications,
-                push_notifications=push_notifications,
-            )
-
-            warm_user_cache(user)
-            
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return JsonResponse({
-                'user': {
-                    'email': user.email,
-                    'name': user.name,
-                    'surname': user.surname,
-                    'role': user.role,
-                },
-                'message': 'Успішна реєстрація та авторизація через Google (сесія)'
-            }, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+
+class GoogleAuthView(BaseAuthView):
+    provider = "google"
+
+
+class FacebookAuthView(BaseAuthView):
+    provider = "facebook"
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
