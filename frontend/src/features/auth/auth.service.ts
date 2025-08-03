@@ -333,7 +333,7 @@ class AuthService {
     }
   }
 
-  async googleOAuth(data: {
+  async providerOAuth(data: {
     credential: string
     role?: string
     surname?: string
@@ -342,23 +342,55 @@ class AuthService {
     password?: string
     email_notifications?: boolean
     push_notifications?: boolean
+    provider: 'google' | 'facebook' | undefined
   }): Promise<{
     access?: string
     refresh?: string
     user?: User
     message?: string
   }> {
+    console.log('[AuthService] providerOAuth викликано з даними:', {
+      provider: data.provider,
+      hasCredential: !!data.credential,
+      role: data.role,
+      name: data.name,
+      surname: data.surname,
+    })
+
     const csrfToken = await this.ensureCsrfToken()
     if (!csrfToken) {
+      console.error('[AuthService] Не вдалося отримати CSRF токен')
       throw new Error('Не вдалося отримати CSRF токен')
     }
-    const response = await apiClient.post('/auth/google-oauth/', data, {
-      headers: {
-        'X-CSRFToken': csrfToken,
-      },
-      withCredentials: true,
-    })
-    return response.data
+
+    console.log(
+      '[AuthService] CSRF токен отримано, робимо запит до:',
+      `/auth/${data.provider}-oauth/`
+    )
+
+    try {
+      const response = await apiClient.post(
+        `/auth/${data.provider}-oauth/`,
+        data,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+          },
+          withCredentials: true,
+        }
+      )
+
+      console.log('[AuthService] Відповідь сервера:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('[AuthService] Помилка в providerOAuth:', error)
+      console.error('[AuthService] Деталі помилки:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      })
+      throw error
+    }
   }
 
   isAuthenticated(): boolean {

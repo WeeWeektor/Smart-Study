@@ -39,14 +39,18 @@ export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleRegistration, setIsGoogleRegistration] = useState(false)
   const [googleCredential, setGoogleCredential] = useState<string>('')
+  const [isFacebookRegistration, setIsFacebookRegistration] = useState(false)
+  const [facebookCredential, setFacebookCredential] = useState<string>('')
 
   useEffect(() => {
     const googleName = searchParams.get('name')
     const googleSurname = searchParams.get('surname')
     const googleEmail = searchParams.get('email')
     const googleCredential = searchParams.get('google_credential')
+    const facebookCredential = searchParams.get('facebook_credential')
 
     if (googleName && googleSurname && googleEmail && googleCredential) {
+      console.log('[RegisterForm] Отримано Google дані з URL параметрів')
       setFormData(prev => ({
         ...prev,
         name: googleName,
@@ -59,6 +63,25 @@ export const RegisterForm = () => {
       }))
       setGoogleCredential(googleCredential)
       setIsGoogleRegistration(true)
+    } else if (
+      googleName &&
+      googleSurname &&
+      googleEmail &&
+      facebookCredential
+    ) {
+      console.log('[RegisterForm] Отримано Facebook дані з URL параметрів')
+      setFormData(prev => ({
+        ...prev,
+        name: googleName,
+        surname: googleSurname,
+        email: googleEmail,
+        password: generateRandomPassword(),
+        confirmPassword: generateRandomPassword(),
+        agreeToTerms: false,
+        subscribeNewsletter: true,
+      }))
+      setFacebookCredential(facebookCredential)
+      setIsFacebookRegistration(true)
     }
   }, [searchParams])
 
@@ -72,12 +95,18 @@ export const RegisterForm = () => {
     return password
   }
 
-  const handleGoogleDataReceived = (data: {
+  const handleSocialDataReceived = (data: {
     name: string
     surname: string
     email: string
     credential: string
+    provider: 'google' | 'facebook'
   }) => {
+    console.log(
+      '[RegisterForm] handleSocialDataReceived викликано з даними:',
+      data
+    )
+
     setFormData(prev => ({
       ...prev,
       name: data.name,
@@ -88,8 +117,18 @@ export const RegisterForm = () => {
       agreeToTerms: false,
       subscribeNewsletter: true,
     }))
-    setGoogleCredential(data.credential)
-    setIsGoogleRegistration(true)
+
+    if (data.provider === 'google') {
+      console.log('[RegisterForm] Встановлюємо Google credential')
+      setGoogleCredential(data.credential)
+      setIsGoogleRegistration(true)
+      setIsFacebookRegistration(false)
+    } else {
+      console.log('[RegisterForm] Встановлюємо Facebook credential')
+      setFacebookCredential(data.credential)
+      setIsFacebookRegistration(true)
+      setIsGoogleRegistration(false)
+    }
   }
 
   const handleUserExists = (userData: {
@@ -98,12 +137,18 @@ export const RegisterForm = () => {
     user?: any
     message?: string
   }) => {
+    console.log('[RegisterForm] handleUserExists викликано з даними:', userData)
+
     if (userData.access) {
+      console.log('[RegisterForm] Встановлюємо access токен')
       tokenService.setToken(userData.access)
     }
     if (userData.refresh) {
+      console.log('[RegisterForm] Встановлюємо refresh токен')
       tokenService.setRefreshToken(userData.refresh)
     }
+
+    console.log('[RegisterForm] Перенаправляємо на /profile')
     navigate('/profile')
   }
 
@@ -113,19 +158,18 @@ export const RegisterForm = () => {
     setSuccess('')
     setIsLoading(true)
 
-    if (
-      !isGoogleRegistration &&
-      formData.password !== formData.confirmPassword
-    ) {
-      setError('Паролі не співпадають')
-      setIsLoading(false)
-      return
-    }
+    if (!isGoogleRegistration && !isFacebookRegistration) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Паролі не співпадають')
+        setIsLoading(false)
+        return
+      }
 
-    if (!isGoogleRegistration && formData.password.length < 8) {
-      setError('Пароль повинен містити принаймні 8 символів')
-      setIsLoading(false)
-      return
+      if (formData.password.length < 8) {
+        setError('Пароль повинен містити принаймні 8 символів')
+        setIsLoading(false)
+        return
+      }
     }
 
     if (!formData.agreeToTerms) {
@@ -134,16 +178,36 @@ export const RegisterForm = () => {
       return
     }
 
+    if (!formData.role) {
+      setError('Необхідно вибрати роль')
+      setIsLoading(false)
+      return
+    }
+
     try {
-      if (isGoogleRegistration) {
-        if (!googleCredential) {
-          setError('Відсутній Google credential. Спробуйте ще раз.')
+      if (isGoogleRegistration || isFacebookRegistration) {
+        const credential = isGoogleRegistration
+          ? googleCredential
+          : facebookCredential
+        const provider = isGoogleRegistration ? 'google' : 'facebook'
+
+        if (!credential) {
+          setError('Відсутній credential. Спробуйте ще раз.')
           setIsLoading(false)
           return
         }
 
-        const response = await authService.googleOAuth({
-          credential: googleCredential,
+        console.log('[RegisterForm] Відправляємо соціальну реєстрацію:', {
+          provider,
+          role: formData.role,
+          name: formData.name,
+          surname: formData.surname,
+          email: formData.email,
+        })
+
+        const response = await authService.providerOAuth({
+          credential,
+          provider,
           role: formData.role as 'student' | 'teacher',
           name: formData.name,
           surname: formData.surname,
@@ -161,7 +225,7 @@ export const RegisterForm = () => {
           tokenService.setRefreshToken(response.refresh)
         }
 
-        setSuccess('Реєстрація через Google успішна!')
+        setSuccess(`Реєстрація через ${provider} успішна!`)
         navigate('/profile')
       } else {
         const registrationData: any = {
@@ -221,6 +285,26 @@ export const RegisterForm = () => {
       ...prev,
       [field]: value,
     }))
+  }
+
+  const handleReturnToNormalRegistration = () => {
+    setGoogleCredential('')
+    setFacebookCredential('')
+    setIsGoogleRegistration(false)
+    setIsFacebookRegistration(false)
+    setFormData({
+      name: '',
+      surname: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+      role: '',
+      agreeToTerms: false,
+      subscribeNewsletter: true,
+    })
+    setError('')
+    setSuccess('')
   }
 
   return (
@@ -397,6 +481,20 @@ export const RegisterForm = () => {
           </div>
         </div>
 
+        {(isGoogleRegistration || isFacebookRegistration) && (
+          <div className="mb-4 flex justify-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleReturnToNormalRegistration}
+              className="border-brand-300 text-brand-600 hover:bg-brand-50"
+            >
+              Повернутись до звичайної реєстрації
+            </Button>
+          </div>
+        )}
+
         <Button
           type="submit"
           className="w-full bg-brand-600 hover:bg-brand-700 text-white"
@@ -409,7 +507,7 @@ export const RegisterForm = () => {
       <div className="mt-4">
         <SocialAuth
           onError={setError}
-          onGoogleDataReceived={handleGoogleDataReceived}
+          onSocialDataReceived={handleSocialDataReceived}
           onUserExists={handleUserExists}
         />
       </div>

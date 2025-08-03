@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartStudy</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script
+      async
+      defer
+      crossorigin="anonymous"
+      src="https://connect.facebook.net/uk_UA/sdk.js"
+    ></script>
+    <script>
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: '%VITE_FACEBOOK_APP_ID%',
+          cookie: true,
+          xfbml: true,
+          version: 'v19.0',
+        })
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

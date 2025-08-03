@@ -7,6 +7,7 @@ import { PasswordField } from '@/shared/ui/password-field'
 import { FormAlert } from '@/shared/ui/form-alert'
 import { AuthCard } from '@/shared/ui/auth-card'
 import { SocialAuth } from '@/features/social-auth'
+import { tokenService } from '@/shared/api'
 
 interface LoginResponse {
   role: string
@@ -20,17 +21,20 @@ export const LoginForm = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleGoogleDataReceived = (googleData: {
+  const handleSocialDataReceived = (data: {
     name: string
     surname: string
     email: string
     credential: string
+    provider?: 'google' | 'facebook'
   }) => {
+    console.log('[LoginForm] Отримано соціальні дані:', data)
+
     const params = new URLSearchParams({
-      name: googleData.name,
-      surname: googleData.surname,
-      email: googleData.email,
-      google_credential: googleData.credential,
+      name: data.name,
+      surname: data.surname,
+      email: data.email,
+      [`${data.provider}_credential`]: data.credential,
     })
     navigate(`/register?${params.toString()}`)
   }
@@ -41,13 +45,16 @@ export const LoginForm = () => {
     user?: any
     message?: string
   }) => {
-    if (data.access || data.user || data.message) {
-      console.log(
-        '[LoginForm] Користувач існує, перенаправляємо на профіль:',
-        data
-      )
-      navigate('/profile')
+    console.log('[LoginForm] Користувач існує:', data)
+
+    if (data.access) {
+      tokenService.setToken(data.access)
     }
+    if (data.refresh) {
+      tokenService.setRefreshToken(data.refresh)
+    }
+
+    navigate('/profile')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,7 +138,7 @@ export const LoginForm = () => {
       <div className="mt-6">
         <SocialAuth
           onError={setError}
-          onGoogleDataReceived={handleGoogleDataReceived}
+          onSocialDataReceived={handleSocialDataReceived}
           onUserExists={handleUserExists}
         />
       </div>

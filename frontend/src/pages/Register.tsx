@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Button, Card, CardContent } from '@/shared/ui'
+import { Button } from '@/shared/ui'
 import { AuthLayout } from '@/widgets/auth'
 import { RegisterForm } from '@/features/register'
-import { SocialAuth } from '@/features/social-auth'
 
 const Register = () => {
   return (

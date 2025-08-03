@@ -1,28 +1,18 @@
 import { useSocialAuth } from './model/useSocialAuth'
-import {
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Button,
-  Checkbox,
-} from '@/shared/ui'
+import { Button } from '@/shared/ui'
 
 export const SocialAuth = ({
   onError,
-  onGoogleDataReceived,
+  onSocialDataReceived,
   onUserExists,
 }: {
   onError?: (msg: string) => void
-  onGoogleDataReceived?: (data: {
+  onSocialDataReceived?: (data: {
     name: string
     surname: string
     email: string
     credential: string
-    password?: string
+    provider: 'google' | 'facebook'
   }) => void
   onUserExists?: (userData: {
     access?: string
@@ -31,8 +21,12 @@ export const SocialAuth = ({
     message?: string
   }) => void
 }) => {
-  const { isGoogleLoading, handleGoogleClick, handleFacebookClick } =
-    useSocialAuth({ onError, onGoogleDataReceived, onUserExists })
+  const {
+    isGoogleLoading,
+    isFacebookLoading,
+    handleGoogleClick,
+    handleFacebookClick,
+  } = useSocialAuth({ onError, onSocialDataReceived, onUserExists })
 
   return (
     <div>
@@ -86,18 +80,28 @@ export const SocialAuth = ({
           variant="outline"
           className="border-slate-300 text-slate-700 flex items-center justify-center w-full"
           onClick={handleFacebookClick}
+          disabled={isFacebookLoading}
         >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-            <path
-              fill="#1877F2"
-              d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24h11.495v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"
-            />
-            <path
-              fill="#FFF"
-              d="M16.671 24v-9.294h3.12l.467-3.622h-3.587V8.771c0-1.048.293-1.763 1.797-1.763l1.918-.001v-3.24c-.334-.044-1.472-.143-2.797-.143-2.766 0-4.659 1.688-4.659 4.788v2.13H9.692v3.622h3.128V24h3.851"
-            />
-          </svg>
-          Facebook
+          {isFacebookLoading ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+              Завантаження...
+            </div>
+          ) : (
+            <>
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path
+                  fill="#1877F2"
+                  d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24h11.495v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"
+                />
+                <path
+                  fill="#FFF"
+                  d="M16.671 24v-9.294h3.12l.467-3.622h-3.587V8.771c0-1.048.293-1.763 1.797-1.763l1.918-.001v-3.24c-.334-.044-1.472-.143-2.797-.143-2.766 0-4.659 1.688-4.659 4.788v2.13H9.692v3.622h3.128V24h3.851"
+                />
+              </svg>
+              Facebook
+            </>
+          )}
         </Button>
       </div>
     </div>
