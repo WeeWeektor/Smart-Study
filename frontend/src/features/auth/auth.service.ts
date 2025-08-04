@@ -95,14 +95,14 @@ class AuthService {
         (loginResponse.data.user.is_staff ||
           loginResponse.data.user.is_superuser)
       ) {
-        window.location.href = loginResponse.data.redirect || '/admin/'
+        window.location.href = loginResponse.data.redirect || '/profile/'
         return {
           data: {
             token: loginResponse.data.token,
             user: loginResponse.data.user,
           },
           status: 'success',
-          message: 'Перенаправлення на адмін-панель',
+          message: 'Вхід успішний',
         }
       }
 

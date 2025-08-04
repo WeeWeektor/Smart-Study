@@ -31,6 +31,9 @@ const App = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/verify-email" element={<EmailVerification />} />
+
+        {/*<Route path="/admin/*" element={<AdminPanel />} />*/}
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

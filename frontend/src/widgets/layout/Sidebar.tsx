@@ -14,6 +14,7 @@ interface UserInfo {
   name: string
   surname: string
   email: string
+  is_admin: string
 }
 
 interface SidebarProps {
@@ -30,6 +31,14 @@ export const Sidebar = ({ userInfo }: SidebarProps) => {
     { to: '/calendar/student', icon: Calendar, text: 'Календар' },
     { to: '/profile', icon: User, text: 'Профіль' },
   ]
+
+  if (userInfo.is_admin === 'admin') {
+    navLinks.push({
+      to: 'https://127.0.0.1:5173/admin',
+      icon: Home,
+      text: 'Адмін панель',
+    })
+  }
 
   return (
     <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200">

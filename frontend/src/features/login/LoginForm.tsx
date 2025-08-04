@@ -78,7 +78,7 @@ export const LoginForm = () => {
         const userRole = response.role
 
         if (userRole === 'admin') {
-          navigate('/')
+          navigate('/profile')
         } else {
           navigate('/profile')
         }

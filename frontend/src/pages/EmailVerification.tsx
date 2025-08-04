@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Alert, AlertDescription } from '@/shared/ui'
+import { Button } from '@/shared/ui'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 const EmailVerification = () => {

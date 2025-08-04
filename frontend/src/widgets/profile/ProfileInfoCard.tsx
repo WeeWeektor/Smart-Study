@@ -49,6 +49,16 @@ const getInitials = (name: string, surname: string) => {
   return firstLetter + lastLetter
 }
 
+const roleText = (role: string) => {
+  if (role === 'student') {
+    return 'Студент'
+  } else if (role === 'teacher') {
+    return 'Викладач'
+  } else if (role === 'admin') {
+    return 'Адміністратор'
+  }
+}
+
 function truncateWithEllipsis(str: string, max: number) {
   return str.length > max ? str.slice(0, max) + '...' : str
 }
@@ -106,7 +116,7 @@ export const ProfileInfoCard = ({
             {profileData.user.name} {profileData.user.surname}
           </h2>
           <Badge className="mt-2 bg-brand-100 text-brand-700">
-            {profileData?.user?.role === 'student' ? 'Студент' : 'Викладач'}
+            {roleText(profileData?.user?.role)}
           </Badge>
         </div>
 

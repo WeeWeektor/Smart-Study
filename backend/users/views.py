@@ -12,7 +12,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.shortcuts import redirect
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.http import JsonResponse
-from django.utils.crypto import get_random_string
 
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
@@ -32,9 +31,6 @@ from .services.profile_cache_service import (
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 
 from rest_framework.views import APIView
-from google.oauth2 import id_token
-from google.auth.transport import requests
-from django.contrib.auth import get_user_model
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -180,7 +176,8 @@ class LoginView(View):
                     "role": user.role,
                     "is_verified_email": user.is_verified_email,
                 },
-                "redirect": "/admin/" if user.is_staff or user.is_superuser else "/",
+                "redirect": "/profile/",
+                # "redirect": "/admin/" if user.is_staff or user.is_superuser else "/",
             })
         except json.JSONDecodeError:
             return error_response("Невірний формат JSON.", 400)
