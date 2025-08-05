@@ -26,7 +26,7 @@ export const AuthLayout = ({ headerContent, children }: AuthLayoutProps) => {
 
             <div className="flex items-center space-x-3">
               {headerContent}
-              <ThemeToggle variant="default" size="default" />
+              <ThemeToggle variant="outline" size="default" />
             </div>
           </div>
         </div>

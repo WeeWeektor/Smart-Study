@@ -69,7 +69,7 @@ export const ProfileHeader = ({
                 Редагувати
               </Button>
             )}
-            <ThemeToggle variant="default" size="default" />
+            <ThemeToggle variant="secondary" size="default" />
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
