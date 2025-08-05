@@ -2,6 +2,7 @@ import { EmailVerificationNotification } from '@/features/email-verification-not
 import { LogoutSuccessNotification } from '@/features/logout'
 import { DeleteAccountSuccessNotification } from '@/features/delete-account'
 import { useUrlParamNotification } from '@/shared/hooks/use-url-param-notification'
+import { ThemeToggle } from '@/shared/ui/theme-toggle'
 
 const Index = () => {
   const [showEmailVerification, hideEmailVerification] =
@@ -12,25 +13,32 @@ const Index = () => {
     useUrlParamNotification('showDeleteAccountSuccess')
 
   return (
-    <div>
-      <h1 className="text-xl font-bold text-foreground">
-        Welcome to the Index Page
-      </h1>
-      <p className="mt-2 text-muted-foreground">
-        This is the main page of the application.
-      </p>
+    <div className="min-h-screen bg-background p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome to Smart Study
+          </h1>
+          <ThemeToggle variant="secondary" size="default" />
+        </div>
+        <p className="text-lg text-muted-foreground mb-8">
+          This is the main page of the application.
+        </p>
 
-      {showEmailVerification && (
-        <EmailVerificationNotification onClose={hideEmailVerification} />
-      )}
+        {showEmailVerification && (
+          <EmailVerificationNotification onClose={hideEmailVerification} />
+        )}
 
-      {showLogoutSuccess && (
-        <LogoutSuccessNotification onClose={hideLogoutSuccess} />
-      )}
+        {showLogoutSuccess && (
+          <LogoutSuccessNotification onClose={hideLogoutSuccess} />
+        )}
 
-      {showDeleteAccountSuccess && (
-        <DeleteAccountSuccessNotification onClose={hideDeleteAccountSuccess} />
-      )}
+        {showDeleteAccountSuccess && (
+          <DeleteAccountSuccessNotification
+            onClose={hideDeleteAccountSuccess}
+          />
+        )}
+      </div>
     </div>
   )
 }

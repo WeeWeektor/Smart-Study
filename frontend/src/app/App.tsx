@@ -13,11 +13,23 @@ import {
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
+import { useTheme } from '@/shared/hooks/use-theme'
 
 const App = () => {
+  const [theme] = useTheme()
+
   useEffect(() => {
     tokenService.initializeToken()
   }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [theme])
 
   return (
     <BrowserRouter>
