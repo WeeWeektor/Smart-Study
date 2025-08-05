@@ -32,23 +32,25 @@ export const SocialAuth = ({
     <div>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-300" />
+          <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-slate-500">Або увійти через</span>
+          <span className="px-2 bg-card text-muted-foreground">
+            Або увійти через
+          </span>
         </div>
       </div>
       <div className="mt-6 grid grid-cols-2 gap-3">
         <Button
           type="button"
           variant="outline"
-          className="border-slate-300 text-slate-700 flex items-center justify-center w-full"
+          className="border-border text-foreground flex items-center justify-center w-full"
           onClick={handleGoogleClick}
           disabled={isGoogleLoading}
         >
           {isGoogleLoading ? (
             <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground mr-2"></div>
               Завантаження...
             </div>
           ) : (
@@ -78,13 +80,13 @@ export const SocialAuth = ({
         <Button
           type="button"
           variant="outline"
-          className="border-slate-300 text-slate-700 flex items-center justify-center w-full"
+          className="border-border text-foreground flex items-center justify-center w-full"
           onClick={handleFacebookClick}
           disabled={isFacebookLoading}
         >
           {isFacebookLoading ? (
             <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground mr-2"></div>
               Завантаження...
             </div>
           ) : (

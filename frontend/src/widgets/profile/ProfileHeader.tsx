@@ -19,15 +19,15 @@ export const ProfileHeader = ({
   disabledSave,
 }: ProfileHeaderProps) => {
   return (
-    <header className="bg-white border-b border-slate-200">
+    <header className="bg-card border-b border-border text-card-foreground">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 flex items-center">
-              <User className="w-6 h-6 mr-2 text-brand-600" />
+            <h1 className="text-2xl font-semibold flex items-center text-foreground">
+              <User className="w-6 h-6 mr-2 text-brand-600 dark:text-brand-400" />
               Мій профіль
             </h1>
-            <p className="text-slate-600">
+            <p className="text-muted-foreground">
               Керуйте своїм профілем та налаштуваннями
             </p>
           </div>
@@ -42,7 +42,7 @@ export const ProfileHeader = ({
                   Скасувати
                 </Button>
                 <Button
-                  className="bg-brand-600 hover:bg-brand-700"
+                  className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
                   onClick={onSave}
                   disabled={isSaving || disabledSave}
                 >
@@ -61,7 +61,7 @@ export const ProfileHeader = ({
               </div>
             ) : (
               <Button
-                className="bg-brand-600 hover:bg-brand-700 text-white"
+                className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
                 onClick={onEdit}
               >
                 <Edit className="w-4 h-4 mr-2" />

@@ -44,7 +44,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
           onChange={e => onChange('name', e.target.value)}
           required={requiredFields.includes('name')}
           disabled={!isEditing}
-          className="border-slate-300 focus:border-brand-500 focus:ring-brand-500"
+          className="border-border focus:border-brand-500 focus:ring-brand-500"
         />
       </div>
       <div className="space-y-2">
@@ -57,7 +57,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
           onChange={e => onChange('surname', e.target.value)}
           required={requiredFields.includes('surname')}
           disabled={!isEditing}
-          className="border-slate-300 focus:border-brand-500 focus:ring-brand-500"
+          className="border-border focus:border-brand-500 focus:ring-brand-500"
         />
       </div>
     </div>
@@ -72,7 +72,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
           onChange={e => onChange('email', e.target.value)}
           required={requiredFields.includes('email')}
           disabled={!isEditing}
-          className="border-slate-300 focus:border-brand-500 focus:ring-brand-500"
+          className="border-border focus:border-brand-500 focus:ring-brand-500"
         />
       </div>
     )}
@@ -85,7 +85,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
         value={formData.phone || ''}
         onChange={e => onChange('phone', e.target.value)}
         disabled={!isEditing}
-        className="border-slate-300 focus:border-brand-500 focus:ring-brand-500"
+        className="border-border focus:border-brand-500 focus:ring-brand-500"
       />
     </div>
     {showRole && (
@@ -97,7 +97,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
           disabled={!isEditing}
           required={requiredFields.includes('role')}
         >
-          <SelectTrigger className="border-slate-300 focus:border-brand-500 focus:ring-brand-500">
+          <SelectTrigger className="border-border focus:border-brand-500 focus:ring-brand-500">
             <SelectValue placeholder="Оберіть свою роль" />
           </SelectTrigger>
           <SelectContent>

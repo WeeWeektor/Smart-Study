@@ -13,8 +13,12 @@ const Index = () => {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Welcome to the Index Page</h1>
-      <p className="mt-2">This is the main page of the application.</p>
+      <h1 className="text-xl font-bold text-foreground">
+        Welcome to the Index Page
+      </h1>
+      <p className="mt-2 text-muted-foreground">
+        This is the main page of the application.
+      </p>
 
       {showEmailVerification && (
         <EmailVerificationNotification onClose={hideEmailVerification} />

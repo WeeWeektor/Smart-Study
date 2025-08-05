@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
         <Link to="/register">
           <Button
             variant="ghost"
-            className="text-slate-700 hover:text-brand-600"
+            className="text-muted-foreground hover:text-brand-600 dark:hover:text-brand-400"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Назад до реєстрації

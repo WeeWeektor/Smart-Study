@@ -9,7 +9,6 @@ import {
   Textarea,
 } from './index'
 import React from 'react'
-import { X } from 'lucide-react'
 
 interface ProfileExtraFieldsProps {
   formData: {
@@ -40,7 +39,7 @@ export const ProfileExtraFields: React.FC<ProfileExtraFieldsProps> = ({
           <SelectValue placeholder="Не вказано" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="not_specified" className="text-slate-400">
+          <SelectItem value="not_specified" className="text-muted-foreground">
             Не вказано
           </SelectItem>
           <SelectItem value="bachelor">Bachelor</SelectItem>

@@ -1,19 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { authService } from '@/features/auth'
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Label,
-  Alert,
-  AlertDescription,
-} from '@/shared/ui'
-import { Mail, CheckCircle, AlertCircle } from 'lucide-react'
+import { Button } from '@/shared/ui'
+import { Mail, CheckCircle } from 'lucide-react'
 import { EmailField } from '@/shared/ui/email-field'
 import { FormAlert } from '@/shared/ui/form-alert'
 import { AuthCard } from '@/shared/ui/auth-card'
@@ -57,11 +46,11 @@ export const ForgotPasswordForm = () => {
   return (
     <>
       <div className="text-center">
-        <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-brand-600" />
+        <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
-        <h2 className="text-3xl font-bold text-slate-900">Забули пароль?</h2>
-        <p className="mt-2 text-slate-600">
+        <h2 className="text-3xl font-bold text-foreground">Забули пароль?</h2>
+        <p className="mt-2 text-muted-foreground">
           Не хвилюйтесь, ми допоможемо відновити доступ до вашого акаунта
         </p>
       </div>
@@ -75,7 +64,7 @@ export const ForgotPasswordForm = () => {
             <EmailField value={email} onChange={setEmail} required />
             <Button
               type="submit"
-              className="w-full bg-brand-600 hover:bg-brand-700 text-white"
+              className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               disabled={isLoading}
             >
               {isLoading ? 'Надсилаємо...' : 'Надіслати інструкції'}
@@ -83,27 +72,27 @@ export const ForgotPasswordForm = () => {
           </form>
         ) : (
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-success-icon" />
             </div>
-            <h2 className="text-2xl text-slate-900 mb-2">
+            <h2 className="text-2xl text-foreground mb-2">
               Перевірте вашу пошту
             </h2>
-            <p className="text-slate-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Ми надіслали інструкції з відновлення паролю на адресу:
             </p>
-            <p className="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg inline-block mb-4">
+            <p className="text-sm font-medium text-foreground bg-card px-3 py-2 rounded-lg inline-block mb-4">
               {email}
             </p>
             <Button
               onClick={handleTryAgain}
               variant="outline"
-              className="w-full border-slate-300 text-slate-700 mb-2"
+              className="w-full border-border text-muted-foreground mb-2"
             >
               Спробувати з іншим email
             </Button>
             <Link to="/login" className="block">
-              <Button className="w-full bg-brand-600 hover:bg-brand-700 text-white">
+              <Button className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
                 Повернутися до входу
               </Button>
             </Link>
@@ -112,11 +101,11 @@ export const ForgotPasswordForm = () => {
       </AuthCard>
       {!isSuccess && (
         <div className="text-center">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Пригадали пароль?{' '}
             <Link
               to="/login"
-              className="text-brand-600 hover:text-brand-700 font-medium"
+              className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium"
             >
               Увійти в акаунт
             </Link>

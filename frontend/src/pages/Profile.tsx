@@ -280,10 +280,10 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600" />
-          <p className="mt-4 text-slate-600">Завантаження профілю...</p>
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
+          <p className="mt-4 text-muted-foreground">Завантаження профілю...</p>
         </div>
       </div>
     )
@@ -291,13 +291,13 @@ const Profile = () => {
 
   if (!profileData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">Помилка завантаження профілю</p>
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <p className="text-destructive mb-4">Помилка завантаження профілю</p>
           <Button
             onClick={loadProfile}
-            className="bg-brand-600 hover:bg-brand-700"
+            className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           >
             Спробувати знову
           </Button>
@@ -307,7 +307,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <Sidebar
         userInfo={{
           name: profileData.user.name,
@@ -332,17 +332,17 @@ const Profile = () => {
 
         <main className="p-6">
           {error && (
-            <Alert className="mb-6 border-red-200 bg-red-50">
+            <Alert className="mb-6 border-destructive bg-destructive/10">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-red-800">
+              <AlertDescription className="text-destructive">
                 {error}
               </AlertDescription>
             </Alert>
           )}
           {success && (
-            <Alert className="mb-6 border-green-200 bg-green-50">
+            <Alert className="mb-6 border-success-icon bg-success-bg/10">
               <CheckCircle className="h-4 w-4" />
-              <AlertDescription className="text-green-800">
+              <AlertDescription className="text-success-text">
                 {success}
               </AlertDescription>
             </Alert>

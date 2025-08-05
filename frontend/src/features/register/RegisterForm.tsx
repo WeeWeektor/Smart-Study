@@ -399,9 +399,9 @@ export const RegisterForm = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
               </div>
@@ -426,9 +426,9 @@ export const RegisterForm = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2"
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
               </div>
@@ -446,18 +446,21 @@ export const RegisterForm = () => {
               }
               required
             />
-            <Label htmlFor="agreeToTerms" className="text-sm text-slate-600">
+            <Label
+              htmlFor="agreeToTerms"
+              className="text-sm text-muted-foreground"
+            >
               Я погоджуюся з{' '}
               <Link
                 to="/terms-of-service"
-                className="text-brand-600 hover:text-brand-700"
+                className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
               >
                 умовами використання
               </Link>{' '}
               та{' '}
               <Link
                 to="/privacy-policy"
-                className="text-brand-600 hover:text-brand-700"
+                className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
               >
                 політикою конфіденційності
               </Link>
@@ -474,7 +477,7 @@ export const RegisterForm = () => {
             />
             <Label
               htmlFor="subscribeNewsletter"
-              className="text-sm text-slate-600"
+              className="text-sm text-muted-foreground"
             >
               Отримувати новини та оновлення на email
             </Label>
@@ -488,7 +491,7 @@ export const RegisterForm = () => {
               variant="outline"
               size="sm"
               onClick={handleReturnToNormalRegistration}
-              className="border-brand-300 text-brand-600 hover:bg-brand-50"
+              className="border-brand-300 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900"
             >
               Повернутись до звичайної реєстрації
             </Button>
@@ -497,7 +500,7 @@ export const RegisterForm = () => {
 
         <Button
           type="submit"
-          className="w-full bg-brand-600 hover:bg-brand-700 text-white"
+          className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           disabled={isLoading}
         >
           {isLoading ? 'Створення акаунта...' : 'Створити акаунт'}

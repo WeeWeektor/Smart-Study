@@ -80,7 +80,7 @@ export const ProfileInfoCard = ({
                 src={previewUrl || profileData?.profile?.profile_picture}
                 alt="Profile picture"
               />
-              <AvatarFallback className="text-xl bg-brand-100 text-brand-600">
+              <AvatarFallback className="text-xl bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-400">
                 {getInitials(profileData.user.name, profileData.user.surname)}
               </AvatarFallback>
             </Avatar>
@@ -98,7 +98,7 @@ export const ProfileInfoCard = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-brand-600 border-brand-300 hover:bg-brand-50"
+                className="text-brand-600 dark:text-brand-400 border-brand-300 dark:border-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900"
                 onClick={() =>
                   document.getElementById('profile-photo')?.click()
                 }
@@ -110,32 +110,32 @@ export const ProfileInfoCard = ({
           )}
 
           <h2
-            className="text-xl font-semibold text-slate-900 mt-4 truncate max-w-xs mx-auto overflow-hidden whitespace-nowrap"
+            className="text-xl font-semibold text-foreground mt-4 truncate max-w-xs mx-auto overflow-hidden whitespace-nowrap"
             title={`${profileData.user.name} ${profileData.user.surname}`}
           >
             {profileData.user.name} {profileData.user.surname}
           </h2>
-          <Badge className="mt-2 bg-brand-100 text-brand-700">
+          <Badge className="mt-2 bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300">
             {roleText(profileData?.user?.role)}
           </Badge>
         </div>
 
         <div className="space-y-4 mt-6">
           {profileData?.user?.email && (
-            <div className="flex items-center text-sm text-slate-600">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="pl-1">{profileData.user.email}</span>
             </div>
           )}
           {profileData?.user?.phone_number && (
-            <div className="flex items-center text-sm text-slate-600">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="pl-1">{profileData.user.phone_number}</span>
             </div>
           )}
           {profileData?.profile?.organization && (
             <div
-              className="flex items-center text-sm text-slate-600"
+              className="flex items-center text-sm text-muted-foreground"
               title={profileData.profile.organization}
             >
               <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -149,7 +149,7 @@ export const ProfileInfoCard = ({
             <>
               {profileData?.profile?.location && (
                 <div
-                  className="flex items-center text-sm text-slate-600"
+                  className="flex items-center text-sm text-muted-foreground"
                   title={profileData.profile.location}
                 >
                   <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -159,7 +159,7 @@ export const ProfileInfoCard = ({
                 </div>
               )}
               {profileData?.profile?.specialization && (
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <Book className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="pl-1">
                     {profileData.profile.specialization}
@@ -167,13 +167,13 @@ export const ProfileInfoCard = ({
                 </div>
               )}
               {profileData?.profile?.bio && (
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <UserIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="pl-1">{profileData.profile.bio}</span>
                 </div>
               )}
               {profileData?.profile?.education_level && (
-                <div className="flex items-center text-sm text-slate-600">
+                <div className="flex items-center text-sm text-muted-foreground">
                   <Award className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="pl-1">
                     {profileData.profile.education_level}

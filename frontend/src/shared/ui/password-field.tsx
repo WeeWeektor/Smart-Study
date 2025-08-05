@@ -24,7 +24,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
   const [show, setShow] = useState(false)
   return (
     <div className="space-y-2">
-      <Label htmlFor="password" className="text-slate-700">
+      <Label htmlFor="password" className="text-foreground">
         {label}
       </Label>
       <div className="relative">
@@ -36,23 +36,23 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           required={required}
           disabled={disabled}
           placeholder={placeholder}
-          className="pr-10 border-slate-300 focus:border-brand-500 focus:ring-brand-500"
+          className="pr-10 border-border focus:border-brand-500 focus:ring-brand-500"
         />
         <button
           type="button"
           aria-label={show ? 'Сховати пароль' : 'Показати пароль'}
-          className="absolute inset-y-0 right-0 flex items-center justify-center w-10 h-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none hover:bg-slate-100 transition rounded"
+          className="absolute inset-y-0 right-0 flex items-center justify-center w-10 h-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none hover:bg-muted transition rounded"
           onClick={() => setShow(s => !s)}
           tabIndex={-1}
         >
           {show ? (
-            <EyeOff className="h-5 w-5 text-slate-400 mx-auto" />
+            <EyeOff className="h-5 w-5 text-muted-foreground mx-auto" />
           ) : (
-            <Eye className="h-5 w-5 text-slate-400 mx-auto" />
+            <Eye className="h-5 w-5 text-muted-foreground mx-auto" />
           )}
         </button>
       </div>
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {error && <div className="text-destructive text-sm">{error}</div>}
     </div>
   )
 }

@@ -18,13 +18,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   description,
   children,
 }) => (
-  <Card className="border-slate-200 shadow-lg max-w-md mx-auto">
+  <Card className="border-border shadow-lg max-w-md mx-auto">
     <CardHeader className="space-y-1">
-      <CardTitle className="text-2xl text-center text-slate-900">
+      <CardTitle className="text-2xl text-center text-foreground">
         {title}
       </CardTitle>
       {description && (
-        <CardDescription className="text-center">{description}</CardDescription>
+        <CardDescription className="text-center text-muted-foreground">
+          {description}
+        </CardDescription>
       )}
     </CardHeader>
     <CardContent>{children}</CardContent>

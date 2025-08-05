@@ -6,13 +6,13 @@ export const PrivacyPolicyContent = () => {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-8 h-8 text-brand-600" />
+        <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Shield className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-4">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
           Політика конфіденційності
         </h1>
-        <p className="text-lg text-slate-600">
+        <p className="text-lg text-muted-foreground">
           Останнє оновлення: {new Date().toLocaleDateString('uk-UA')}
         </p>
       </div>
@@ -21,11 +21,11 @@ export const PrivacyPolicyContent = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Eye className="w-5 h-5 text-brand-600" />
+              <Eye className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               <span>1. Загальна інформація</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study ("ми", "наша компанія") поважає вашу конфіденційність
               і зобов'язується захищати ваші персональні дані. Ця політика
@@ -42,11 +42,11 @@ export const PrivacyPolicyContent = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Database className="w-5 h-5 text-brand-600" />
+              <Database className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               <span>2. Інформація, яку ми збираємо</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <h4>2.1 Особиста інформація:</h4>
             <ul>
               <li>Ім'я та прізвище</li>
@@ -79,7 +79,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>3. Як ми використовуємо вашу інформацію</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>Ми використовуємо зібрану інформацію для:</p>
             <ul>
               <li>
@@ -114,7 +114,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>4. Штучний інтелект та аналітика</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>Smart Study використовує технології штучного інтелекту для:</p>
             <ul>
               <li>Аналізу навчальних патернів та поведінки</li>
@@ -134,7 +134,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>5. Розкриття інформації третім сторонам</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Ми не продаємо, не обмінюємо та не передаємо ваші персональні дані
               третім сторонам, за винятком:
@@ -162,11 +162,11 @@ export const PrivacyPolicyContent = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Lock className="w-5 h-5 text-brand-600" />
+              <Lock className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               <span>6. Захист даних</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>Ми використовуємо сучасні засоби захисту:</p>
             <ul>
               <li>
@@ -193,7 +193,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>7. Ваші права</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Відповідно до законодавства про захист персональних даних, ви
               маєте право:
@@ -227,7 +227,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>8. Cookies та подібні технології</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>Ми використовуємо cookies для покращення вашого досвіду:</p>
             <ul>
               <li>
@@ -254,7 +254,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>9. Зберігання даних</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Ми зберігаємо ваші персональні дані стільки, скільки це необхідно
               для:
@@ -277,7 +277,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>10. Діти та неповнолітні</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Наша платформа призначена для користувачів віком від 13 років.
               Якщо ви молодше 18 років, рекомендуємо отримати згоду батьків або
@@ -294,7 +294,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>11. Зміни в політиці конфіденційності</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study може оновлювати цю політику конфіденційності. Про
               суттєві зміни ми повідомимо вас через:
@@ -311,7 +311,7 @@ export const PrivacyPolicyContent = () => {
           <CardHeader>
             <CardTitle>12. Контакти з питань конфіденційності</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Якщо у вас є питання щодо цієї політики конфіденційності або
               обробки ваших персональних даних, зв'яжіться з нами:
@@ -335,7 +335,7 @@ export const PrivacyPolicyContent = () => {
 
       <div className="mt-12 text-center">
         <Link to="/register">
-          <Button className="bg-brand-600 hover:bg-brand-700">
+          <Button className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
             Повернутися до реєстрації
           </Button>
         </Link>

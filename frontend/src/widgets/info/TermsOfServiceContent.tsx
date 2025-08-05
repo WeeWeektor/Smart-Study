@@ -6,13 +6,13 @@ export const TermsOfServiceContent = () => {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FileText className="w-8 h-8 text-brand-600" />
+        <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-4">
+          <FileText className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-4">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
           Умови використання
         </h1>
-        <p className="text-lg text-slate-600">
+        <p className="text-lg text-muted-foreground">
           Останнє оновлення: {new Date().toLocaleDateString('uk-UA')}
         </p>
       </div>
@@ -21,11 +21,11 @@ export const TermsOfServiceContent = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-brand-600" />
+              <Users className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               <span>1. Загальні положення</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Вітаємо вас на платформі Smart Study - інтелектуальній платформі
               для оцінки та розвитку навичок студентів з системою рекомендацій
@@ -43,7 +43,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>2. Опис послуг</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>Smart Study надає такі послуги:</p>
             <ul>
               <li>Онлайн-курси та навчальні матеріали</li>
@@ -60,7 +60,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>3. Права та обов'язки користувачів</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <h4>3.1 Права користувачів:</h4>
             <ul>
               <li>Доступ до всіх функцій платформи відповідно до вашої ролі</li>
@@ -84,7 +84,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>4. Інтелектуальна власність</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Всі матеріали на платформі Smart Study, включаючи курси, тести,
               відео, тексти та програмне забезпечення, захищені авторським
@@ -103,7 +103,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>5. Академічна доброчесність</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study підтримує принципи академічної доброчесності.
               Заборонено:
@@ -126,7 +126,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>6. Оплата та відшкодування</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study надає безкоштовний доступ до базових функцій
               платформи. Преміум-функції можуть бути доступні за додаткову
@@ -143,7 +143,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>7. Обмеження відповідальності</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study докладає максимальних зусиль для забезпечення
               стабільної роботи платформи, але не гарантує безперервного доступу
@@ -162,7 +162,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>8. Припинення послуг</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study залишає за собою право призупинити або припинити
               надання послуг користувачам, які порушують ці умови використання.
@@ -178,7 +178,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>9. Зміни в умовах використання</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Smart Study може оновлювати ці умови використання. Про суттєві
               зміни ми повідомимо користувачів через платформу або електронну
@@ -195,7 +195,7 @@ export const TermsOfServiceContent = () => {
           <CardHeader>
             <CardTitle>10. Контактна інформація</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-slate max-w-none">
+          <CardContent className="prose max-w-none text-foreground">
             <p>
               Якщо у вас є питання щодо цих умов використання, зв'яжіться з
               нами:
@@ -217,7 +217,7 @@ export const TermsOfServiceContent = () => {
 
       <div className="mt-12 text-center">
         <Link to="/register">
-          <Button className="bg-brand-600 hover:bg-brand-700">
+          <Button className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
             Повернутися до реєстрації
           </Button>
         </Link>

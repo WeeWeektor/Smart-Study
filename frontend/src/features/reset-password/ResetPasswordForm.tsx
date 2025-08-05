@@ -68,39 +68,17 @@ export const ResetPasswordForm = () => {
     }
   }
 
-  const getPasswordStrength = (password: string) => {
-    let strength = 0
-    if (password.length >= 8) strength++
-    if (/(?=.*[a-z])/.test(password)) strength++
-    if (/(?=.*[A-Z])/.test(password)) strength++
-    if (/(?=.*\d)/.test(password)) strength++
-    if (/(?=.*[!@#$%^&*])/.test(password)) strength++
-    return strength
-  }
-
-  const getPasswordStrengthColor = (strength: number) => {
-    const colors = [
-      'bg-red-200',
-      'bg-red-200',
-      'bg-yellow-200',
-      'bg-yellow-200',
-      'bg-blue-200',
-      'bg-green-200',
-    ]
-    return colors[strength] || 'bg-slate-200'
-  }
-
   if (isSuccess) {
     return (
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="w-16 h-16 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-success-icon" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900">
+          <h2 className="text-3xl font-bold text-foreground">
             Пароль успішно змінено!
           </h2>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-muted-foreground">
             Ваш пароль було успішно оновлено. Зараз ви будете перенаправлені на
             сторінку входу.
           </p>
@@ -108,11 +86,11 @@ export const ResetPasswordForm = () => {
 
         <AuthCard title="Скидання пароля">
           <div className="text-center">
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Перенаправлення через кілька секунд...
             </p>
             <Link to="/login">
-              <Button className="w-full bg-brand-600 hover:bg-brand-700">
+              <Button className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
                 Перейти до входу зараз
               </Button>
             </Link>
@@ -125,13 +103,13 @@ export const ResetPasswordForm = () => {
   return (
     <>
       <div className="text-center">
-        <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lock className="w-8 h-8 text-brand-600" />
+        <div className="w-16 h-16 bg-brand-100 dark:bg-brand-900 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Lock className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
-        <h2 className="text-3xl font-bold text-slate-900">
+        <h2 className="text-3xl font-bold text-foreground">
           Створити новий пароль
         </h2>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-muted-foreground">
           Введіть новий пароль для вашого акаунта
         </p>
       </div>
@@ -158,7 +136,7 @@ export const ResetPasswordForm = () => {
           />
           <Button
             type="submit"
-            className="w-full bg-brand-600 hover:bg-brand-700"
+            className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
             disabled={
               isLoading ||
               !newPassword ||

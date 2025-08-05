@@ -116,20 +116,20 @@ export const LoginForm = () => {
               checked={rememberMe}
               onCheckedChange={checked => setRememberMe(checked as boolean)}
             />
-            <Label htmlFor="remember" className="text-sm text-slate-600">
+            <Label htmlFor="remember" className="text-sm text-muted-foreground">
               Запам'ятати мене
             </Label>
           </div>
           <Link
             to="/forgot-password"
-            className="text-sm text-brand-600 hover:text-brand-700"
+            className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
           >
             Забули пароль?
           </Link>
         </div>
         <Button
           type="submit"
-          className="w-full bg-brand-600 hover:bg-brand-700 text-white"
+          className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           disabled={isLoading}
         >
           {isLoading ? 'Вхід...' : 'Увійти'}

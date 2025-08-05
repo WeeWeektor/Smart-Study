@@ -17,7 +17,7 @@ export const EmailField: React.FC<EmailFieldProps> = ({
   error,
 }) => (
   <div className="space-y-2">
-    <Label htmlFor="email" className="text-slate-700">
+    <Label htmlFor="email" className="text-foreground">
       Email адреса
     </Label>
     <Input
@@ -28,8 +28,8 @@ export const EmailField: React.FC<EmailFieldProps> = ({
       onChange={e => onChange(e.target.value)}
       required={required}
       disabled={disabled}
-      className="border-slate-300 focus:border-brand-500 focus:ring-brand-500"
+      className="border-border focus:border-brand-500 focus:ring-brand-500"
     />
-    {error && <div className="text-red-600 text-sm">{error}</div>}
+    {error && <div className="text-destructive text-sm">{error}</div>}
   </div>
 )

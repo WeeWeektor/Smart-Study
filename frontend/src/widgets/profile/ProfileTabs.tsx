@@ -33,11 +33,11 @@ interface ProfileTabsProps {
 
 function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6 border border-slate-200">
-      <h3 className="font-medium text-slate-900 mb-4">Сповіщення</h3>
+    <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
+      <h3 className="font-medium text-foreground mb-4">Сповіщення</h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-slate-700">Email сповіщення</span>
+          <span className="text-muted-foreground">Email сповіщення</span>
           <Checkbox
             checked={formData.email_notifications}
             onCheckedChange={checked =>
@@ -47,7 +47,7 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-slate-700">Push сповіщення</span>
+          <span className="text-muted-foreground">Push сповіщення</span>
           <Checkbox
             checked={formData.push_notifications}
             onCheckedChange={checked =>
@@ -57,7 +57,9 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-slate-700">Нагадування про дедлайни</span>
+          <span className="text-muted-foreground">
+            Нагадування про дедлайни
+          </span>
           <Checkbox
             checked={formData.deadline_reminders}
             onCheckedChange={checked =>
@@ -73,11 +75,13 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
 
 function PrivacyBlock({ formData, onSettingsChange, isEditing }: any) {
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6 border border-slate-200">
-      <h3 className="font-medium text-slate-900 mb-4">Приватність</h3>
+    <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
+      <h3 className="font-medium text-foreground mb-4">Приватність</h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-slate-700">Показувати профіль іншим</span>
+          <span className="text-muted-foreground">
+            Показувати профіль іншим
+          </span>
           <Checkbox
             checked={formData.show_profile_to_others}
             onCheckedChange={checked =>
@@ -87,7 +91,7 @@ function PrivacyBlock({ formData, onSettingsChange, isEditing }: any) {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-slate-700">Показувати досягнення</span>
+          <span className="text-muted-foreground">Показувати досягнення</span>
           <Checkbox
             checked={formData.show_achievements}
             onCheckedChange={checked =>
@@ -114,8 +118,8 @@ function ChangePasswordBlock({
   handleChangePassword,
 }: any) {
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6 border border-slate-200">
-      <h3 className="font-medium text-slate-900 mb-4">Зміна паролю</h3>
+    <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
+      <h3 className="font-medium text-foreground mb-4">Зміна паролю</h3>
       <form className="space-y-4" onSubmit={handleChangePassword}>
         {passwordError && <FormAlert type="error" message={passwordError} />}
         {passwordSuccess && (
@@ -143,7 +147,7 @@ function ChangePasswordBlock({
           placeholder="Підтвердіть новий пароль"
         />
         <Button
-          className="bg-brand-600 hover:bg-brand-700 w-full"
+          className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 w-full text-white"
           type="submit"
           disabled={isPasswordLoading}
         >
@@ -156,11 +160,11 @@ function ChangePasswordBlock({
 
 function DangerZoneBlock({ onDeleteAccount }: any) {
   return (
-    <div className="bg-white rounded-lg shadow p-6 border border-red-200">
-      <h3 className="font-medium text-slate-900 mb-4">Небезпечна зона</h3>
-      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
-        <h4 className="font-medium text-red-900 mb-2">Видалення акаунта</h4>
-        <p className="text-sm text-red-700 mb-4">
+    <div className="bg-card rounded-lg shadow p-6 border border-destructive">
+      <h3 className="font-medium text-destructive mb-4">Небезпечна зона</h3>
+      <div className="p-4 border border-destructive rounded-lg bg-destructive/10 dark:bg-destructive/20">
+        <h4 className="font-medium text-destructive mb-2">Видалення акаунта</h4>
+        <p className="text-sm text-destructive mb-4">
           Після видалення акаунта всі ваші дані будуть назавжди втрачені. Ця дія
           не може бути скасована.
         </p>
@@ -254,11 +258,11 @@ export const ProfileTabs = ({
               {courseProgress.map((course, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-medium text-slate-900">
+                    <h3 className="font-medium text-foreground">
                       {course.course}
                     </h3>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-muted-foreground">
                         {course.completed}/{course.total} уроків
                       </span>
                       <Badge
@@ -271,11 +275,11 @@ export const ProfileTabs = ({
                     </div>
                   </div>
                   <Progress value={course.progress} />
-                  <div className="flex justify-between text-sm text-slate-500">
+                  <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Остання активність: {course.lastActivity}</span>
                     {course.progress === 100 && (
-                      <span className="flex items-center text-green-600">
-                        <CheckCircle className="w-4 h-4 mr-1" />
+                      <span className="flex items-center text-success-text">
+                        <CheckCircle className="w-4 h-4 mr-1 text-success-icon" />
                         Завершено
                       </span>
                     )}
@@ -298,18 +302,18 @@ export const ProfileTabs = ({
               {achievements.map(achievement => (
                 <div
                   key={achievement.id}
-                  className="flex items-start space-x-4 p-4 border border-slate-200 rounded-lg hover:border-brand-300 transition-colors"
+                  className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
                 >
                   <div className="text-3xl">{achievement.icon}</div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-slate-900">
+                    <h3 className="font-medium text-foreground">
                       {achievement.title}
                     </h3>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-muted-foreground">
                       {achievement.description}
                     </p>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {achievement.date}
                       </span>
                       <Badge className={getAchievementColor(achievement.type)}>

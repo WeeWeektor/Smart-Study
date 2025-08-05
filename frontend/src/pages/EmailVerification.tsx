@@ -51,43 +51,43 @@ const EmailVerification = () => {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600" />
-          <p className="mt-4 text-slate-600">Підтвердження email...</p>
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
+          <p className="mt-4 text-muted-foreground">Підтвердження email...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-card rounded-lg shadow-lg p-6 text-card-foreground">
           {status === 'success' ? (
             <div className="text-center">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              <CheckCircle className="h-12 w-12 text-success-icon mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">
                 Email підтверджено!
               </h2>
-              <p className="text-slate-600 mb-4">{message}</p>
+              <p className="text-muted-foreground mb-4">{message}</p>
               <Button
                 onClick={() => navigate('/profile?emailVerified=true')}
-                className="w-full bg-brand-600 hover:bg-brand-700"
+                className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               >
                 Перейти до профілю
               </Button>
             </div>
           ) : (
             <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">
                 Помилка підтвердження
               </h2>
-              <p className="text-slate-600 mb-4">{message}</p>
+              <p className="text-muted-foreground mb-4">{message}</p>
               <Button
                 onClick={() => navigate('/login')}
-                className="w-full bg-brand-600 hover:bg-brand-700"
+                className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               >
                 Перейти до входу
               </Button>
