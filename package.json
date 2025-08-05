@@ -5,16 +5,16 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && python manage.py runserver_plus --cert-file ../ssl/cert.pem --key-file ../ssl/key.pem 127.0.0.1:8000",
-    "dev:frontend": "cd frontend && npm run dev -- --port 5173",
-    "dev:https": "concurrently \"npm run dev:backend-https\" \"npm run dev:frontend-https\"",
-    "dev:backend-https": "cd backend && python manage.py runserver 127.0.0.1:8000",
-    "dev:frontend-https": "cd frontend && vite --host",
+    "dev:backend": "cd backend && uvicorn smartStudy_backend.asgi:application --host 127.0.0.1 --port 8000 --ssl-keyfile=../ssl/key.pem --ssl-certfile=../ssl/cert.pem --reload",
+    "dev:frontend": "cd frontend && npm run dev",
     "install:backend": "cd backend && pip install -r requirements.txt",
     "install:frontend": "cd frontend && npm install",
     "install:all": "npm run install:backend && npm run install:frontend",
     "build:frontend": "cd frontend && npm run build",
     "test:frontend": "cd frontend && npm run test",
+    "test:backend": "cd backend && python manage.py test",
+    "test:backend:cov": "cd backend && coverage run manage.py test && coverage report",
+    "test:all": "npm run test:backend && npm run test:frontend",
     "ssl:generate": "powershell -ExecutionPolicy Bypass -File generate-ssl.ps1"
   },
   "devDependencies": {

@@ -72,6 +72,7 @@ REST_FRAMEWORK = {
 # URLs & WSGI
 ROOT_URLCONF = 'smartStudy_backend.urls'
 WSGI_APPLICATION = 'smartStudy_backend.wsgi.application'
+ASGI_APPLICATION = 'smartStudy_backend.asgi.application'
 
 # Templates
 TEMPLATES = [
