@@ -6,8 +6,10 @@ import { Lock, CheckCircle } from 'lucide-react'
 import { PasswordField } from '@/shared/ui/password-field'
 import { FormAlert } from '@/shared/ui/form-alert'
 import { AuthCard } from '@/shared/ui/auth-card'
+import { useI18n } from '@/shared/lib'
 
 export const ResetPasswordForm = () => {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')
@@ -20,16 +22,16 @@ export const ResetPasswordForm = () => {
 
   const validatePassword = (password: string) => {
     if (password.length < 8) {
-      return 'Пароль повинен містити щонайменше 8 символів'
+      return t('validation.passwordMinLength', { min: 8 })
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну малу літеру'
+      return t('auth.passwordLowercaseRequired')
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну велику літеру'
+      return t('auth.passwordUppercaseRequired')
     }
     if (!/(?=.*\d)/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну цифру'
+      return t('auth.passwordDigitRequired')
     }
     return ''
   }
@@ -45,12 +47,12 @@ export const ResetPasswordForm = () => {
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Паролі не співпадають')
+      setError(t('validation.passwordMismatch'))
       return
     }
 
     if (!token) {
-      setError('Неправильне посилання для скидання пароля')
+      setError(t('auth.invalidResetLink'))
       return
     }
 
@@ -62,7 +64,7 @@ export const ResetPasswordForm = () => {
 
       setTimeout(() => navigate('/login'), 3000)
     } catch (error: any) {
-      setError(error.message || 'Помилка при скиданні пароля')
+      setError(error.message || t('errors.generalError'))
     } finally {
       setIsLoading(false)
     }
@@ -76,22 +78,21 @@ export const ResetPasswordForm = () => {
             <CheckCircle className="w-8 h-8 text-success-icon" />
           </div>
           <h2 className="text-3xl font-bold text-foreground">
-            Пароль успішно змінено!
+            {t('auth.passwordChanged')}
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Ваш пароль було успішно оновлено. Зараз ви будете перенаправлені на
-            сторінку входу.
+            {t('auth.passwordResetSuccess')}
           </p>
         </div>
 
-        <AuthCard title="Скидання пароля">
+        <AuthCard title={t('auth.resetPassword')}>
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-4">
-              Перенаправлення через кілька секунд...
+              {t('common.next')}
             </p>
             <Link to="/login">
               <Button className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
-                Перейти до входу зараз
+                {t('auth.login')}
               </Button>
             </Link>
           </div>
@@ -107,16 +108,16 @@ export const ResetPasswordForm = () => {
           <Lock className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
         <h2 className="text-3xl font-bold text-foreground">
-          Створити новий пароль
+          {t('auth.createNewPassword')}
         </h2>
         <p className="mt-2 text-muted-foreground">
-          Введіть новий пароль для вашого акаунта
+          {t('auth.enterAnewPassword')}
         </p>
       </div>
 
       <AuthCard
-        title="Скидання пароля"
-        description="Пароль повинен бути надійним та унікальним"
+        title={t('auth.resetPassword')}
+        description={t('auth.passwordMustBeUnique')}
       >
         {error && <FormAlert type="error" message={error} />}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -124,15 +125,15 @@ export const ResetPasswordForm = () => {
             value={newPassword}
             onChange={setNewPassword}
             required
-            label="Новий пароль"
-            placeholder="Введіть новий пароль"
+            label={t('auth.newPassword')}
+            placeholder={t('auth.enterNewPassword')}
           />
           <PasswordField
             value={confirmPassword}
             onChange={setConfirmPassword}
             required
-            label="Повторіть пароль"
-            placeholder="Повторіть новий пароль"
+            label={t('auth.confirmPassword')}
+            placeholder={t('auth.confirmNewPassword')}
           />
           <Button
             type="submit"
@@ -144,7 +145,7 @@ export const ResetPasswordForm = () => {
               newPassword !== confirmPassword
             }
           >
-            {isLoading ? 'Скидання пароля...' : 'Скинути пароль'}
+            {isLoading ? t('auth.resetPassword1') : t('auth.resetPassword')}
           </Button>
         </form>
       </AuthCard>

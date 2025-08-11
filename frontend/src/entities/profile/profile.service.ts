@@ -1,6 +1,13 @@
 import { apiClient, tokenService } from '@/shared/api'
 import type { ApiResponse } from '@/shared/api'
 import { type ProfileData, type UpdateProfileRequest } from './model'
+import {
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+  getNestedTranslation,
+  interpolate,
+  translations,
+} from '@/shared/lib/i18n'
 
 function getCookie(name: string): string | undefined {
   const value = `; ${document.cookie}`
@@ -13,6 +20,23 @@ function getCookie(name: string): string | undefined {
 }
 
 class ProfileService {
+  private translate(
+    key: string,
+    params?: Record<string, string | number>
+  ): string {
+    try {
+      const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY)
+      const language =
+        storedLanguage === 'en' || storedLanguage === 'uk'
+          ? storedLanguage
+          : DEFAULT_LANGUAGE.code
+      const template = getNestedTranslation(translations[language], key)
+      return params ? interpolate(template, params) : template
+    } catch {
+      return key
+    }
+  }
+
   async ensureCsrfToken(): Promise<string | null> {
     try {
       let csrfToken = getCookie('csrftoken')
@@ -25,7 +49,7 @@ class ProfileService {
 
       return csrfToken || null
     } catch (error) {
-      console.error('Помилка отримання CSRF токена:', error)
+      console.error(this.translate('errors.csrfTokenFetchError'), error)
       return null
     }
   }
@@ -44,11 +68,11 @@ class ProfileService {
       return {
         data: response.data,
         status: 'success',
-        message: 'Профіль завантажено успішно',
+        message: this.translate('profile.profileLoaded'),
       }
     } catch (error) {
-      console.error('Помилка завантаження профілю:', error)
-      throw new Error('Не вдалося завантажити профіль')
+      console.error(this.translate('profile.profileLoadError'), error)
+      throw new Error(this.translate('profile.profileLoadError'))
     }
   }
 
@@ -72,24 +96,22 @@ class ProfileService {
       return {
         data: response.data,
         status: 'success',
-        message: 'Профіль оновлено успішно',
+        message: this.translate('profile.profileUpdated'),
       }
     } catch (error) {
-      console.error('Помилка оновлення профілю:', error)
-      throw new Error('Не вдалося оновити профіль')
+      console.error(this.translate('profile.profileUpdateError'), error)
+      throw new Error(this.translate('profile.profileUpdateError'))
     }
   }
 
   async uploadProfilePicture(
     file: File
   ): Promise<ApiResponse<{ url: string }>> {
-    console.log('Викликано uploadProfilePicture, file:', file)
     try {
       const csrfToken = await this.ensureCsrfToken()
 
       const formData = new FormData()
       formData.append('profile_picture', file)
-      console.log('formData entries:', [...formData.entries()])
 
       const response = await apiClient.post(
         '/user/profile/upload-avatar/',
@@ -105,11 +127,11 @@ class ProfileService {
       return {
         data: response.data,
         status: 'success',
-        message: 'Фото профілю завантажено успішно',
+        message: this.translate('profile.profilePictureUploaded'),
       }
     } catch (error) {
-      console.error('Помилка завантаження фото профілю:', error)
-      throw new Error('Не вдалося завантажити фото профілю')
+      console.error(this.translate('profile.profilePictureUploadError'), error)
+      throw new Error(this.translate('profile.profilePictureUploadError'))
     }
   }
 
@@ -125,8 +147,8 @@ class ProfileService {
       })
       tokenService.removeToken()
     } catch (error) {
-      console.error('Помилка видалення профілю:', error)
-      throw new Error('Не вдалося видалити профіль')
+      console.error(this.translate('profile.deleteAccountError'), error)
+      throw new Error(this.translate('profile.deleteAccountError'))
     }
   }
 
@@ -153,11 +175,11 @@ class ProfileService {
       return {
         data: response.data,
         status: 'success',
-        message: 'Пароль змінено успішно',
+        message: this.translate('auth.passwordChanged'),
       }
     } catch (error) {
-      console.error('Помилка зміни паролю:', error)
-      throw new Error('Не вдалося змінити пароль')
+      console.error(this.translate('auth.passwordChangeError'), error)
+      throw new Error(this.translate('auth.passwordChangeError'))
     }
   }
 }

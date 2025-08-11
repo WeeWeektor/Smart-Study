@@ -11,6 +11,7 @@ import {
   Progress,
   Checkbox,
   Button,
+  LanguageSwitcher,
 } from '@/shared/ui'
 import { EditProfileForm } from '@/features/edit-profile'
 import { DeleteAccountButton } from '@/features/delete-account'
@@ -22,6 +23,7 @@ import { PasswordField } from '@/shared/ui/password-field'
 import { FormAlert } from '@/shared/ui/form-alert'
 import { profileService } from '@/entities/profile/profile.service'
 import React from 'react'
+import { useI18n } from '@/shared/lib'
 
 interface ProfileTabsProps {
   formData: any
@@ -32,12 +34,17 @@ interface ProfileTabsProps {
 }
 
 function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
+  const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
-      <h3 className="font-medium text-foreground mb-4">Сповіщення</h3>
+      <h3 className="font-medium text-foreground mb-4">
+        {t('settings.notifications')}
+      </h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Email сповіщення</span>
+          <span className="text-muted-foreground">
+            {t('settings.emailNotifications')}
+          </span>
           <Checkbox
             checked={formData.email_notifications}
             onCheckedChange={checked =>
@@ -47,7 +54,9 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Push сповіщення</span>
+          <span className="text-muted-foreground">
+            {t('settings.pushNotifications')}
+          </span>
           <Checkbox
             checked={formData.push_notifications}
             onCheckedChange={checked =>
@@ -58,7 +67,7 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">
-            Нагадування про дедлайни
+            {t('settings.deadlineReminders')}
           </span>
           <Checkbox
             checked={formData.deadline_reminders}
@@ -74,13 +83,16 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
 }
 
 function PrivacyBlock({ formData, onSettingsChange, isEditing }: any) {
+  const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
-      <h3 className="font-medium text-foreground mb-4">Приватність</h3>
+      <h3 className="font-medium text-foreground mb-4">
+        {t('settings.privacy')}
+      </h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">
-            Показувати профіль іншим
+            {t('settings.showProfileToOthers')}
           </span>
           <Checkbox
             checked={formData.show_profile_to_others}
@@ -91,7 +103,9 @@ function PrivacyBlock({ formData, onSettingsChange, isEditing }: any) {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Показувати досягнення</span>
+          <span className="text-muted-foreground">
+            {t('settings.showAchievements')}
+          </span>
           <Checkbox
             checked={formData.show_achievements}
             onCheckedChange={checked =>
@@ -117,9 +131,12 @@ function ChangePasswordBlock({
   isPasswordLoading,
   handleChangePassword,
 }: any) {
+  const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
-      <h3 className="font-medium text-foreground mb-4">Зміна паролю</h3>
+      <h3 className="font-medium text-foreground mb-4">
+        {t('auth.changePassword.title')}
+      </h3>
       <form className="space-y-4" onSubmit={handleChangePassword}>
         {passwordError && <FormAlert type="error" message={passwordError} />}
         {passwordSuccess && (
@@ -129,44 +146,64 @@ function ChangePasswordBlock({
           value={currentPassword}
           onChange={setCurrentPassword}
           required
-          label="Поточний пароль"
-          placeholder="Введіть поточний пароль"
+          label={t('auth.currentPassword')}
+          placeholder={t('auth.enterCurrentPassword')}
         />
         <PasswordField
           value={newPassword}
           onChange={setNewPassword}
           required
-          label="Новий пароль"
-          placeholder="Введіть новий пароль"
+          label={t('auth.newPassword')}
+          placeholder={t('auth.enterNewPassword')}
         />
         <PasswordField
           value={confirmPassword}
           onChange={setConfirmPassword}
           required
-          label="Підтвердіть пароль"
-          placeholder="Підтвердіть новий пароль"
+          label={t('auth.confirmPassword')}
+          placeholder={t('auth.confirmNewPassword')}
         />
         <Button
           className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 w-full text-white"
           type="submit"
           disabled={isPasswordLoading}
         >
-          {isPasswordLoading ? 'Зміна пароля...' : 'Змінити пароль'}
+          {isPasswordLoading
+            ? t('auth.changePassword.processing')
+            : t('auth.changePassword.action')}
         </Button>
       </form>
     </div>
   )
 }
 
+function SwitchLanguageBlock() {
+  const { t } = useI18n()
+  return (
+    <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
+      <h3 className="font-medium text-foreground mb-4">
+        {t('settings.language')}
+      </h3>
+      <div className="space-y-3">
+        <LanguageSwitcher className="w-full" />
+      </div>
+    </div>
+  )
+}
+
 function DangerZoneBlock({ onDeleteAccount }: any) {
+  const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 border border-destructive">
-      <h3 className="font-medium text-destructive mb-4">Небезпечна зона</h3>
+      <h3 className="font-medium text-destructive mb-4">
+        {t('settings.dangerZone')}
+      </h3>
       <div className="p-4 border border-destructive rounded-lg bg-destructive/10 dark:bg-destructive/20">
-        <h4 className="font-medium text-destructive mb-2">Видалення акаунта</h4>
+        <h4 className="font-medium text-destructive mb-2">
+          {t('settings.deleteAccount')}
+        </h4>
         <p className="text-sm text-destructive mb-4">
-          Після видалення акаунта всі ваші дані будуть назавжди втрачені. Ця дія
-          не може бути скасована.
+          {t('settings.deleteAccountWarning')}
         </p>
         <DeleteAccountButton onDelete={onDeleteAccount} />
       </div>
@@ -181,6 +218,7 @@ export const ProfileTabs = ({
   onSettingsChange,
   onDeleteAccount,
 }: ProfileTabsProps) => {
+  const { t } = useI18n()
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -193,15 +231,15 @@ export const ProfileTabs = ({
     setPasswordError(null)
     setPasswordSuccess(null)
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError('Всі поля обовʼязкові')
+      setPasswordError(`${t('validation.allFieldsRequired')}`)
       return
     }
     if (newPassword.length < 8) {
-      setPasswordError('Пароль повинен містити щонайменше 8 символів')
+      setPasswordError(`${t('validation.passwordMinLength')}`)
       return
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError('Паролі не співпадають')
+      setPasswordError(`${t('validation.passwordMismatch')}`)
       return
     }
     setIsPasswordLoading(true)
@@ -211,12 +249,12 @@ export const ProfileTabs = ({
         new_password: newPassword,
         confirm_password: confirmPassword,
       })
-      setPasswordSuccess(res.message || 'Пароль змінено успішно')
+      setPasswordSuccess(res.message || `${t('auth.passwordChanged')}`)
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      setPasswordError(err.message || 'Не вдалося змінити пароль')
+      setPasswordError(err.message || `${t('auth.passwordChangeError')}`)
     } finally {
       setIsPasswordLoading(false)
     }
@@ -225,17 +263,19 @@ export const ProfileTabs = ({
   return (
     <Tabs defaultValue="info" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="info">Інформація</TabsTrigger>
-        <TabsTrigger value="progress">Прогрес</TabsTrigger>
-        <TabsTrigger value="achievements">Досягнення</TabsTrigger>
-        <TabsTrigger value="settings">Налаштування</TabsTrigger>
+        <TabsTrigger value="info">{t('common.info')}</TabsTrigger>
+        <TabsTrigger value="progress">{t('common.progress')}</TabsTrigger>
+        <TabsTrigger value="achievements">
+          {t('common.achievements')}
+        </TabsTrigger>
+        <TabsTrigger value="settings">{t('common.settings')}</TabsTrigger>
       </TabsList>
 
       {/* Personal Information */}
       <TabsContent value="info">
         <Card>
           <CardHeader>
-            <CardTitle>Особиста інформація</CardTitle>
+            <CardTitle>{t('profile.personalInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <EditProfileForm
@@ -251,7 +291,7 @@ export const ProfileTabs = ({
       <TabsContent value="progress">
         <Card>
           <CardHeader>
-            <CardTitle>Прогрес по курсах</CardTitle>
+            <CardTitle>{t('profile.progressInCourses')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -263,7 +303,7 @@ export const ProfileTabs = ({
                     </h3>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-muted-foreground">
-                        {course.completed}/{course.total} уроків
+                        {course.completed}/{course.total} {t('profile.lessons')}
                       </span>
                       <Badge
                         variant={
@@ -276,11 +316,13 @@ export const ProfileTabs = ({
                   </div>
                   <Progress value={course.progress} />
                   <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Остання активність: {course.lastActivity}</span>
+                    <span>
+                      {t('profile.lastActivity')}: {course.lastActivity}
+                    </span>
                     {course.progress === 100 && (
                       <span className="flex items-center text-success-text">
                         <CheckCircle className="w-4 h-4 mr-1 text-success-icon" />
-                        Завершено
+                        {t('common.ending')}
                       </span>
                     )}
                   </div>
@@ -295,7 +337,7 @@ export const ProfileTabs = ({
       <TabsContent value="achievements">
         <Card>
           <CardHeader>
-            <CardTitle>Досягнення</CardTitle>
+            <CardTitle>{t('profile.achievements')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
@@ -318,10 +360,10 @@ export const ProfileTabs = ({
                       </span>
                       <Badge className={getAchievementColor(achievement.type)}>
                         {achievement.type === 'gold'
-                          ? 'Золото'
+                          ? `${t('profile.gold')}`
                           : achievement.type === 'silver'
-                            ? 'Срібло'
-                            : 'Бронза'}
+                            ? `${t('profile.silver')}`
+                            : `${t('profile.bronze')}`}
                       </Badge>
                     </div>
                   </div>
@@ -336,7 +378,7 @@ export const ProfileTabs = ({
       <TabsContent value="settings">
         <Card>
           <CardHeader>
-            <CardTitle>Налаштування</CardTitle>
+            <CardTitle>{t('profile.settings')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <NotificationsBlock
@@ -349,6 +391,7 @@ export const ProfileTabs = ({
               onSettingsChange={onSettingsChange}
               isEditing={isEditing}
             />
+            <SwitchLanguageBlock />
             <ChangePasswordBlock
               currentPassword={currentPassword}
               setCurrentPassword={setCurrentPassword}

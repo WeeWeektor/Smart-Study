@@ -8,12 +8,14 @@ import { FormAlert } from '@/shared/ui/form-alert'
 import { AuthCard } from '@/shared/ui/auth-card'
 import { SocialAuth } from '@/features/social-auth'
 import { tokenService } from '@/shared/api'
+import { useI18n } from '@/shared/lib'
 
 interface LoginResponse {
   role: string
 }
 
 export const LoginForm = () => {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -64,7 +66,7 @@ export const LoginForm = () => {
 
     try {
       if (!email || !password) {
-        setError('Будь ласка, заповніть всі поля')
+        setError(t('validation.required'))
         return
       }
 
@@ -85,9 +87,9 @@ export const LoginForm = () => {
       }
     } catch (error) {
       if (error instanceof Error) {
-        setError(error.message || 'Невірний email або пароль')
+        setError(error.message || t('errors.unauthorized'))
       } else {
-        setError('Сталася невідома помилка')
+        setError(t('errors.generalError'))
       }
     } finally {
       setIsLoading(false)
@@ -96,8 +98,8 @@ export const LoginForm = () => {
 
   return (
     <AuthCard
-      title="Вхід в акаунт"
-      description="Введіть свої дані для входу в систему"
+      title={t('auth.loginAccount')}
+      description={t('auth.enterYourData')}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <FormAlert type="error" message={error} />}
@@ -106,8 +108,8 @@ export const LoginForm = () => {
           value={password}
           onChange={setPassword}
           required
-          label="Пароль"
-          placeholder="Введіть ваш пароль"
+          label={t('auth.password')}
+          placeholder={t('auth.enterYourPassword')}
         />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -117,14 +119,14 @@ export const LoginForm = () => {
               onCheckedChange={checked => setRememberMe(checked as boolean)}
             />
             <Label htmlFor="remember" className="text-sm text-muted-foreground">
-              Запам'ятати мене
+              {t('common.rememberMe')}
             </Label>
           </div>
           <Link
             to="/forgot-password"
             className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
           >
-            Забули пароль?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
         <Button
@@ -132,7 +134,7 @@ export const LoginForm = () => {
           className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           disabled={isLoading}
         >
-          {isLoading ? 'Вхід...' : 'Увійти'}
+          {isLoading ? t('auth.login1') : t('auth.login')}
         </Button>
       </form>
       <div className="mt-6">

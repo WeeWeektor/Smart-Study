@@ -13,9 +13,11 @@ import {
   ProfileTabs,
 } from '@/widgets/profile'
 import { learningStats } from '@/shared/lib/mock-data'
+import { useI18n } from '@/shared/lib'
 
 const Profile = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [searchParams] = useSearchParams()
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
@@ -52,7 +54,7 @@ const Profile = () => {
   useEffect(() => {
     const emailVerified = searchParams.get('emailVerified')
     if (emailVerified === 'true') {
-      setSuccess('Email успішно підтверджено!')
+      setSuccess(t('auth.emailVerifiedSuccess'))
       navigate('/profile', { replace: true })
     }
   }, [searchParams, navigate])
@@ -117,12 +119,12 @@ const Profile = () => {
     const file = e.target.files?.[0]
     if (file) {
       if (!file.type.startsWith('image/')) {
-        setError('Будь ласка, оберіть файл зображення')
+        setError(t('validation.imageFile'))
         return
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        setError('Розмір файлу не повинен перевищувати 5MB')
+        setError(t('validation.fileSize', { size: 5 }))
         return
       }
 
@@ -148,7 +150,7 @@ const Profile = () => {
       setSuccess('')
 
       if (!formData.name.trim() || !formData.surname.trim()) {
-        setError("Ім'я та прізвище є обов'язковими полями")
+        setError(t('validation.nameAndSurnameRequired'))
         return
       }
 
@@ -159,7 +161,7 @@ const Profile = () => {
         if (uploadResponse.status === 'success' && uploadResponse.data?.url) {
           profilePictureUrl = uploadResponse.data.url
         } else {
-          setError('Помилка завантаження фото')
+          setError(t('profile.profilePictureUploadError'))
           return
         }
       }
@@ -205,7 +207,7 @@ const Profile = () => {
       const response = await profileService.updateProfile(updateData)
 
       if (response.status === 'success') {
-        setSuccess('Профіль успішно оновлено!')
+        setSuccess(t('profile.profileUpdated'))
         setIsEditing(false)
         setSelectedFile(null)
         await loadProfile()
@@ -218,7 +220,7 @@ const Profile = () => {
     } catch (error) {
       console.error('Помилка оновлення профілю:', error)
       setError(
-        error instanceof Error ? error.message : 'Помилка оновлення профілю'
+        error instanceof Error ? error.message : t('profile.profileUpdateError')
       )
     } finally {
       setSaving(false)
@@ -226,11 +228,7 @@ const Profile = () => {
   }
 
   const handleDeleteAccount = async () => {
-    if (
-      window.confirm(
-        'Ви впевнені, що хочете видалити свій акаунт? Ця дія незворотна.'
-      )
-    ) {
+    if (window.confirm(t('profile.deleteAccountConfirm'))) {
       try {
         await profileService.deleteProfile()
         await authService.logout()
@@ -238,7 +236,9 @@ const Profile = () => {
       } catch (error) {
         console.error('Помилка видалення акаунта:', error)
         setError(
-          error instanceof Error ? error.message : 'Помилка видалення акаунта'
+          error instanceof Error
+            ? error.message
+            : t('profile.deleteAccountError')
         )
         navigate('/?showDeleteAccountSuccess=true')
       }
@@ -283,7 +283,7 @@ const Profile = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
-          <p className="mt-4 text-muted-foreground">Завантаження профілю...</p>
+          <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -294,12 +294,14 @@ const Profile = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <p className="text-destructive mb-4">Помилка завантаження профілю</p>
+          <p className="text-destructive mb-4">
+            {t('profile.profileLoadError')}
+          </p>
           <Button
             onClick={loadProfile}
             className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           >
-            Спробувати знову
+            {t('common.retry')}
           </Button>
         </div>
       </div>

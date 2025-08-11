@@ -1,6 +1,7 @@
 import { Input, Label } from './index'
 import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import { useI18n } from '@/shared/lib'
 
 interface PasswordFieldProps {
   value: string
@@ -18,14 +19,15 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
   required = false,
   disabled = false,
   error,
-  label = 'Пароль',
-  placeholder = 'Введіть пароль',
+  label = undefined,
+  placeholder = undefined,
 }) => {
   const [show, setShow] = useState(false)
+  const { t } = useI18n()
   return (
     <div className="space-y-2">
       <Label htmlFor="password" className="text-foreground">
-        {label}
+        {label ?? t('auth.password')}
       </Label>
       <div className="relative">
         <Input
@@ -35,12 +37,12 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           onChange={e => onChange(e.target.value)}
           required={required}
           disabled={disabled}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('auth.password')}
           className="pr-10 border-border focus:border-brand-500 focus:ring-brand-500"
         />
         <button
           type="button"
-          aria-label={show ? 'Сховати пароль' : 'Показати пароль'}
+          aria-label={show ? t('auth.hidePassword') : t('auth.showPassword')}
           className="absolute inset-y-0 right-0 flex items-center justify-center w-10 h-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none hover:bg-muted transition rounded"
           onClick={() => setShow(s => !s)}
           tabIndex={-1}

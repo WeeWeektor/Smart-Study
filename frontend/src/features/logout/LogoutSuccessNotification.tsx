@@ -1,5 +1,6 @@
 import React from 'react'
 import { CheckCircle } from 'lucide-react'
+import { useI18n } from '@/shared/lib'
 
 interface LogoutSuccessNotificationProps {
   onClose: () => void
@@ -8,13 +9,16 @@ interface LogoutSuccessNotificationProps {
 const LogoutSuccessNotification: React.FC<LogoutSuccessNotificationProps> = ({
   onClose,
 }) => {
+  const { t } = useI18n()
   return (
     <div className="fixed top-5 right-5 bg-card text-card-foreground rounded-lg shadow-lg z-50 max-w-xs w-full animate-slide-in">
       <div className="p-3">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-success-icon" />
-            <span className="font-semibold text-success-text">Успішно</span>
+            <span className="font-semibold text-success-text">
+              {t('common.success')}
+            </span>
           </div>
           <button
             className="bg-transparent border-none text-xl cursor-pointer px-1 text-muted-foreground hover:text-foreground"
@@ -24,7 +28,7 @@ const LogoutSuccessNotification: React.FC<LogoutSuccessNotificationProps> = ({
           </button>
         </div>
         <div className="text-sm text-muted-foreground">
-          Ви успішно вийшли з системи
+          {t('auth.logoutSuccess')}
         </div>
       </div>
     </div>

@@ -17,8 +17,10 @@ import { FormAlert } from '@/shared/ui/form-alert'
 import { AuthCard } from '@/shared/ui/auth-card'
 import { SocialAuth } from '@/features/social-auth'
 import { tokenService } from '@/shared/api'
+import { useI18n } from '@/shared/lib'
 
 export const RegisterForm = () => {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
@@ -160,26 +162,26 @@ export const RegisterForm = () => {
 
     if (!isGoogleRegistration && !isFacebookRegistration) {
       if (formData.password !== formData.confirmPassword) {
-        setError('Паролі не співпадають')
+        setError(t('validation.passwordMismatch'))
         setIsLoading(false)
         return
       }
 
       if (formData.password.length < 8) {
-        setError('Пароль повинен містити принаймні 8 символів')
+        setError(t('validation.passwordMinLength', { min: 8 }))
         setIsLoading(false)
         return
       }
     }
 
     if (!formData.agreeToTerms) {
-      setError('Необхідно погодитись з умовами використання')
+      setError(t('auth.agreeToTermsRequired'))
       setIsLoading(false)
       return
     }
 
     if (!formData.role) {
-      setError('Необхідно вибрати роль')
+      setError(t('auth.roleRequired'))
       setIsLoading(false)
       return
     }
@@ -192,7 +194,7 @@ export const RegisterForm = () => {
         const provider = isGoogleRegistration ? 'google' : 'facebook'
 
         if (!credential) {
-          setError('Відсутній credential. Спробуйте ще раз.')
+          setError(t('errors.generalError'))
           setIsLoading(false)
           return
         }
@@ -225,7 +227,7 @@ export const RegisterForm = () => {
           tokenService.setRefreshToken(response.refresh)
         }
 
-        setSuccess(`Реєстрація через ${provider} успішна!`)
+        setSuccess(t('auth.registerSuccess'))
         navigate('/profile')
       } else {
         const registrationData: any = {
@@ -246,13 +248,13 @@ export const RegisterForm = () => {
           tokenService.setToken(response.data.token)
         }
 
-        setSuccess('Акаунт успішно створено!')
+        setSuccess(t('auth.registerSuccess'))
         navigate('/profile')
       }
     } catch (error: any) {
       console.error('Registration error:', error)
 
-      let errorMessage = 'Помилка при створенні акаунта'
+      let errorMessage = t('errors.generalError')
 
       if (error.response) {
         if (error.response.data && error.response.data.error) {
@@ -260,16 +262,16 @@ export const RegisterForm = () => {
         } else if (error.response.data && error.response.data.message) {
           errorMessage = error.response.data.message
         } else if (error.response.status === 400) {
-          errorMessage = 'Перевірте правильність введених даних'
+          errorMessage = t('validation.invalidData')
         } else if (error.response.status === 409) {
-          errorMessage = 'Користувач з таким email вже існує'
+          errorMessage = t('auth.userExists')
         } else if (error.response.status === 403) {
-          errorMessage = 'Помилка CSRF перевірки. Спробуйте оновити сторінку'
+          errorMessage = t('errors.csrfError')
         } else {
           errorMessage = `Помилка сервера: ${error.response.status}`
         }
       } else if (error.request) {
-        errorMessage = "Сервер не відповідає. Перевірте з'єднання з інтернетом"
+        errorMessage = t('errors.networkError')
       } else if (error.message) {
         errorMessage = error.message
       }
@@ -308,41 +310,38 @@ export const RegisterForm = () => {
   }
 
   return (
-    <AuthCard
-      title="Реєстрація"
-      description="Заповніть форму нижче для створення акаунта"
-    >
+    <AuthCard title={t('auth.register1')} description={t('auth.enterForm')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <FormAlert type="error" message={error} />}
         {success && <FormAlert type="success" message={success} />}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="name">Ім'я</Label>
+            <Label htmlFor="name">{t('profile.name')}</Label>
             <Input
               id="name"
               type="text"
               value={formData.name}
               onChange={e => handleInputChange('name', e.target.value)}
-              placeholder="Ваше ім'я"
+              placeholder={t('profile.name')}
               required
             />
           </div>
           <div>
-            <Label htmlFor="surname">Прізвище</Label>
+            <Label htmlFor="surname">{t('profile.surname')}</Label>
             <Input
               id="surname"
               type="text"
               value={formData.surname}
               onChange={e => handleInputChange('surname', e.target.value)}
-              placeholder="Ваше прізвище"
+              placeholder={t('profile.surname')}
               required
             />
           </div>
         </div>
 
         <div>
-          <Label htmlFor="email">Email адреса</Label>
+          <Label htmlFor="email">{t('auth.email')}</Label>
           <Input
             id="email"
             type="email"
@@ -354,7 +353,7 @@ export const RegisterForm = () => {
         </div>
 
         <div>
-          <Label htmlFor="phoneNumber">Номер телефону</Label>
+          <Label htmlFor="phoneNumber">{t('profile.phone')}</Label>
           <Input
             id="phoneNumber"
             type="tel"
@@ -365,17 +364,17 @@ export const RegisterForm = () => {
         </div>
 
         <div>
-          <Label htmlFor="role">Роль</Label>
+          <Label htmlFor="role">{t('auth.role')}</Label>
           <Select
             value={formData.role}
             onValueChange={value => handleInputChange('role', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Оберіть свою роль" />
+              <SelectValue placeholder={t('auth.role')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="student">Студент</SelectItem>
-              <SelectItem value="teacher">Викладач</SelectItem>
+              <SelectItem value="student">{t('auth.student')}</SelectItem>
+              <SelectItem value="teacher">{t('auth.teacher')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -383,14 +382,14 @@ export const RegisterForm = () => {
         {!isGoogleRegistration && (
           <>
             <div>
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={e => handleInputChange('password', e.target.value)}
-                  placeholder="Створіть надійний пароль"
+                  placeholder={t('auth.password')}
                   required
                 />
                 <button
@@ -408,7 +407,9 @@ export const RegisterForm = () => {
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">Підтвердження паролю</Label>
+              <Label htmlFor="confirmPassword">
+                {t('auth.confirmPassword')}
+              </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -417,7 +418,7 @@ export const RegisterForm = () => {
                   onChange={e =>
                     handleInputChange('confirmPassword', e.target.value)
                   }
-                  placeholder="Повторіть пароль"
+                  placeholder={t('auth.confirmPassword')}
                   required
                 />
                 <button
@@ -450,19 +451,19 @@ export const RegisterForm = () => {
               htmlFor="agreeToTerms"
               className="text-sm text-muted-foreground"
             >
-              Я погоджуюся з{' '}
+              {t('auth.agreeToTermsPrefix')}{' '}
               <Link
                 to="/terms-of-service"
                 className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
               >
-                умовами використання
+                {t('auth.termsOfService')}
               </Link>{' '}
-              та{' '}
+              {t('common.and')}{' '}
               <Link
                 to="/privacy-policy"
                 className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
               >
-                політикою конфіденційності
+                {t('auth.privacyPolicy')}
               </Link>
             </Label>
           </div>
@@ -479,7 +480,7 @@ export const RegisterForm = () => {
               htmlFor="subscribeNewsletter"
               className="text-sm text-muted-foreground"
             >
-              Отримувати новини та оновлення на email
+              {t('settings.emailNotifications')}
             </Label>
           </div>
         </div>
@@ -493,7 +494,7 @@ export const RegisterForm = () => {
               onClick={handleReturnToNormalRegistration}
               className="border-brand-300 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900"
             >
-              Повернутись до звичайної реєстрації
+              {t('auth.backToRegularRegister')}
             </Button>
           </div>
         )}
@@ -503,7 +504,7 @@ export const RegisterForm = () => {
           className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           disabled={isLoading}
         >
-          {isLoading ? 'Створення акаунта...' : 'Створити акаунт'}
+          {isLoading ? t('auth.createAccount1') : t('auth.createAccount')}
         </Button>
       </form>
 

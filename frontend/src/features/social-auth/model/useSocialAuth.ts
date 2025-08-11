@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { authService } from '@/features/auth'
 import { tokenService } from '@/shared/api'
+import {
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+  translations,
+} from '@/shared/lib/i18n'
+import { getNestedTranslation, interpolate } from '@/shared/lib/i18n/utils'
 
 interface SocialAuthData {
   name: string
@@ -28,6 +34,20 @@ export function useSocialAuth({
 }: UseSocialAuthProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isFacebookLoading, setIsFacebookLoading] = useState(false)
+
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    try {
+      const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY)
+      const language =
+        storedLanguage === 'en' || storedLanguage === 'uk'
+          ? storedLanguage
+          : DEFAULT_LANGUAGE.code
+      const template = getNestedTranslation(translations[language], key)
+      return params ? interpolate(template, params) : template
+    } catch {
+      return key
+    }
+  }
 
   const handleError = (message: string) => {
     if (onError && typeof onError === 'function') {
@@ -94,6 +114,16 @@ export function useSocialAuth({
         [`${provider}_credential`]: credential,
       })
 
+      if (onSocialDataReceived) {
+        onSocialDataReceived({
+          name: userData.name,
+          surname: userData.surname,
+          email: userData.email,
+          credential,
+          provider,
+        })
+      }
+
       window.location.href = `/register?${params.toString()}`
     } catch (error: any) {
       console.error('[SocialAuth] Помилка в handleSocialAuth:', error)
@@ -114,12 +144,20 @@ export function useSocialAuth({
           [`${provider}_credential`]: credential,
         })
 
+        if (onSocialDataReceived) {
+          onSocialDataReceived({
+            name: userData.name,
+            surname: userData.surname,
+            email: userData.email,
+            credential,
+            provider,
+          })
+        }
+
         window.location.href = `/register?${params.toString()}`
         return
       } else {
-        handleError(
-          `Помилка авторизації через ${provider}: ${error.message || error}`
-        )
+        handleError(t('errors.generalError'))
       }
     } finally {
       loadingSetter(false)
@@ -195,7 +233,7 @@ export function useSocialAuth({
   const decodeGoogleJWT = (credential: string) => {
     try {
       if (!credential) {
-        throw new Error('Відсутній credential')
+        throw new Error(t('errors.generalError'))
       }
 
       const base64Url = credential.split('.')[1]
@@ -217,7 +255,7 @@ export function useSocialAuth({
       }
     } catch (jwtErr) {
       console.error('[GoogleAuth] Некоректний JWT:', credential, jwtErr)
-      throw new Error('Некоректний токен Google. Спробуйте ще раз.')
+      throw new Error(t('errors.generalError'))
     }
   }
 
@@ -255,7 +293,7 @@ export function useSocialAuth({
       )
     } else {
       console.log('[FacebookAuth] Користувач не авторизувався')
-      handleError('Facebook авторизація не вдалася')
+      handleError(t('errors.generalError'))
     }
   }
 
@@ -267,7 +305,7 @@ export function useSocialAuth({
         window.google.accounts.id.prompt()
       } else {
         if (onError) {
-          onError('Google авторизація недоступна. Спробуйте оновити сторінку.')
+          onError(t('errors.generalError'))
         }
       }
     } catch (error: any) {
@@ -285,7 +323,7 @@ export function useSocialAuth({
       }
 
       if (onError) {
-        onError('Помилка запуску Google авторизації')
+        onError(t('errors.generalError'))
       }
     }
   }
@@ -302,14 +340,14 @@ export function useSocialAuth({
         })
       } else {
         console.error('[FacebookAuth] Facebook SDK не завантажено')
-        handleError('Facebook SDK не завантажено. Спробуйте оновити сторінку.')
+        handleError(t('errors.generalError'))
       }
     } catch (error: any) {
       console.error(
         '[FacebookAuth] Помилка запуску Facebook авторизації:',
         error
       )
-      handleError('Помилка запуску Facebook авторизації')
+      handleError(t('errors.generalError'))
     }
   }
 

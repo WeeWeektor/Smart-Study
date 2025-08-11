@@ -9,6 +9,7 @@ import {
   Textarea,
 } from './index'
 import React from 'react'
+import { useI18n } from '@/shared/lib'
 
 interface ProfileExtraFieldsProps {
   formData: {
@@ -26,74 +27,77 @@ export const ProfileExtraFields: React.FC<ProfileExtraFieldsProps> = ({
   formData,
   onChange,
   isEditing = true,
-}) => (
-  <>
-    <div className="relative">
-      <Label htmlFor="education_level">Рівень освіти</Label>
-      <Select
-        value={formData.education_level || 'not_specified'}
-        onValueChange={(value: string) => onChange('education_level', value)}
-        disabled={!isEditing}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Не вказано" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="not_specified" className="text-muted-foreground">
-            Не вказано
-          </SelectItem>
-          <SelectItem value="bachelor">Bachelor</SelectItem>
-          <SelectItem value="master">Master</SelectItem>
-          <SelectItem value="doctor of science">Doctor of Science</SelectItem>
-          <SelectItem value="diploma">Diploma</SelectItem>
-          <SelectItem value="certificate">Certificate</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    <div>
-      <Label htmlFor="location">Місцезнаходження</Label>
-      <Input
-        id="location"
-        value={formData.location}
-        disabled={!isEditing}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          onChange('location', e.target.value)
-        }
-      />
-    </div>
-    <div>
-      <Label htmlFor="organization">Організація</Label>
-      <Input
-        id="organization"
-        value={formData.organization}
-        disabled={!isEditing}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          onChange('organization', e.target.value)
-        }
-      />
-    </div>
-    <div>
-      <Label htmlFor="specialization">Спеціалізація</Label>
-      <Input
-        id="specialization"
-        value={formData.specialization}
-        disabled={!isEditing}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          onChange('specialization', e.target.value)
-        }
-      />
-    </div>
-    <div>
-      <Label htmlFor="bio">Про себе</Label>
-      <Textarea
-        id="bio"
-        value={formData.bio}
-        disabled={!isEditing}
-        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-          onChange('bio', e.target.value)
-        }
-        rows={4}
-      />
-    </div>
-  </>
-)
+}) => {
+  const { t } = useI18n()
+  return (
+    <>
+      <div className="relative">
+        <Label htmlFor="education_level">{t('profile.educationLevel')}</Label>
+        <Select
+          value={formData.education_level || 'not_specified'}
+          onValueChange={(value: string) => onChange('education_level', value)}
+          disabled={!isEditing}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('common.notSpecified')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="not_specified" className="text-muted-foreground">
+              {t('common.notSpecified')}
+            </SelectItem>
+            <SelectItem value="bachelor">Bachelor</SelectItem>
+            <SelectItem value="master">Master</SelectItem>
+            <SelectItem value="doctor of science">Doctor of Science</SelectItem>
+            <SelectItem value="diploma">Diploma</SelectItem>
+            <SelectItem value="certificate">Certificate</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="location">{t('profile.location')}</Label>
+        <Input
+          id="location"
+          value={formData.location}
+          disabled={!isEditing}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange('location', e.target.value)
+          }
+        />
+      </div>
+      <div>
+        <Label htmlFor="organization">{t('profile.organization')}</Label>
+        <Input
+          id="organization"
+          value={formData.organization}
+          disabled={!isEditing}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange('organization', e.target.value)
+          }
+        />
+      </div>
+      <div>
+        <Label htmlFor="specialization">{t('profile.specialization')}</Label>
+        <Input
+          id="specialization"
+          value={formData.specialization}
+          disabled={!isEditing}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange('specialization', e.target.value)
+          }
+        />
+      </div>
+      <div>
+        <Label htmlFor="bio">{t('profile.bio')}</Label>
+        <Textarea
+          id="bio"
+          value={formData.bio}
+          disabled={!isEditing}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            onChange('bio', e.target.value)
+          }
+          rows={4}
+        />
+      </div>
+    </>
+  )
+}

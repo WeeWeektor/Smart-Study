@@ -1,6 +1,12 @@
 import { apiClient, tokenService } from '@/shared/api'
 import type { User, ApiResponse } from '@/shared/api'
 import axios from 'axios'
+import {
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+  translations,
+} from '@/shared/lib/i18n'
+import { getNestedTranslation, interpolate } from '@/shared/lib/i18n/utils'
 
 function getCookie(name: string): string | undefined {
   const value = `; ${document.cookie}`
@@ -53,6 +59,23 @@ export interface ChangePasswordRequest {
 }
 
 class AuthService {
+  private translate(
+    key: string,
+    params?: Record<string, string | number>
+  ): string {
+    try {
+      const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY)
+      const language =
+        storedLanguage === 'en' || storedLanguage === 'uk'
+          ? storedLanguage
+          : DEFAULT_LANGUAGE.code
+      const template = getNestedTranslation(translations[language], key)
+      return params ? interpolate(template, params) : template
+    } catch {
+      return key
+    }
+  }
+
   async ensureCsrfToken(): Promise<string | null> {
     try {
       let csrfToken = getCookie('csrftoken')
@@ -66,7 +89,7 @@ class AuthService {
       console.log('CSRF токен:', csrfToken || 'не знайдено')
       return csrfToken || null
     } catch (error) {
-      console.error('Помилка отримання CSRF токена:', error)
+      console.error(this.translate('errors.csrfTokenFetchError'), error)
       return null
     }
   }
@@ -76,7 +99,7 @@ class AuthService {
       const csrfToken = await this.ensureCsrfToken()
 
       if (!csrfToken) {
-        throw new Error('Не вдалося отримати CSRF токен')
+        throw new Error(this.translate('errors.csrfTokenFetchError'))
       }
 
       const loginResponse = await apiClient.post('/auth/login/', credentials, {
@@ -102,7 +125,7 @@ class AuthService {
             user: loginResponse.data.user,
           },
           status: 'success',
-          message: 'Вхід успішний',
+          message: this.translate('auth.loginSuccess'),
         }
       }
 
@@ -112,7 +135,7 @@ class AuthService {
           user: loginResponse.data.user,
         },
         status: 'success',
-        message: 'Вхід успішний',
+        message: this.translate('auth.loginSuccess'),
       }
     } catch (error: unknown) {
       console.error('Помилка входу:', error)
@@ -122,25 +145,21 @@ class AuthService {
         console.error('Статус відповіді:', error.response.status)
 
         if (error.response.status === 401) {
-          throw new Error('Невірний email або пароль')
+          throw new Error(this.translate('errors.unauthorized'))
         } else if (error.response.status === 400) {
-          throw new Error('Перевірте правильність введених даних')
+          throw new Error(this.translate('validation.invalidData'))
         } else if (error.response.status === 403) {
-          throw new Error('Помилка CSRF перевірки. Спробуйте оновити сторінку')
+          throw new Error(this.translate('errors.csrfError'))
         } else {
-          throw new Error(`Помилка сервера: ${error.response.status}`)
+          throw new Error(this.translate('errors.serverError'))
         }
       } else if (axios.isAxiosError(error) && error.request) {
         if (error.message.includes('ERR_CERT_AUTHORITY_INVALID')) {
-          throw new Error(
-            'Помилка валідації SSL сертифіката. Додайте сертифікат до довірених або використайте HTTP для розробки.'
-          )
+          throw new Error(this.translate('errors.serverError'))
         }
-        throw new Error(
-          "Сервер не відповідає. Перевірте з'єднання з інтернетом"
-        )
+        throw new Error(this.translate('errors.networkError'))
       } else {
-        throw new Error('Невідома помилка при спробі входу')
+        throw new Error(this.translate('errors.generalError'))
       }
     }
   }
@@ -150,7 +169,7 @@ class AuthService {
       const csrfToken = await this.ensureCsrfToken()
 
       if (!csrfToken) {
-        throw new Error('Не вдалося отримати CSRF токен')
+        throw new Error(this.translate('errors.csrfTokenFetchError'))
       }
 
       await apiClient.post('/auth/register/', data, {
@@ -194,7 +213,7 @@ class AuthService {
             user: loginResponse.data.user || ({} as User),
           },
           status: 'success',
-          message: 'Реєстрація успішна!',
+          message: this.translate('auth.registerSuccess'),
         }
       } catch (loginError) {
         window.location.href = '/?showEmailVerification=true'
@@ -202,7 +221,7 @@ class AuthService {
         return {
           data: { token: '', user: {} as User },
           status: 'success',
-          message: 'Реєстрація успішна!',
+          message: this.translate('auth.registerSuccess'),
         }
       }
     } catch (error: unknown) {
@@ -210,7 +229,7 @@ class AuthService {
 
       if (axios.isAxiosError(error)) {
         if (error.response && error.response.status === 409) {
-          throw new Error('Користувач з таким email вже існує')
+          throw new Error(this.translate('auth.userExists'))
         } else if (
           error.response &&
           error.response.data &&
@@ -220,17 +239,15 @@ class AuthService {
           const message = String(error.response.data.message)
           throw new Error(message)
         } else if (error.response && error.response.status === 403) {
-          throw new Error('Помилка CSRF перевірки. Спробуйте оновити сторінку')
+          throw new Error(this.translate('errors.csrfError'))
         }
       }
 
       if (error instanceof Error) {
-        throw new Error(
-          error.message || 'Помилка при реєстрації. Спробуйте ще раз.'
-        )
+        throw new Error(error.message || this.translate('errors.generalError'))
       }
 
-      throw new Error('Невідома помилка під час реєстрації')
+      throw new Error(this.translate('errors.generalError'))
     }
   }
 
@@ -241,7 +258,7 @@ class AuthService {
       const csrfToken = await this.ensureCsrfToken()
 
       if (!csrfToken) {
-        throw new Error('Не вдалося отримати CSRF токен')
+        throw new Error(this.translate('errors.csrfTokenFetchError'))
       }
 
       const response = await apiClient.post<ApiResponse<{ message: string }>>(
@@ -258,14 +275,16 @@ class AuthService {
       return {
         data: { message: response.data.message || '' },
         status: 'success',
-        message: 'Інструкції для скидання пароля надіслано на вашу пошту',
+        message: this.translate('auth.forgotPasswordInstructionsSent'),
       }
     } catch (error: unknown) {
       console.error('Помилка відновлення паролю:', error)
       if (error instanceof Error) {
-        throw new Error(error.message || 'Не вдалося скинути пароль')
+        throw new Error(
+          error.message || this.translate('auth.passwordChangeError')
+        )
       }
-      throw new Error('Невідома помилка під час скидання пароля')
+      throw new Error(this.translate('errors.generalError'))
     }
   }
 
@@ -277,7 +296,7 @@ class AuthService {
       const csrfToken = await this.ensureCsrfToken()
 
       if (!csrfToken) {
-        throw new Error('Не вдалося отримати CSRF токен')
+        throw new Error(this.translate('errors.csrfTokenFetchError'))
       }
 
       const response = await apiClient.post<ApiResponse<{ message: string }>>(
@@ -297,14 +316,16 @@ class AuthService {
       return {
         data: { message: response.data.message || '' },
         status: 'success',
-        message: 'Пароль успішно змінено',
+        message: this.translate('auth.passwordChanged'),
       }
     } catch (error: unknown) {
       console.error('Помилка зміни паролю:', error)
       if (error instanceof Error) {
-        throw new Error(error.message || 'Не вдалося змінити пароль')
+        throw new Error(
+          error.message || this.translate('auth.passwordChangeError')
+        )
       }
-      throw new Error('Невідома помилка під час зміни пароля')
+      throw new Error(this.translate('errors.generalError'))
     }
   }
 
@@ -360,7 +381,7 @@ class AuthService {
     const csrfToken = await this.ensureCsrfToken()
     if (!csrfToken) {
       console.error('[AuthService] Не вдалося отримати CSRF токен')
-      throw new Error('Не вдалося отримати CSRF токен')
+      throw new Error(this.translate('errors.csrfTokenFetchError'))
     }
 
     console.log(

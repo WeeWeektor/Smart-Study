@@ -1,6 +1,7 @@
 import { Button } from '@/shared/ui'
 import { Loader2, Save, Edit, User, Bell } from 'lucide-react'
 import { ThemeToggle } from '@/shared/ui'
+import { useI18n } from '@/shared/lib'
 
 interface ProfileHeaderProps {
   isEditing: boolean
@@ -19,6 +20,7 @@ export const ProfileHeader = ({
   onCancel,
   disabledSave,
 }: ProfileHeaderProps) => {
+  const { t } = useI18n()
   return (
     <header className="bg-card border-b border-border text-card-foreground">
       <div className="px-6 py-4">
@@ -26,11 +28,9 @@ export const ProfileHeader = ({
           <div>
             <h1 className="text-2xl font-semibold flex items-center text-foreground">
               <User className="w-6 h-6 mr-2 text-brand-600 dark:text-brand-400" />
-              Мій профіль
+              {t('profile.myProfile')}
             </h1>
-            <p className="text-muted-foreground">
-              Керуйте своїм профілем та налаштуваннями
-            </p>
+            <p className="text-muted-foreground">{t('profile.personalInfo')}</p>
           </div>
           <div className="flex items-center space-x-4">
             {isEditing ? (
@@ -40,7 +40,7 @@ export const ProfileHeader = ({
                   onClick={onCancel}
                   disabled={isSaving}
                 >
-                  Скасувати
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
@@ -50,12 +50,12 @@ export const ProfileHeader = ({
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Збереження...
+                      {t('common.loading')}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Зберегти
+                      {t('common.save')}
                     </>
                   )}
                 </Button>
@@ -66,7 +66,7 @@ export const ProfileHeader = ({
                 onClick={onEdit}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Редагувати
+                {t('common.edit')}
               </Button>
             )}
             <ThemeToggle variant="secondary" size="default" />

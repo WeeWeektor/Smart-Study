@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { LogoutButton } from '@/features/logout'
 import { getInitials } from '@/shared/lib'
+import { useI18n } from '@/shared/lib'
 
 interface UserInfo {
   name: string
@@ -23,20 +24,21 @@ interface SidebarProps {
 
 export const Sidebar = ({ userInfo }: SidebarProps) => {
   const location = useLocation()
+  const { t } = useI18n()
 
   const navLinks = [
-    { to: '/dashboard/student', icon: Home, text: 'Головна' },
-    { to: '/courses', icon: BookOpen, text: 'Курси' },
-    { to: '/tests', icon: BarChart3, text: 'Тести' },
-    { to: '/calendar/student', icon: Calendar, text: 'Календар' },
-    { to: '/profile', icon: User, text: 'Профіль' },
+    { to: '/dashboard/student', icon: Home, text: t('common.home') },
+    { to: '/courses', icon: BookOpen, text: t('common.courses') },
+    { to: '/tests', icon: BarChart3, text: t('common.tests') },
+    { to: '/calendar/student', icon: Calendar, text: t('common.calendar') },
+    { to: '/profile', icon: User, text: t('profile.profile') },
   ]
 
   if (userInfo.is_admin === 'admin') {
     navLinks.push({
       to: 'https://127.0.0.1:5173/admin',
       icon: Home,
-      text: 'Адмін панель',
+      text: `Admin ${t('common.adminPanel')}`,
     })
   }
 

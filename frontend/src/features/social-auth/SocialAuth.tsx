@@ -1,5 +1,6 @@
 import { useSocialAuth } from './model/useSocialAuth'
 import { Button } from '@/shared/ui'
+import { useI18n } from '@/shared/lib'
 
 export const SocialAuth = ({
   onError,
@@ -21,6 +22,7 @@ export const SocialAuth = ({
     message?: string
   }) => void
 }) => {
+  const { t } = useI18n()
   const {
     isGoogleLoading,
     isFacebookLoading,
@@ -36,7 +38,7 @@ export const SocialAuth = ({
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="px-2 bg-card text-muted-foreground">
-            Або увійти через
+            {t('auth.orLoginWith')}
           </span>
         </div>
       </div>
@@ -51,7 +53,7 @@ export const SocialAuth = ({
           {isGoogleLoading ? (
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground mr-2"></div>
-              Завантаження...
+              {t('common.loading')}
             </div>
           ) : (
             <>
@@ -87,7 +89,7 @@ export const SocialAuth = ({
           {isFacebookLoading ? (
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground mr-2"></div>
-              Завантаження...
+              {t('common.loading')}
             </div>
           ) : (
             <>

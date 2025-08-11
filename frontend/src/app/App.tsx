@@ -14,6 +14,7 @@ import {
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
 import { useTheme } from '@/shared/hooks/use-theme'
+import { I18nProvider } from '@/shared/lib/i18n/context'
 
 const App = () => {
   const [theme] = useTheme()
@@ -32,23 +33,25 @@ const App = () => {
   }, [theme])
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/verify-email" element={<EmailVerification />} />
+    <I18nProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
 
-        {/*<Route path="/admin/*" element={<AdminPanel />} />*/}
+          {/*<Route path="/admin/*" element={<AdminPanel />} />*/}
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </I18nProvider>
   )
 }
 

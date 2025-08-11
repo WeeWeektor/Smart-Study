@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/shared/ui'
 import { FileText, Users } from 'lucide-react'
+import { useI18n } from '@/shared/lib'
 
 export const TermsOfServiceContent = () => {
+  const { t } = useI18n()
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
@@ -10,7 +12,7 @@ export const TermsOfServiceContent = () => {
           <FileText className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
         <h1 className="text-4xl font-bold text-foreground mb-4">
-          Умови використання
+          {t('profile.termsOfServiceTitle')}
         </h1>
         <p className="text-lg text-muted-foreground">
           Останнє оновлення: {new Date().toLocaleDateString('uk-UA')}
@@ -218,7 +220,7 @@ export const TermsOfServiceContent = () => {
       <div className="mt-12 text-center">
         <Link to="/register">
           <Button className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
-            Повернутися до реєстрації
+            {t('common.backToRegister')}
           </Button>
         </Link>
       </div>

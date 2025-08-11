@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
+import { useI18n } from '@/shared/lib'
 
 interface ProfileInfoCardProps {
   profileData: {
@@ -49,14 +50,12 @@ const getInitials = (name: string, surname: string) => {
   return firstLetter + lastLetter
 }
 
-const roleText = (role: string) => {
-  if (role === 'student') {
-    return 'Студент'
-  } else if (role === 'teacher') {
-    return 'Викладач'
-  } else if (role === 'admin') {
-    return 'Адміністратор'
-  }
+const RoleText: React.FC<{ role: string }> = ({ role }) => {
+  const { t } = useI18n()
+  if (role === 'student') return <>{t('auth.student')}</>
+  if (role === 'teacher') return <>{t('auth.teacher')}</>
+  if (role === 'admin') return <>Admin</>
+  return null
 }
 
 function truncateWithEllipsis(str: string, max: number) {
@@ -104,7 +103,7 @@ export const ProfileInfoCard = ({
                 }
               >
                 <Camera className="w-4 h-4 mr-2" />
-                Змінити фото
+                Change photo
               </Button>
             </div>
           )}
@@ -116,7 +115,7 @@ export const ProfileInfoCard = ({
             {profileData.user.name} {profileData.user.surname}
           </h2>
           <Badge className="mt-2 bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300">
-            {roleText(profileData?.user?.role)}
+            <RoleText role={profileData?.user?.role} />
           </Badge>
         </div>
 

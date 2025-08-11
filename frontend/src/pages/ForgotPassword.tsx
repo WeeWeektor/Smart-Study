@@ -3,8 +3,10 @@ import { Button } from '@/shared/ui'
 import { AuthLayout } from '@/widgets/auth'
 import { ForgotPasswordForm } from '@/features/forgot-password'
 import { ArrowLeft } from 'lucide-react'
+import { useI18n } from '@/shared/lib'
 
 const ForgotPassword = () => {
+  const { t } = useI18n()
   return (
     <AuthLayout
       headerContent={
@@ -14,7 +16,7 @@ const ForgotPassword = () => {
             className="text-muted-foreground hover:text-brand-600 dark:hover:text-brand-400"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад до входу
+            {t('common.backToLogin')}
           </Button>
         </Link>
       }

@@ -2,6 +2,7 @@ import { useTheme } from '@/shared/hooks/use-theme'
 import React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/shared/lib/utils'
+import { useI18n } from '@/shared/lib'
 
 const themeToggleVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
@@ -41,6 +42,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   ...props
 }) => {
   const [theme, setTheme] = useTheme()
+  const { t } = useI18n()
 
   return (
     <button
@@ -48,7 +50,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       className={cn(themeToggleVariants({ variant, size, className }))}
       {...props}
     >
-      {theme === 'light' ? '🌞 Світла' : '🌙 Темна'}
+      {theme === 'light'
+        ? '🌞 ' + `${t('settings.light')}`
+        : '🌙 ' + `${t('settings.dark')}`}
     </button>
   )
 }
