@@ -100,3 +100,5 @@ __pycache__/
 # React/Vite specific
 .vite/
 /backend/docker-compose.yml
+/gen/
+/postgres_data/

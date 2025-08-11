@@ -99,6 +99,11 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('DATABASE_HOST'),
         'PORT': os.getenv('DATABASE_PORT'),
+
+        'OPTIONS': {
+            'MAX_CONNS': 20,
+            'MIN_CONNS': 5,
+        }
     }
 }
 
@@ -119,7 +124,6 @@ SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
-
 
 # Authentication
 AUTH_USER_MODEL = 'users.CustomUser'

@@ -17,8 +17,6 @@ def handle_profile_picture(user_profile, profile_picture):
     if user_profile.profile_picture:
         try:
             delete_profile_picture(user_profile.user.id, delete_folder=False)
-        # except Exception:
-        #     pass
         except (FileNotFoundError, ValidationError, Exception) as e:
             logger = logging.getLogger(__name__)
             logger.warning(f"Не вдалося видалити попереднє фото: {str(e)}")
