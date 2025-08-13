@@ -1,0 +1,465 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-13 15:25+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\users\admin.py:17
+msgid "Personal information"
+msgstr "Personal information"
+
+#: .\users\admin.py:18
+msgid "Access rights"
+msgstr "Access rights"
+
+#: .\users\admin.py:19
+msgid "Additional"
+msgstr "Additional"
+
+#: .\users\admin.py:43
+msgid "Basic information"
+msgstr "Basic information"
+
+#: .\users\admin.py:44
+msgid "Profile details"
+msgstr "Profile details"
+
+#: .\users\admin.py:45
+msgid "Description"
+msgstr "Description"
+
+#: .\users\admin.py:58
+msgid "User"
+msgstr "User"
+
+#: .\users\admin.py:59
+msgid "Notification"
+msgstr "Notification"
+
+#: .\users\admin.py:60
+msgid "Privacy"
+msgstr "Privacy"
+
+#: .\users\models.py:13
+msgid "The Email field must be set"
+msgstr "The Email field must be set"
+
+#: .\users\models.py:74
+msgid "Profile"
+msgstr "Profile"
+
+#: .\users\services\oauth_service.py:30
+msgid "Invalid Facebook token"
+msgstr "Invalid Facebook token"
+
+#: .\users\services\oauth_service.py:42
+msgid "Facebook API error: "
+msgstr "Facebook API error: "
+
+#: .\users\services\oauth_service.py:67
+msgid "Unknown OAuth provider"
+msgstr "Unknown OAuth provider"
+
+#: .\users\services\oauth_service.py:96
+msgid "Successful authorization via"
+msgstr "Successful authorization via"
+
+#: .\users\services\oauth_service.py:96 .\users\services\oauth_service.py:136
+msgid "(session)"
+msgstr "(session)"
+
+#: .\users\services\oauth_service.py:100
+msgid "You must specify role and surname"
+msgstr "You must specify role and surname"
+
+#: .\users\services\oauth_service.py:104 .\users\views.py:64
+msgid "Incorrect role. Acceptable values:"
+msgstr "Incorrect role. Acceptable values:"
+
+#: .\users\services\oauth_service.py:136
+msgid "Successful registration and authorization via"
+msgstr "Successful registration and authorization via"
+
+#: .\users\services\profile_cache_service.py:84
+msgid "Error receiving user settings"
+msgstr "Error receiving user settings"
+
+#: .\users\services\profile_cache_service.py:143
+msgid "Error receiving user profile"
+msgstr "Error receiving user profile"
+
+#: .\users\services\profile_cache_service.py:160
+msgid "Invalidating the user existence cache for email:"
+msgstr "Invalidating the user existence cache for email:"
+
+#: .\users\services\profile_cache_service.py:160
+#: .\users\services\profile_cache_service.py:196
+msgid "successfully"
+msgstr "successfully"
+
+#: .\users\services\profile_cache_service.py:160
+#: .\users\services\profile_cache_service.py:196
+msgid "key not found"
+msgstr "key not found"
+
+#: .\users\services\profile_cache_service.py:171
+msgid "Deleted"
+msgstr "Deleted"
+
+#: .\users\services\profile_cache_service.py:171
+msgid "cached user records"
+msgstr "cached user records"
+
+#: .\users\services\profile_cache_service.py:182
+msgid "Complete invalidation of caches for the user"
+msgstr "Complete invalidation of caches for the user"
+
+#: .\users\services\profile_cache_service.py:182
+msgid "records"
+msgstr "records"
+
+#: .\users\services\profile_cache_service.py:190
+msgid "Disabled cache settings and user profile"
+msgstr "Disabled cache settings and user profile"
+
+#: .\users\services\profile_cache_service.py:196
+msgid "Disabled profile cache for user"
+msgstr "Disabled profile cache for user"
+
+#: .\users\services\profile_cache_service.py:207
+msgid "Cache warmed up for the user"
+msgstr "Cache warmed up for the user"
+
+#: .\users\services\profile_cache_service.py:209
+msgid "Error while warming up the user cache"
+msgstr "Error while warming up the user cache"
+
+#: .\users\services\profile_picture_service.py:14
+msgid "Unsupported file type. Allowed: JPEG, PNG, GIF, WebP."
+msgstr "Unsupported file type. Allowed: JPEG, PNG, GIF, WebP."
+
+#: .\users\services\profile_picture_service.py:17
+msgid "Too much file size. Max allowed: 5MB."
+msgstr "Too much file size. Max allowed: 5MB."
+
+#: .\users\services\profile_picture_service.py:24
+msgid "Unable to delete previous photo:"
+msgstr "Unable to delete previous photo:"
+
+#: .\users\services\profile_picture_service.py:43
+msgid "Error when uploading a file to Supabase:"
+msgstr "Error when uploading a file to Supabase:"
+
+#: .\users\services\profile_picture_service.py:59
+msgid "Error when deleting a file from Supabase:"
+msgstr "Error when deleting a file from Supabase:"
+
+#: .\users\services\profile_picture_service.py:60
+msgid "Unable to delete profile photo:"
+msgstr "Unable to delete profile photo:"
+
+#: .\users\user_utils.py:20
+msgid "Successfully"
+msgstr "Successfully"
+
+#: .\users\user_utils.py:32
+msgid "Unable to create activation token."
+msgstr "Unable to create activation token."
+
+#: .\users\user_utils.py:35
+msgid "Congratulations,"
+msgstr "Congratulations,"
+
+#: .\users\user_utils.py:35
+msgid "Congratulations!"
+msgstr "Congratulations!"
+
+#: .\users\user_utils.py:49
+msgid "Email confirmation for SmartStudy"
+msgstr "Email confirmation for SmartStudy"
+
+#: .\users\user_utils.py:58
+msgid "Password recovery for SmartStudy"
+msgstr "Password recovery for SmartStudy"
+
+#: .\users\utils\csrf_token.py:11
+msgid "CSRF cookie set"
+msgstr "CSRF cookie set"
+
+#: .\users\utils\email_templates.py:10 .\users\utils\email_templates.py:29
+msgid "Thank you for registering with SmartStudy!"
+msgstr "Thank you for registering with SmartStudy!"
+
+#: .\users\utils\email_templates.py:11
+msgid ""
+"To complete your registration and activate your account, please confirm your "
+"email address."
+msgstr ""
+"To complete your registration and activate your account, please confirm your "
+"email address."
+
+#: .\users\utils\email_templates.py:14
+msgid "Confirm email"
+msgstr "Confirm email"
+
+#: .\users\utils\email_templates.py:17 .\users\utils\email_templates.py:36
+msgid ""
+"If you have not registered with SmartStudy, please disregard this letter."
+msgstr ""
+"If you have not registered with SmartStudy, please disregard this letter."
+
+#: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:38
+#: .\users\utils\email_templates.py:57 .\users\utils\email_templates.py:77
+msgid "Sincerely,"
+msgstr "Sincerely,"
+
+#: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:57
+msgid "The SmartStudy team"
+msgstr "The SmartStudy team"
+
+#: .\users\utils\email_templates.py:32
+msgid ""
+"To complete your registration and activate your account, please confirm your "
+"email address by clicking on the link:"
+msgstr ""
+"To complete your registration and activate your account, please confirm your "
+"email address by clicking on the link:"
+
+#: .\users\utils\email_templates.py:39 .\users\utils\email_templates.py:78
+msgid "The SmartStudy Team"
+msgstr "The SmartStudy Team"
+
+#: .\users\utils\email_templates.py:49 .\users\utils\email_templates.py:69
+msgid ""
+"You have received this letter because a request has been made to reset the "
+"password for your SmartStudy account."
+msgstr ""
+"You have received this letter because a request has been made to reset the "
+"password for your SmartStudy account."
+
+#: .\users\utils\email_templates.py:50
+msgid "To reset your password, please follow the link below:"
+msgstr "To reset your password, please follow the link below:"
+
+#: .\users\utils\email_templates.py:53
+msgid "Reset password"
+msgstr "Reset password"
+
+#: .\users\utils\email_templates.py:56 .\users\utils\email_templates.py:75
+msgid "If you did not request a password reset, please ignore this email."
+msgstr "If you did not request a password reset, please ignore this email."
+
+#: .\users\utils\email_templates.py:72
+msgid "To reset your password, please follow this link:"
+msgstr "To reset your password, please follow this link:"
+
+#: .\users\utils\validators.py:6 .\users\utils\validators.py:27
+msgid "Incorrect email format."
+msgstr "Incorrect email format."
+
+#: .\users\utils\validators.py:10
+msgid ""
+"The phone number must contain between 10 and 15 digits, including the prefix."
+msgstr ""
+"The phone number must contain between 10 and 15 digits, including the prefix."
+
+#: .\users\views.py:45
+msgid "Required field missing:"
+msgstr "Required field missing:"
+
+#: .\users\views.py:67
+msgid "First and last names cannot be left blank."
+msgstr "First and last names cannot be left blank."
+
+#: .\users\views.py:89
+msgid "Please confirm your email address."
+msgstr "Please confirm your email address."
+
+#: .\users\views.py:91
+msgid "Email already registered."
+msgstr "Email already registered."
+
+#: .\users\views.py:93 .\users\views.py:182 .\users\views.py:265
+#: .\users\views.py:326 .\users\views.py:378 .\users\views.py:448
+msgid "Invalid JSON format."
+msgstr "Invalid JSON format."
+
+#: .\users\views.py:95
+msgid "Error during registration:"
+msgstr "Error during registration:"
+
+#: .\users\views.py:105
+msgid "Invalid token. The ‘token’ parameter is missing."
+msgstr "Invalid token. The ‘token’ parameter is missing."
+
+#: .\users\views.py:113
+msgid "Email already confirmed."
+msgstr "Email already confirmed."
+
+#: .\users\views.py:126 .\users\views.py:248 .\users\views.py:286
+#: .\users\views.py:320
+msgid "No user with this email address was found."
+msgstr "No user with this email address was found."
+
+#: .\users\views.py:128
+msgid "The confirmation link has expired."
+msgstr "The confirmation link has expired."
+
+#: .\users\views.py:130
+msgid "Invalid token for confirmation."
+msgstr "Invalid token for confirmation."
+
+#: .\users\views.py:141
+msgid "Required fields are missing: email or password."
+msgstr "Required fields are missing: email or password."
+
+#: .\users\views.py:154
+msgid "Incorrect email or password."
+msgstr "Incorrect email or password."
+
+#: .\users\views.py:157 .\users\views.py:251
+msgid "Account is inactive."
+msgstr "Account is inactive."
+
+#: .\users\views.py:160 .\users\views.py:254
+msgid "Email not confirmed. Please check your email."
+msgstr "Email not confirmed. Please check your email."
+
+#: .\users\views.py:184
+msgid "Login error:"
+msgstr "Login error:"
+
+#: .\users\views.py:197
+msgid "No credential provided"
+msgstr "No credential provided"
+
+#: .\users\views.py:231
+msgid "No email address provided."
+msgstr "No email address provided."
+
+#: .\users\views.py:241
+msgid ""
+"A password reset request has been sent. Please check your email or try again "
+"in 5 minutes."
+msgstr ""
+"A password reset request has been sent. Please check your email or try again "
+"in 5 minutes."
+
+#: .\users\views.py:261
+msgid "Please check your email for a password reset link."
+msgstr "Please check your email for a password reset link."
+
+#: .\users\views.py:263
+msgid "Missing field: email"
+msgstr "Missing field: email"
+
+#: .\users\views.py:267
+msgid "Error processing request:"
+msgstr "Error processing request:"
+
+#: .\users\views.py:277
+msgid "No token to reset the password."
+msgstr "No token to reset the password."
+
+#: .\users\views.py:288 .\users\views.py:322
+msgid "The token for resetting the password has expired."
+msgstr "The token for resetting the password has expired."
+
+#: .\users\views.py:290 .\users\views.py:324
+msgid "Invalid token for password reset."
+msgstr "Invalid token for password reset."
+
+#: .\users\views.py:298
+msgid "Required fields are missing: token or password."
+msgstr "Required fields are missing: token or password."
+
+#: .\users\views.py:318
+msgid "Password reset successful."
+msgstr "Password reset successful."
+
+#: .\users\views.py:328
+msgid "Error when resetting password:"
+msgstr "Error when resetting password:"
+
+#: .\users\views.py:336
+msgid "You have successfully logged out."
+msgstr "You have successfully logged out."
+
+#: .\users\views.py:344
+msgid "The user is not authorized."
+msgstr "The user is not authorized."
+
+#: .\users\views.py:351
+msgid ""
+"Required fields are missing: current_password, new_password, or "
+"confirm_password."
+msgstr ""
+"Required fields are missing: current_password, new_password, or "
+"confirm_password."
+
+#: .\users\views.py:358
+msgid "The new password and password confirmation do not match."
+msgstr "The new password and password confirmation do not match."
+
+#: .\users\views.py:367
+msgid "Incorrect current password."
+msgstr "Incorrect current password."
+
+#: .\users\views.py:376
+msgid "Password successfully changed."
+msgstr "Password successfully changed."
+
+#: .\users\views.py:380
+msgid "Error when changing password:"
+msgstr "Error when changing password:"
+
+#: .\users\views.py:388 .\users\views.py:400 .\users\views.py:425
+#: .\users\views.py:457
+msgid "User not authorized."
+msgstr "User not authorized."
+
+#: .\users\views.py:394
+msgid "Error retrieving profile:"
+msgstr "Error retrieving profile:"
+
+#: .\users\views.py:404
+msgid "File not found."
+msgstr "File not found."
+
+#: .\users\views.py:414
+msgid "Avatar successfully uploaded."
+msgstr "Avatar successfully uploaded."
+
+#: .\users\views.py:420
+msgid "Error loading avatar:"
+msgstr "Error loading avatar:"
+
+#: .\users\views.py:443
+msgid "Profile successfully updated."
+msgstr "Profile successfully updated."
+
+#: .\users\views.py:452
+msgid "Error updating profile:"
+msgstr "Error updating profile:"
+
+#: .\users\views.py:470
+msgid "Your account has been successfully deleted."
+msgstr "Your account has been successfully deleted."
+
+#: .\users\views.py:472
+msgid "Error when deleting an account:"
+msgstr "Error when deleting an account:"

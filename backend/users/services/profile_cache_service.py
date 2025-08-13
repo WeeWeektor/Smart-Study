@@ -1,5 +1,6 @@
 import logging
 from django.core.cache import cache
+from django.utils.translation import gettext
 
 from smartStudy_backend import settings
 from ..models import UserSettings, UserProfile, CustomUser
@@ -14,7 +15,7 @@ GOOGLE_TOKEN_CACHE_TIMEOUT = 15 * 60
 RATE_LIMIT_TIMEOUT = 5 * 60
 
 def get_allowed_roles():
-    """Кешування списку дозволених ролей"""
+    """Caching the list of allowed roles"""
     cache_key = "allowed_roles"
     roles = cache.get(cache_key)
 
@@ -37,7 +38,7 @@ def get_user_status_cache_key(user_id):
     return f"user_status_{user_id}"
 
 def get_user_existence_cache(email):
-    """Кешування перевірки існування користувача"""
+    """Caching user existence checks"""
     if not email:
         return {"exists": False}
 
@@ -61,7 +62,7 @@ def get_user_existence_cache(email):
     return user_data
 
 def get_cached_user_settings(user):
-    """Кешування налаштувань користувача."""
+    """Caching user settings."""
     cache_key = get_settings_cache_key(user.id)
     cached_settings = cache.get(cache_key)
 
@@ -80,11 +81,11 @@ def get_cached_user_settings(user):
         cache.set(cache_key, settings_data, SETTINGS_CACHE_TIMEOUT)
         return settings_data
     except Exception as e:
-        logger.error(f"Помилка при отриманні налаштувань користувача {user.id}: {str(e)}")
+        logger.error(f"{gettext("Error receiving user settings")} {user.id}: {str(e)}")
         return {}
 
 def get_cached_user_status(user):
-    """Кешування статусу користувача"""
+    """Caching user status"""
     cache_key = get_user_status_cache_key(user.id)
     cached_status = cache.get(cache_key)
 
@@ -101,7 +102,7 @@ def get_cached_user_status(user):
     return status_data
 
 def get_cached_profile(user):
-    """Кешування профілю користувача."""
+    """Caching user profiles."""
     cache_key = get_profile_cache_key(user.id)
     cached_data = cache.get(cache_key)
 
@@ -139,7 +140,7 @@ def get_cached_profile(user):
         return profile_data
 
     except Exception as e:
-        logger.error(f"Помилка при отриманні профілю користувача {user.id}: {str(e)}")
+        logger.error(f"{gettext("Error receiving user profile")} {user.id}: {str(e)}")
         return {
             "user": {
                 "id": str(user.id),
@@ -153,56 +154,56 @@ def get_cached_profile(user):
         }
 
 def invalidate_user_existence_cache(email):
-    """Інвалідація кешу існування користувача"""
+    """Invalidating the user existence cache"""
     cache_key = get_user_existence_cache_key(email)
     result = cache.delete(cache_key)
-    logger.info(f"Інвалідація кешу існування користувача для email: {email} - {'успішно' if result else 'ключ не знайдено'}")
+    logger.info(f"{gettext("Invalidating the user existence cache for email:")} {email} - {gettext('successfully') if result else gettext('key not found')}")
     return result
 
 def invalidate_user_cache(user_id):
-    """Видалення всіх кешованих даних користувача."""
+    """Delete all cached user data."""
     cache_keys = [
         get_profile_cache_key(user_id),
         get_settings_cache_key(user_id),
         get_user_status_cache_key(user_id)
     ]
     delete_count = cache.delete_many(cache_keys)
-    logger.info(f"Видалено {delete_count} кешованих записів для користувача {user_id}")
+    logger.info(f"{gettext("Deleted")} {delete_count} {gettext("cached user records")} {user_id}")
     return delete_count
 
 
 def invalidate_all_user_caches(user_id, email=None):
-    """Повна інвалідація всіх кешів користувача"""
+    """Complete invalidation of all user caches"""
     count = invalidate_user_cache(user_id)
     if email:
         invalidate_user_existence_cache(email)
         count += 1
 
-    logger.info(f"Повна інвалідація кешів для користувача {user_id}: {count} записів")
+    logger.info(f"{gettext("Complete invalidation of caches for the user")} {user_id}: {count} {gettext("records")}")
     return count
 
 def invalidate_user_settings_cache(user_id):
-    """Видалення тільки кешу налаштувань"""
+    """Delete only the settings cache"""
     cache_key = get_settings_cache_key(user_id)
     cache.delete(cache_key)
     cache.delete(get_profile_cache_key(user_id))
-    logger.info(f"Інвалідовано кеш налаштувань та профілю для користувача {user_id}")
+    logger.info(f"{gettext("Disabled cache settings and user profile")} {user_id}")
 
 def invalidate_user_profile_cache(user_id):
-    """Видалення тільки кешу профілю"""
+    """Delete only the profile cache"""
     cache_key = get_profile_cache_key(user_id)
     result = cache.delete(cache_key)
-    logger.info(f"Інвалідовано кеш профілю для користувача {user_id} - {'успішно' if result else 'ключ не знайдено'}")
+    logger.info(f"{gettext("Disabled profile cache for user")} {user_id} - {gettext('successfully') if result else gettext('key not found')}")
     return result
 
 def warm_user_cache(user, warm_existence=True):
-    """Попереднє завантаження кешу для користувача"""
+    """Preloading the cache for the user"""
     try:
         get_cached_profile(user)
 
         if warm_existence:
             get_user_existence_cache(user.email)
 
-        logger.info(f"Кеш прогрітий для користувача {user.id}")
+        logger.info(f"{gettext("Cache warmed up for the user")} {user.id}")
     except Exception as e:
-        logger.error(f"Помилка при прогріві кешу для користувача {user.id}: {str(e)}")
+        logger.error(f"{gettext("Error while warming up the user cache")} {user.id}: {str(e)}")

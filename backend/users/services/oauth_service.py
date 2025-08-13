@@ -2,6 +2,7 @@ from django.contrib.auth import login, get_user_model
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.utils.crypto import get_random_string
+from django.utils.translation import gettext
 
 from smartStudy_backend import settings
 from users.models import UserSettings
@@ -26,7 +27,7 @@ def verify_facebook_token(token):
     debug_data = debug_response.json()
 
     if not debug_data.get("data", {}).get("is_valid"):
-        raise ValueError("Invalid Facebook token")
+        raise ValueError(gettext("Invalid Facebook token"))
 
     user_url = "https://graph.facebook.com/me"
     user_params = {
@@ -38,7 +39,7 @@ def verify_facebook_token(token):
     user_data = user_response.json()
 
     if "error" == user_data:
-        raise ValueError("Помилка Facebook API: " + user_data["error"]["message"])
+        raise ValueError(gettext("Facebook API error: ") + user_data["error"]["message"])
 
     return {
         "email": user_data.get("email"),
@@ -63,7 +64,7 @@ def handle_oauth_login(request, token, provider, name=None, surname=None, role=N
             elif provider == "facebook":
                 idinfo = verify_facebook_token(token)
             else:
-                raise ValueError("Невідомий провайдер OAuth")
+                raise ValueError(gettext("Unknown OAuth provider"))
 
             cache.set(cache_key, idinfo, timeout=15*60)
 
@@ -92,15 +93,15 @@ def handle_oauth_login(request, token, provider, name=None, surname=None, role=N
                     'surname': user.surname,
                     'role': user.role,
                 },
-                'message': f'Успішна авторизація через {provider} (сесія)'
+                'message': f'{gettext("Successful authorization via")} {provider} {gettext("(session)")}'
             }, status=200)
 
         if not role or not oauth_surname:
-            return JsonResponse({'error': 'Необхідно вказати role та surname'}, status=400)
+            return JsonResponse({'error': gettext('You must specify role and surname')}, status=400)
 
         if role not in get_allowed_roles():
             return JsonResponse({
-                "error": f"Невірна роль. Допустимі значення: {', '.join(get_allowed_roles())}"
+                "error": f"{gettext("Incorrect role. Acceptable values:")} {', '.join(get_allowed_roles())}"
             }, status=400)
 
         user = User.objects.create_user(
@@ -132,7 +133,7 @@ def handle_oauth_login(request, token, provider, name=None, surname=None, role=N
                 'surname': user.surname,
                 'role': user.role,
             },
-            'message': f'Успішна реєстрація та авторизація через {provider} (сесія)'
+            'message': f'{gettext("Successful registration and authorization via")} {provider} {gettext("(session)")}'
         }, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

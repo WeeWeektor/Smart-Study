@@ -7,6 +7,8 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   config => {
+    config.headers['Accept-Language'] =
+      localStorage.getItem('smartStudy_language') || 'en'
     return config
   },
   error => {

@@ -235,7 +235,7 @@ export const ProfileTabs = ({
       return
     }
     if (newPassword.length < 8) {
-      setPasswordError(`${t('validation.passwordMinLength')}`)
+      setPasswordError(`${(t('validation.passwordMinLength'), { min: 8 })}`)
       return
     }
     if (newPassword !== confirmPassword) {

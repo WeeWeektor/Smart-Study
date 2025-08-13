@@ -7,13 +7,14 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils.decorators import method_decorator
-from django.views import View
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.shortcuts import redirect
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.http import JsonResponse
+from django.utils.translation import gettext
 
 from smartStudy_backend import settings
+from common import LocalizedView, LocalizedAPIView
 from .models import CustomUser, UserSettings, UserProfile
 from .services.oauth_service import handle_oauth_login
 from .user_utils import send_verification_email, error_response, success_response, send_password_reset_email
@@ -30,11 +31,9 @@ from .services.profile_cache_service import (
 )
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 
-from rest_framework.views import APIView
-
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class RegisterView(View):
+class RegisterView(LocalizedView):
     @staticmethod
     def post(request):
         try:
@@ -43,7 +42,7 @@ class RegisterView(View):
             required_fields = ['name', 'surname', 'role', 'email', 'password']
             for field in required_fields:
                 if field not in data:
-                    return error_response(f"Відсутнє обов'язкове поле: {field}")
+                    return error_response(f"{gettext("Required field missing:")} {field}")
 
             try:
                 cached_email_validator(data['email'])
@@ -62,10 +61,10 @@ class RegisterView(View):
                 return error_response(str(e))
 
             if data['role'] not in get_allowed_roles():
-                return error_response(f'Невірна роль. Допустимі значення: {", ".join(get_allowed_roles())}')
+                return error_response(f'{gettext("Incorrect role. Acceptable values:")} {", ".join(get_allowed_roles())}')
 
             if not data['name'].strip() or not data['surname'].strip():
-                return error_response("Ім'я та прізвище не можуть бути порожніми.")
+                return error_response(gettext('First and last names cannot be left blank.'))
 
             user = CustomUser.objects.create_user(
                 name=data['name'],
@@ -87,23 +86,23 @@ class RegisterView(View):
             )
 
             send_verification_email(user)
-            return success_response({"message": "Будь ласка, підтвердіть email."})
+            return success_response({"message": gettext('Please confirm your email address.')})
         except IntegrityError:
-            return error_response("Email вже зайнятий.")
+            return error_response(gettext('Email already registered.'))
         except json.JSONDecodeError:
-            return error_response("Невірний формат JSON.")
+            return error_response(gettext('Invalid JSON format.'))
         except Exception as e:
-            return error_response(f"Помилка при реєстрації: {str(e)}", 500)
+            return error_response(f"{gettext('Error during registration:')} {str(e)}", 500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class VerifyEmailView(View):
+class VerifyEmailView(LocalizedView):
     @staticmethod
     def get(request):
         token = request.GET.get('token')
 
         if not token:
-            return error_response('Невірний токен. Параметр \'token\' відсутній.')
+            return error_response(gettext('Invalid token. The ‘token’ parameter is missing.'))
 
         signer = TimestampSigner()
         try:
@@ -111,7 +110,7 @@ class VerifyEmailView(View):
             try:
                 user = CustomUser.objects.get(email=email)
                 if user.is_verified_email:
-                    return success_response({"message": "Email вже підтверджено."})
+                    return success_response({"message": gettext('Email already confirmed.')})
 
                 user.is_verified_email = True
                 user.is_active = True
@@ -124,22 +123,22 @@ class VerifyEmailView(View):
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return redirect(f"{settings.FRONTEND_URL}/verify-email?token={token}")
             except CustomUser.DoesNotExist:
-                return error_response("Користувача з таким email не знайдено.")
+                return error_response(gettext('No user with this email address was found.'))
         except SignatureExpired:
-            return error_response("Термін дії посилання для підтвердження закінчився.")
+            return error_response(gettext('The confirmation link has expired.'))
         except BadSignature:
-            return error_response("Невірний токен для підтвердження.")
+            return error_response(gettext("Invalid token for confirmation."))
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class LoginView(View):
+class LoginView(LocalizedView):
     @staticmethod
     def post(request):
         try:
             data = json.loads(request.body)
 
             if 'email' not in data or 'password' not in data:
-                return error_response('Відсутні обов\'язкові поля: email або password.')
+                return error_response(gettext('Required fields are missing: email or password.'))
 
             email = data['email']
             password = data['password']
@@ -152,13 +151,13 @@ class LoginView(View):
             user: Optional[CustomUser] = authenticate(request, username=email, password=password)
 
             if user is None:
-                return error_response('Неправильний email або пароль.', 400)
+                return error_response(gettext('Incorrect email or password.'), 400)
 
             if not user.is_active:
-                return error_response('Обліковий запис неактивний.', 400)
+                return error_response(gettext('Account is inactive.'), 400)
 
             if not user.is_verified_email:
-                return error_response('Email не підтверджено. Перевірте вашу пошту.', 400)
+                return error_response(gettext('Email not confirmed. Please check your email.'), 400)
 
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
@@ -180,13 +179,13 @@ class LoginView(View):
                 # "redirect": "/admin/" if user.is_staff or user.is_superuser else "/",
             })
         except json.JSONDecodeError:
-            return error_response("Невірний формат JSON.", 400)
+            return error_response(gettext('Invalid JSON format.'), 400)
         except Exception as e:
-            return error_response(f"Помилка при вході: {str(e)}", 500)
+            return error_response(f"{gettext('Login error:')} {str(e)}", 500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class BaseAuthView(APIView):
+class BaseAuthView(LocalizedAPIView):
     provider = None
 
     def post(self, request):
@@ -195,7 +194,7 @@ class BaseAuthView(APIView):
             token = data.get('credential')
 
             if not token:
-                return JsonResponse({'error': 'No credential provided'}, status=400)
+                return JsonResponse({'error': gettext('No credential provided')}, status=400)
 
             return handle_oauth_login(
                 request=request,
@@ -221,7 +220,7 @@ class FacebookAuthView(BaseAuthView):
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class ForgotPasswordView(View):
+class ForgotPasswordView(LocalizedView):
     @staticmethod
     def post(request):
         try:
@@ -229,7 +228,7 @@ class ForgotPasswordView(View):
             email = data['email']
 
             if not email:
-                return error_response("Відсутня електронна пошта.")
+                return error_response(gettext('No email address provided.'))
 
             try:
                 cached_email_validator(email)
@@ -239,43 +238,43 @@ class ForgotPasswordView(View):
             cache_key = f"forgot_reset_{hash(email)}"
             if cache.get(cache_key):
                 return error_response(
-                    "Запит на скидання паролю вже надіслано. Будь ласка, перевірте вашу пошту, або спробуйте через 5 хвилин.",
-                    429
+                    message=gettext('A password reset request has been sent. Please check your email or try again in 5 minutes.'),
+                    status=429
                 )
 
             user_data = get_user_existence_cache(email)
 
             if not user_data['exists']:
-                return error_response('Користувача з таким email не знайдено.', 404)
+                return error_response(gettext('No user with this email address was found.'), 404)
 
             if not user_data['is_active']:
-                return error_response("Обліковий запис неактивний.", 400)
+                return error_response(gettext('Account is inactive.'), 400)
 
             if not user_data['is_verified']:
-                return error_response("Email не підтверджено. Перевірте вашу пошту.", 400)
+                return error_response(gettext('Email not confirmed. Please check your email.'), 400)
 
             user = CustomUser.objects.get(email=email)
             send_password_reset_email(user)
 
             cache.set(cache_key, True, timeout=5*60)
 
-            return success_response({"message": "Будь ласка, перевірте вашу пошту для скидання паролю."})
+            return success_response({"message": gettext('Please check your email for a password reset link.')})
         except KeyError:
-            return error_response("Відсутнє поле: email")
+            return error_response(gettext('Missing field: email'), 400)
         except json.JSONDecodeError:
-            return error_response("Невірний формат JSON.", 400)
+            return error_response(gettext('Invalid JSON format.'), 400)
         except Exception as e:
-            return error_response(f"Помилка при обробці запиту: {str(e)}", 500)
+            return error_response(f"{gettext('Error processing request:')} {str(e)}", 500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class ResetPasswordView(View):
+class ResetPasswordView(LocalizedView):
     @staticmethod
     def get(request):
         token = request.GET.get('token')
 
         if not token:
-            return error_response('Відсутній токен для скидання паролю.', 400)
+            return error_response(gettext('No token to reset the password.'), 400)
 
         signer = TimestampSigner()
         try:
@@ -284,11 +283,11 @@ class ResetPasswordView(View):
                 CustomUser.objects.get(email=email)
                 return redirect(f"{settings.FRONTEND_URL}/reset-password?token={token}")
             except CustomUser.DoesNotExist:
-                return error_response("Користувача з таким email не знайдено.", 404)
+                return error_response(gettext('No user with this email address was found.'), 404)
         except SignatureExpired:
-            return error_response("Термін дії токена для скидання паролю закінчився.", 400)
+            return error_response(gettext('The token for resetting the password has expired.'), 400)
         except BadSignature:
-            return error_response("Невірний токен для скидання паролю.", 400)
+            return error_response(gettext('Invalid token for password reset.'), 400)
 
     @staticmethod
     def post(request):
@@ -296,7 +295,7 @@ class ResetPasswordView(View):
             data = json.loads(request.body)
 
             if 'token' not in data or 'password' not in data:
-                return error_response('Відсутні обов\'язкові поля: token або password.')
+                return error_response(gettext('Required fields are missing: token or password.'))
 
             token = data['token']
             password = data['password']
@@ -316,47 +315,47 @@ class ResetPasswordView(View):
 
                     invalidate_all_user_caches(user.id, user.email)
 
-                    return success_response({"message": "Пароль успішно змінено"})
+                    return success_response({"message": gettext('Password reset successful.')})
                 except CustomUser.DoesNotExist:
-                    return error_response("Користувача з таким email не знайдено.", 404)
+                    return error_response(gettext('No user with this email address was found.'), 404)
             except SignatureExpired:
-                return error_response("Термін дії токена для скидання паролю закінчився.", 400)
+                return error_response(gettext('The token for resetting the password has expired.'), 400)
             except BadSignature:
-                return error_response("Невірний токен для скидання паролю.", 400)
+                return error_response(gettext('Invalid token for password reset.'), 400)
         except json.JSONDecodeError:
-            return error_response("Невірний формат JSON.", 400)
+            return error_response(gettext('Invalid JSON format.'), 400)
         except Exception as e:
-            return error_response(f"Помилка при скиданні паролю: {str(e)}", 500)
+            return error_response(f"{gettext('Error when resetting password:')} {str(e)}", 500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class LogoutView(View):
+class LogoutView(LocalizedView):
     @staticmethod
     def post(request):
         logout(request)
-        return success_response({"message": "Успішний вихід з системи."})
+        return success_response({"message": gettext('You have successfully logged out.')})
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class ChangePasswordView(View):
+class ChangePasswordView(LocalizedView):
     @staticmethod
     def patch(request):
         if not request.user.is_authenticated:
-            return error_response("Користувач не авторизований.", 401)
+            return error_response(gettext('The user is not authorized.'), 401)
 
         try:
             data = json.loads(request.body)
 
             if 'current_password' not in data or 'new_password' not in data or 'confirm_password' not in data:
                 return error_response(
-                    'Відсутні обов\'язкові поля: current_password, new_password або confirm_password.')
+                    gettext('Required fields are missing: current_password, new_password, or confirm_password.'))
 
             current_password = data['current_password']
             new_password = data['new_password']
             confirm_password = data['confirm_password']
 
             if new_password != confirm_password:
-                return error_response("Новий пароль і підтвердження паролю не збігаються.", 400)
+                return error_response(gettext('The new password and password confirmation do not match.'), 400)
 
             try:
                 validate_password(new_password)
@@ -365,7 +364,7 @@ class ChangePasswordView(View):
 
             user = request.user
             if not user.check_password(current_password):
-                return error_response("Невірний поточний пароль.", 400)
+                return error_response(gettext('Incorrect current password.'), 400)
 
             user.set_password(new_password)
             user.save()
@@ -374,35 +373,35 @@ class ChangePasswordView(View):
 
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            return success_response({"message": "Пароль успішно змінено."})
+            return success_response({"message": gettext('Password successfully changed.')})
         except json.JSONDecodeError:
-            return error_response("Невірний формат JSON.", 400)
+            return error_response(gettext('Invalid JSON format.'), 400)
         except Exception as e:
-            return error_response(f"Помилка при зміні паролю: {str(e)}", 500)
+            return error_response(f"{gettext('Error when changing password:')} {str(e)}", 500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
-class ProfileView(View):
+class ProfileView(LocalizedView):
     @staticmethod
     def get(request):
         if not request.user.is_authenticated:
-            return error_response("Користувач не авторизований.", 401)
+            return error_response(gettext('User not authorized.'), 401)
 
         try:
             profile_data = get_cached_profile(request.user)
             return success_response(profile_data)
         except Exception as e:
-            return error_response(f"Помилка при отриманні профілю: {str(e)}", 500)
+            return error_response(f"{gettext('Error retrieving profile:')} {str(e)}", 500)
 
     @staticmethod
     def post(request):
-        """Окремий ендпоінт для завантаження аватарки"""
+        """Separate endpoint for uploading avatars"""
         if not request.user.is_authenticated:
-            return error_response("Користувач не авторизований.", 401)
+            return error_response(gettext('User not authorized.'), 401)
 
         try:
             if 'profile_picture' not in request.FILES:
-                return error_response("Файл не знайдено.", 400)
+                return error_response(gettext('File not found.'), 400)
 
             profile_picture = request.FILES['profile_picture']
             user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
@@ -412,18 +411,18 @@ class ProfileView(View):
 
             return success_response({
                 "url": user_profile.profile_picture,
-                "message": "Аватарку успішно завантажено."
+                "message": gettext('Avatar successfully uploaded.')
             })
 
         except ValidationError as e:
             return error_response(str(e), 400)
         except Exception as e:
-            return error_response(f"Помилка при завантаженні аватарки: {str(e)}", 500)
+            return error_response(f"{gettext('Error loading avatar:')} {str(e)}", 500)
 
     @staticmethod
     def patch(request):
         if not request.user.is_authenticated:
-            return error_response("Користувач не авторизований.", 401)
+            return error_response(gettext('User not authorized.'), 401)
 
         try:
             data, is_multipart = parse_request_data(request)
@@ -441,21 +440,21 @@ class ProfileView(View):
             updated_profile_data = get_cached_profile(user)
 
             return success_response({
-                "message": "Профіль успішно оновлено.",
+                "message": gettext('Profile successfully updated.'),
                 "profile_data": updated_profile_data
             })
 
         except json.JSONDecodeError:
-            return error_response("Невірний формат JSON.", 400)
+            return error_response(gettext('Invalid JSON format.'), 400)
         except ValidationError as e:
             return error_response(str(e), 400)
         except Exception as e:
-            return error_response(f"Помилка при оновленні профілю: {str(e)}", 500)
+            return error_response(f"{gettext('Error updating profile:')} {str(e)}", 500)
 
     @staticmethod
     def delete(request):
         if not request.user.is_authenticated:
-            return error_response("Користувач не авторизований.", 401)
+            return error_response(gettext('User not authorized.'), 401)
 
         try:
             user = request.user
@@ -468,6 +467,6 @@ class ProfileView(View):
 
             invalidate_all_user_caches(user_id, user_email)
 
-            return success_response({"message": "Обліковий запис успішно видалено."})
+            return success_response({"message": gettext('Your account has been successfully deleted.')})
         except Exception as e:
-            return error_response(f"Помилка при видаленні облікового запису: {str(e)}", 500)
+            return error_response(f"{gettext('Error when deleting an account:')} {str(e)}", 500)

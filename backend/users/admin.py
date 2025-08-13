@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.translation import gettext
 
 from users.models import CustomUser, UserProfile, UserSettings
 
@@ -13,9 +14,9 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Персональна інформація', {'fields': ('name', 'surname', 'phone_number')}),
-        ('Права доступу', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Додаткове', {'fields': ('role', 'is_verified_email', 'last_login')}),
+        (gettext('Personal information'), {'fields': ('name', 'surname', 'phone_number')}),
+        (gettext('Access rights'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (gettext('Additional'), {'fields': ('role', 'is_verified_email', 'last_login')}),
     )
 
     add_fieldsets = (
@@ -39,9 +40,9 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'user__name', 'user__surname', 'organization', 'specialization')
 
     fieldsets = (
-        ('Основна інформація', {'fields': ('user', 'profile_picture')}),
-        ('Деталі профілю', {'fields': ('location', 'organization', 'specialization', 'education_level')}),
-        ('Опис', {'fields': ('bio',)}),
+        (gettext('Basic information'), {'fields': ('user', 'profile_picture')}),
+        (gettext('Profile details'), {'fields': ('location', 'organization', 'specialization', 'education_level')}),
+        (gettext('Description'), {'fields': ('bio',)}),
     )
 
 
@@ -54,7 +55,7 @@ class UserSettingsAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'user__name', 'user__surname')
 
     fieldsets = (
-        ('Користувач', {'fields': ('user',)}),
-        ('Сповіщення', {'fields': ('email_notifications', 'push_notifications', 'deadline_reminders')}),
-        ('Приватність', {'fields': ('show_profile_to_others', 'show_achievements')}),
+        (gettext('User'), {'fields': ('user',)}),
+        (gettext('Notification'), {'fields': ('email_notifications', 'push_notifications', 'deadline_reminders')}),
+        (gettext('Privacy'), {'fields': ('show_profile_to_others', 'show_achievements')}),
     )

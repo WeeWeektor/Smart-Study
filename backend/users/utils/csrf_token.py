@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext
 from django.views import View
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -7,4 +8,4 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 class CSRFTokenView(View):
     @staticmethod
     def get(request):
-        return JsonResponse({'success': 'CSRF cookie set'})
+        return JsonResponse({'success': gettext('CSRF cookie set')})

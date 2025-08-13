@@ -1,37 +1,44 @@
+from django.utils.translation import gettext
+
+
 def get_verification_email_html(greeting, activation_url):
     return f"""
     <html>
       <body style="font-family: Arial, sans-serif; line-height: 1.6;">
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e9e9e9; border-radius: 5px;">
           <h2 style="color: #4a4a4a;">{greeting}</h2>
-          <p>Дякуємо за реєстрацію в системі SmartStudy!</p>
-          <p>Для завершення реєстрації та активації облікового запису, будь ласка, підтвердіть свою електронну пошту.</p>
+          <p>{gettext('Thank you for registering with SmartStudy!')}</p>
+          <p>{gettext('To complete your registration and activate your account, please confirm your email address.')}</p>
           <p style="margin: 25px 0;">
             <a href="{activation_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
-              Підтвердити електронну пошту
+              {gettext('Confirm email')}
             </a>
           </p>
-          <p>Якщо ви не реєструвались на SmartStudy, проігноруйте цей лист.</p>
-          <p>З повагою,<br>Команда SmartStudy</p>
+          <p>{gettext('If you have not registered with SmartStudy, please disregard this letter.')}</p>
+          <p>{gettext('Sincerely,')}<br>{gettext('The SmartStudy team')}</p>
         </div>
       </body>
     </html>
     """
 
+
 def get_verification_email_plain(greeting, activation_url):
     return f"""
     {greeting}
 
-    Дякуємо за реєстрацію в системі SmartStudy!
+    {gettext('Thank you for registering with SmartStudy!')}
 
-    Для завершення реєстрації та активації облікового запису, будь ласка, підтвердіть свою електронну пошту за посиланням:
+    {gettext(
+        'To complete your registration and activate your account, please confirm your email address by clicking on the link:'
+    )}
     {activation_url}
 
-    Якщо ви не реєструвались на SmartStudy, проігноруйте цей лист.
+    {gettext('If you have not registered with SmartStudy, please disregard this letter.')}
 
-    З повагою,
-    Команда SmartStudy
+    {gettext('Sincerely,')}
+    {gettext('The SmartStudy Team')}
     """
+
 
 def get_password_reset_email_html(greeting, reset_url):
     return f"""
@@ -39,31 +46,34 @@ def get_password_reset_email_html(greeting, reset_url):
       <body style="font-family: Arial, sans-serif; line-height: 1.6;">
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e9e9e9; border-radius: 5px;">
           <h2 style="color: #4a4a4a;">{greeting}</h2>
-          <p>Ви отримали цей лист, оскільки надійшов запит на відновлення пароля для вашого облікового запису в системі SmartStudy.</p>
-          <p>Щоб скинути пароль, будь ласка, перейдіть за посиланням нижче:</p>
+          <p>{gettext('You have received this letter because a request has been made to reset the password for your SmartStudy account.')}</p>
+          <p>{gettext('To reset your password, please follow the link below:')}</p>
           <p style="margin: 25px 0;">
             <a href="{reset_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
-              Скинути пароль
+              {gettext('Reset password')}
             </a>
           </p>
-          <p>Якщо ви не запитували відновлення пароля, проігноруйте цей лист.</p>
-          <p>З повагою,<br>Команда SmartStudy</p>
+          <p>{gettext('If you did not request a password reset, please ignore this email.')}</p>
+          <p>{gettext('Sincerely,')}<br>{gettext('The SmartStudy team')}</p>
         </div>
       </body>
     </html>
     """
 
+
 def get_password_reset_email_plain(greeting, reset_url):
     return f"""
     {greeting}
 
-    Ви отримали цей лист, оскільки надійшов запит на відновлення пароля для вашого облікового запису в системі SmartStudy.
+    {gettext(
+        'You have received this letter because a request has been made to reset the password for your SmartStudy account.'
+    )}
 
-    Щоб скинути пароль, будь ласка, перейдіть за посиланням:
+    {gettext('To reset your password, please follow this link:')}
     {reset_url}
 
-    Якщо ви не запитували відновлення пароля, проігноруйте цей лист.
+    {gettext('If you did not request a password reset, please ignore this email.')}
 
-    З повагою,
-    Команда SmartStudy
+    {gettext('Sincerely,')}
+    {gettext('The SmartStudy Team')}
     """
