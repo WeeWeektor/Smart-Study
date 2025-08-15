@@ -27,7 +27,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
   return (
     <div className="space-y-2">
       <Label htmlFor="password" className="text-foreground">
-        {label ?? t('auth.password')}
+        {label ?? t('Пароль')}
       </Label>
       <div className="relative">
         <Input
@@ -37,12 +37,12 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           onChange={e => onChange(e.target.value)}
           required={required}
           disabled={disabled}
-          placeholder={placeholder ?? t('auth.password')}
+          placeholder={placeholder ?? t('Введіть пароль')}
           className="pr-10 border-border focus:border-brand-500 focus:ring-brand-500"
         />
         <button
           type="button"
-          aria-label={show ? t('auth.hidePassword') : t('auth.showPassword')}
+          aria-label={show ? t('Сховати пароль') : t('Показати пароль')}
           className="absolute inset-y-0 right-0 flex items-center justify-center w-10 h-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none hover:bg-muted transition rounded"
           onClick={() => setShow(s => !s)}
           tabIndex={-1}

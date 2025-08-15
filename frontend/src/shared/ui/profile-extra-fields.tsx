@@ -32,29 +32,31 @@ export const ProfileExtraFields: React.FC<ProfileExtraFieldsProps> = ({
   return (
     <>
       <div className="relative">
-        <Label htmlFor="education_level">{t('profile.educationLevel')}</Label>
+        <Label htmlFor="education_level">{t('Рівень освіти')}</Label>
         <Select
           value={formData.education_level || 'not_specified'}
           onValueChange={(value: string) => onChange('education_level', value)}
           disabled={!isEditing}
         >
           <SelectTrigger>
-            <SelectValue placeholder={t('common.notSpecified')} />
+            <SelectValue placeholder={t('Не вказано')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="not_specified" className="text-muted-foreground">
-              {t('common.notSpecified')}
+              {t('Не вказано')}
             </SelectItem>
-            <SelectItem value="bachelor">Bachelor</SelectItem>
-            <SelectItem value="master">Master</SelectItem>
-            <SelectItem value="doctor of science">Doctor of Science</SelectItem>
-            <SelectItem value="diploma">Diploma</SelectItem>
-            <SelectItem value="certificate">Certificate</SelectItem>
+            <SelectItem value="bachelor">{t('Бакалавр')}</SelectItem>
+            <SelectItem value="master">{t('Магістр')}</SelectItem>
+            <SelectItem value="doctor of science">
+              {t('Доктор наук')}
+            </SelectItem>
+            <SelectItem value="diploma">{t('Диплом')}</SelectItem>
+            <SelectItem value="certificate">{t('Сертифікат')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div>
-        <Label htmlFor="location">{t('profile.location')}</Label>
+        <Label htmlFor="location">{t('Місцезнаходження')}</Label>
         <Input
           id="location"
           value={formData.location}
@@ -65,7 +67,7 @@ export const ProfileExtraFields: React.FC<ProfileExtraFieldsProps> = ({
         />
       </div>
       <div>
-        <Label htmlFor="organization">{t('profile.organization')}</Label>
+        <Label htmlFor="organization">{t('Організація')}</Label>
         <Input
           id="organization"
           value={formData.organization}
@@ -76,7 +78,7 @@ export const ProfileExtraFields: React.FC<ProfileExtraFieldsProps> = ({
         />
       </div>
       <div>
-        <Label htmlFor="specialization">{t('profile.specialization')}</Label>
+        <Label htmlFor="specialization">{t('Спеціалізація')}</Label>
         <Input
           id="specialization"
           value={formData.specialization}
@@ -87,7 +89,7 @@ export const ProfileExtraFields: React.FC<ProfileExtraFieldsProps> = ({
         />
       </div>
       <div>
-        <Label htmlFor="bio">{t('profile.bio')}</Label>
+        <Label htmlFor="bio">{t('Про себе')}</Label>
         <Textarea
           id="bio"
           value={formData.bio}

@@ -14,3 +14,7 @@ export interface TranslationNamespace {
 export interface Translations {
   [namespace: string]: TranslationNamespace
 }
+
+export interface FlatTranslations {
+  [key: string]: string
+}

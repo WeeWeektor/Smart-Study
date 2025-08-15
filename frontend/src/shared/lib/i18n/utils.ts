@@ -4,6 +4,13 @@ export function getNestedTranslation(
   obj: TranslationNamespace,
   path: string
 ): string {
+  if (obj && typeof obj === 'object' && path in obj) {
+    const value = obj[path]
+    if (typeof value === 'string') {
+      return value
+    }
+  }
+
   const keys = path.split('.')
   let result: any = obj
 

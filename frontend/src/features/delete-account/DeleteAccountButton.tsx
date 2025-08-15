@@ -13,7 +13,7 @@ export const DeleteAccountButton = ({ onDelete }: DeleteAccountButtonProps) => {
       className="bg-destructive text-destructive-foreground hover:bg-destructive-hover"
       onClick={onDelete}
     >
-      {t('settings.deleteAccount')}
+      {t('Видалити акаунт')}
     </Button>
   )
 }

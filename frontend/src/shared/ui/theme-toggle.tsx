@@ -50,9 +50,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       className={cn(themeToggleVariants({ variant, size, className }))}
       {...props}
     >
-      {theme === 'light'
-        ? '🌞 ' + `${t('settings.light')}`
-        : '🌙 ' + `${t('settings.dark')}`}
+      {theme === 'light' ? '🌞 ' + `${t('Світла')}` : '🌙 ' + `${t('Темна')}`}
     </button>
   )
 }

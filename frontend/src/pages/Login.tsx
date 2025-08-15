@@ -10,13 +10,13 @@ const Login = () => {
     <AuthLayout
       headerContent={
         <>
-          <span className="text-muted-foreground">{t('auth.noAccount')}</span>
+          <span className="text-muted-foreground">{t('Немає акаунта?')}</span>
           <Link to="/register">
             <Button
               variant="outline"
               className="border-brand-300 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900"
             >
-              {t('auth.register')}
+              {t('Реєстрація')}
             </Button>
           </Link>
         </>
@@ -24,10 +24,10 @@ const Login = () => {
     >
       <div className="text-center">
         <h2 className="text-3xl font-bold text-foreground">
-          {t('auth.greeting')}!
+          {t('Вітаємо знову!')}!
         </h2>
         <p className="mt-2 text-muted-foreground">
-          {t('auth.loginToYourAccount')}
+          {t('Увійдіть до свого акаунта Smart Study')}
         </p>
       </div>
       <LoginForm />

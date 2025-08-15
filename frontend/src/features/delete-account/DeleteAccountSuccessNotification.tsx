@@ -17,7 +17,7 @@ const DeleteAccountSuccessNotification: React.FC<
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-success-icon" />
             <span className="font-semibold text-success-text">
-              {t('common.success')}
+              {t('Успішно')}
             </span>
           </div>
           <button
@@ -28,7 +28,7 @@ const DeleteAccountSuccessNotification: React.FC<
           </button>
         </div>
         <div className="text-sm text-muted-foreground">
-          {t('profile.accountDeleted')}
+          {t('Ваш акаунт успішно видалено')}
         </div>
       </div>
     </div>

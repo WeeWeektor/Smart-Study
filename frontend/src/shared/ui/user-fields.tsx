@@ -38,11 +38,11 @@ export const UserFields: React.FC<UserFieldsProps> = ({
     <>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">{t('profile.name')}</Label>
+          <Label htmlFor="name">{t("Ім'я")}</Label>
           <Input
             id="name"
             type="text"
-            placeholder={t('common.yourName')}
+            placeholder={t("Ваше ім'я")}
             value={formData.name}
             onChange={e => onChange('name', e.target.value)}
             required={requiredFields.includes('name')}
@@ -51,11 +51,11 @@ export const UserFields: React.FC<UserFieldsProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="surname">{t('profile.surname')}</Label>
+          <Label htmlFor="surname">{t('Прізвище')}</Label>
           <Input
             id="surname"
             type="text"
-            placeholder={t('common.yourSurname')}
+            placeholder={t('Ваше прізвище')}
             value={formData.surname}
             onChange={e => onChange('surname', e.target.value)}
             required={requiredFields.includes('surname')}
@@ -66,7 +66,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
       </div>
       {showEmail && (
         <div className="space-y-2">
-          <Label htmlFor="email">{t('auth.email')}</Label>
+          <Label htmlFor="email">{t('Email адреса')}</Label>
           <Input
             id="email"
             type="email"
@@ -80,7 +80,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="phone">{t('profile.phone')}</Label>
+        <Label htmlFor="phone">{t('Номер телефону')}</Label>
         <Input
           id="phone"
           type="tel"
@@ -93,7 +93,7 @@ export const UserFields: React.FC<UserFieldsProps> = ({
       </div>
       {showRole && (
         <div className="space-y-2">
-          <Label htmlFor="role">{t('auth.role')}</Label>
+          <Label htmlFor="role">{t('Роль')}</Label>
           <Select
             value={formData.role || ''}
             onValueChange={value => onChange('role', value)}
@@ -101,11 +101,11 @@ export const UserFields: React.FC<UserFieldsProps> = ({
             required={requiredFields.includes('role')}
           >
             <SelectTrigger className="border-border focus:border-brand-500 focus:ring-brand-500">
-              <SelectValue placeholder={t('common.enterYourRole')} />
+              <SelectValue placeholder={t('Оберіть свою роль')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="student">{t('auth.student')}</SelectItem>
-              <SelectItem value="teacher">{t('auth.teacher')}</SelectItem>
+              <SelectItem value="student">{t('Студент')}</SelectItem>
+              <SelectItem value="teacher">{t('Викладач')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

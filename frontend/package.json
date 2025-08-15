@@ -11,7 +11,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
-    "format:all": "prettier --write ."
+    "format:all": "prettier --write .",
+    "i18n:extract": "i18next-scanner --config i18next-scanner.config.cjs",
+    "i18n:extract:regex": "node scripts/extract-i18n.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -32,6 +34,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.58.1",
+    "react-i18next": "^15.6.1",
     "react-router-dom": "^7.6.2",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.3.3",
@@ -51,6 +54,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "i18next-scanner": "^4.6.0",
     "postcss-import": "^16.1.1",
     "prettier": "^3.5.3",
     "typescript": "~5.8.3",

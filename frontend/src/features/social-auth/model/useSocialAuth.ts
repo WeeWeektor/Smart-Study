@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react'
 import { authService } from '@/features/auth'
 import { tokenService } from '@/shared/api'
-import {
-  DEFAULT_LANGUAGE,
-  LANGUAGE_STORAGE_KEY,
-  translations,
-} from '@/shared/lib/i18n'
-import { getNestedTranslation, interpolate } from '@/shared/lib/i18n/utils'
+import { useI18n } from '@/shared/lib/i18n'
 
 interface SocialAuthData {
   name: string
@@ -35,19 +30,7 @@ export function useSocialAuth({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isFacebookLoading, setIsFacebookLoading] = useState(false)
 
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    try {
-      const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY)
-      const language =
-        storedLanguage === 'en' || storedLanguage === 'uk'
-          ? storedLanguage
-          : DEFAULT_LANGUAGE.code
-      const template = getNestedTranslation(translations[language], key)
-      return params ? interpolate(template, params) : template
-    } catch {
-      return key
-    }
-  }
+  const { t } = useI18n()
 
   const handleError = (message: string) => {
     if (onError && typeof onError === 'function') {
@@ -157,7 +140,9 @@ export function useSocialAuth({
         window.location.href = `/register?${params.toString()}`
         return
       } else {
-        handleError(t('errors.generalError'))
+        handleError(
+          t('Помилка авторизації через ') + provider + ': ' + error.message
+        )
       }
     } finally {
       loadingSetter(false)
@@ -233,7 +218,7 @@ export function useSocialAuth({
   const decodeGoogleJWT = (credential: string) => {
     try {
       if (!credential) {
-        throw new Error(t('errors.generalError'))
+        throw new Error(t('Відсутній credential'))
       }
 
       const base64Url = credential.split('.')[1]
@@ -255,7 +240,7 @@ export function useSocialAuth({
       }
     } catch (jwtErr) {
       console.error('[GoogleAuth] Некоректний JWT:', credential, jwtErr)
-      throw new Error(t('errors.generalError'))
+      throw new Error(t('Некоректний токен Google. Спробуйте ще раз.'))
     }
   }
 
@@ -293,7 +278,7 @@ export function useSocialAuth({
       )
     } else {
       console.log('[FacebookAuth] Користувач не авторизувався')
-      handleError(t('errors.generalError'))
+      handleError(t('Facebook авторизація не вдалася'))
     }
   }
 
@@ -305,7 +290,9 @@ export function useSocialAuth({
         window.google.accounts.id.prompt()
       } else {
         if (onError) {
-          onError(t('errors.generalError'))
+          onError(
+            t('Google авторизація недоступна. Спробуйте оновити сторінку.')
+          )
         }
       }
     } catch (error: any) {
@@ -323,7 +310,7 @@ export function useSocialAuth({
       }
 
       if (onError) {
-        onError(t('errors.generalError'))
+        onError(t('Помилка запуску Google авторизації'))
       }
     }
   }
@@ -340,14 +327,16 @@ export function useSocialAuth({
         })
       } else {
         console.error('[FacebookAuth] Facebook SDK не завантажено')
-        handleError(t('errors.generalError'))
+        handleError(
+          t('Facebook SDK не завантажено. Спробуйте оновити сторінку.')
+        )
       }
     } catch (error: any) {
       console.error(
         '[FacebookAuth] Помилка запуску Facebook авторизації:',
         error
       )
-      handleError(t('errors.generalError'))
+      handleError(t('Помилка запуску Facebook авторизації'))
     }
   }
 

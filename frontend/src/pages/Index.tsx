@@ -19,12 +19,12 @@ const Index = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-foreground">
-            {t('common.welcomeToApp')}
+            {t('Ласкаво просимо до Smart Study')}
           </h1>
           <ThemeToggle variant="secondary" size="default" />
         </div>
         <p className="text-lg text-muted-foreground mb-8">
-          {t('common.mainPageDescription')}
+          {t('Це головна сторінка програми.')}
         </p>
 
         {showEmailVerification && (

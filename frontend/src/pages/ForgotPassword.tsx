@@ -16,7 +16,7 @@ const ForgotPassword = () => {
             className="text-muted-foreground hover:text-brand-600 dark:hover:text-brand-400"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('common.backToLogin')}
+            {t('Назад до входу')}
           </Button>
         </Link>
       }

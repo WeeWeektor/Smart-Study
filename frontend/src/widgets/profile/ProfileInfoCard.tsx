@@ -52,9 +52,9 @@ const getInitials = (name: string, surname: string) => {
 
 const RoleText: React.FC<{ role: string }> = ({ role }) => {
   const { t } = useI18n()
-  if (role === 'student') return <>{t('auth.student')}</>
-  if (role === 'teacher') return <>{t('auth.teacher')}</>
-  if (role === 'admin') return <>Admin</>
+  if (role === 'student') return <>{t('Студент')}</>
+  if (role === 'teacher') return <>{t('Викладач')}</>
+  if (role === 'admin') return <>{t('Адміністратор')}</>
   return null
 }
 
@@ -68,6 +68,7 @@ export const ProfileInfoCard = ({
   onFileSelect,
   isEditing,
 }: ProfileInfoCardProps) => {
+  const { t } = useI18n()
   const [showMore, setShowMore] = useState(false)
   return (
     <Card>
@@ -103,7 +104,7 @@ export const ProfileInfoCard = ({
                 }
               >
                 <Camera className="w-4 h-4 mr-2" />
-                Change photo
+                {t('Змінити фото')}
               </Button>
             </div>
           )}

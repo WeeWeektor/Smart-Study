@@ -21,7 +21,7 @@ export const EmailField: React.FC<EmailFieldProps> = ({
   return (
     <div className="space-y-2">
       <Label htmlFor="email" className="text-foreground">
-        {t('auth.email')}
+        {t('Email адреса')}
       </Label>
       <Input
         id="email"

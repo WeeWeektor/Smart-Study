@@ -37,14 +37,10 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
   const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
-      <h3 className="font-medium text-foreground mb-4">
-        {t('settings.notifications')}
-      </h3>
+      <h3 className="font-medium text-foreground mb-4">{t('Сповіщення')}</h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">
-            {t('settings.emailNotifications')}
-          </span>
+          <span className="text-muted-foreground">{t('Email сповіщення')}</span>
           <Checkbox
             checked={formData.email_notifications}
             onCheckedChange={checked =>
@@ -54,9 +50,7 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">
-            {t('settings.pushNotifications')}
-          </span>
+          <span className="text-muted-foreground">{t('Push сповіщення')}</span>
           <Checkbox
             checked={formData.push_notifications}
             onCheckedChange={checked =>
@@ -67,7 +61,7 @@ function NotificationsBlock({ formData, onSettingsChange, isEditing }: any) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">
-            {t('settings.deadlineReminders')}
+            {t('Нагадування про дедлайни')}
           </span>
           <Checkbox
             checked={formData.deadline_reminders}
@@ -86,13 +80,11 @@ function PrivacyBlock({ formData, onSettingsChange, isEditing }: any) {
   const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
-      <h3 className="font-medium text-foreground mb-4">
-        {t('settings.privacy')}
-      </h3>
+      <h3 className="font-medium text-foreground mb-4">{t('Приватність')}</h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">
-            {t('settings.showProfileToOthers')}
+            {t('Показувати профіль іншим')}
           </span>
           <Checkbox
             checked={formData.show_profile_to_others}
@@ -104,7 +96,7 @@ function PrivacyBlock({ formData, onSettingsChange, isEditing }: any) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">
-            {t('settings.showAchievements')}
+            {t('Показувати досягнення')}
           </span>
           <Checkbox
             checked={formData.show_achievements}
@@ -134,9 +126,7 @@ function ChangePasswordBlock({
   const { t } = useI18n()
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
-      <h3 className="font-medium text-foreground mb-4">
-        {t('auth.changePassword.title')}
-      </h3>
+      <h3 className="font-medium text-foreground mb-4">{t('Зміна паролю')}</h3>
       <form className="space-y-4" onSubmit={handleChangePassword}>
         {passwordError && <FormAlert type="error" message={passwordError} />}
         {passwordSuccess && (
@@ -146,31 +136,29 @@ function ChangePasswordBlock({
           value={currentPassword}
           onChange={setCurrentPassword}
           required
-          label={t('auth.currentPassword')}
-          placeholder={t('auth.enterCurrentPassword')}
+          label={t('Поточний пароль')}
+          placeholder={t('Введіть поточний пароль')}
         />
         <PasswordField
           value={newPassword}
           onChange={setNewPassword}
           required
-          label={t('auth.newPassword')}
-          placeholder={t('auth.enterNewPassword')}
+          label={t('Новий пароль')}
+          placeholder={t('Введіть новий пароль')}
         />
         <PasswordField
           value={confirmPassword}
           onChange={setConfirmPassword}
           required
-          label={t('auth.confirmPassword')}
-          placeholder={t('auth.confirmNewPassword')}
+          label={t('Підтвердіть пароль')}
+          placeholder={t('Підтвердіть новий пароль')}
         />
         <Button
           className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 w-full text-white"
           type="submit"
           disabled={isPasswordLoading}
         >
-          {isPasswordLoading
-            ? t('auth.changePassword.processing')
-            : t('auth.changePassword.action')}
+          {isPasswordLoading ? t('Зміна пароля...') : t('Змінити пароль')}
         </Button>
       </form>
     </div>
@@ -182,7 +170,7 @@ function SwitchLanguageBlock() {
   return (
     <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
       <h3 className="font-medium text-foreground mb-4">
-        {t('settings.language')}
+        {t('Мова інтерфейсу')}
       </h3>
       <div className="space-y-3">
         <LanguageSwitcher className="w-full" />
@@ -196,14 +184,16 @@ function DangerZoneBlock({ onDeleteAccount }: any) {
   return (
     <div className="bg-card rounded-lg shadow p-6 border border-destructive">
       <h3 className="font-medium text-destructive mb-4">
-        {t('settings.dangerZone')}
+        {t('Небезпечна зона')}
       </h3>
       <div className="p-4 border border-destructive rounded-lg bg-destructive/10 dark:bg-destructive/20">
         <h4 className="font-medium text-destructive mb-2">
-          {t('settings.deleteAccount')}
+          {t('Видалення акаунта')}
         </h4>
         <p className="text-sm text-destructive mb-4">
-          {t('settings.deleteAccountWarning')}
+          {t(
+            'Після видалення акаунта всі ваші дані будуть назавжди втрачені. Ця дія не може бути скасована.'
+          )}
         </p>
         <DeleteAccountButton onDelete={onDeleteAccount} />
       </div>
@@ -231,15 +221,15 @@ export const ProfileTabs = ({
     setPasswordError(null)
     setPasswordSuccess(null)
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError(`${t('validation.allFieldsRequired')}`)
+      setPasswordError(t('Всі поля обовʼязкові'))
       return
     }
     if (newPassword.length < 8) {
-      setPasswordError(`${(t('validation.passwordMinLength'), { min: 8 })}`)
+      setPasswordError(t('Пароль повинен містити щонайменше 8 символів'))
       return
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError(`${t('validation.passwordMismatch')}`)
+      setPasswordError(t('Паролі не співпадають'))
       return
     }
     setIsPasswordLoading(true)
@@ -249,12 +239,12 @@ export const ProfileTabs = ({
         new_password: newPassword,
         confirm_password: confirmPassword,
       })
-      setPasswordSuccess(res.message || `${t('auth.passwordChanged')}`)
+      setPasswordSuccess(res.message || t('Пароль змінено успішно'))
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      setPasswordError(err.message || `${t('auth.passwordChangeError')}`)
+      setPasswordError(err.message || t('Не вдалося змінити пароль'))
     } finally {
       setIsPasswordLoading(false)
     }
@@ -263,19 +253,17 @@ export const ProfileTabs = ({
   return (
     <Tabs defaultValue="info" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="info">{t('common.info')}</TabsTrigger>
-        <TabsTrigger value="progress">{t('common.progress')}</TabsTrigger>
-        <TabsTrigger value="achievements">
-          {t('common.achievements')}
-        </TabsTrigger>
-        <TabsTrigger value="settings">{t('common.settings')}</TabsTrigger>
+        <TabsTrigger value="info">{t('Інформація')}</TabsTrigger>
+        <TabsTrigger value="progress">{t('Прогрес')}</TabsTrigger>
+        <TabsTrigger value="achievements">{t('Досягнення')}</TabsTrigger>
+        <TabsTrigger value="settings">{t('Налаштування')}</TabsTrigger>
       </TabsList>
 
       {/* Personal Information */}
       <TabsContent value="info">
         <Card>
           <CardHeader>
-            <CardTitle>{t('profile.personalInfo')}</CardTitle>
+            <CardTitle>{t('Особиста інформація')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <EditProfileForm
@@ -291,7 +279,7 @@ export const ProfileTabs = ({
       <TabsContent value="progress">
         <Card>
           <CardHeader>
-            <CardTitle>{t('profile.progressInCourses')}</CardTitle>
+            <CardTitle>{t('Прогрес по курсах')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -303,7 +291,7 @@ export const ProfileTabs = ({
                     </h3>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-muted-foreground">
-                        {course.completed}/{course.total} {t('profile.lessons')}
+                        {course.completed}/{course.total} {t('уроків')}
                       </span>
                       <Badge
                         variant={
@@ -317,12 +305,12 @@ export const ProfileTabs = ({
                   <Progress value={course.progress} />
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>
-                      {t('profile.lastActivity')}: {course.lastActivity}
+                      {t('Остання активність')}: {course.lastActivity}
                     </span>
                     {course.progress === 100 && (
                       <span className="flex items-center text-success-text">
                         <CheckCircle className="w-4 h-4 mr-1 text-success-icon" />
-                        {t('common.ending')}
+                        {t('Завершено')}
                       </span>
                     )}
                   </div>
@@ -337,7 +325,7 @@ export const ProfileTabs = ({
       <TabsContent value="achievements">
         <Card>
           <CardHeader>
-            <CardTitle>{t('profile.achievements')}</CardTitle>
+            <CardTitle>{t('Досягнення')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
@@ -360,10 +348,10 @@ export const ProfileTabs = ({
                       </span>
                       <Badge className={getAchievementColor(achievement.type)}>
                         {achievement.type === 'gold'
-                          ? `${t('profile.gold')}`
+                          ? `${t('Золото')}`
                           : achievement.type === 'silver'
-                            ? `${t('profile.silver')}`
-                            : `${t('profile.bronze')}`}
+                            ? `${t('Срібло')}`
+                            : `${t('Бронза')}`}
                       </Badge>
                     </div>
                   </div>
@@ -378,7 +366,7 @@ export const ProfileTabs = ({
       <TabsContent value="settings">
         <Card>
           <CardHeader>
-            <CardTitle>{t('profile.settings')}</CardTitle>
+            <CardTitle>{t('Налаштування')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <NotificationsBlock

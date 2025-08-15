@@ -27,18 +27,18 @@ export const Sidebar = ({ userInfo }: SidebarProps) => {
   const { t } = useI18n()
 
   const navLinks = [
-    { to: '/dashboard/student', icon: Home, text: t('common.home') },
-    { to: '/courses', icon: BookOpen, text: t('common.courses') },
-    { to: '/tests', icon: BarChart3, text: t('common.tests') },
-    { to: '/calendar/student', icon: Calendar, text: t('common.calendar') },
-    { to: '/profile', icon: User, text: t('profile.profile') },
+    { to: '/dashboard/student', icon: Home, text: t('Головна') },
+    { to: '/courses', icon: BookOpen, text: t('Курси') },
+    { to: '/tests', icon: BarChart3, text: t('Тести') },
+    { to: '/calendar/student', icon: Calendar, text: t('Календар') },
+    { to: '/profile', icon: User, text: t('Профіль') },
   ]
 
   if (userInfo.is_admin === 'admin') {
     navLinks.push({
       to: 'https://127.0.0.1:5173/admin',
       icon: Home,
-      text: `Admin ${t('common.adminPanel')}`,
+      text: t('Адмін панель'),
     })
   }
 

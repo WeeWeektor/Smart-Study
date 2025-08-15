@@ -18,7 +18,7 @@ const EmailVerification = () => {
 
     if (!token) {
       setStatus('error')
-      setMessage(t('errors.generalError'))
+      setMessage(t('Невірний токен підтвердження'))
       return
     }
 
@@ -31,18 +31,20 @@ const EmailVerification = () => {
 
         if (response.ok) {
           setStatus('success')
-          setMessage(t('auth.emailVerifiedSuccess'))
+          setMessage(
+            t('Email успішно підтверджено! Перенаправлення на профіль...')
+          )
 
           setTimeout(() => {
             navigate('/profile?emailVerified=true')
           }, 1000)
         } else {
           setStatus('error')
-          setMessage(t('errors.generalError'))
+          setMessage(t('Помилка підтвердження email. Перевірте посилання.'))
         }
       } catch (error) {
         setStatus('error')
-        setMessage(t('errors.networkError'))
+        setMessage(t("Помилка з'єднання з сервером"))
       }
     }
 
@@ -55,7 +57,7 @@ const EmailVerification = () => {
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
           <p className="mt-4 text-muted-foreground">
-            {t('auth.emailVerification')}
+            {t('Підтвердження email...')}
           </p>
         </div>
       </div>
@@ -70,28 +72,28 @@ const EmailVerification = () => {
             <div className="text-center">
               <CheckCircle className="h-12 w-12 text-success-icon mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                {t('auth.emailVerification')}
+                {t('Email підтверджено!')}
               </h2>
               <p className="text-muted-foreground mb-4">{message}</p>
               <Button
                 onClick={() => navigate('/profile?emailVerified=true')}
                 className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               >
-                {t('profile.profile')}
+                {t('Перейти до профілю')}
               </Button>
             </div>
           ) : (
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                {t('errors.generalError')}
+                {t('Помилка підтвердження')}
               </h2>
               <p className="text-muted-foreground mb-4">{message}</p>
               <Button
                 onClick={() => navigate('/login')}
                 className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               >
-                {t('auth.login')}
+                {t('Перейти до входу')}
               </Button>
             </div>
           )}

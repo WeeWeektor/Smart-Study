@@ -28,9 +28,11 @@ export const ProfileHeader = ({
           <div>
             <h1 className="text-2xl font-semibold flex items-center text-foreground">
               <User className="w-6 h-6 mr-2 text-brand-600 dark:text-brand-400" />
-              {t('profile.myProfile')}
+              {t('Мій профіль')}
             </h1>
-            <p className="text-muted-foreground">{t('profile.personalInfo')}</p>
+            <p className="text-muted-foreground">
+              {t('Керуйте своїм профілем та налаштуваннями')}
+            </p>
           </div>
           <div className="flex items-center space-x-4">
             {isEditing ? (
@@ -40,7 +42,7 @@ export const ProfileHeader = ({
                   onClick={onCancel}
                   disabled={isSaving}
                 >
-                  {t('common.cancel')}
+                  {t('Скасувати')}
                 </Button>
                 <Button
                   className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
@@ -50,12 +52,12 @@ export const ProfileHeader = ({
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t('common.loading')}
+                      {t('Збереження...')}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      {t('common.save')}
+                      {t('Зберегти')}
                     </>
                   )}
                 </Button>
@@ -66,7 +68,7 @@ export const ProfileHeader = ({
                 onClick={onEdit}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                {t('common.edit')}
+                {t('Редагувати')}
               </Button>
             )}
             <ThemeToggle variant="secondary" size="default" />

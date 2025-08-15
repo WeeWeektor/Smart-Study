@@ -66,7 +66,7 @@ export const LoginForm = () => {
 
     try {
       if (!email || !password) {
-        setError(t('validation.required'))
+        setError(t('Будь ласка, заповніть всі поля'))
         return
       }
 
@@ -87,9 +87,9 @@ export const LoginForm = () => {
       }
     } catch (error) {
       if (error instanceof Error) {
-        setError(error.message || t('errors.unauthorized'))
+        setError(error.message || t('Невірний email або пароль'))
       } else {
-        setError(t('errors.generalError'))
+        setError(t('Сталася невідома помилка'))
       }
     } finally {
       setIsLoading(false)
@@ -98,8 +98,8 @@ export const LoginForm = () => {
 
   return (
     <AuthCard
-      title={t('auth.loginAccount')}
-      description={t('auth.enterYourData')}
+      title={t('Вхід в акаунт')}
+      description={t('Введіть свої дані для входу в систему')}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <FormAlert type="error" message={error} />}
@@ -108,8 +108,8 @@ export const LoginForm = () => {
           value={password}
           onChange={setPassword}
           required
-          label={t('auth.password')}
-          placeholder={t('auth.enterYourPassword')}
+          label={t('Пароль')}
+          placeholder={t('Введіть ваш пароль')}
         />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -119,14 +119,14 @@ export const LoginForm = () => {
               onCheckedChange={checked => setRememberMe(checked as boolean)}
             />
             <Label htmlFor="remember" className="text-sm text-muted-foreground">
-              {t('common.rememberMe')}
+              {t("Запам'ятати мене")}
             </Label>
           </div>
           <Link
             to="/forgot-password"
             className="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
           >
-            {t('auth.forgotPassword')}
+            {t('Забули пароль?')}
           </Link>
         </div>
         <Button
@@ -134,7 +134,7 @@ export const LoginForm = () => {
           className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           disabled={isLoading}
         >
-          {isLoading ? t('auth.login1') : t('auth.login')}
+          {isLoading ? t('Вхід...') : t('Увійти')}
         </Button>
       </form>
       <div className="mt-6">

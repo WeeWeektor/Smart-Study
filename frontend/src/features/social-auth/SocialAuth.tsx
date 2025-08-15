@@ -38,7 +38,7 @@ export const SocialAuth = ({
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="px-2 bg-card text-muted-foreground">
-            {t('auth.orLoginWith')}
+            {t('Або увійти через')}
           </span>
         </div>
       </div>
@@ -53,7 +53,7 @@ export const SocialAuth = ({
           {isGoogleLoading ? (
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground mr-2"></div>
-              {t('common.loading')}
+              {t('Завантаження...')}
             </div>
           ) : (
             <>
@@ -89,7 +89,7 @@ export const SocialAuth = ({
           {isFacebookLoading ? (
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground mr-2"></div>
-              {t('common.loading')}
+              {t('Завантаження...')}
             </div>
           ) : (
             <>

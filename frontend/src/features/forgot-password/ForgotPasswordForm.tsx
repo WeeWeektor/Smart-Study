@@ -22,7 +22,7 @@ export const ForgotPasswordForm = () => {
 
     try {
       if (!email.includes('@')) {
-        setError(t('validation.invalidEmail'))
+        setError(t('Будь ласка, введіть правильну email адресу'))
         return
       }
 
@@ -30,9 +30,9 @@ export const ForgotPasswordForm = () => {
       setIsSuccess(true)
     } catch (error) {
       if (error instanceof Error) {
-        setError(error.message || t('errors.generalError'))
+        setError(error.message || t('Помилка при надсиланні інструкцій'))
       } else {
-        setError(t('errors.generalError'))
+        setError(t('Сталася невідома помилка'))
       }
     } finally {
       setIsLoading(false)
@@ -52,11 +52,18 @@ export const ForgotPasswordForm = () => {
           <Mail className="w-8 h-8 text-brand-600 dark:text-brand-400" />
         </div>
         <h2 className="text-3xl font-bold text-foreground">
-          {t('auth.forgotPassword')}
+          {t('Забули пароль?')}
         </h2>
-        <p className="mt-2 text-muted-foreground">{t('auth.resetPassword')}</p>
+        <p className="mt-2 text-muted-foreground">
+          {t(
+            ' Не хвилюйтесь, ми допоможемо відновити доступ до вашого акаунта'
+          )}
+        </p>
       </div>
-      <AuthCard title={t('auth.resetPassword')} description={t('auth.email')}>
+      <AuthCard
+        title={t('Відновлення паролю')}
+        description={t("Введіть email адресу, пов'язану з вашим акаунтом")}
+      >
         {!isSuccess ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <FormAlert type="error" message={error} />}
@@ -66,7 +73,7 @@ export const ForgotPasswordForm = () => {
               className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               disabled={isLoading}
             >
-              {isLoading ? t('common.loading') : t('common.submit')}
+              {isLoading ? t('Надсилаємо...') : t('Надіслати інструкції')}
             </Button>
           </form>
         ) : (
@@ -75,10 +82,10 @@ export const ForgotPasswordForm = () => {
               <CheckCircle className="w-8 h-8 text-success-icon" />
             </div>
             <h2 className="text-2xl text-foreground mb-2">
-              {t('auth.emailVerification')}
+              {t('Перевірте вашу пошту')}
             </h2>
             <p className="text-muted-foreground mb-4">
-              {t('auth.passwordResetSuccess')}
+              {t('Ми надіслали інструкції з відновлення паролю на адресу:')}
             </p>
             <p className="text-sm font-medium text-foreground bg-card px-3 py-2 rounded-lg inline-block mb-4">
               {email}
@@ -88,11 +95,11 @@ export const ForgotPasswordForm = () => {
               variant="outline"
               className="w-full border-border text-muted-foreground mb-2"
             >
-              {t('common.tryAgain')}
+              {t('Спробувати з іншим email')}
             </Button>
             <Link to="/login" className="block">
               <Button className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white">
-                {t('auth.backToLogin')}
+                {t('Повернутися до входу')}
               </Button>
             </Link>
           </div>
@@ -101,12 +108,12 @@ export const ForgotPasswordForm = () => {
       {!isSuccess && (
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            {t('auth.rememberPassword')}?{' '}
+            {t('Пригадали пароль')}?{' '}
             <Link
               to="/login"
               className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium"
             >
-              {t('auth.loginAccount')}
+              {t('Увійти в акаунт')}
             </Link>
           </p>
         </div>

@@ -54,7 +54,7 @@ const Profile = () => {
   useEffect(() => {
     const emailVerified = searchParams.get('emailVerified')
     if (emailVerified === 'true') {
-      setSuccess(t('auth.emailVerifiedSuccess'))
+      setSuccess(t('Email успішно підтверджено!'))
       navigate('/profile', { replace: true })
     }
   }, [searchParams, navigate])
@@ -119,12 +119,12 @@ const Profile = () => {
     const file = e.target.files?.[0]
     if (file) {
       if (!file.type.startsWith('image/')) {
-        setError(t('validation.imageFile'))
+        setError(t('Будь ласка, оберіть файл зображення'))
         return
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        setError(t('validation.fileSize', { size: 5 }))
+        setError(t('Розмір файлу не повинен перевищувати 5MB'))
         return
       }
 
@@ -150,7 +150,7 @@ const Profile = () => {
       setSuccess('')
 
       if (!formData.name.trim() || !formData.surname.trim()) {
-        setError(t('validation.nameAndSurnameRequired'))
+        setError(t("Ім'я та прізвище є обов'язковими полями"))
         return
       }
 
@@ -161,7 +161,7 @@ const Profile = () => {
         if (uploadResponse.status === 'success' && uploadResponse.data?.url) {
           profilePictureUrl = uploadResponse.data.url
         } else {
-          setError(t('profile.profilePictureUploadError'))
+          setError(t('Помилка завантаження фото'))
           return
         }
       }
@@ -207,7 +207,7 @@ const Profile = () => {
       const response = await profileService.updateProfile(updateData)
 
       if (response.status === 'success') {
-        setSuccess(t('profile.profileUpdated'))
+        setSuccess(t('Профіль успішно оновлено!'))
         setIsEditing(false)
         setSelectedFile(null)
         await loadProfile()
@@ -220,7 +220,7 @@ const Profile = () => {
     } catch (error) {
       console.error('Помилка оновлення профілю:', error)
       setError(
-        error instanceof Error ? error.message : t('profile.profileUpdateError')
+        error instanceof Error ? error.message : t('Помилка оновлення профілю')
       )
     } finally {
       setSaving(false)
@@ -228,7 +228,11 @@ const Profile = () => {
   }
 
   const handleDeleteAccount = async () => {
-    if (window.confirm(t('profile.deleteAccountConfirm'))) {
+    if (
+      window.confirm(
+        t('Ви впевнені, що хочете видалити свій акаунт? Ця дія незворотна.')
+      )
+    ) {
       try {
         await profileService.deleteProfile()
         await authService.logout()
@@ -238,7 +242,7 @@ const Profile = () => {
         setError(
           error instanceof Error
             ? error.message
-            : t('profile.deleteAccountError')
+            : t('Помилка видалення акаунта')
         )
         navigate('/?showDeleteAccountSuccess=true')
       }
@@ -283,7 +287,9 @@ const Profile = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
-          <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
+          <p className="mt-4 text-muted-foreground">
+            {t('Завантаження профілю...')}
+          </p>
         </div>
       </div>
     )
@@ -295,13 +301,13 @@ const Profile = () => {
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <p className="text-destructive mb-4">
-            {t('profile.profileLoadError')}
+            {t('Помилка завантаження профілю')}
           </p>
           <Button
             onClick={loadProfile}
             className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           >
-            {t('common.retry')}
+            {t('Спробувати знову')}
           </Button>
         </div>
       </div>

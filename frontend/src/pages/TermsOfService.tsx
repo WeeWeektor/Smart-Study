@@ -16,7 +16,7 @@ const TermsOfService = () => {
             className="text-muted-foreground hover:text-brand-600 dark:hover:text-brand-400"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('common.backToRegister')}
+            {t('Назад до реєстрації')}
           </Button>
         </Link>
       }
