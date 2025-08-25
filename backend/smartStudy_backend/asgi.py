@@ -10,7 +10,29 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 import os
 
 from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartStudy_backend.settings')
 
-application = get_asgi_application()
+django_asgi_app = get_asgi_application()
+
+async def lifespan(scope, receive, send):
+    message = {"type": ""}
+    try:
+        while True:
+            message = await receive()
+            if message["type"] == "lifespan.startup":
+                await send({"type": "lifespan.startup.complete"})
+            elif message["type"] == "lifespan.shutdown":
+                await send({"type": "lifespan.shutdown.complete"})
+                break
+    except Exception as e:
+        if message["type"] == "lifespan.startup":
+            await send({"type": "lifespan.startup.failed", "message": str(e)})
+        else:
+            await send({"type": "lifespan.shutdown.failed", "message": str(e)})
+
+application = ProtocolTypeRouter({
+    "http": django_asgi_app,
+    "lifespan": lifespan,
+})

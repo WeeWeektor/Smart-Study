@@ -1,3 +1,4 @@
+from asgiref.sync import sync_to_async
 from django.contrib.auth import login, get_user_model
 from django.http import JsonResponse
 from django.core.cache import cache
@@ -10,9 +11,10 @@ from users.services.profile_cache_service import warm_user_cache, invalidate_use
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
+import httpx
 
 
-def verify_facebook_token(token):
+async def verify_facebook_token(token):
     """Verify the Facebook OAuth token and return user info."""
     app_id = settings.SOCIAL_AUTH_FACEBOOK_KEY
     app_secret = settings.SOCIAL_AUTH_FACEBOOK_SECRET
@@ -23,69 +25,70 @@ def verify_facebook_token(token):
         "access_token": f"{app_id}|{app_secret}"
     }
 
-    debug_response = requests.get(debug_url, params=debug_params)
-    debug_data = debug_response.json()
+    async with httpx.AsyncClient() as client:
+        debug_response = await client.get(debug_url, params=debug_params)
+        debug_data = debug_response.json()
 
-    if not debug_data.get("data", {}).get("is_valid"):
-        raise ValueError(gettext("Invalid Facebook token"))
+        if not debug_data.get("data", {}).get("is_valid"):
+            raise ValueError(gettext("Invalid Facebook token"))
 
-    user_url = "https://graph.facebook.com/me"
-    user_params = {
-        "fields": "id,name,email,first_name,last_name",
-        "access_token": token
-    }
+        user_url = "https://graph.facebook.com/me"
+        user_params = {
+            "fields": "id,name,email,first_name,last_name",
+            "access_token": token
+        }
 
-    user_response = requests.get(user_url, params=user_params)
-    user_data = user_response.json()
+        user_response = await client.get(user_url, params=user_params)
+        user_data = user_response.json()
 
-    if "error" == user_data:
-        raise ValueError(gettext("Facebook API error: ") + user_data["error"]["message"])
+        if "error" == user_data:
+            raise ValueError(gettext("Facebook API error: ") + user_data["error"]["message"])
 
-    return {
-        "email": user_data.get("email"),
-        "name": user_data.get("first_name", ""),
-        "given_name": user_data.get("first_name", ""),
-        "family_name": user_data.get("last_name", ""),
-        "sub": user_data.get("id"),
-    }
+        return {
+            "email": user_data.get("email"),
+            "name": user_data.get("first_name", ""),
+            "given_name": user_data.get("first_name", ""),
+            "family_name": user_data.get("last_name", ""),
+            "sub": user_data.get("id"),
+        }
 
 
-def handle_oauth_login(request, token, provider, name=None, surname=None, role=None, phone_number=None,
-                       email_notifications=True, push_notifications=True):
+async def handle_oauth_login(request, token, provider, name=None, surname=None, role=None, phone_number=None,
+                             email_notifications=True, push_notifications=True):
     try:
         cache_key = f"{provider}_token_{hash(token)}"
-        idinfo = cache.get(cache_key)
+        idinfo = await sync_to_async(cache.get)(cache_key)
 
         if not idinfo:
             if provider == "google":
-                idinfo = id_token.verify_oauth2_token(
+                idinfo = await sync_to_async(id_token.verify_oauth2_token)(
                     token, requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
                 )
             elif provider == "facebook":
-                idinfo = verify_facebook_token(token)
+                idinfo = await verify_facebook_token(token)
             else:
                 raise ValueError(gettext("Unknown OAuth provider"))
 
-            cache.set(cache_key, idinfo, timeout=15*60)
+            await sync_to_async(cache.set)(cache_key, idinfo, timeout=15*60)
 
         email = idinfo['email']
         oauth_name = idinfo.get('given_name') or idinfo.get('name') or name or ''
         oauth_surname = idinfo.get('family_name') or surname or ''
 
-        User = get_user_model()
-        user = User.objects.filter(email=email).first()
+        User = await sync_to_async(get_user_model)()
+        user = await sync_to_async(lambda: User.objects.filter(email=email).first())()
 
         if user:
             if not user.is_verified_email:
                 user.is_verified_email = True
             if not user.is_active:
                 user.is_active = True
-            user.save()
+            await sync_to_async(user.save)()
 
-            invalidate_user_existence_cache(email)
-            warm_user_cache(user)
+            await invalidate_user_existence_cache(email)
+            await warm_user_cache(user)
 
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            await sync_to_async(login)(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return JsonResponse({
                 'user': {
                     'email': user.email,
@@ -99,12 +102,12 @@ def handle_oauth_login(request, token, provider, name=None, surname=None, role=N
         if not role or not oauth_surname:
             return JsonResponse({'error': gettext('You must specify role and surname')}, status=400)
 
-        if role not in get_allowed_roles():
+        if role not in await get_allowed_roles():
             return JsonResponse({
-                "error": f"{gettext("Incorrect role. Acceptable values:")} {', '.join(get_allowed_roles())}"
+                "error": f"{gettext("Incorrect role. Acceptable values:")} {', '.join(await get_allowed_roles())}"
             }, status=400)
 
-        user = User.objects.create_user(
+        user = await sync_to_async(User.objects.create_user)(
             name=oauth_name,
             surname=oauth_surname,
             role=role,
@@ -115,18 +118,19 @@ def handle_oauth_login(request, token, provider, name=None, surname=None, role=N
             is_active=True,
         )
 
-        invalidate_user_existence_cache(email)
+        await invalidate_user_existence_cache(email)
 
-        UserSettings.objects.create(
+        await sync_to_async(UserSettings.objects.create)(
             user=user,
             email_notifications=email_notifications,
             push_notifications=push_notifications,
         )
 
-        warm_user_cache(user)
+        await warm_user_cache(user)
 
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return JsonResponse({
+        await sync_to_async(login)(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        response_data = {
             'user': {
                 'email': user.email,
                 'name': user.name,
@@ -134,6 +138,8 @@ def handle_oauth_login(request, token, provider, name=None, surname=None, role=N
                 'role': user.role,
             },
             'message': f'{gettext("Successful registration and authorization via")} {provider} {gettext("(session)")}'
-        }, status=200)
+        }
+
+        return JsonResponse(response_data, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

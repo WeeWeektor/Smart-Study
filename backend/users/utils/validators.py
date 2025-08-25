@@ -1,3 +1,4 @@
+from asgiref.sync import sync_to_async
 from django.core.validators import EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
@@ -10,18 +11,18 @@ phone_validator = RegexValidator(
     message=gettext('The phone number must contain between 10 and 15 digits, including the prefix.')
 )
 
-def cached_email_validator(email):
+async def cached_email_validator(email):
     """Cached email validator to reduce load"""
     cache_key = f"email_valid_{hash(email)}"
-    is_valid = cache.get(cache_key)
+    is_valid = await sync_to_async(cache.get)(cache_key)
 
     if is_valid is None:
         try:
-            email_validator(email)
+            await sync_to_async(email_validator)(email)
             is_valid = True
         except ValidationError:
             is_valid = False
-        cache.set(cache_key, is_valid, timeout=30*60)
+        await sync_to_async(cache.set)(cache_key, is_valid, timeout=30*60)
 
     if not is_valid:
         raise ValidationError(gettext('Incorrect email format.'))

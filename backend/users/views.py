@@ -1,5 +1,7 @@
 import json
+import asyncio
 from typing import Optional
+from asgiref.sync import sync_to_async
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
@@ -35,7 +37,7 @@ from .services.profile_update_service import update_user_data, update_user_setti
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class RegisterView(LocalizedView):
     @staticmethod
-    def post(request):
+    async def post(request):
         try:
             data = json.loads(request.body)
 
@@ -45,47 +47,49 @@ class RegisterView(LocalizedView):
                     return error_response(f"{gettext("Required field missing:")} {field}")
 
             try:
-                cached_email_validator(data['email'])
+                await cached_email_validator(data['email'])
             except ValidationError as e:
                 return error_response(str(e))
 
             try:
-                validate_password(data['password'])
+                await sync_to_async(validate_password)(data['password'])
             except ValidationError as e:
                 return error_response(', '.join(e.messages))
 
             try:
                 if data['phone_number'] is not None:
-                    phone_validator(data['phone_number'])
+                    await sync_to_async(phone_validator)(data['phone_number'])
             except ValidationError as e:
                 return error_response(str(e))
 
-            if data['role'] not in get_allowed_roles():
-                return error_response(f'{gettext("Incorrect role. Acceptable values:")} {", ".join(get_allowed_roles())}')
+            allowed_roles = await get_allowed_roles()
+            if data['role'] not in allowed_roles:
+                return error_response(
+                    f'{gettext("Incorrect role. Acceptable values:")} {", ".join(allowed_roles)}')
 
             if not data['name'].strip() or not data['surname'].strip():
                 return error_response(gettext('First and last names cannot be left blank.'))
 
-            user = CustomUser.objects.create_user(
-                name=data['name'],
-                surname=data['surname'],
+            user = await sync_to_async(CustomUser.objects.create_user)(
+                name=data['name'].strip(),
+                surname=data['surname'].strip(),
                 phone_number=data['phone_number'],
                 role=data['role'],
                 email=data['email'],
                 password=data['password'],
-            )
-            user.is_active = False
-            user.save()
-
-            invalidate_user_existence_cache(data['email'])
-
-            UserSettings.objects.create(
-                user=user,
-                email_notifications=data.get('email_notifications', True),
-                push_notifications=data.get('push_notifications', True)
+                is_active=False
             )
 
-            send_verification_email(user)
+            await asyncio.gather(
+                invalidate_user_existence_cache(data['email']),
+                sync_to_async(UserSettings.objects.create)(
+                    user=user,
+                    email_notifications=data.get('email_notifications', True),
+                    push_notifications=data.get('push_notifications', True)
+                ),
+                send_verification_email(user)
+            )
+
             return success_response({"message": gettext('Please confirm your email address.')})
         except IntegrityError:
             return error_response(gettext('Email already registered.'))
@@ -98,7 +102,7 @@ class RegisterView(LocalizedView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class VerifyEmailView(LocalizedView):
     @staticmethod
-    def get(request):
+    async def get(request):
         token = request.GET.get('token')
 
         if not token:
@@ -108,19 +112,19 @@ class VerifyEmailView(LocalizedView):
         try:
             email = signer.unsign(token, max_age=60 * 60 * 24)
             try:
-                user = CustomUser.objects.get(email=email)
+                user = await sync_to_async(CustomUser.objects.get)(email=email)
                 if user.is_verified_email:
                     return success_response({"message": gettext('Email already confirmed.')})
 
                 user.is_verified_email = True
                 user.is_active = True
-                user.save()
+                await sync_to_async(user.save)()
 
-                invalidate_user_existence_cache(email)
+                await invalidate_user_existence_cache(email)
 
-                warm_user_cache(user)
+                await warm_user_cache(user)
 
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                await sync_to_async(login)(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return redirect(f"{settings.FRONTEND_URL}/verify-email?token={token}")
             except CustomUser.DoesNotExist:
                 return error_response(gettext('No user with this email address was found.'))
@@ -133,7 +137,7 @@ class VerifyEmailView(LocalizedView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class LoginView(LocalizedView):
     @staticmethod
-    def post(request):
+    async def post(request):
         try:
             data = json.loads(request.body)
 
@@ -144,11 +148,11 @@ class LoginView(LocalizedView):
             password = data['password']
 
             try:
-                cached_email_validator(email)
+                await cached_email_validator(email)
             except ValidationError as e:
                 return error_response(str(e))
 
-            user: Optional[CustomUser] = authenticate(request, username=email, password=password)
+            user: Optional[CustomUser] = await sync_to_async(authenticate)(request, username=email, password=password)
 
             if user is None:
                 return error_response(gettext('Incorrect email or password.'), 400)
@@ -159,9 +163,9 @@ class LoginView(LocalizedView):
             if not user.is_verified_email:
                 return error_response(gettext('Email not confirmed. Please check your email.'), 400)
 
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            await sync_to_async(login)(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            warm_user_cache(user)
+            await warm_user_cache(user)
 
             return success_response({
                 "user": {
@@ -188,7 +192,7 @@ class LoginView(LocalizedView):
 class BaseAuthView(LocalizedAPIView):
     provider = None
 
-    def post(self, request):
+    async def post(self, request):
         try:
             data = request.data if hasattr(request, 'data') else json.loads(request.body)
             token = data.get('credential')
@@ -196,7 +200,7 @@ class BaseAuthView(LocalizedAPIView):
             if not token:
                 return JsonResponse({'error': gettext('No credential provided')}, status=400)
 
-            return handle_oauth_login(
+            return await handle_oauth_login(
                 request=request,
                 token=token,
                 provider=self.provider,
@@ -222,7 +226,7 @@ class FacebookAuthView(BaseAuthView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ForgotPasswordView(LocalizedView):
     @staticmethod
-    def post(request):
+    async def post(request):
         try:
             data = json.loads(request.body)
             email = data['email']
@@ -231,18 +235,19 @@ class ForgotPasswordView(LocalizedView):
                 return error_response(gettext('No email address provided.'))
 
             try:
-                cached_email_validator(email)
+                await cached_email_validator(email)
             except ValidationError as e:
                 return error_response(str(e))
 
             cache_key = f"forgot_reset_{hash(email)}"
-            if cache.get(cache_key):
+            if await sync_to_async(cache.get)(cache_key):
                 return error_response(
-                    message=gettext('A password reset request has been sent. Please check your email or try again in 5 minutes.'),
+                    message=gettext(
+                        'A password reset request has been sent. Please check your email or try again in 5 minutes.'),
                     status=429
                 )
 
-            user_data = get_user_existence_cache(email)
+            user_data = await get_user_existence_cache(email)
 
             if not user_data['exists']:
                 return error_response(gettext('No user with this email address was found.'), 404)
@@ -253,10 +258,10 @@ class ForgotPasswordView(LocalizedView):
             if not user_data['is_verified']:
                 return error_response(gettext('Email not confirmed. Please check your email.'), 400)
 
-            user = CustomUser.objects.get(email=email)
-            send_password_reset_email(user)
+            user = await sync_to_async(CustomUser.objects.get)(email=email)
+            await send_password_reset_email(user)
 
-            cache.set(cache_key, True, timeout=5*60)
+            await sync_to_async(cache.set)(cache_key, True, timeout=5 * 60)
 
             return success_response({"message": gettext('Please check your email for a password reset link.')})
         except KeyError:
@@ -270,7 +275,7 @@ class ForgotPasswordView(LocalizedView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ResetPasswordView(LocalizedView):
     @staticmethod
-    def get(request):
+    async def get(request):
         token = request.GET.get('token')
 
         if not token:
@@ -280,7 +285,7 @@ class ResetPasswordView(LocalizedView):
         try:
             email = signer.unsign(token, max_age=60 * 60 * 24)
             try:
-                CustomUser.objects.get(email=email)
+                await sync_to_async(CustomUser.objects.get)(email=email)
                 return redirect(f"{settings.FRONTEND_URL}/reset-password?token={token}")
             except CustomUser.DoesNotExist:
                 return error_response(gettext('No user with this email address was found.'), 404)
@@ -290,7 +295,7 @@ class ResetPasswordView(LocalizedView):
             return error_response(gettext('Invalid token for password reset.'), 400)
 
     @staticmethod
-    def post(request):
+    async def post(request):
         try:
             data = json.loads(request.body)
 
@@ -301,7 +306,7 @@ class ResetPasswordView(LocalizedView):
             password = data['password']
 
             try:
-                validate_password(password)
+                await sync_to_async(validate_password)(password)
             except ValidationError as e:
                 return error_response(', '.join(e.messages))
 
@@ -309,11 +314,11 @@ class ResetPasswordView(LocalizedView):
             try:
                 email = signer.unsign(token, max_age=60 * 60 * 24)
                 try:
-                    user = CustomUser.objects.get(email=email)
-                    user.set_password(password)
-                    user.save()
+                    user = await sync_to_async(CustomUser.objects.get)(email=email)
+                    await sync_to_async(user.set_password)(password)
+                    await sync_to_async(user.save)()
 
-                    invalidate_all_user_caches(user.id, user.email)
+                    await invalidate_all_user_caches(user.id, user.email)
 
                     return success_response({"message": gettext('Password reset successful.')})
                 except CustomUser.DoesNotExist:
@@ -331,16 +336,16 @@ class ResetPasswordView(LocalizedView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class LogoutView(LocalizedView):
     @staticmethod
-    def post(request):
-        logout(request)
+    async def post(request):
+        await sync_to_async(logout)(request)
         return success_response({"message": gettext('You have successfully logged out.')})
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ChangePasswordView(LocalizedView):
     @staticmethod
-    def patch(request):
-        if not request.user.is_authenticated:
+    async def patch(request):
+        if not await sync_to_async(lambda: request.user.is_authenticated)():
             return error_response(gettext('The user is not authorized.'), 401)
 
         try:
@@ -358,7 +363,7 @@ class ChangePasswordView(LocalizedView):
                 return error_response(gettext('The new password and password confirmation do not match.'), 400)
 
             try:
-                validate_password(new_password)
+                await sync_to_async(validate_password)(new_password)
             except ValidationError as e:
                 return error_response(', '.join(e.messages))
 
@@ -366,12 +371,12 @@ class ChangePasswordView(LocalizedView):
             if not user.check_password(current_password):
                 return error_response(gettext('Incorrect current password.'), 400)
 
-            user.set_password(new_password)
-            user.save()
+            await sync_to_async(user.set_password)(new_password)
+            await sync_to_async(user.save)()
 
-            invalidate_user_cache(user.id)
+            await invalidate_user_cache(user.id)
 
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            await sync_to_async(login)(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             return success_response({"message": gettext('Password successfully changed.')})
         except json.JSONDecodeError:
@@ -383,20 +388,20 @@ class ChangePasswordView(LocalizedView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ProfileView(LocalizedView):
     @staticmethod
-    def get(request):
-        if not request.user.is_authenticated:
+    async def get(request):
+        if not await sync_to_async(lambda: request.user.is_authenticated)():
             return error_response(gettext('User not authorized.'), 401)
 
         try:
-            profile_data = get_cached_profile(request.user)
+            profile_data = await get_cached_profile(request.user)
             return success_response(profile_data)
         except Exception as e:
             return error_response(f"{gettext('Error retrieving profile:')} {str(e)}", 500)
 
     @staticmethod
-    def post(request):
+    async def post(request):
         """Separate endpoint for uploading avatars"""
-        if not request.user.is_authenticated:
+        if not await sync_to_async(lambda: request.user.is_authenticated)():
             return error_response(gettext('User not authorized.'), 401)
 
         try:
@@ -404,10 +409,10 @@ class ProfileView(LocalizedView):
                 return error_response(gettext('File not found.'), 400)
 
             profile_picture = request.FILES['profile_picture']
-            user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            user_profile, _ = await sync_to_async(UserProfile.objects.get_or_create)(user=request.user)
 
-            handle_profile_picture(user_profile, profile_picture)
-            invalidate_user_cache(request.user.id)
+            await handle_profile_picture(user_profile, profile_picture)
+            await invalidate_user_cache(await sync_to_async(lambda: request.user.id)())
 
             return success_response({
                 "url": user_profile.profile_picture,
@@ -420,24 +425,24 @@ class ProfileView(LocalizedView):
             return error_response(f"{gettext('Error loading avatar:')} {str(e)}", 500)
 
     @staticmethod
-    def patch(request):
-        if not request.user.is_authenticated:
+    async def patch(request):
+        if not await sync_to_async(lambda: request.user.is_authenticated)():
             return error_response(gettext('User not authorized.'), 401)
 
         try:
             data, is_multipart = parse_request_data(request)
             user = request.user
 
-            update_user_data(user, data.get('user', {}))
-            update_user_settings(user, data.get('settings', {}), is_multipart)
-            update_user_profile(user, data.get('profile', {}))
+            await update_user_data(user, data.get('user', {}))
+            await update_user_settings(user, data.get('settings', {}), is_multipart)
+            await update_user_profile(user, data.get('profile', {}))
 
             if 'profile_picture' in request.FILES:
-                user_profile = UserProfile.objects.get(user=user)
-                handle_profile_picture(user_profile, request.FILES['profile_picture'])
+                user_profile = await sync_to_async(UserProfile.objects.get)(user=user)
+                await handle_profile_picture(user_profile, request.FILES['profile_picture'])
 
-            invalidate_user_cache(user.id)
-            updated_profile_data = get_cached_profile(user)
+            await invalidate_user_cache(await sync_to_async(lambda: user.id)())
+            updated_profile_data = await get_cached_profile(user)
 
             return success_response({
                 "message": gettext('Profile successfully updated.'),
@@ -452,20 +457,20 @@ class ProfileView(LocalizedView):
             return error_response(f"{gettext('Error updating profile:')} {str(e)}", 500)
 
     @staticmethod
-    def delete(request):
-        if not request.user.is_authenticated:
+    async def delete(request):
+        if not await sync_to_async(lambda: request.user.is_authenticated)():
             return error_response(gettext('User not authorized.'), 401)
 
         try:
             user = request.user
-            user_id = user.id
-            user_email = user.email
+            user_id = await sync_to_async(lambda: user.id)()
+            user_email = await sync_to_async(lambda: user.email)()
 
-            logout(request)
-            delete_profile_picture(user_id, delete_folder=True)
-            user.delete()
+            await sync_to_async(logout)(request)
+            await delete_profile_picture(user_id, delete_folder=True)
+            await sync_to_async(user.delete)()
 
-            invalidate_all_user_caches(user_id, user_email)
+            await invalidate_all_user_caches(user_id, user_email)
 
             return success_response({"message": gettext('Your account has been successfully deleted.')})
         except Exception as e:
