@@ -8,7 +8,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import { LogoutButton } from '@/features/logout'
-import { getInitials } from '@/shared/lib'
+import { getInitials, LANGUAGE_STORAGE_KEY } from '@/shared/lib'
 import { useI18n } from '@/shared/lib'
 
 interface UserInfo {
@@ -36,7 +36,7 @@ export const Sidebar = ({ userInfo }: SidebarProps) => {
 
   if (userInfo.is_admin === 'admin') {
     navLinks.push({
-      to: 'https://127.0.0.1:5173/admin',
+      to: `https://127.0.0.1:8000/admin/?lang=${localStorage.getItem(LANGUAGE_STORAGE_KEY)}`,
       icon: Home,
       text: t('Адмін панель'),
     })

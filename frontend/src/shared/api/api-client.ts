@@ -1,14 +1,19 @@
 import axios from 'axios'
+import { LANGUAGE_STORAGE_KEY } from '@/shared/lib'
 
 export const apiClient = axios.create({
-  baseURL: 'https://localhost:8000/api',
+  baseURL: '/api',
   withCredentials: true,
 })
 
 apiClient.interceptors.request.use(
   config => {
-    config.headers['Accept-Language'] =
-      localStorage.getItem('smartStudy_language') || 'en'
+    const language = localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'en'
+
+    config.headers['Accept-Language'] = language
+    config.headers['X-Language'] = language
+    config.headers['Content-Language'] = language
+
     return config
   },
   error => {
@@ -18,6 +23,17 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   response => {
+    const backendLanguage = response.headers['x-current-language']
+    if (
+      backendLanguage &&
+      backendLanguage !== localStorage.getItem(LANGUAGE_STORAGE_KEY)
+    ) {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, backendLanguage)
+      window.dispatchEvent(
+        new CustomEvent('languageChanged', { detail: backendLanguage })
+      )
+    }
+
     return response
   },
   error => {

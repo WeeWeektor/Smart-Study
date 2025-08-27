@@ -30,16 +30,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django.contrib.postgres',
-    'debug_toolbar',
     'django_extensions',
-
     'corsheaders',
     'rest_framework',
-
     'social_django',
-    'users',
     'sslserver',
     'channels',
+    'silk',
+
+    'users',
 ]
 
 CHANNEL_LAYERS = {
@@ -54,17 +53,17 @@ CHANNEL_LAYERS = {
 
 # Middleware
 MIDDLEWARE = [
+    "silk.middleware.SilkyMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'common.middleware.LanguageMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    # Debug toolbar
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -175,13 +174,6 @@ LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
 
-# Debug Toolbar
-INTERNAL_IPS = ['127.0.0.1']
-
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': lambda request: True,
-}
-
 CSRF_TRUSTED_ORIGINS = [
     'https://localhost:5173',
     'https://127.0.0.1:5173',
@@ -190,7 +182,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Static Files
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Defaults
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -245,3 +238,12 @@ BASE_URL = 'https://127.0.0.1:8000'
 DEFAULT_FROM_EMAIL = 'noreply@smartstudy.com'
 FRONTEND_URL = "https://localhost:5173"
 ALLOWED_ROLES = ['admin', 'student', 'teacher']
+
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = False
+
+LANGUAGE_COOKIE_NAME = 'django_language'
+LANGUAGE_COOKIE_AGE = 365 * 24 * 60 * 60
+LANGUAGE_COOKIE_PATH = '/'
+LANGUAGE_COOKIE_SECURE = SESSION_COOKIE_SECURE
+LANGUAGE_COOKIE_SAMESITE = 'Lax'

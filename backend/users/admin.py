@@ -1,12 +1,20 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.utils.translation import gettext
+from django.utils.translation import gettext, activate
+from django.conf import settings
 
 from users.models import CustomUser, UserProfile, UserSettings
 
+class LanguageAwareAdminMixin:
+    def get_form(self, request, obj=None, **kwargs):
+        language = request.COOKIES.get('django_language')
+        if language and language in [lang[0] for lang in settings.LANGUAGES]:
+            activate(language)
+        return super().get_form(request, obj, **kwargs)
+
 
 @admin.register(CustomUser)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(LanguageAwareAdminMixin, UserAdmin):
     model = CustomUser
 
     list_display = ('email', 'name', 'surname', 'role', 'is_active', 'is_staff')
@@ -32,7 +40,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
 
 @admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
+class UserProfileAdmin(LanguageAwareAdminMixin, admin.ModelAdmin):
     model = UserProfile
 
     list_display = ('user', 'location', 'organization', 'specialization', 'education_level')
@@ -47,7 +55,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserSettings)
-class UserSettingsAdmin(admin.ModelAdmin):
+class UserSettingsAdmin(LanguageAwareAdminMixin, admin.ModelAdmin):
     model = UserSettings
 
     list_display = ('user', 'email_notifications', 'push_notifications', 'show_profile_to_others')
