@@ -187,9 +187,9 @@ async def invalidate_all_user_caches(user_id, email=None):
 async def invalidate_user_settings_cache(user_id):
     """Delete only the settings cache"""
     cache_key = get_settings_cache_key(user_id)
-    await sync_to_async(cache.delete)(cache_key)
-    await sync_to_async(cache.delete)(get_profile_cache_key(user_id))
-    logger.info(f"{gettext("Disabled cache settings and user profile")} {user_id}")
+    result = await sync_to_async(cache.delete)(cache_key)
+    logger.info(f"{gettext("Disabled settings cache for user")} {user_id} - {gettext('successfully') if result else gettext('key not found')}")
+    return result
 
 async def invalidate_user_profile_cache(user_id):
     """Delete only the profile cache"""

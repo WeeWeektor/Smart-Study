@@ -19,7 +19,7 @@ async def verify_facebook_token(token):
     app_id = settings.SOCIAL_AUTH_FACEBOOK_KEY
     app_secret = settings.SOCIAL_AUTH_FACEBOOK_SECRET
 
-    debug_url = f"https://graph.facebook.com/debug_token"
+    debug_url = "https://graph.facebook.com/debug_token"
     debug_params = {
         "input_token": token,
         "access_token": f"{app_id}|{app_secret}"

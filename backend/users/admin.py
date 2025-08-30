@@ -5,6 +5,7 @@ from django.conf import settings
 
 from users.models import CustomUser, UserProfile, UserSettings
 
+
 class LanguageAwareAdminMixin:
     def get_form(self, request, obj=None, **kwargs):
         language = request.COOKIES.get('django_language')
@@ -38,6 +39,7 @@ class CustomUserAdmin(LanguageAwareAdminMixin, UserAdmin):
 
     search_fields = ('email', 'name', 'surname')
     ordering = ('email',)
+
 
 @admin.register(UserProfile)
 class UserProfileAdmin(LanguageAwareAdminMixin, admin.ModelAdmin):
