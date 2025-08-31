@@ -230,3 +230,32 @@ class TestLanguageMiddleware(TestCase):
 
         mock_activate.assert_any_call('en')
         mock_activate.assert_any_call('uk')
+
+    @patch('common.middleware.get_language_from_request')
+    @patch('common.middleware.validate_language')
+    def test_cookie_security_attributes(self, mock_validate, mock_get_language):
+        """Тест security атрибутів cookie"""
+        mock_get_language.return_value = 'en'
+        mock_validate.return_value = 'en'
+
+        response = self.middleware(self.request)
+        cookie = response.cookies.get('django_language')
+
+        self.assertNotIn('\r', cookie.value)
+        self.assertNotIn('\n', cookie.value)
+        self.assertNotIn(';', cookie.value)
+        self.assertNotIn('\x00', cookie.value)
+
+    @patch('common.middleware.get_language_from_request')
+    @patch('common.middleware.validate_language')
+    def test_response_header_security(self, mock_validate, mock_get_language):
+        """Тест безпеки response headers"""
+        mock_get_language.return_value = 'en'
+        mock_validate.return_value = 'en'
+
+        response = self.middleware(self.request)
+
+        lang_header = response['X-Current-Language']
+        self.assertNotIn('\r', lang_header)
+        self.assertNotIn('\n', lang_header)
+        self.assertNotIn('\x00', lang_header)

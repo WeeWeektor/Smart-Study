@@ -63,6 +63,7 @@ class ParceAcceptLanguageTestCase(TestCase):
         header = 'EN-us, EN;q=0.9'
         self.assertEqual(parce_accept_language(header), 'en')
 
+
 class ValidateLanguageTestCase(TestCase):
     def test_returns_default_if_language_is_none(self):
         self.assertEqual(validate_language(None), settings.LANGUAGE_CODE.lower())
@@ -78,3 +79,46 @@ class ValidateLanguageTestCase(TestCase):
 
     def test_returns_same_if_language_valid_uk(self):
         self.assertEqual(validate_language('Uk'), 'uk')
+
+
+class TestEdgeCases(TestCase):
+    """Граничні випадки"""
+
+    def test_extremely_long_accept_language_header(self):
+        """Тест з дуже довгим Accept-Language header"""
+        long_header = ','.join([f'lang{i}-XX' for i in range(100)])
+        result = parce_accept_language(long_header)
+        self.assertIsNone(result)
+
+    def test_malformed_accept_language_headers(self):
+        """Тест з некоректними headers"""
+        malformed = ['en;q=invalid', 'en-US;q=1.5', ';;;en;;;', 'en,,,uk,,,']
+        for header in malformed:
+            with self.subTest(header=header):
+                result = parce_accept_language(header)
+                self.assertIn(result, [None, 'en', 'uk'])
+
+    def test_accept_language_dos_protection(self):
+        """Тест захисту від DoS через Accept-Language"""
+        many_langs = ','.join([f'lang{i}' for i in range(1000)])
+        result = parce_accept_language(many_langs)
+        self.assertIsNone(result)
+
+    def test_accept_language_nested_parsing(self):
+        """Тест складного парсингу Accept-Language"""
+        complex_header = 'en-US;q=0.9;level=1,en;q=0.8;charset=utf-8,uk;q=0.7'
+        result = parce_accept_language(complex_header)
+        self.assertEqual(result, 'en')
+
+    def test_accept_language_special_characters(self):
+        """Тест спеціальних символів в Accept-Language"""
+        special_headers = [
+            'en\r\n',
+            'en\t\t',
+            'en;q=\x00',
+            'en\xff\xfe',
+        ]
+        for header in special_headers:
+            with self.subTest(header=header):
+                result = parce_accept_language(header)
+                self.assertIn(result, [None, 'en', 'uk'])

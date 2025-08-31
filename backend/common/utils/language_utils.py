@@ -1,10 +1,14 @@
+import re
+
 from smartStudy_backend import settings
 
 
 def get_language_from_request(request):
     cookie_lang = request.COOKIES.get('django_language') or request.COOKIES.get('language')
     if cookie_lang:
-        return cookie_lang.lower()
+        cleaned_lang = _extract_language_code(cookie_lang)
+        if cleaned_lang and validate_language(cleaned_lang):
+            return cleaned_lang.lower()
 
     x_language = request.headers.get('X-Language')
     if x_language:
@@ -30,6 +34,21 @@ def get_language_from_request(request):
     return getattr(settings, 'LANGUAGE_CODE', 'en').lower()
 
 
+def _extract_language_code(value):
+    """Витягує тільки мовний код з потенційно небезпечного рядка"""
+    if not value or not isinstance(value, str):
+        return None
+
+    if len(value) > 50:
+        return None
+
+    cleaned = re.sub(r'[^a-zA-Z-]', '', value.split(';')[0].split(',')[0].strip())
+
+    if len(cleaned) > 10:
+        return None
+
+    return cleaned if cleaned else None
+
 def parce_accept_language(accept_language_header):
     if not accept_language_header:
         return None
@@ -41,8 +60,9 @@ def parce_accept_language(accept_language_header):
         if lang_code not in languages:
             languages.append(lang_code)
 
+    valid_languages = [lang[0] for lang in settings.LANGUAGES]
     for lang_code in languages:
-        if lang_code in [lang[0] for lang in settings.LANGUAGES]:
+        if lang_code in valid_languages:
             return lang_code.lower()
 
     return None

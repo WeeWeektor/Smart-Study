@@ -330,3 +330,21 @@ class TestLocalizedMixin(TestCase):
         self.assertEqual(response.content.decode(), "Middle view response")
         mock_set_language.assert_called_once_with(self.request)
         mock_deactivate.assert_called_once()
+
+    @patch.object(LocalizedMixin, '_set_language')
+    @patch('django.utils.translation.deactivate')
+    async def test_async_exception_translation_cleanup(self, mock_deactivate, mock_set_language):
+        """Тест що translation очищається навіть при async винятках"""
+        mock_set_language.return_value = 'en'
+
+        class AsyncExceptionView(LocalizedMixin, APIView):
+            async def get(self, request, *args, **kwargs):
+                await asyncio.sleep(0.001)
+                raise ValueError("Async exception")
+
+        view = AsyncExceptionView()
+
+        with self.assertRaises(ValueError):
+            await view.async_dispatch(self.request)
+
+        mock_deactivate.assert_called_once()
