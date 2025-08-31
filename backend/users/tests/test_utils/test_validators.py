@@ -271,6 +271,86 @@ class TestValidators(TestCase):
         cache_key = f"email_valid_{hash(email)}"
         self.assertFalse(cache.get(cache_key))
 
+    async def test_cached_email_validator_concurrent_access(self):
+        """Тест одночасного доступу до кешованого валідатора"""
+        email = 'concurrent@example.com'
+
+        tasks = [cached_email_validator(email) for _ in range(5)]
+        results = await asyncio.gather(*tasks)
+
+        self.assertTrue(all(results))
+
+    async def test_cached_email_validator_memory_usage(self):
+        """Тест використання пам'яті кешем"""
+        emails = [f'test{i}@example.com' for i in range(100)]
+
+        for email in emails:
+            await cached_email_validator(email)
+
+        for email in emails:
+            cache_key = f"email_valid_{hash(email)}"
+            self.assertTrue(cache.get(cache_key))
+
+    def test_phone_validator_edge_cases(self):
+        """Тест граничних випадків для phone валідатора"""
+        edge_cases = [
+            ('+1234567890', True),  # Мінімум з +
+            ('1234567890', True),  # Мінімум без +
+            ('+123456789012345', True),  # Максимум з +
+            ('123456789012345', True),  # Максимум без +
+            ('+123456789', False),  # Менше мінімуму з +
+            ('123456789', False),  # Менше мінімуму без +
+            ('+1234567890123456', False),  # Більше максимуму з +
+            ('1234567890123456', False),  # Більше максимуму без +
+        ]
+
+        for phone, should_be_valid in edge_cases:
+            with self.subTest(phone=phone):
+                if should_be_valid:
+                    try:
+                        phone_validator(phone)
+                    except ValidationError:
+                        self.fail(f'Valid phone {phone} was rejected')
+                else:
+                    with self.assertRaises(ValidationError):
+                        phone_validator(phone)
+
+    async def test_cached_email_validator_cache_miss_then_hit(self):
+        """Тест послідовності cache miss -> cache hit"""
+        email = 'test@example.com'
+        cache_key = f"email_valid_{hash(email)}"
+
+        with patch('users.utils.validators.email_validator') as mock_validator:
+            result1 = await cached_email_validator(email)
+            self.assertTrue(result1)
+            mock_validator.assert_called_once()
+
+        with patch('users.utils.validators.email_validator') as mock_validator:
+            result2 = await cached_email_validator(email)
+            self.assertTrue(result2)
+            mock_validator.assert_not_called()
+
+    def test_email_validator_boundary_cases(self):
+        """Тест граничних випадків для email"""
+        boundary_cases = [
+            ('a@b.co', True),  # Мінімальний валідний email
+            ('test@sub.domain.com', True),  # Піддомен
+            ('user+filter@domain.com', True),  # Email з фільтром
+            ('user@domain-name.com', True),  # Домен з дефісом
+            ('123@456.789', True),  # Числовий email
+        ]
+
+        for email, should_be_valid in boundary_cases:
+            with self.subTest(email=email):
+                if should_be_valid:
+                    try:
+                        email_validator(email)
+                    except ValidationError:
+                        self.fail(f'Valid email {email} was rejected')
+                else:
+                    with self.assertRaises(ValidationError):
+                        email_validator(email)
+
 
 class TestValidatorsIntegration(TestCase):
     """Інтеграційні тести для валідаторів"""

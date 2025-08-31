@@ -306,3 +306,54 @@ class TestRequestParsing(TestCase):
 
         self.assertEqual(data, json_data)
         self.assertFalse(is_multipart)
+
+    def test_parse_request_data_large_json(self):
+        """Тест обробки великих JSON файлів"""
+        large_data = {'items': [{'id': i, 'name': f'item_{i}'} for i in range(1000)]}
+        request = self.factory.post('/',
+                                    data=json.dumps(large_data),
+                                    content_type='application/json')
+
+        data, is_multipart = parse_request_data(request)
+
+        self.assertEqual(len(data['items']), 1000)
+        self.assertFalse(is_multipart)
+
+    def test_parse_request_data_special_characters_multipart(self):
+        """Тест спеціальних символів у multipart даних"""
+        request = Mock()
+        request.content_type = 'multipart/form-data'
+        mock_post = Mock()
+        mock_post.dict.return_value = {
+            'special_chars': 'äöü@#$%^&*()',
+            'unicode': '🚀🌟💫'
+        }
+        request.POST = mock_post
+
+        data, is_multipart = parse_request_data(request)
+
+        self.assertEqual(data['special_chars'], 'äöü@#$%^&*()')
+        self.assertEqual(data['unicode'], '🚀🌟💫')
+        self.assertTrue(is_multipart)
+
+    def test_parse_request_data_malformed_json(self):
+        """Тест некоректного JSON"""
+        request = Mock()
+        request.content_type = 'application/json'
+        request.body = b'{"incomplete": json'
+
+        with self.assertRaises(json.JSONDecodeError):
+            parse_request_data(request)
+
+    def test_parse_request_data_content_type_with_charset(self):
+        """Тест content_type з charset"""
+        request = Mock()
+        request.content_type = 'multipart/form-data; charset=utf-8; boundary=----WebKitFormBoundary'
+        mock_post = Mock()
+        mock_post.dict.return_value = {'key': 'value'}
+        request.POST = mock_post
+
+        data, is_multipart = parse_request_data(request)
+
+        self.assertEqual(data, {'key': 'value'})
+        self.assertTrue(is_multipart)

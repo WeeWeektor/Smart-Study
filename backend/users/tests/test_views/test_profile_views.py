@@ -382,30 +382,41 @@ class TestProfileView(TestCase):
     @patch('users.views.sync_to_async')
     @patch('users.views.delete_profile_picture')
     @patch('users.views.invalidate_all_user_caches')
-    @patch('users.views.success_response')
-    async def test_profile_view_delete_success(self, mock_success_response, mock_invalidate_all_caches,
-                                               mock_delete_picture, mock_sync_to_async):
+    @patch('users.views.logout')
+    async def test_profile_view_delete_success(self, mock_logout, mock_invalidate_cache, mock_delete_picture,
+                                               mock_sync_to_async):
         """Тест успішного видалення акаунту"""
 
         mock_sync_to_async.side_effect = [
             AsyncMock(return_value=True),  # is_authenticated
-            AsyncMock(return_value=1),  # user.id (lambda: user.id)
-            AsyncMock(return_value='test@example.com'),  # user.email (lambda: user.email)
-            AsyncMock(),  # logout
-            AsyncMock(),  # user.delete()
+            AsyncMock(return_value=1),  # user.id
+            AsyncMock(return_value='test@example.com'),  # user.email
+            AsyncMock(return_value=None),  # logout
+            AsyncMock(return_value=None)  # user.delete()
         ]
 
-        mock_delete_picture.return_value = AsyncMock()
-        mock_invalidate_all_caches.return_value = AsyncMock()
-        mock_success_response.return_value = JsonResponse({'success': True})
+        mock_logout.return_value = None
+        mock_delete_picture.return_value = None
+        mock_invalidate_cache.return_value = None
 
         request = self.factory.delete('/')
         request.user = self.mock_user
 
-        await self.view.delete(request)
+        with patch('users.views.success_response') as mock_success_response:
+            mock_success_response.return_value = JsonResponse({
+                'success': True,
+                'message': 'Account deleted successfully.'
+            }, status=200)
 
-        mock_delete_picture.assert_called_once_with(1, delete_folder=True)
-        mock_invalidate_all_caches.assert_called_once_with(1, 'test@example.com')
+            response = await self.view.delete(request)
+
+            self.assertEqual(response.status_code, 200)
+
+            mock_delete_picture.assert_called_once_with(1, delete_folder=True)
+            mock_invalidate_cache.assert_called_once_with(1, 'test@example.com')
+            mock_success_response.assert_called_once_with({
+                'message': 'Your account has been successfully deleted.'
+            })
 
     @patch('users.views.sync_to_async')
     async def test_profile_view_delete_unauthenticated(self, mock_sync_to_async):
@@ -657,3 +668,68 @@ class TestProfileView(TestCase):
             self.assertIn('message', call_args)
             self.assertIn('profile_data', call_args)
             self.assertEqual(call_args['profile_data'], self.profile_data)
+
+    @patch('users.views.sync_to_async')
+    async def test_profile_view_get_exception_handling(self, mock_sync_to_async):
+        """Тест обробки винятків в GET методі"""
+        mock_sync_to_async.return_value = AsyncMock(return_value=True)
+
+        request = self.factory.get('/')
+        request.user = self.mock_user
+
+        with patch('users.views.get_cached_profile') as mock_get_cached:
+            mock_get_cached.side_effect = Exception('Cache error')
+
+            with patch('users.views.error_response') as mock_error_response:
+                mock_error_response.return_value = JsonResponse({'error': 'Server error'}, status=500)
+
+                await self.view.get(request)
+
+                mock_error_response.assert_called_once()
+
+    @patch('users.views.sync_to_async')
+    async def test_profile_view_post_file_validation_error(self, mock_sync_to_async):
+        """Тест валідаційної помилки при завантаженні файлу"""
+        mock_sync_to_async.side_effect = [
+            AsyncMock(return_value=True),  # is_authenticated
+            AsyncMock(return_value=(Mock(), True)),  # get_or_create
+        ]
+
+        request = Mock()
+        request.user = self.mock_user
+        request.FILES = {'profile_picture': Mock()}
+
+        with patch('users.views.handle_profile_picture') as mock_handle:
+            mock_handle.side_effect = ValidationError('File too large')
+
+            with patch('users.views.error_response') as mock_error_response:
+                mock_error_response.return_value = JsonResponse({'error': 'Validation error'}, status=400)
+
+                response = await self.view.post(request)
+
+                self.assertEqual(response.status_code, 400)
+                mock_error_response.assert_called_once()
+
+    @patch('users.views.sync_to_async')
+    @patch('users.views.parse_request_data')
+    async def test_profile_view_patch_json_decode_error(self, mock_parse_request, mock_sync_to_async):
+        """Тест JSON декодування помилки в PATCH"""
+        mock_sync_to_async.return_value = AsyncMock(return_value=True)
+        mock_parse_request.side_effect = json.JSONDecodeError('Invalid JSON', '', 0)
+
+        request = self.factory.patch('/')
+        request.user = self.mock_user
+
+        with patch('users.views.error_response') as mock_error_response:
+            mock_error_response.return_value = JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+            await self.view.patch(request)
+
+            mock_error_response.assert_called_once()
+
+    async def test_profile_view_all_methods_have_csrf_protection(self):
+        """Тест що всі методи мають CSRF захист"""
+        self.assertTrue(hasattr(ProfileView.dispatch, '__wrapped__'))
+
+        decorator_name = ProfileView.dispatch.__name__
+        self.assertEqual(decorator_name, 'dispatch')

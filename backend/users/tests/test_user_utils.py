@@ -46,6 +46,48 @@ class TestSyncFunctions(TestCase):
         self.assertIsInstance(token, str)
         self.assertIn(email, token)
 
+    def test_generate_activation_token_different_emails(self):
+        """Тест генерації різних токенів для різних email"""
+        email1 = "user1@example.com"
+        email2 = "user2@example.com"
+
+        token1 = user_utils.generate_activation_token(email1)
+        token2 = user_utils.generate_activation_token(email2)
+
+        self.assertNotEqual(token1, token2)
+        self.assertIn(email1, token1)
+        self.assertIn(email2, token2)
+
+    def test_generate_activation_token_empty_email(self):
+        """Тест генерації токену з порожнім email"""
+        token = user_utils.generate_activation_token("")
+        self.assertIsInstance(token, str)
+
+    def test_success_response_with_empty_data(self):
+        """Тест success_response з порожніми даними"""
+        response = user_utils.success_response(data={})
+        resp_data = json.loads(response.content.decode())
+
+        self.assertEqual(resp_data["status"], "success")
+        self.assertEqual(resp_data["message"], "Successfully")
+
+    def test_error_response_with_custom_status(self):
+        """Тест error_response з різними статус кодами"""
+        test_cases = [
+            (400, "Bad Request"),
+            (401, "Unauthorized"),
+            (403, "Forbidden"),
+            (404, "Not Found"),
+            (500, "Internal Server Error")
+        ]
+
+        for status_code, message in test_cases:
+            with self.subTest(status_code=status_code):
+                response = user_utils.error_response(message, status=status_code)
+                self.assertEqual(response.status_code, status_code)
+                data = json.loads(response.content.decode())
+                self.assertEqual(data["message"], message)
+
 
 class TestAsyncFunctions(TestCase):
     def setUp(self):
@@ -128,3 +170,43 @@ class TestAsyncFunctions(TestCase):
         _, kwargs = mock_send_template.call_args
         self.assertEqual(kwargs["user"], self.user)
         self.assertIn("/api/auth/reset-password/", kwargs["url_path"])
+
+    @patch("users.user_utils.settings")
+    @patch("users.user_utils.sync_to_async")
+    def test_send_template_email_missing_base_url(self, mock_sync, mock_settings):
+        """Тест send_template_email без BASE_URL у settings"""
+        mock_settings.BASE_URL = None
+        mock_settings.DEFAULT_FROM_EMAIL = 'test@example.com'
+        mock_send = AsyncMock()
+        mock_sync.return_value = mock_send
+
+        async def runner():
+            await user_utils.send_template_email(
+                user=self.user,
+                subject="Test",
+                url_path="/test/",
+                html_template_func=get_verification_email_html,
+                plain_template_func=get_verification_email_plain
+            )
+
+        asyncio.run(runner())
+        mock_send.assert_awaited_once()
+
+    @patch("users.user_utils.sync_to_async")
+    def test_send_template_email_email_sending_failure(self, mock_sync):
+        """Тест помилки при відправці email"""
+        mock_send = AsyncMock(side_effect=Exception("SMTP Error"))
+        mock_sync.return_value = mock_send
+
+        async def runner():
+            with self.assertRaises(Exception) as cm:
+                await user_utils.send_template_email(
+                    user=self.user,
+                    subject="Test",
+                    url_path="/test/",
+                    html_template_func=get_verification_email_html,
+                    plain_template_func=get_verification_email_plain
+                )
+            self.assertIn("SMTP Error", str(cm.exception))
+
+        asyncio.run(runner())
