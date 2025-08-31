@@ -56,11 +56,11 @@ class RegisterView(LocalizedView):
             except ValidationError as e:
                 return error_response(', '.join(e.messages))
 
-            try:
-                if data['phone_number'] is not None:
+            if 'phone_number' in data and data['phone_number'] is not None:
+                try:
                     await sync_to_async(phone_validator)(data['phone_number'])
-            except ValidationError as e:
-                return error_response(str(e))
+                except ValidationError as e:
+                    return error_response(str(e))
 
             allowed_roles = await get_allowed_roles()
             if data['role'] not in allowed_roles:
@@ -73,7 +73,7 @@ class RegisterView(LocalizedView):
             user = await sync_to_async(CustomUser.objects.create_user)(
                 name=data['name'].strip(),
                 surname=data['surname'].strip(),
-                phone_number=data['phone_number'],
+                phone_number=data.get('phone_number'),
                 role=data['role'],
                 email=data['email'],
                 password=data['password'],
