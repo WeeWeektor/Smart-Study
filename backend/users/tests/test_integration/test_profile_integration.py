@@ -14,7 +14,9 @@ class ProfileIntegrationTest(TransactionTestCase):
         self.client = Client()
         self.user = User.objects.create_user(
             email='test@example.com',
-            password='testpass123'
+            password='testpass123',
+            is_active=True,
+            is_verified_email=True,
         )
         self.client.force_login(self.user)
 
@@ -65,11 +67,13 @@ class ProfileIntegrationTest(TransactionTestCase):
             content_type="image/jpeg"
         )
 
-        response = self.client.patch(
+        response = self.client.post(
             '/api/user/profile/',
             {
-                'name': 'Updated Name',
-                'bio': 'Updated bio',
+                'data': json.dumps({
+                    'user': {'name': 'Updated_Name'},
+                    'profile': {'bio': 'Updated bio'}
+                }),
                 'profile_picture': test_image
             }
         )
@@ -102,7 +106,9 @@ class ProfileCacheIntegrationTest(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(
             email='cache@example.com',
-            password='testpass123'
+            password='testpass123',
+            is_active=True,
+            is_verified_email=True,
         )
         self.client.force_login(self.user)
 
@@ -132,11 +138,15 @@ class ProfileSecurityIntegrationTest(TestCase):
         self.client = Client()
         self.user1 = User.objects.create_user(
             email='user1@example.com',
-            password='testpass123'
+            password='testpass123',
+            is_active=True,
+            is_verified_email=True,
         )
         self.user2 = User.objects.create_user(
             email='user2@example.com',
-            password='testpass123'
+            password='testpass123',
+            is_active=True,
+            is_verified_email=True,
         )
 
     def test_unauthorized_access(self):

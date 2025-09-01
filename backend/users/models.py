@@ -5,6 +5,7 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext
+from django.utils.html import strip_tags
 
 
 class CustomUserManager(BaseUserManager):
@@ -49,6 +50,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
+    def clean(self):
+        if self.name:
+            self.name = strip_tags(self.name)
+        if self.surname:
+            self.surname = strip_tags(self.surname)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile', verbose_name='User')
@@ -72,6 +83,20 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{gettext("Profile")} {self.user.name} {self.user.surname}"
+
+    def clean(self):
+        if self.bio:
+            self.bio = strip_tags(self.bio)
+        if self.location:
+            self.location = strip_tags(self.location)
+        if self.organization:
+            self.organization = strip_tags(self.organization)
+        if self.specialization:
+            self.specialization = strip_tags(self.specialization)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 
 class UserSettings(models.Model):

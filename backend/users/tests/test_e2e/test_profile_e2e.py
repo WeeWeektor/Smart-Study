@@ -4,6 +4,7 @@ from django.test import Client
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 import json
+import uuid
 
 User = get_user_model()
 
@@ -17,11 +18,13 @@ class ProfileE2ETest(TransactionTestCase):
 
     def test_complete_user_journey(self):
         """Тест повного шляху користувача від реєстрації до видалення"""
+        unique_email = f'john-{uuid.uuid4().hex[:8]}@example.com'
+
         # 1. Реєстрація
         register_data = {
             'name': 'John',
             'surname': 'Doe',
-            'email': 'john@example.com',
+            'email': unique_email,
             'password': 'StrongPass123!',
             'role': 'student'
         }
@@ -33,20 +36,15 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 2. Створюємо користувача напряму (симулюємо верифікацію)
-        user = User.objects.create_user(
-            name='John',
-            surname='Doe',
-            email='john@example.com',
-            password='StrongPass123!',
-            role='student',
-            is_active=True,
-            is_verified_email=True
-        )
+        # 2. Отримуємо створеного користувача з БД
+        user = User.objects.get(email=unique_email)
+        user.is_active = True
+        user.is_verified_email = True
+        user.save()
 
         # 3. Логін
         login_data = {
-            'email': 'john@example.com',
+            'email': unique_email,
             'password': 'StrongPass123!'
         }
 
@@ -108,7 +106,7 @@ class ProfileE2ETest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
 
         # 9. Перевірка що користувач видалений
-        self.assertFalse(User.objects.filter(email='john@example.com').exists())
+        self.assertFalse(User.objects.filter(email=unique_email).exists())
 
     def test_profile_data_consistency_across_requests(self):
         """Тест консистентності даних профілю між запитами"""

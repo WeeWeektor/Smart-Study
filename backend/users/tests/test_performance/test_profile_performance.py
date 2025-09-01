@@ -14,7 +14,9 @@ class ProfilePerformanceTest(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(
             email='perf@example.com',
-            password='testpass123'
+            password='testpass123',
+            is_active=True,
+            is_verified_email=True,
         )
         self.client.force_login(self.user)
 
@@ -46,20 +48,29 @@ class ProfilePerformanceTest(TestCase):
 
         self.assertLess(second_request_time, first_request_time)
 
-    @override_settings(CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    })
+    @override_settings(
+        CACHES={
+            'default': {
+                'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+            }
+        },
+        SESSION_ENGINE='django.contrib.sessions.backends.db'
+    )
     def test_performance_without_cache(self):
         """Тест продуктивності без кешування"""
-        cache.clear()
+        user = User.objects.create_user(
+            email='no-cache@example.com',
+            password='testpass123',
+            is_active=True,
+            is_verified_email=True,
+        )
+        client = Client()
+        client.force_login(user)
 
         start_time = time.time()
-        response = self.client.get('/api/user/profile/')
+        response = client.get('/api/user/profile/')
         end_time = time.time()
 
         self.assertEqual(response.status_code, 200)
-
         request_time = end_time - start_time
         self.assertLess(request_time, 2.0)
