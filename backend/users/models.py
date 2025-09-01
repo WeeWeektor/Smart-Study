@@ -5,7 +5,8 @@ from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext
-from django.utils.html import strip_tags
+
+from common.utils import sanitize_input
 
 
 class CustomUserManager(BaseUserManager):
@@ -51,10 +52,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Users'
 
     def clean(self):
-        if self.name:
-            self.name = strip_tags(self.name)
-        if self.surname:
-            self.surname = strip_tags(self.surname)
+        self.name = sanitize_input(self.name)
+        self.surname = sanitize_input(self.surname)
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -85,14 +84,10 @@ class UserProfile(models.Model):
         return f"{gettext("Profile")} {self.user.name} {self.user.surname}"
 
     def clean(self):
-        if self.bio:
-            self.bio = strip_tags(self.bio)
-        if self.location:
-            self.location = strip_tags(self.location)
-        if self.organization:
-            self.organization = strip_tags(self.organization)
-        if self.specialization:
-            self.specialization = strip_tags(self.specialization)
+        self.bio = sanitize_input(self.bio)
+        self.location = sanitize_input(self.location)
+        self.organization = sanitize_input(self.organization)
+        self.specialization = sanitize_input(self.specialization)
 
     def save(self, *args, **kwargs):
         self.clean()

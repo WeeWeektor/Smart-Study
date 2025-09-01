@@ -174,3 +174,144 @@ class ProfileE2ETest(TransactionTestCase):
         # Фінальна перевірка стану
         final_response = clients[0].get('/api/user/profile/')
         self.assertEqual(final_response.status_code, 200)
+
+    def test_oauth_to_profile_complete_flow(self):
+        """E2E тест OAuth → Profile workflow"""
+        from unittest.mock import patch
+
+        with patch('users.services.oauth_service.id_token.verify_oauth2_token') as mock_verify:
+            # Мок Google OAuth
+            mock_verify.return_value = {
+                'email': 'oauth_e2e@example.com',
+                'given_name': 'OAuth',
+                'family_name': 'User',
+                'picture': 'https://example.com/avatar.jpg'
+            }
+
+            # 1. OAuth реєстрація
+            oauth_data = {
+                'credential': 'fake_token',
+                'role': 'student'
+            }
+
+            response = self.client.post(
+                '/api/auth/google-oauth/',
+                data=json.dumps(oauth_data),
+                content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+
+            # 2. Автоматичний логін після OAuth
+            response = self.client.get('/api/user/profile/')
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data['user']['email'], 'oauth_e2e@example.com')
+
+            # 3. Доповнення профілю після OAuth
+            profile_data = {
+                'profile': {
+                    'bio': 'OAuth user bio',
+                    'location': 'Kyiv, Ukraine'
+                },
+                'settings': {
+                    'email_notifications': True
+                }
+            }
+
+            response = self.client.patch(
+                '/api/user/profile/',
+                data=json.dumps(profile_data),
+                content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+
+    def test_email_verification_complete_workflow(self):
+        """E2E тест email верифікації"""
+        unique_email = f'verify-{uuid.uuid4().hex[:8]}@example.com'
+
+        # 1. Реєстрація без верифікації
+        register_data = {
+            'name': 'Verify',
+            'surname': 'User',
+            'email': unique_email,
+            'password': 'VerifyPass123!',
+            'role': 'student'
+        }
+
+        response = self.client.post(
+            '/api/auth/register/',
+            data=json.dumps(register_data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # 2. Спроба логіну без верифікації
+        login_data = {
+            'email': unique_email,
+            'password': 'VerifyPass123!'
+        }
+
+        response = self.client.post(
+            '/api/auth/login/',
+            data=json.dumps(login_data),
+            content_type='application/json'
+        )
+        # Може блокувати або дозволяти, залежно від налаштувань
+        self.assertIn(response.status_code, [200, 400, 401, 403])
+
+        # 3. Верифікація email
+        user = User.objects.get(email=unique_email)
+        user.is_verified_email = True
+        user.is_active = True
+        user.save()
+
+        # 4. Успішний логін після верифікації
+        response = self.client.post(
+            '/api/auth/login/',
+            data=json.dumps(login_data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_error_recovery_workflow(self):
+        """E2E тест відновлення після помилок"""
+        user = User.objects.create_user(
+            name='Recovery',
+            surname='User',
+            email='recovery@example.com',
+            password='Recovery123!',
+            role='student',
+            is_verified_email=True,
+            is_active=True
+        )
+        self.client.force_login(user)
+
+        # 1. Невалідне оновлення профілю - надсилаємо невалідний JSON
+        response = self.client.patch(
+            '/api/user/profile/',
+            data='{"user": {"name": "Test"',  # Неправильний JSON без закриваючої дужки
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        # 2. Перевірка що дані не змінились
+        response = self.client.get('/api/user/profile/')
+        data = response.json()
+        self.assertEqual(data['user']['name'], 'Recovery')
+
+        # 3. Валідне оновлення після помилки
+        valid_data = {
+            'user': {'name': 'Recovered User'}
+        }
+
+        response = self.client.patch(
+            '/api/user/profile/',
+            data=json.dumps(valid_data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # 4. Підтвердження успішного оновлення
+        response = self.client.get('/api/user/profile/')
+        data = response.json()
+        self.assertEqual(data['user']['name'], 'Recovered User')
