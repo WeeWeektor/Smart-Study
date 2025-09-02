@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-13 15:25+0300\n"
+"POT-Creation-Date: 2025-09-02 21:00+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,6 +20,30 @@ msgstr ""
 "11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
 "100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
 "(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+
+#: .\common\middleware.py:61
+msgid "Too many requests. Try again later."
+msgstr "Занадто багато запитів. Спробуйте пізніше."
+
+#: .\common\middleware.py:127
+msgid "Session security violation. Please login again."
+msgstr "Порушення безпеки сеансу. Будь ласка, увійдіть знову."
+
+#: .\common\utils\sanitize_input.py:22
+msgid "NoSQL injection pattern detected: "
+msgstr "Виявлено шаблон ін'єкції NoSQL:"
+
+#: .\core\admin.py:4
+msgid "Smart Study Administration"
+msgstr "Smart Study Адміністрування"
+
+#: .\core\admin.py:5
+msgid "Site administration"
+msgstr "Адміністрування сайту"
+
+#: .\core\admin.py:6
+msgid "Smart Study"
+msgstr "Smart Study"
 
 #: .\users\admin.py:17
 msgid "Personal information"
@@ -33,175 +57,403 @@ msgstr "Права доступу"
 msgid "Additional"
 msgstr "Додатково"
 
-#: .\users\admin.py:43
+#: .\users\admin.py:45
 msgid "Basic information"
 msgstr "Основна інформація"
 
-#: .\users\admin.py:44
+#: .\users\admin.py:46
 msgid "Profile details"
 msgstr "Деталі профілю"
 
-#: .\users\admin.py:45
+#: .\users\admin.py:47
 msgid "Description"
 msgstr "Опис"
 
-#: .\users\admin.py:58
+#: .\users\admin.py:60 .\users\models.py:46 .\users\models.py:51
+#: .\users\models.py:75
 msgid "User"
 msgstr "Користувач"
 
-#: .\users\admin.py:59
+#: .\users\admin.py:61
 msgid "Notification"
 msgstr "Повідомлення"
 
-#: .\users\admin.py:60
+#: .\users\admin.py:62
 msgid "Privacy"
 msgstr "Конфіденційність"
 
-#: .\users\models.py:13
+#: .\users\models.py:11
 msgid "The Email field must be set"
 msgstr "Поле «Електронна пошта» має бути заповнене"
 
-#: .\users\models.py:74
+#: .\users\models.py:27
+msgid "Name"
+msgstr "Ім'я"
+
+#: .\users\models.py:28
+msgid "Surname"
+msgstr "Прізвище"
+
+#: .\users\models.py:29
+msgid "Phone number"
+msgstr "Номер телефону"
+
+#: .\users\models.py:30
+msgid "Email"
+msgstr "Електронна пошта"
+
+#: .\users\models.py:31
+msgid "Is email verified"
+msgstr "Верифікована електронна пошта"
+
+#: .\users\models.py:32
+msgid "Role"
+msgstr "Роль"
+
+#: .\users\models.py:33
+msgid "Admin"
+msgstr "Адміністратор"
+
+#: .\users\models.py:34
+msgid "Student"
+msgstr "Студент"
+
+#: .\users\models.py:35
+msgid "Teacher"
+msgstr "Вчитель"
+
+#: .\users\models.py:37
+msgid "Is active"
+msgstr "Активований"
+
+#: .\users\models.py:38
+msgid "Is staff"
+msgstr "Персонал"
+
+#: .\users\models.py:39
+msgid "Created at"
+msgstr "Створено о"
+
+#: .\users\models.py:47
+msgid "Users"
+msgstr "Користувачі"
+
+#: .\users\models.py:53
+msgid "Profile Picture"
+msgstr "Фотографія профілю"
+
+#: .\users\models.py:54
+msgid "Location"
+msgstr "Місцезнаходження"
+
+#: .\users\models.py:55
+msgid "Organization"
+msgstr "Організація"
+
+#: .\users\models.py:56
+msgid "Specialization"
+msgstr "Спеціалізація"
+
+#: .\users\models.py:57
+msgid "Education Level"
+msgstr "Рівень освіти"
+
+#: .\users\models.py:58
+msgid "Bachelor"
+msgstr "Бакалавр"
+
+#: .\users\models.py:59
+msgid "Master"
+msgstr "Магістр"
+
+#: .\users\models.py:60
+msgid "Doctor of Science"
+msgstr "Доктор наук"
+
+#: .\users\models.py:61
+msgid "Diploma"
+msgstr "Дипломований"
+
+#: .\users\models.py:62
+msgid "Certificate"
+msgstr "Сертифікований"
+
+#: .\users\models.py:64
+msgid "About me"
+msgstr "Про мене"
+
+#: .\users\models.py:67
+msgid "User Profile"
+msgstr "Профіль користувача"
+
+#: .\users\models.py:68
+msgid "User Profiles"
+msgstr "Профілі користувачів"
+
+#: .\users\models.py:71
 msgid "Profile"
 msgstr "Профіль"
 
-#: .\users\services\oauth_service.py:30
+#: .\users\models.py:77
+msgid "Email notifications"
+msgstr "Email повідомлення"
+
+#: .\users\models.py:78
+msgid "Push notifications"
+msgstr "Push повідомлення"
+
+#: .\users\models.py:79
+msgid "Deadline reminders"
+msgstr "Нагадування про терміни"
+
+#: .\users\models.py:80
+msgid "Show profile to others"
+msgstr "Показувати профіль іншим"
+
+#: .\users\models.py:81
+msgid "Show achievements"
+msgstr "Показувати досягнення"
+
+#: .\users\models.py:84 .\users\models.py:85
+msgid "User Settings"
+msgstr "Налаштування користувачів"
+
+#: .\users\services\file_validation_service.py:19
+msgid "File too large. Maximum size: 5MB"
+msgstr "Файл занадто великий. Максимальний розмір: 5 МБ"
+
+#: .\users\services\file_validation_service.py:33
+msgid "File type not allowed. Allowed types: JPEG, PNG, GIF, WebP"
+msgstr "Тип файлу не підтримується. Підтримувані типи: JPEG, PNG, GIF, WebP."
+
+#: .\users\services\file_validation_service.py:42
+msgid "File signature does not match declared type"
+msgstr "Підпис файлу не відповідає заявленому типу"
+
+#: .\users\services\file_validation_service.py:45
+msgid "Content-Type spoofing detected"
+msgstr "Виявлено підробку типу вмісту"
+
+#: .\users\services\file_validation_service.py:52
+msgid "Dangerous file extension detected"
+msgstr "Виявлено небезпечне розширення файлу"
+
+#: .\users\services\oauth_service.py:33
 msgid "Invalid Facebook token"
 msgstr "Недійсний токен Facebook"
 
-#: .\users\services\oauth_service.py:42
+#: .\users\services\oauth_service.py:45
 msgid "Facebook API error: "
 msgstr "Помилка API Facebook: "
 
-#: .\users\services\oauth_service.py:67
+#: .\users\services\oauth_service.py:70
 msgid "Unknown OAuth provider"
 msgstr "Невідомий постачальник OAuth"
 
-#: .\users\services\oauth_service.py:96
+#: .\users\services\oauth_service.py:99
 msgid "Successful authorization via"
 msgstr "Успішна авторизація через"
 
-#: .\users\services\oauth_service.py:96 .\users\services\oauth_service.py:136
+#: .\users\services\oauth_service.py:99 .\users\services\oauth_service.py:140
 msgid "(session)"
 msgstr "(сесія)"
 
-#: .\users\services\oauth_service.py:100
+#: .\users\services\oauth_service.py:103
 msgid "You must specify role and surname"
 msgstr "Ви повинні вказати роль і прізвище"
 
-#: .\users\services\oauth_service.py:104 .\users\views.py:64
+#: .\users\services\oauth_service.py:107 .\users\views.py:68
 msgid "Incorrect role. Acceptable values:"
 msgstr "Неправильна роль. Прийнятні значення:"
 
-#: .\users\services\oauth_service.py:136
+#: .\users\services\oauth_service.py:140
 msgid "Successful registration and authorization via"
 msgstr "Успішна реєстрація та авторизація через"
 
-#: .\users\services\profile_cache_service.py:84
+#: .\users\services\profile_cache_service.py:93
 msgid "Error receiving user settings"
 msgstr "Помилка під час отримання налаштувань користувача"
 
-#: .\users\services\profile_cache_service.py:143
+#: .\users\services\profile_cache_service.py:154
 msgid "Error receiving user profile"
 msgstr "Помилка під час отримання профілю користувача"
 
-#: .\users\services\profile_cache_service.py:160
+#: .\users\services\profile_cache_service.py:173
 msgid "Invalidating the user existence cache for email:"
 msgstr "Скасування кешу існування користувача для електронної пошти:"
 
-#: .\users\services\profile_cache_service.py:160
-#: .\users\services\profile_cache_service.py:196
+#: .\users\services\profile_cache_service.py:173
+#: .\users\services\profile_cache_service.py:205
+#: .\users\services\profile_cache_service.py:214
 msgid "successfully"
 msgstr "успішно"
 
-#: .\users\services\profile_cache_service.py:160
-#: .\users\services\profile_cache_service.py:196
+#: .\users\services\profile_cache_service.py:173
+#: .\users\services\profile_cache_service.py:205
+#: .\users\services\profile_cache_service.py:214
 msgid "key not found"
 msgstr "ключ не знайдено"
 
-#: .\users\services\profile_cache_service.py:171
+#: .\users\services\profile_cache_service.py:185
 msgid "Deleted"
 msgstr "Видалено"
 
-#: .\users\services\profile_cache_service.py:171
+#: .\users\services\profile_cache_service.py:185
 msgid "cached user records"
 msgstr "кешовані записи користувачів"
 
-#: .\users\services\profile_cache_service.py:182
+#: .\users\services\profile_cache_service.py:196
 msgid "Complete invalidation of caches for the user"
 msgstr "Повне скасування кешів для користувача"
 
-#: .\users\services\profile_cache_service.py:182
+#: .\users\services\profile_cache_service.py:196
 msgid "records"
 msgstr "записи"
 
-#: .\users\services\profile_cache_service.py:190
-msgid "Disabled cache settings and user profile"
-msgstr "Вимкнені налаштування кешу та профіль користувача"
+#: .\users\services\profile_cache_service.py:205
+msgid "Disabled settings cache for user"
+msgstr "Вимкнено кеш профілю для користувача"
 
-#: .\users\services\profile_cache_service.py:196
+#: .\users\services\profile_cache_service.py:214
 msgid "Disabled profile cache for user"
 msgstr "Вимкнено кеш профілю для користувача"
 
-#: .\users\services\profile_cache_service.py:207
+#: .\users\services\profile_cache_service.py:226
 msgid "Cache warmed up for the user"
 msgstr "Кеш, підігрітий для користувача"
 
-#: .\users\services\profile_cache_service.py:209
+#: .\users\services\profile_cache_service.py:228
 msgid "Error while warming up the user cache"
 msgstr "Помилка під час завантаження кешу користувача"
-
-#: .\users\services\profile_picture_service.py:14
-msgid "Unsupported file type. Allowed: JPEG, PNG, GIF, WebP."
-msgstr "Непідтримуваний тип файлу. Дозволено: JPEG, PNG, GIF, WebP."
-
-#: .\users\services\profile_picture_service.py:17
-msgid "Too much file size. Max allowed: 5MB."
-msgstr "Занадто великий розмір файлу. Максимально допустимий розмір: 5 МБ."
 
 #: .\users\services\profile_picture_service.py:24
 msgid "Unable to delete previous photo:"
 msgstr "Неможливо видалити попереднє фото:"
 
-#: .\users\services\profile_picture_service.py:43
-msgid "Error when uploading a file to Supabase:"
-msgstr "Помилка під час завантаження файлу до Supabase:"
+#: .\users\services\profile_picture_service.py:46
+msgid "Failed to upload file:"
+msgstr "Не вдалося завантажити файл:"
 
-#: .\users\services\profile_picture_service.py:59
+#: .\users\services\profile_picture_service.py:64
 msgid "Error when deleting a file from Supabase:"
 msgstr "Помилка під час видалення файлу з Supabase:"
 
-#: .\users\services\profile_picture_service.py:60
+#: .\users\services\profile_picture_service.py:65
 msgid "Unable to delete profile photo:"
 msgstr "Неможливо видалити фотографію профілю:"
 
-#: .\users\user_utils.py:20
+#: .\users\tests\test_utils\test_csrf_token.py:27
+#: .\users\utils\csrf_token.py:14
+msgid "CSRF cookie set"
+msgstr "CSRF cookie встановлено"
+
+#: .\users\tests\test_views\test_auth_views.py:75
+#: .\users\tests\test_views\test_auth_views.py:92
+#: .\users\tests\test_views\test_auth_views.py:109 .\users\views.py:145
+msgid "Required fields are missing: email or password."
+msgstr "Не заповнено обов'язкові поля: електронна адреса або пароль."
+
+#: .\users\tests\test_views\test_auth_views.py:148
+#: .\users\tests\test_views\test_auth_views.py:552 .\users\views.py:158
+msgid "Incorrect email or password."
+msgstr "Неправильний електронний адрес або пароль."
+
+#: .\users\tests\test_views\test_auth_views.py:170 .\users\views.py:161
+#: .\users\views.py:256
+msgid "Account is inactive."
+msgstr "Акаунт неактивний."
+
+#: .\users\tests\test_views\test_auth_views.py:194 .\users\views.py:164
+#: .\users\views.py:259
+msgid "Email not confirmed. Please check your email."
+msgstr ""
+"Електронна адреса не підтверджена. Будь ласка, перевірте свою електронну "
+"пошту."
+
+#: .\users\tests\test_views\test_auth_views.py:204
+#: .\users\tests\test_views\test_auth_views.py:1083 .\users\views.py:97
+#: .\users\views.py:186 .\users\views.py:270 .\users\views.py:331
+#: .\users\views.py:383 .\users\views.py:453
+msgid "Invalid JSON format."
+msgstr "Неправильний формат JSON."
+
+#: .\users\tests\test_views\test_auth_views.py:347 .\users\views.py:188
+msgid "Login error:"
+msgstr "Помилка входу:"
+
+#: .\users\tests\test_views\test_auth_views.py:848 .\users\views.py:93
+msgid "Please confirm your email address."
+msgstr "Будь ласка, підтвердьте свою адресу електронної пошти."
+
+#: .\users\tests\test_views\test_auth_views.py:861
+#: .\users\tests\test_views\test_auth_views.py:874
+#: .\users\tests\test_views\test_auth_views.py:887
+#: .\users\tests\test_views\test_auth_views.py:900
+#: .\users\tests\test_views\test_auth_views.py:913 .\users\views.py:47
+msgid "Required field missing:"
+msgstr "Необхідне поле відсутнє:"
+
+#: .\users\tests\test_views\test_auth_views.py:1023
+#: .\users\tests\test_views\test_auth_views.py:1050 .\users\views.py:71
+msgid "First and last names cannot be left blank."
+msgstr "Ім'я та прізвище не можна залишати порожніми."
+
+#: .\users\tests\test_views\test_auth_views.py:1072 .\users\views.py:95
+msgid "Email already registered."
+msgstr "Електронна адреса вже зареєстрована."
+
+#: .\users\tests\test_views\test_auth_views.py:1096 .\users\views.py:99
+msgid "Error during registration:"
+msgstr "Помилка під час реєстрації:"
+
+#: .\users\tests\test_views\test_auth_views.py:1560 .\users\views.py:132
+msgid "The confirmation link has expired."
+msgstr "Термін дії посилання для підтвердження закінчився."
+
+#: .\users\tests\test_views\test_auth_views.py:1576 .\users\views.py:134
+msgid "Invalid token for confirmation."
+msgstr "Недійсний токен для підтвердження."
+
+#: .\users\tests\test_views\test_auth_views.py:1597 .\users\views.py:130
+#: .\users\views.py:253 .\users\views.py:291 .\users\views.py:325
+msgid "No user with this email address was found."
+msgstr "Користувач з цією адресою електронної пошти не знайдений."
+
+#: .\users\tests\test_views\test_auth_views.py:1621 .\users\views.py:117
+msgid "Email already confirmed."
+msgstr "Електронна адреса вже підтверджена."
+
+#: .\users\tests\test_views\test_oauth_views.py:94
+#: .\users\tests\test_views\test_oauth_views.py:113
+#: .\users\tests\test_views\test_oauth_views.py:132
+#: .\users\tests\test_views\test_oauth_views.py:375
+#: .\users\tests\test_views\test_oauth_views.py:441 .\users\views.py:201
+msgid "No credential provided"
+msgstr "Не надано жодних повноважень"
+
+#: .\users\user_utils.py:24
 msgid "Successfully"
 msgstr "Успішно"
 
-#: .\users\user_utils.py:32
+#: .\users\user_utils.py:38
 msgid "Unable to create activation token."
 msgstr "Неможливо створити токен активації."
 
-#: .\users\user_utils.py:35
+#: .\users\user_utils.py:41
 msgid "Congratulations,"
 msgstr "Вітаємо,"
 
-#: .\users\user_utils.py:35
+#: .\users\user_utils.py:41
 msgid "Congratulations!"
 msgstr "Вітаємо!"
 
-#: .\users\user_utils.py:49
+#: .\users\user_utils.py:57
 msgid "Email confirmation for SmartStudy"
-msgstr "Підтвердження електронною поштою для SmartStudy"
+msgstr "Підтвердження електронної пошти для SmartStudy"
 
-#: .\users\user_utils.py:58
+#: .\users\user_utils.py:67
 msgid "Password recovery for SmartStudy"
 msgstr "Відновлення пароля для SmartStudy"
-
-#: .\users\utils\csrf_token.py:11
-msgid "CSRF cookie set"
-msgstr "CSRF cookie встановлено"
 
 #: .\users\utils\email_templates.py:10 .\users\utils\email_templates.py:29
 msgid "Thank you for registering with SmartStudy!"
@@ -212,8 +464,8 @@ msgid ""
 "To complete your registration and activate your account, please confirm your "
 "email address."
 msgstr ""
-"Щоб завершити реєстрацію та активувати свій обліковий запис, підтвердьте свою "
-"адресу електронної пошти."
+"Щоб завершити реєстрацію та активувати свій обліковий запис, підтвердьте "
+"свою адресу електронної пошти."
 
 #: .\users\utils\email_templates.py:14
 msgid "Confirm email"
@@ -222,8 +474,7 @@ msgstr "Підтвердити електронну адресу"
 #: .\users\utils\email_templates.py:17 .\users\utils\email_templates.py:36
 msgid ""
 "If you have not registered with SmartStudy, please disregard this letter."
-msgstr ""
-"Якщо ви не зареєструвалися в SmartStudy, проігноруйте цей лист."
+msgstr "Якщо ви не зареєструвалися в SmartStudy, проігноруйте цей лист."
 
 #: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:38
 #: .\users\utils\email_templates.py:57 .\users\utils\email_templates.py:77
@@ -239,8 +490,8 @@ msgid ""
 "To complete your registration and activate your account, please confirm your "
 "email address by clicking on the link:"
 msgstr ""
-"Щоб завершити реєстрацію та активувати свій обліковий запис, підтвердьте свою "
-"адресу електронної пошти, натиснувши на посилання:"
+"Щоб завершити реєстрацію та активувати свій обліковий запис, підтвердьте "
+"свою адресу електронної пошти, натиснувши на посилання:"
 
 #: .\users\utils\email_templates.py:39 .\users\utils\email_templates.py:78
 msgid "The SmartStudy Team"
@@ -251,8 +502,8 @@ msgid ""
 "You have received this letter because a request has been made to reset the "
 "password for your SmartStudy account."
 msgstr ""
-"Ви отримали цей лист, оскільки було подано запит на скидання пароля "
-"для вашого облікового запису SmartStudy."
+"Ви отримали цей лист, оскільки було подано запит на скидання пароля для "
+"вашого облікового запису SmartStudy."
 
 #: .\users\utils\email_templates.py:50
 msgid "To reset your password, please follow the link below:"
@@ -270,142 +521,77 @@ msgstr "Якщо ви не запитували про зміну пароля, 
 msgid "To reset your password, please follow this link:"
 msgstr "Щоб скинути пароль, перейдіть за цим посиланням:"
 
-#: .\users\utils\validators.py:6 .\users\utils\validators.py:27
+#: .\users\utils\validators.py:7 .\users\utils\validators.py:29
 msgid "Incorrect email format."
 msgstr "Неправильний формат електронної адреси."
 
-#: .\users\utils\validators.py:10
+#: .\users\utils\validators.py:11
 msgid ""
 "The phone number must contain between 10 and 15 digits, including the prefix."
-msgstr ""
-"Номер телефону повинен містити від 10 до 15 цифр, включаючи префікс."
+msgstr "Номер телефону повинен містити від 10 до 15 цифр, включаючи префікс."
 
-#: .\users\views.py:45
-msgid "Required field missing:"
-msgstr "Необхідне поле відсутнє:"
-
-#: .\users\views.py:67
-msgid "First and last names cannot be left blank."
-msgstr "Ім'я та прізвище не можна залишати порожніми."
-
-#: .\users\views.py:89
-msgid "Please confirm your email address."
-msgstr "Будь ласка, підтвердьте свою адресу електронної пошти."
-
-#: .\users\views.py:91
-msgid "Email already registered."
-msgstr "Електронна адреса вже зареєстрована."
-
-#: .\users\views.py:93 .\users\views.py:182 .\users\views.py:265
-#: .\users\views.py:326 .\users\views.py:378 .\users\views.py:448
-msgid "Invalid JSON format."
-msgstr "Неправильний формат JSON."
-
-#: .\users\views.py:95
-msgid "Error during registration:"
-msgstr "Помилка під час реєстрації:"
-
-#: .\users\views.py:105
+#: .\users\views.py:109
 msgid "Invalid token. The ‘token’ parameter is missing."
 msgstr "Недійсний токен. Параметр «token» відсутній."
 
-#: .\users\views.py:113
-msgid "Email already confirmed."
-msgstr "Електронна адреса вже підтверджена."
-
-#: .\users\views.py:126 .\users\views.py:248 .\users\views.py:286
-#: .\users\views.py:320
-msgid "No user with this email address was found."
-msgstr "Користувач з цією адресою електронної пошти не знайдений."
-
-#: .\users\views.py:128
-msgid "The confirmation link has expired."
-msgstr "Термін дії посилання для підтвердження закінчився."
-
-#: .\users\views.py:130
-msgid "Invalid token for confirmation."
-msgstr "Недійсний токен для підтвердження."
-
-#: .\users\views.py:141
-msgid "Required fields are missing: email or password."
-msgstr "Не заповнено обов'язкові поля: електронна адреса або пароль."
-
-#: .\users\views.py:154
-msgid "Incorrect email or password."
-msgstr "Неправильний електронний адрес або пароль."
-
-#: .\users\views.py:157 .\users\views.py:251
-msgid "Account is inactive."
-msgstr "Акаунт неактивний."
-
-#: .\users\views.py:160 .\users\views.py:254
-msgid "Email not confirmed. Please check your email."
-msgstr "Електронна адреса не підтверджена. Будь ласка, перевірте свою електронну пошту."
-
-#: .\users\views.py:184
-msgid "Login error:"
-msgstr "Помилка входу:"
-
-#: .\users\views.py:197
-msgid "No credential provided"
-msgstr "Не надано жодних повноважень"
-
-#: .\users\views.py:231
+#: .\users\views.py:235
 msgid "No email address provided."
 msgstr "Адреса електронної пошти не вказана."
 
-#: .\users\views.py:241
+#: .\users\views.py:246
 msgid ""
 "A password reset request has been sent. Please check your email or try again "
 "in 5 minutes."
 msgstr ""
-"Запит на зміну пароля було надіслано. Перевірте свою електронну пошту або спробуйте знову через 5 хвилин."
+"Запит на зміну пароля було надіслано. Перевірте свою електронну пошту або "
+"спробуйте знову через 5 хвилин."
 
-#: .\users\views.py:261
+#: .\users\views.py:266
 msgid "Please check your email for a password reset link."
-msgstr "Перевірте свою електронну пошту, щоб отримати посилання для скидання пароля."
+msgstr ""
+"Перевірте свою електронну пошту, щоб отримати посилання для скидання пароля."
 
-#: .\users\views.py:263
+#: .\users\views.py:268
 msgid "Missing field: email"
 msgstr "Відсутнє поле: електронна адреса"
 
-#: .\users\views.py:267
+#: .\users\views.py:272
 msgid "Error processing request:"
 msgstr "Помилка при обробці запиту:"
 
-#: .\users\views.py:277
+#: .\users\views.py:282
 msgid "No token to reset the password."
 msgstr "Немає токена для скидання пароля."
 
-#: .\users\views.py:288 .\users\views.py:322
+#: .\users\views.py:293 .\users\views.py:327
 msgid "The token for resetting the password has expired."
 msgstr "Термін дії токена для скидання пароля закінчився."
 
-#: .\users\views.py:290 .\users\views.py:324
+#: .\users\views.py:295 .\users\views.py:329
 msgid "Invalid token for password reset."
 msgstr "Недійсний токен для скидання пароля."
 
-#: .\users\views.py:298
+#: .\users\views.py:303
 msgid "Required fields are missing: token or password."
 msgstr "Не заповнено обов'язкові поля: токен або пароль."
 
-#: .\users\views.py:318
+#: .\users\views.py:323
 msgid "Password reset successful."
 msgstr "Пароль успішно скинуто."
 
-#: .\users\views.py:328
+#: .\users\views.py:333
 msgid "Error when resetting password:"
 msgstr "Помилка під час скидання пароля:"
 
-#: .\users\views.py:336
+#: .\users\views.py:341
 msgid "You have successfully logged out."
 msgstr "Ви успішно вийшли з системи."
 
-#: .\users\views.py:344
+#: .\users\views.py:349
 msgid "The user is not authorized."
 msgstr "Користувач не авторизований."
 
-#: .\users\views.py:351
+#: .\users\views.py:356
 msgid ""
 "Required fields are missing: current_password, new_password, or "
 "confirm_password."
@@ -413,55 +599,55 @@ msgstr ""
 "Відсутні обов'язкові поля: current_password, new_password або "
 "confirm_password."
 
-#: .\users\views.py:358
+#: .\users\views.py:363
 msgid "The new password and password confirmation do not match."
 msgstr "Новий пароль і підтвердження пароля не збігаються."
 
-#: .\users\views.py:367
+#: .\users\views.py:372
 msgid "Incorrect current password."
 msgstr "Неправильний поточний пароль."
 
-#: .\users\views.py:376
+#: .\users\views.py:381
 msgid "Password successfully changed."
 msgstr "Пароль успішно змінено."
 
-#: .\users\views.py:380
+#: .\users\views.py:385
 msgid "Error when changing password:"
 msgstr "Помилка під час зміни пароля:"
 
-#: .\users\views.py:388 .\users\views.py:400 .\users\views.py:425
-#: .\users\views.py:457
+#: .\users\views.py:393 .\users\views.py:405 .\users\views.py:430
+#: .\users\views.py:465
 msgid "User not authorized."
 msgstr "Користувач не авторизований."
 
-#: .\users\views.py:394
+#: .\users\views.py:399
 msgid "Error retrieving profile:"
 msgstr "Помилка під час отримання профілю:"
 
-#: .\users\views.py:404
+#: .\users\views.py:409
 msgid "File not found."
 msgstr "Файл не знайдено."
 
-#: .\users\views.py:414
+#: .\users\views.py:419
 msgid "Avatar successfully uploaded."
 msgstr "Аватар успішно завантажено."
 
-#: .\users\views.py:420
+#: .\users\views.py:425
 msgid "Error loading avatar:"
 msgstr "Помилка під час завантаження аватара:"
 
-#: .\users\views.py:443
+#: .\users\views.py:448
 msgid "Profile successfully updated."
 msgstr "Профіль успішно оновлено."
 
-#: .\users\views.py:452
+#: .\users\views.py:460
 msgid "Error updating profile:"
 msgstr "Помилка під час оновлення профілю:"
 
-#: .\users\views.py:470
+#: .\users\views.py:478
 msgid "Your account has been successfully deleted."
 msgstr "Ваш обліковий запис було успішно видалено."
 
-#: .\users\views.py:472
+#: .\users\views.py:480
 msgid "Error when deleting an account:"
 msgstr "Помилка під час видалення облікового запису:"

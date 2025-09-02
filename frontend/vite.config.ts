@@ -20,20 +20,20 @@ export default defineConfig({
     host: true,
     proxy: {
       '/admin': {
-        target: 'https://127.0.0.1:8000',
+        target: 'https://localhost:8000',
         changeOrigin: true,
         secure: false,
         ws: true,
         cookieDomainRewrite: 'localhost',
       },
       '/api': {
-        target: 'https://127.0.0.1:8000',
+        target: 'https://localhost:8000',
         changeOrigin: true,
         secure: false,
         cookieDomainRewrite: 'localhost',
       },
       '/static': {
-        target: 'https://127.0.0.1:8000',
+        target: 'https://localhost:8000',
         changeOrigin: true,
         secure: false,
         cookieDomainRewrite: 'localhost',

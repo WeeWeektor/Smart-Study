@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'channels',
     'silk',
 
+    'core',
     'users',
 ]
 
@@ -113,14 +114,6 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('DATABASE_HOST'),
         'PORT': os.getenv('DATABASE_PORT'),
-
-        # 'OPTIONS': {
-        #     'MAX_CONNS': 20,
-        #     'MIN_CONNS': 5,
-        # }
-
-        # __
-        # 'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
     }
 }
 

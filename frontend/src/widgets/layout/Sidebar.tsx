@@ -36,7 +36,7 @@ export const Sidebar = ({ userInfo }: SidebarProps) => {
 
   if (userInfo.is_admin === 'admin') {
     navLinks.push({
-      to: `https://127.0.0.1:8000/admin/?lang=${localStorage.getItem(LANGUAGE_STORAGE_KEY)}`,
+      to: `https://localhost:8000/admin/?lang=${localStorage.getItem(LANGUAGE_STORAGE_KEY)}`,
       icon: Home,
       text: t('Адмін панель'),
     })
