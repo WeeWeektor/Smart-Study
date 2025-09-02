@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from django.utils.translation import gettext_lazy as _
@@ -64,6 +65,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'common.middleware.RateLimitMiddleware',
+    'common.middleware.SessionSecurityMiddleware',
+    'common.middleware.SecurityHeadersMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -247,3 +251,25 @@ LANGUAGE_COOKIE_AGE = 365 * 24 * 60 * 60
 LANGUAGE_COOKIE_PATH = '/'
 LANGUAGE_COOKIE_SECURE = SESSION_COOKIE_SECURE
 LANGUAGE_COOKIE_SAMESITE = 'Lax'
+
+TESTING = 'test' in sys.argv or 'pytest' in sys.modules
+
+if TESTING:
+    MIDDLEWARE = [
+        m for m in MIDDLEWARE
+        if not any(skip in m.lower() for skip in ['silk'])
+    ]
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'test_smartstudy',
+            'USER': 'test_user',
+            'PASSWORD': 'test_pass',
+            'HOST': 'localhost',
+            'PORT': '5433',
+            'TEST': {
+                'NAME': 'test_smartstudy_test',
+            }
+        }
+    }

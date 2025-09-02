@@ -1,14 +1,26 @@
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
+
+from common.utils import sanitize_input
 from ..models import UserSettings, UserProfile
 from ..utils.validators import phone_validator
 
 
 async def update_user_data(user, data):
-    if 'name' in data and data['name'].strip():
-        user.name = data['name']
-    if 'surname' in data and data['surname'].strip():
-        user.surname = data['surname']
+    forbidden_fields = ['role', 'is_staff', 'is_superuser', 'is_active', 'is_verified_email']
+
+    if not user.is_staff:
+        for field in forbidden_fields:
+            data.pop(field, None)
+
+    if 'name' in data and data['name']:
+        if len(data['name'].strip()) > 100:
+            raise ValidationError("Name too long")
+        user.name = sanitize_input(data['name'])
+    if 'surname' in data and data['surname']:
+        if len(data['surname'].strip()) > 100:
+            raise ValidationError("Surname too long")
+        user.surname = sanitize_input(data['surname'])
     if 'phone_number' in data:
         try:
             if data['phone_number'] is None or data['phone_number'].strip() == '':
@@ -39,5 +51,10 @@ async def update_user_profile(user, data):
     profile_fields = ['bio', 'location', 'organization', 'specialization', 'education_level']
     for field in profile_fields:
         if field in data:
-            setattr(user_profile, field, data[field])
+            value = data[field]
+            if value is not None and str(value).strip():
+                sanitized_value = sanitize_input(value)
+                setattr(user_profile, field, sanitized_value if sanitized_value else None)
+            else:
+                setattr(user_profile, field, None)
     await sync_to_async(user_profile.save)()

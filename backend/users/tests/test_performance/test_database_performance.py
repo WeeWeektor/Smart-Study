@@ -1,6 +1,7 @@
 import time
-from django.test import TransactionTestCase
+
 from django.contrib.auth import get_user_model
+from django.test import TransactionTestCase
 
 User = get_user_model()
 
@@ -10,7 +11,6 @@ class DatabasePerformanceTest(TransactionTestCase):
 
     def test_query_performance(self):
         """Тест продуктивності запитів"""
-        # Створення тестових даних
         users = [
             User(
                 email=f'query_test_{i}@example.com',
@@ -27,7 +27,6 @@ class DatabasePerformanceTest(TransactionTestCase):
         print(f"📊 1000 users creation: {creation_time:.3f}s")
         self.assertLess(creation_time, 5.0, "Bulk creation should be under 5s")
 
-        # Тест різних типів запитів
         queries = [
             ('Simple filter', lambda: User.objects.filter(role='student').count()),
             ('Complex filter', lambda: User.objects.filter(
@@ -59,7 +58,6 @@ class DatabasePerformanceTest(TransactionTestCase):
         for i in range(20):
             start = time.time()
 
-            # Простий запит
             User.objects.filter(email='nonexistent@example.com').exists()
 
             end = time.time()
@@ -72,7 +70,6 @@ class DatabasePerformanceTest(TransactionTestCase):
 
     def test_index_effectiveness(self):
         """Тест ефективності індексів"""
-        # Створення даних для тестування індексів
         User.objects.bulk_create([
             User(
                 email=f'index_test_{i}@domain{i % 10}.com',
@@ -81,7 +78,6 @@ class DatabasePerformanceTest(TransactionTestCase):
             ) for i in range(5000)
         ], batch_size=500)
 
-        # Тест запитів що повинні використовувати індекси
         indexed_queries = [
             ('Email lookup', lambda: User.objects.filter(
                 email='index_test_100@domain0.com'
@@ -99,5 +95,4 @@ class DatabasePerformanceTest(TransactionTestCase):
             query_time = end - start
             print(f"📊 {query_name} (indexed): {query_time:.4f}s")
 
-            # Індексовані запити повинні бути дуже швидкими
             self.assertLess(query_time, 0.1, f"{query_name} should use index efficiently")

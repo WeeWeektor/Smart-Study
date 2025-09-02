@@ -17,10 +17,9 @@ class APIIntegrationTest(TransactionTestCase):
 
     def test_api_error_handling(self):
         """Обробка помилок API"""
-        # Невалідні дані реєстрації
         invalid_data = {
             'email': 'invalid-email',
-            'password': '123',  # Занадто простий пароль
+            'password': '123',
         }
 
         response = self.client.post(
@@ -33,7 +32,6 @@ class APIIntegrationTest(TransactionTestCase):
         response_data = response.json()
         self.assertEqual(response_data['status'], 'error')
         self.assertIn('message', response_data)
-
 
 
 class AsyncAPIIntegrationTest(TransactionTestCase):
@@ -49,12 +47,10 @@ class AsyncAPIIntegrationTest(TransactionTestCase):
         """Інтеграція async операцій профілю"""
         self.client.force_login(self.user)
 
-        # 1. Async отримання профілю
         response = self.client.get(reverse('user_urls:profile'))
         self.assertEqual(response.status_code, 200)
         profile_data = response.json()
 
-        # 2. Async оновлення профілю
         update_data = {
             'user': {'name': 'Async Test'},
             'profile': {'bio': 'Async bio'},
@@ -73,7 +69,6 @@ class AsyncAPIIntegrationTest(TransactionTestCase):
         self.assertEqual(updated_data['profile_data']['profile']['bio'], 'Async bio')
         self.assertEqual(updated_data['profile_data']['settings']['email_notifications'], False)
 
-        # 3. Перевірка збереження в БД
         self.user.refresh_from_db()
         self.assertEqual(self.user.name, 'Async Test')
 
@@ -81,9 +76,7 @@ class AsyncAPIIntegrationTest(TransactionTestCase):
         """Тест конкурентних оновлень профілю"""
         self.client.force_login(self.user)
 
-        # Симуляція одночасних запитів
         import threading
-        import time
 
         results = []
 
@@ -100,21 +93,17 @@ class AsyncAPIIntegrationTest(TransactionTestCase):
             )
             results.append((name_suffix, response.status_code))
 
-        # Створення потоків
         threads = []
         for i in range(3):
             thread = threading.Thread(target=update_profile, args=(i,))
             threads.append(thread)
 
-        # Запуск потоків
         for thread in threads:
             thread.start()
 
-        # Очікування завершення
         for thread in threads:
             thread.join()
 
-        # Перевірка результатів
         self.assertEqual(len(results), 3)
         for name_suffix, status_code in results:
             self.assertEqual(status_code, 200)

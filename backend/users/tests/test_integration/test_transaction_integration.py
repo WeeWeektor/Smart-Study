@@ -21,16 +21,13 @@ class TransactionIntegrationTest(TransactionTestCase):
         async def test_flow():
             try:
                 async with transaction.atomic():
-                    # Успішне оновлення
                     await update_user_data(self.user, {'name': 'Test'})
 
-                    # Провокація помилки
                     await update_user_data(self.user, {'email': 'invalid-email'})
 
             except Exception:
-                pass  # Очікуємо помилку
+                pass
 
-            # Перевірка що rollback спрацював
             await self.user.arefresh_from_db()
             self.assertNotEqual(self.user.name, 'Test')
 
@@ -62,5 +59,4 @@ class TransactionIntegrationTest(TransactionTestCase):
         for thread in threads:
             thread.join()
 
-        # Принаймні один запит повинен бути успішним
         self.assertTrue(any('User_' in result for result in results))

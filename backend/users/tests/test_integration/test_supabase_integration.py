@@ -8,6 +8,7 @@ import asyncio
 
 User = get_user_model()
 
+
 class SupabaseIntegrationTest(TransactionTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -26,7 +27,6 @@ class SupabaseIntegrationTest(TransactionTestCase):
         """Інтеграція завантаження зображення профілю"""
         mock_bucket = MagicMock()
         mock_bucket.upload.return_value = {'error': None}
-        # Виправляємо формат відповіді - повертаємо тільки URL
         mock_bucket.get_public_url.return_value = 'https://storage.example.com/avatar.jpg'
 
         mock_storage = MagicMock()
@@ -36,7 +36,7 @@ class SupabaseIntegrationTest(TransactionTestCase):
         async def test_flow():
             test_image = SimpleUploadedFile(
                 "test.jpg",
-                b"fake image content",
+                b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C',
                 content_type="image/jpeg"
             )
 
@@ -51,7 +51,6 @@ class SupabaseIntegrationTest(TransactionTestCase):
     def test_profile_picture_deletion_integration(self, mock_supabase):
         """Інтеграція видалення зображення профілю"""
         mock_bucket = MagicMock()
-        # Виправляємо формат відповіді для list - повертаємо список файлів безпосередньо
         mock_bucket.list.return_value = [{'name': 'avatar.jpg'}]
         mock_bucket.remove.return_value = {'error': None}
 
@@ -76,7 +75,6 @@ class SupabaseIntegrationTest(TransactionTestCase):
         mock_supabase.storage = mock_storage
 
         async def test_flow():
-            # Невалідний тип файлу
             invalid_file = SimpleUploadedFile(
                 "test.txt",
                 b"text content",
@@ -86,7 +84,6 @@ class SupabaseIntegrationTest(TransactionTestCase):
             with self.assertRaises(Exception):
                 await handle_profile_picture(self.user_profile, invalid_file)
 
-            # Занадто великий файл
             large_file = SimpleUploadedFile(
                 "large.jpg",
                 b"x" * (6 * 1024 * 1024),  # 6MB
@@ -125,7 +122,6 @@ class SupabaseIntegrationTest(TransactionTestCase):
         """Тест обробки помилок при видаленні"""
         mock_bucket = MagicMock()
         mock_bucket.list.return_value = [{'name': 'avatar.jpg'}]
-        # Додаємо помилку для list операції замість remove
         mock_bucket.list.return_value = {'error': {'message': 'List failed'}, 'data': None}
         mock_bucket.remove.return_value = {'error': None}
 
@@ -143,7 +139,6 @@ class SupabaseIntegrationTest(TransactionTestCase):
     def test_deletion_list_error_handling(self, mock_supabase):
         """Тест обробки помилок при отриманні списку файлів"""
         mock_bucket = MagicMock()
-        # Моделюємо помилку при отриманні списку файлів
         mock_bucket.list.side_effect = Exception("Supabase connection error")
 
         mock_storage = MagicMock()

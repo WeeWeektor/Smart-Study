@@ -1,6 +1,8 @@
 import json
-from django.test import TestCase, RequestFactory
 from unittest.mock import patch, Mock
+
+from django.test import TestCase, RequestFactory
+
 from users.utils.request_parsing import parse_request_data
 
 

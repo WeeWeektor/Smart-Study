@@ -16,6 +16,7 @@ USER_EXISTENCE_CACHE_TIMEOUT = 10 * 60
 GOOGLE_TOKEN_CACHE_TIMEOUT = 15 * 60
 RATE_LIMIT_TIMEOUT = 5 * 60
 
+
 async def get_allowed_roles():
     """Caching the list of allowed roles"""
     cache_key = "allowed_roles"
@@ -27,17 +28,22 @@ async def get_allowed_roles():
 
     return roles
 
+
 def get_user_existence_cache_key(email):
     return f"user_exists_{hash(email)}"
+
 
 def get_profile_cache_key(user_id):
     return f"user_profile_{user_id}"
 
+
 def get_settings_cache_key(user_id):
     return f"user_settings_{user_id}"
 
+
 def get_user_status_cache_key(user_id):
     return f"user_status_{user_id}"
+
 
 async def get_user_existence_cache(email):
     """Caching user existence checks"""
@@ -63,6 +69,7 @@ async def get_user_existence_cache(email):
 
     return user_data
 
+
 async def get_cached_user_settings(user):
     """Caching user settings."""
     cache_key = get_settings_cache_key(user.id)
@@ -86,6 +93,7 @@ async def get_cached_user_settings(user):
         logger.error(f"{gettext("Error receiving user settings")} {user.id}: {str(e)}")
         return {}
 
+
 async def get_cached_user_status(user):
     """Caching user status"""
     cache_key = get_user_status_cache_key(user.id)
@@ -102,6 +110,7 @@ async def get_cached_user_status(user):
     }
     await sync_to_async(cache.set)(cache_key, status_data, USER_STATUS_CACHE_TIMEOUT)
     return status_data
+
 
 async def get_cached_profile(user):
     """Caching user profiles."""
@@ -155,12 +164,15 @@ async def get_cached_profile(user):
             "profile": {}
         }
 
+
 async def invalidate_user_existence_cache(email):
     """Invalidating the user existence cache"""
     cache_key = get_user_existence_cache_key(email)
     result = await sync_to_async(cache.delete)(cache_key)
-    logger.info(f"{gettext("Invalidating the user existence cache for email:")} {email} - {gettext('successfully') if result else gettext('key not found')}")
+    logger.info(
+        f"{gettext("Invalidating the user existence cache for email:")} {email} - {gettext('successfully') if result else gettext('key not found')}")
     return result
+
 
 async def invalidate_user_cache(user_id):
     """Delete all cached user data."""
@@ -184,19 +196,24 @@ async def invalidate_all_user_caches(user_id, email=None):
     logger.info(f"{gettext("Complete invalidation of caches for the user")} {user_id}: {count} {gettext("records")}")
     return count
 
+
 async def invalidate_user_settings_cache(user_id):
     """Delete only the settings cache"""
     cache_key = get_settings_cache_key(user_id)
     result = await sync_to_async(cache.delete)(cache_key)
-    logger.info(f"{gettext("Disabled settings cache for user")} {user_id} - {gettext('successfully') if result else gettext('key not found')}")
+    logger.info(
+        f"{gettext("Disabled settings cache for user")} {user_id} - {gettext('successfully') if result else gettext('key not found')}")
     return result
+
 
 async def invalidate_user_profile_cache(user_id):
     """Delete only the profile cache"""
     cache_key = get_profile_cache_key(user_id)
     result = await sync_to_async(cache.delete)(cache_key)
-    logger.info(f"{gettext("Disabled profile cache for user")} {user_id} - {gettext('successfully') if result else gettext('key not found')}")
+    logger.info(
+        f"{gettext("Disabled profile cache for user")} {user_id} - {gettext('successfully') if result else gettext('key not found')}")
     return result
+
 
 async def warm_user_cache(user, warm_existence=True):
     """Preloading the cache for the user"""

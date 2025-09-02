@@ -1,10 +1,11 @@
 from asgiref.sync import sync_to_async
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 from django.core.signing import TimestampSigner
 from django.http import JsonResponse
 from django.utils.translation import gettext
 from supabase import create_client, Client
+
 from users.utils.email_templates import get_verification_email_plain, get_verification_email_html, \
     get_password_reset_email_html, get_password_reset_email_plain
 
@@ -15,8 +16,10 @@ supabase: Client = create_client(
     settings.SUPABASE_API_KEY
 )
 
+
 def error_response(message, status=400):
     return JsonResponse({"status": "error", "message": message}, status=status)
+
 
 def success_response(data=None, message=gettext('Successfully')):
     response = {"status": "success", "message": message}
@@ -24,8 +27,10 @@ def success_response(data=None, message=gettext('Successfully')):
         response.update(data)
     return JsonResponse(response)
 
+
 def generate_activation_token(email):
     return signer.sign(email)
+
 
 async def send_template_email(user, subject, url_path, html_template_func, plain_template_func):
     token = generate_activation_token(user.email)
@@ -45,6 +50,7 @@ async def send_template_email(user, subject, url_path, html_template_func, plain
         recipient_list=[user.email],
     )
 
+
 async def send_verification_email(user):
     await send_template_email(
         user=user,
@@ -53,6 +59,7 @@ async def send_verification_email(user):
         html_template_func=get_verification_email_html,
         plain_template_func=get_verification_email_plain
     )
+
 
 async def send_password_reset_email(user):
     await send_template_email(

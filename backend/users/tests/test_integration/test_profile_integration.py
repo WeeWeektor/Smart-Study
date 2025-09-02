@@ -51,12 +51,10 @@ class ProfileIntegrationTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        # Перевірка оновлення профілю
         profile = UserProfile.objects.get(user=self.user)
         self.assertEqual(profile.bio, 'Updated bio')
         self.assertEqual(profile.location, 'Kyiv, Ukraine')
 
-        # Перевірка оновлення налаштувань
         settings = UserSettings.objects.get(user=self.user)
         self.assertFalse(settings.email_notifications)
         self.assertTrue(settings.deadline_reminders)
@@ -65,7 +63,6 @@ class ProfileIntegrationTest(TransactionTestCase):
     @patch('users.views.handle_profile_picture')
     def test_avatar_upload_integration(self, mock_handle_picture):
         """Інтеграційний тест завантаження аватара"""
-        # Mock successful avatar upload
         mock_handle_picture.return_value = None
 
         test_image = SimpleUploadedFile(
@@ -81,7 +78,6 @@ class ProfileIntegrationTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        # Перевіряємо що сервіс був викликаний
         mock_handle_picture.assert_called_once()
 
     def test_avatar_upload_real_response(self):
@@ -97,16 +93,13 @@ class ProfileIntegrationTest(TransactionTestCase):
             data={'profile_picture': test_image}
         )
 
-        # Очікуємо що запит буде оброблений (можливо з помилкою через відсутність реального сервісу)
         self.assertIn(response.status_code, [200, 400, 500])
 
     def test_complete_profile_workflow(self):
         """Тест повного workflow роботи з профілем"""
-        # 1. Отримання профілю
         response = self.client.get('/api/user/profile/')
         self.assertEqual(response.status_code, 200)
 
-        # 2. Оновлення профілю
         profile_data = {
             'user': {'name': 'John', 'surname': 'Doe'},
             'settings': {'email_notifications': True},
@@ -120,10 +113,9 @@ class ProfileIntegrationTest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 3. Завантаження аватара
         test_image = SimpleUploadedFile(
             "test.jpg",
-            b"fake image data",
+            b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C',
             content_type="image/jpeg"
         )
 
@@ -133,7 +125,6 @@ class ProfileIntegrationTest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 4. Перевірка оновленого профілю
         response = self.client.get('/api/user/profile/')
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -143,19 +134,24 @@ class ProfileIntegrationTest(TransactionTestCase):
         """Тест оновлення профілю через multipart/form-data"""
         test_image = SimpleUploadedFile(
             "avatar.jpg",
-            b"fake image data",
+            b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C',
             content_type="image/jpeg"
         )
 
+        response = self.client.patch(
+            '/api/user/profile/',
+            data=json.dumps({
+                'user': {'name': 'Updated_Name'},
+                'profile': {'bio': 'Updated bio'}
+            }),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+
         response = self.client.post(
             '/api/user/profile/',
-            {
-                'data': json.dumps({
-                    'user': {'name': 'Updated_Name'},
-                    'profile': {'bio': 'Updated bio'}
-                }),
-                'profile_picture': test_image
-            }
+            {'profile_picture': test_image}
         )
 
         self.assertEqual(response.status_code, 200)
@@ -180,7 +176,6 @@ class ProfileIntegrationTest(TransactionTestCase):
 
     def test_profile_data_consistency(self):
         """Тест консистентності даних профілю"""
-        # Одночасне оновлення різних частин профілю
         profile_data = {
             'user': {'name': 'John', 'surname': 'Doe'},
             'profile': {'bio': 'Developer'},
@@ -195,7 +190,6 @@ class ProfileIntegrationTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        # Перевірка що всі дані збережені атомарно
         response = self.client.get(reverse('user_urls:profile'))
         data = response.json()
 
@@ -205,7 +199,6 @@ class ProfileIntegrationTest(TransactionTestCase):
 
     def test_profile_partial_updates(self):
         """Тест часткових оновлень профілю"""
-        # Оновлення тільки імені
         response = self.client.patch(
             reverse('user_urls:profile'),
             data=json.dumps({'user': {'name': 'NewName'}}),
@@ -214,8 +207,6 @@ class ProfileIntegrationTest(TransactionTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        # Перевірка що інші поля не змінились
         response = self.client.get(reverse('user_urls:profile'))
         data = response.json()
         self.assertEqual(data['user']['name'], 'NewName')
-        # surname повинен залишитись незмінним

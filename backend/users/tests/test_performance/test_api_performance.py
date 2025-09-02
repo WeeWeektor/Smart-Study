@@ -63,17 +63,15 @@ class APIPerformanceTest(TransactionTestCase):
 
             print(f"📊 {method} {endpoint} - Avg: {avg_time:.3f}s, Max: {max_time:.3f}s")
 
-            # API endpoints повинні відповідати швидко
             self.assertLess(avg_time, 0.5, f"{method} {endpoint} should respond under 0.5s")
 
     def test_file_upload_performance(self):
         """Тест продуктивності завантаження файлів"""
-        # Тест файлів різного розміру
         file_sizes = [
-            (1024, "1KB"),  # 1KB
-            (10240, "10KB"),  # 10KB
-            (102400, "100KB"),  # 100KB
-            (1048576, "1MB"),  # 1MB
+            (1024, "1KB"),
+            (10240, "10KB"),
+            (102400, "100KB"),
+            (1048576, "1MB"),
         ]
 
         for size, label in file_sizes:
@@ -93,10 +91,9 @@ class APIPerformanceTest(TransactionTestCase):
             upload_time = end - start
             print(f"📊 File upload {label}: {upload_time:.3f}s")
 
-            # Менші файли повинні завантажуватись швидше
-            if size <= 102400:  # До 100KB
+            if size <= 102400:
                 self.assertLess(upload_time, 1.0, f"{label} upload should be under 1s")
-            else:  # 1MB
+            else:
                 self.assertLess(upload_time, 3.0, f"{label} upload should be under 3s")
 
     def test_api_throughput(self):
@@ -105,7 +102,6 @@ class APIPerformanceTest(TransactionTestCase):
 
         start = time.time()
 
-        # Паралельні GET запити
         def make_request():
             response = self.client.get('/api/user/profile/')
             return response.status_code
@@ -128,9 +124,9 @@ class APIPerformanceTest(TransactionTestCase):
     def test_api_payload_size_performance(self):
         """Тест продуктивності з різними розмірами payload"""
         payloads = [
-            {'user': {'name': 'Small'}},  # Малий payload
-            {'user': {'name': 'Medium', 'bio': 'x' * 1000}},  # Середній payload
-            {'user': {'name': 'Large', 'bio': 'x' * 10000}},  # Великий payload
+            {'user': {'name': 'Small'}},
+            {'user': {'name': 'Medium', 'bio': 'x' * 1000}},
+            {'user': {'name': 'Large', 'bio': 'x' * 10000}},
         ]
 
         for i, payload in enumerate(payloads):

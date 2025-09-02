@@ -6,8 +6,6 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext
 
-from common.utils import sanitize_input
-
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -51,14 +49,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
-    def clean(self):
-        self.name = sanitize_input(self.name)
-        self.surname = sanitize_input(self.surname)
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
-
 
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile', verbose_name='User')
@@ -82,16 +72,6 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{gettext("Profile")} {self.user.name} {self.user.surname}"
-
-    def clean(self):
-        self.bio = sanitize_input(self.bio)
-        self.location = sanitize_input(self.location)
-        self.organization = sanitize_input(self.organization)
-        self.specialization = sanitize_input(self.specialization)
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
 
 class UserSettings(models.Model):

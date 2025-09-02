@@ -1,6 +1,7 @@
-from django.test import TestCase
 from django.contrib.admin.sites import AdminSite
+from django.test import TestCase
 from django.utils.translation import get_language, activate
+
 from smartStudy_backend import settings
 from users.admin import CustomUserAdmin, UserProfileAdmin, UserSettingsAdmin
 from users.models import CustomUser, UserProfile, UserSettings

@@ -1,4 +1,5 @@
 import time
+import threading
 from django.test import TestCase
 from django.http import HttpRequest
 from common.utils.language_utils import get_language_from_request
@@ -22,7 +23,6 @@ class TestPerformanceStress(TestCase):
 
     def test_concurrent_safety(self):
         """Тест thread safety"""
-        import threading
         results = []
 
         def worker():

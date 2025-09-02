@@ -1,10 +1,11 @@
-from django.test import TestCase, RequestFactory
-from django.http import JsonResponse
-from django.utils.translation import gettext
-from unittest.mock import patch, Mock
-from users.utils.csrf_token import CSRFTokenView
-
 import json
+from unittest.mock import patch, Mock
+
+from django.http import JsonResponse
+from django.test import TestCase, RequestFactory
+from django.utils.translation import gettext
+
+from users.utils.csrf_token import CSRFTokenView
 
 
 class TestCSRFTokenView(TestCase):
@@ -98,8 +99,9 @@ class TestCSRFTokenView(TestCase):
 
         response_data = json.loads(response.content)
         self.assertIsInstance(response_data, dict)
-        self.assertEqual(len(response_data), 1)
+        self.assertEqual(len(response_data), 2)
         self.assertIn('success', response_data)
+        self.assertIn('csrf_token', response_data)
 
     def test_csrf_token_view_ensure_csrf_cookie_decorator(self):
         """Тест що декоратор ensure_csrf_cookie застосований"""
@@ -131,8 +133,10 @@ class TestCSRFTokenView(TestCase):
         response_data1 = json.loads(response1.content)
         response_data2 = json.loads(response2.content)
 
-        self.assertEqual(response_data1, response_data2)
         self.assertEqual(response_data1['success'], response_data2['success'])
+        self.assertIn('csrf_token', response_data1)
+        self.assertIn('csrf_token', response_data2)
+        self.assertNotEqual(response_data1['csrf_token'], response_data2['csrf_token'])
 
     @patch('users.utils.csrf_token.JsonResponse')
     def test_json_response_creation(self, mock_json_response):
@@ -144,7 +148,7 @@ class TestCSRFTokenView(TestCase):
         CSRFTokenView.get(request)
 
         mock_json_response.assert_called_once()
-        args, kwargs = mock_json_response.call_args
+        args, _ = mock_json_response.call_args
 
         self.assertIsInstance(args[0], dict)
         self.assertIn('success', args[0])

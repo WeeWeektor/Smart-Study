@@ -104,3 +104,4 @@ __pycache__/
 /postgres_data/
 /backend/locale/en/LC_MESSAGES/django.mo
 /backend/locale/uk/LC_MESSAGES/django.mo
+/backend/docker-compose.test.yml

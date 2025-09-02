@@ -26,18 +26,15 @@ class ValidationIntegrationTest(TransactionTestCase):
         """Інтеграція валідації телефону"""
 
         async def test_flow():
-            # Валідний номер
             valid_data = {'phone_number': '+380501234567'}
             await update_user_data(self.user, valid_data)
             await self.user.arefresh_from_db()
             self.assertEqual(self.user.phone_number, '+380501234567')
 
-            # Невалідний номер
             invalid_data = {'phone_number': 'invalid_phone'}
             with self.assertRaises((ValidationError, ValueError)):
                 await update_user_data(self.user, invalid_data)
 
-            # Очищення номера
             clear_data = {'phone_number': None}
             await update_user_data(self.user, clear_data)
             await self.user.arefresh_from_db()
@@ -59,7 +56,6 @@ class ValidationIntegrationTest(TransactionTestCase):
             except (ValidationError, ValueError):
                 pass
 
-            # Дублікат email - використовуємо sync_to_async
             duplicate_user = await sync_to_async(User.objects.create_user)(
                 name='Duplicate',
                 surname='User',
@@ -105,27 +101,21 @@ class ValidationIntegrationTest(TransactionTestCase):
         """Інтеграція валідації ролі"""
 
         async def test_flow():
-            original_role = self.user.role  # 'student'
+            original_role = self.user.role
 
-            # Невалідна роль
             invalid_data = {'role': 'invalid_role'}
 
             try:
                 await update_user_data(self.user, invalid_data)
                 await self.user.arefresh_from_db()
-                # Роль не повинна змінитися при невалідному значенні
                 self.assertEqual(self.user.role, original_role)
             except (ValidationError, ValueError):
                 pass
 
-            # Тестуємо що валідна роль теж не змінюється
-            # (якщо система не дозволяє змінювати ролі через update_user_data)
             valid_data = {'role': 'teacher'}
             await update_user_data(self.user, valid_data)
             await self.user.arefresh_from_db()
 
-            # Перевіряємо, чи роль залишилася незмінною
-            # Це може бути очікуваною поведінкою з міркувань безпеки
             self.assertEqual(self.user.role, original_role)
 
         asyncio.run(test_flow())

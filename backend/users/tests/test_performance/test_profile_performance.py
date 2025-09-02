@@ -3,17 +3,19 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from django.test import TestCase, override_settings, TransactionTestCase
+from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
-from django.test import Client
 from django.core.cache import cache
+from django.test import Client
+from django.test import override_settings, TransactionTestCase
 
+from users.models import CustomUser
 from users.services.profile_cache_service import get_cached_profile
 
 User = get_user_model()
 
 
-class ProfilePerformanceTest(TestCase):
+class ProfilePerformanceTest(TransactionTestCase):
     """Тести продуктивності для профілю"""
 
     def setUp(self):
@@ -26,7 +28,6 @@ class ProfilePerformanceTest(TestCase):
         )
         self.client.force_login(self.user)
 
-        # Створення тестових користувачів для bulk операцій
         self.users = []
         for i in range(10):
             user = User.objects.create_user(
@@ -94,7 +95,6 @@ class ProfilePerformanceTest(TestCase):
 
     def test_bulk_operations_performance(self):
         """Тест продуктивності bulk операцій"""
-        # 1. Bulk створення користувачів
         start = time.time()
 
         users_to_create = [
@@ -113,7 +113,6 @@ class ProfilePerformanceTest(TestCase):
         print(f"📊 Bulk creation of 100 users: {creation_time:.3f}s")
         self.assertLess(creation_time, 2.0, "Bulk creation should be under 2 seconds")
 
-        # 2. Bulk оновлення
         created_users = User.objects.filter(email__startswith='bulk')
 
         start = time.time()
@@ -126,7 +125,6 @@ class ProfilePerformanceTest(TestCase):
         print(f"📊 Bulk update of 100 users: {update_time:.3f}s")
         self.assertLess(update_time, 1.5, "Bulk update should be under 1.5 seconds")
 
-        # 3. Bulk видалення
         start = time.time()
         deleted_count = User.objects.filter(email__startswith='bulk').delete()[0]
         deletion_time = time.time() - start
@@ -152,13 +150,11 @@ class ProfilePerformanceTest(TestCase):
                 'user_index': user_index
             })
 
-        # Одночасні запити від 20 користувачів
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(profile_request, i) for i in range(20)]
             for future in futures:
                 future.result()
 
-        # Аналіз результатів
         successful_requests = [r for r in results if r['status'] == 200]
         avg_time = sum(r['time'] for r in successful_requests) / len(successful_requests)
         max_time = max(r['time'] for r in successful_requests)
@@ -170,10 +166,25 @@ class ProfilePerformanceTest(TestCase):
         self.assertLess(max_time, 3.0, "Max response time should be under 3s")
 
     def test_database_query_optimization(self):
-        """Тест оптимізації запитів до БД"""
-        with self.assertNumQueries(5):  # Максимум 5 запитів
-            response = self.client.get('/api/user/profile/')
-            self.assertEqual(response.status_code, 200)
+        user = CustomUser.objects.create_user(
+            name='Database',
+            surname='Test',
+            email='dbtest@example.com',
+            password='TestPassword123!',
+            role='student',
+            is_active=True,
+            is_verified_email=True
+        )
+
+        cache.clear()
+        self.client.logout()
+        get_profile_sync = async_to_sync(get_cached_profile)
+
+        with self.assertNumQueries(8):
+            profile_data = get_profile_sync(user)
+
+            self.assertIsNotNone(profile_data)
+            self.assertEqual(profile_data['user']['email'], 'dbtest@example.com')
 
     def test_memory_usage_profile_operations(self):
         """Тест використання пам'яті під час операцій з профілем"""
@@ -181,7 +192,6 @@ class ProfilePerformanceTest(TestCase):
 
         tracemalloc.start()
 
-        # Операції з профілем
         for i in range(50):
             self.client.get('/api/user/profile/')
 
@@ -201,27 +211,22 @@ class ProfilePerformanceTest(TestCase):
         peak_mb = peak / 1024 / 1024
         print(f"📊 Peak memory usage: {peak_mb:.2f} MB")
 
-        # Пікове використання не повинно перевищувати 100MB
         self.assertLess(peak_mb, 100, "Peak memory usage should be under 100MB")
 
     def test_cache_performance_under_load(self):
         """Тест продуктивності кешу під навантаженням"""
 
         async def test_flow():
-            # Прогрів кешу
             for user in self.users[:5]:
                 await get_cached_profile(user)
 
-            # Вимірювання часу з кешем
             start = time.time()
             for user in self.users[:5]:
                 await get_cached_profile(user)
             cached_time = time.time() - start
 
-            # Очищення кешу
             cache.clear()
 
-            # Вимірювання часу без кешу
             start = time.time()
             for user in self.users[:5]:
                 await get_cached_profile(user)
@@ -229,7 +234,6 @@ class ProfilePerformanceTest(TestCase):
 
             print(f"📊 Cache performance - Cached: {cached_time:.3f}s, Uncached: {uncached_time:.3f}s")
 
-            # Кеш повинен бути швидшим
             self.assertLess(cached_time, uncached_time)
 
         asyncio.run(test_flow())

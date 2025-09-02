@@ -452,7 +452,10 @@ class ProfileView(LocalizedView):
         except json.JSONDecodeError:
             return error_response(gettext('Invalid JSON format.'), 400)
         except ValidationError as e:
-            return error_response(str(e), 400)
+            if "NoSQL injection" in str(e):
+                return error_response(str(e), 400)
+            else:
+                return error_response(str(e), 400)
         except Exception as e:
             return error_response(f"{gettext('Error updating profile:')} {str(e)}", 500)
 

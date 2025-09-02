@@ -222,6 +222,7 @@ class TestLocalizedAPIView(TestCase):
 
 class TestBothViews(TestCase):
     """Порівняльні тести для обох views"""
+
     def setUp(self):
         self.request = HttpRequest()
         self.request.method = 'GET'

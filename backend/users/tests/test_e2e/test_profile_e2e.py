@@ -20,7 +20,6 @@ class ProfileE2ETest(TransactionTestCase):
         """Тест повного шляху користувача від реєстрації до видалення"""
         unique_email = f'john-{uuid.uuid4().hex[:8]}@example.com'
 
-        # 1. Реєстрація
         register_data = {
             'name': 'John',
             'surname': 'Doe',
@@ -36,13 +35,11 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 2. Отримуємо створеного користувача з БД
         user = User.objects.get(email=unique_email)
         user.is_active = True
         user.is_verified_email = True
         user.save()
 
-        # 3. Логін
         login_data = {
             'email': unique_email,
             'password': 'StrongPass123!'
@@ -55,13 +52,11 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 4. Отримання профілю
         response = self.client.get('/api/user/profile/')
         self.assertEqual(response.status_code, 200)
         profile_data = response.json()
         self.assertEqual(profile_data['user']['name'], 'John')
 
-        # 5. Оновлення профілю
         update_data = {
             'user': {'name': 'Johnny'},
             'profile': {'bio': 'Updated bio'}
@@ -74,10 +69,21 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 6. Завантаження аватара
+        image_content = (
+            b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00'
+            b'\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t'
+            b'\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a'
+            b'\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342'
+            b'\xff\xc0\x00\x11\x08\x00\x01\x00\x01\x01\x01\x11\x00\x02\x11\x01'
+            b'\x03\x11\x01\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x08\xff\xc4\x00\x14\x10\x01\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff'
+            b'\xda\x00\x08\x01\x01\x00\x00?\x00\x00\xff\xd9'
+        )
+
         test_image = SimpleUploadedFile(
-            "avatar.jpg",
-            b"fake image content",
+            "test_profile.jpg",
+            image_content,
             content_type="image/jpeg"
         )
 
@@ -87,7 +93,6 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 7. Зміна пароля
         password_data = {
             'current_password': 'StrongPass123!',
             'new_password': 'NewStrongPass123!',
@@ -101,11 +106,9 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 8. Видалення акаунту
         response = self.client.delete('/api/user/profile/')
         self.assertEqual(response.status_code, 200)
 
-        # 9. Перевірка що користувач видалений
         self.assertFalse(User.objects.filter(email=unique_email).exists())
 
     def test_profile_data_consistency_across_requests(self):
@@ -118,7 +121,6 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.client.force_login(user)
 
-        # Множинні оновлення
         for i in range(5):
             update_data = {
                 'user': {'name': f'User{i}'},
@@ -132,7 +134,6 @@ class ProfileE2ETest(TransactionTestCase):
             )
             self.assertEqual(response.status_code, 200)
 
-            # Перевірка що дані збереглися
             response = self.client.get('/api/user/profile/')
             self.assertEqual(response.status_code, 200)
             data = response.json()
@@ -148,12 +149,10 @@ class ProfileE2ETest(TransactionTestCase):
             is_verified_email=True
         )
 
-        # Створюємо кілька клієнтів
         clients = [Client() for _ in range(3)]
         for client in clients:
             client.force_login(user)
 
-        # Одночасні оновлення
         responses = []
         for i, client in enumerate(clients):
             update_data = {
@@ -167,11 +166,9 @@ class ProfileE2ETest(TransactionTestCase):
             )
             responses.append(response)
 
-        # Всі запити повинні бути успішними
         for response in responses:
             self.assertEqual(response.status_code, 200)
 
-        # Фінальна перевірка стану
         final_response = clients[0].get('/api/user/profile/')
         self.assertEqual(final_response.status_code, 200)
 
@@ -180,7 +177,6 @@ class ProfileE2ETest(TransactionTestCase):
         from unittest.mock import patch
 
         with patch('users.services.oauth_service.id_token.verify_oauth2_token') as mock_verify:
-            # Мок Google OAuth
             mock_verify.return_value = {
                 'email': 'oauth_e2e@example.com',
                 'given_name': 'OAuth',
@@ -188,7 +184,6 @@ class ProfileE2ETest(TransactionTestCase):
                 'picture': 'https://example.com/avatar.jpg'
             }
 
-            # 1. OAuth реєстрація
             oauth_data = {
                 'credential': 'fake_token',
                 'role': 'student'
@@ -201,13 +196,11 @@ class ProfileE2ETest(TransactionTestCase):
             )
             self.assertEqual(response.status_code, 200)
 
-            # 2. Автоматичний логін після OAuth
             response = self.client.get('/api/user/profile/')
             self.assertEqual(response.status_code, 200)
             data = response.json()
             self.assertEqual(data['user']['email'], 'oauth_e2e@example.com')
 
-            # 3. Доповнення профілю після OAuth
             profile_data = {
                 'profile': {
                     'bio': 'OAuth user bio',
@@ -229,7 +222,6 @@ class ProfileE2ETest(TransactionTestCase):
         """E2E тест email верифікації"""
         unique_email = f'verify-{uuid.uuid4().hex[:8]}@example.com'
 
-        # 1. Реєстрація без верифікації
         register_data = {
             'name': 'Verify',
             'surname': 'User',
@@ -245,7 +237,6 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 2. Спроба логіну без верифікації
         login_data = {
             'email': unique_email,
             'password': 'VerifyPass123!'
@@ -256,16 +247,13 @@ class ProfileE2ETest(TransactionTestCase):
             data=json.dumps(login_data),
             content_type='application/json'
         )
-        # Може блокувати або дозволяти, залежно від налаштувань
         self.assertIn(response.status_code, [200, 400, 401, 403])
 
-        # 3. Верифікація email
         user = User.objects.get(email=unique_email)
         user.is_verified_email = True
         user.is_active = True
         user.save()
 
-        # 4. Успішний логін після верифікації
         response = self.client.post(
             '/api/auth/login/',
             data=json.dumps(login_data),
@@ -286,20 +274,17 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.client.force_login(user)
 
-        # 1. Невалідне оновлення профілю - надсилаємо невалідний JSON
         response = self.client.patch(
             '/api/user/profile/',
-            data='{"user": {"name": "Test"',  # Неправильний JSON без закриваючої дужки
+            data='{"user": {"name": "Test"',
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 400)
 
-        # 2. Перевірка що дані не змінились
         response = self.client.get('/api/user/profile/')
         data = response.json()
         self.assertEqual(data['user']['name'], 'Recovery')
 
-        # 3. Валідне оновлення після помилки
         valid_data = {
             'user': {'name': 'Recovered User'}
         }
@@ -311,7 +296,6 @@ class ProfileE2ETest(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        # 4. Підтвердження успішного оновлення
         response = self.client.get('/api/user/profile/')
         data = response.json()
         self.assertEqual(data['user']['name'], 'Recovered User')

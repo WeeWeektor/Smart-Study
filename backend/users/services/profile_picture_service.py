@@ -7,16 +7,12 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
 from smartStudy_backend import settings
+from users.services.file_validation_service import validate_file_security
 from users.user_utils import supabase
 
 
 async def handle_profile_picture(user_profile, profile_picture):
-    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if profile_picture.content_type not in allowed_types:
-        raise ValidationError(gettext("Unsupported file type. Allowed: JPEG, PNG, GIF, WebP."))
-
-    if profile_picture.size > 5 * 1024 * 1024:
-        raise ValidationError(gettext("Too much file size. Max allowed: 5MB."))
+    validate_file_security(profile_picture)
 
     user_id = await sync_to_async(lambda: user_profile.user.id)()
 
@@ -47,7 +43,7 @@ async def handle_profile_picture(user_profile, profile_picture):
         user_profile.profile_picture = public_url
         await sync_to_async(user_profile.save)()
     except Exception as e:
-        raise ValidationError(f"{gettext("Error when uploading a file to Supabase:")} {str(e)}")
+        raise ValidationError(f"{gettext("Failed to upload file:")} {str(e)}")
 
 
 async def delete_profile_picture(user_id, delete_folder=False):

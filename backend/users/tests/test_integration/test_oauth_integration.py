@@ -51,7 +51,6 @@ class OAuthIntegrationTest(TransactionTestCase):
         self.assertEqual(user_data['name'], 'Test')
         self.assertEqual(user_data['surname'], 'User')
 
-        # Перевіряємо створення користувача в базі
         user = User.objects.get(email='test@gmail.com')
         self.assertTrue(user.is_verified_email)
         self.assertTrue(user.is_active)
@@ -89,7 +88,6 @@ class OAuthIntegrationTest(TransactionTestCase):
     @patch('google.oauth2.id_token.verify_oauth2_token')
     def test_google_oauth_existing_user_login(self, mock_verify_token):
         """Тест входу існуючого користувача через Google OAuth"""
-        # Створюємо існуючого користувача
         existing_user = User.objects.create_user(
             name='Existing',
             surname='User',
@@ -134,7 +132,6 @@ class OAuthIntegrationTest(TransactionTestCase):
         if 'id' in user_data:
             self.assertEqual(str(existing_user.id), user_data['id'])
 
-            # Альтернативна перевірка через базу даних
         db_user = CustomUser.objects.get(email='existing@gmail.com')
         self.assertEqual(existing_user.id, db_user.id)
 
@@ -208,7 +205,6 @@ class OAuthIntegrationTest(TransactionTestCase):
 
         self.assertIn(response.status_code, [200, 201])
 
-        # Перевіряємо створення налаштувань
         from users.models import UserSettings
         user = User.objects.get(email='settings@gmail.com')
 
@@ -253,7 +249,6 @@ class OAuthIntegrationTest(TransactionTestCase):
         """Тест відсутніх обов'язкових полів"""
         oauth_data = {
             'credential': 'fake_token'
-            # Відсутні name, surname, role
         }
 
         response = self.client.post(
@@ -296,26 +291,22 @@ class OAuthIntegrationTest(TransactionTestCase):
             'role': 'student'
         }
 
-        # Виконуємо перший запит
         response1 = self.client.post(
             reverse('auth_urls:google-oauth'),
             data=json.dumps(oauth_data),
             content_type='application/json'
         )
 
-        # Виконуємо другий запит з тими самими даними
         response2 = self.client.post(
             reverse('auth_urls:google-oauth'),
             data=json.dumps(oauth_data),
             content_type='application/json'
         )
 
-        # Принаймні один з запитів має бути успішним
         self.assertTrue(
             response1.status_code in [200, 201] or response2.status_code in [200, 201]
         )
 
-        # Перевіряємо що тільки один користувач створений
         users_count = User.objects.filter(email='concurrent@gmail.com').count()
         self.assertEqual(users_count, 1)
 
@@ -344,7 +335,6 @@ class OAuthCacheIntegrationTest(TransactionTestCase):
             'role': 'student'
         }
 
-        # Перший OAuth логін - створення користувача
         response1 = self.client.post(
             reverse('auth_urls:google-oauth'),
             data=json.dumps(oauth_data),
@@ -353,13 +343,11 @@ class OAuthCacheIntegrationTest(TransactionTestCase):
 
         self.assertIn(response1.status_code, [200, 201])
 
-        # Перевіряємо що користувач створений
         user = CustomUser.objects.get(email='google_cache@example.com')
         self.assertIsNotNone(user)
         self.assertTrue(user.is_verified_email)
         self.assertTrue(user.is_active)
 
-        # Другий OAuth логін того самого користувача
         response2 = self.client.post(
             reverse('auth_urls:google-oauth'),
             data=json.dumps(oauth_data),
@@ -368,11 +356,9 @@ class OAuthCacheIntegrationTest(TransactionTestCase):
 
         self.assertIn(response2.status_code, [200, 201])
 
-        # Перевіряємо що тільки один користувач існує
         users_count = CustomUser.objects.filter(email='google_cache@example.com').count()
         self.assertEqual(users_count, 1)
 
-        # Перевіряємо що кеш працює
         cached_profile = get_cached_profile(user)
         self.assertIsNotNone(cached_profile)
 
@@ -388,14 +374,12 @@ class OAuthErrorHandlingTest(TransactionTestCase):
             content_type='application/json'
         )
 
-        # Має повертати помилку, а не падати
         self.assertIn(response.status_code, [400, 401, 403])
 
     def test_oauth_rate_limiting(self):
         """Тест обробки множинних OAuth запитів"""
         oauth_data = {'credential': 'test_token', 'name': 'Test', 'surname': 'User', 'role': 'student'}
 
-        # Багато запитів підряд
         responses = []
         for _ in range(10):
             response = self.client.post(

@@ -30,10 +30,8 @@ class SecurityIntegrationTest(TransactionTestCase):
             content_type='application/json'
         )
 
-        # Не повинен падати, дані повинні санітизуватись
         self.assertIn(response.status_code, [200, 400])
 
-        # Перевірка що БД не пошкоджена
         self.assertTrue(User.objects.filter(id=user.id).exists())
 
     def test_comprehensive_xss_protection(self):
@@ -65,12 +63,10 @@ class SecurityIntegrationTest(TransactionTestCase):
 
             self.assertEqual(response.status_code, 200)
 
-            # Перевірка санітизації
             response = self.client.get('/api/user/profile/')
             data = response.json()
             profile_content = str(data.get('profile', {}))
 
-            # Небезпечні теги повинні бути видалені
             self.assertNotIn('<script>', profile_content)
             self.assertNotIn('onerror', profile_content)
             self.assertNotIn('javascript:', profile_content)

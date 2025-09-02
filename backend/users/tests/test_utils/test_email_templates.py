@@ -1,12 +1,14 @@
-from django.test import TestCase
+import re
 from unittest.mock import patch
+
+from django.test import TestCase
+
 from users.utils.email_templates import (
     get_verification_email_html,
     get_verification_email_plain,
     get_password_reset_email_html,
     get_password_reset_email_plain
 )
-import re
 
 
 class TestEmailTemplates(TestCase):

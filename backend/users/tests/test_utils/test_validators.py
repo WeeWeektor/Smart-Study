@@ -1,8 +1,10 @@
 import asyncio
-from django.test import TestCase
-from django.core.exceptions import ValidationError
-from django.core.cache import cache
 from unittest.mock import patch
+
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+
 from users.utils.validators import (
     email_validator,
     phone_validator,
@@ -294,14 +296,14 @@ class TestValidators(TestCase):
     def test_phone_validator_edge_cases(self):
         """Тест граничних випадків для phone валідатора"""
         edge_cases = [
-            ('+1234567890', True),  # Мінімум з +
-            ('1234567890', True),  # Мінімум без +
-            ('+123456789012345', True),  # Максимум з +
-            ('123456789012345', True),  # Максимум без +
-            ('+123456789', False),  # Менше мінімуму з +
-            ('123456789', False),  # Менше мінімуму без +
-            ('+1234567890123456', False),  # Більше максимуму з +
-            ('1234567890123456', False),  # Більше максимуму без +
+            ('+1234567890', True),
+            ('1234567890', True),
+            ('+123456789012345', True),
+            ('123456789012345', True),
+            ('+123456789', False),
+            ('123456789', False),
+            ('+1234567890123456', False),
+            ('1234567890123456', False),
         ]
 
         for phone, should_be_valid in edge_cases:
@@ -333,11 +335,11 @@ class TestValidators(TestCase):
     def test_email_validator_boundary_cases(self):
         """Тест граничних випадків для email"""
         boundary_cases = [
-            ('a@b.co', True),  # Мінімальний валідний email
-            ('test@sub.domain.com', True),  # Піддомен
-            ('user+filter@domain.com', True),  # Email з фільтром
-            ('user@domain-name.com', True),  # Домен з дефісом
-            ('123@456.789', True),  # Числовий email
+            ('a@b.co', True),
+            ('test@sub.domain.com', True),
+            ('user+filter@domain.com', True),
+            ('user@domain-name.com', True),
+            ('123@456.789', True),
         ]
 
         for email, should_be_valid in boundary_cases:

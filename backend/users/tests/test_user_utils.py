@@ -1,8 +1,9 @@
 import asyncio
 import json
-from django.test import TestCase
 from unittest.mock import patch, AsyncMock
+
 from django.http import JsonResponse
+from django.test import TestCase
 
 from users import user_utils
 from users.utils.email_templates import (

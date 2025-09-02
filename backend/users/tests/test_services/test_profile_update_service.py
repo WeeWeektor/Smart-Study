@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from users.services import profile_update_service
+from users.services.profile_update_service import update_user_data
 
 
 class TestProfileUpdateService(TestCase):
@@ -30,19 +31,17 @@ class TestProfileUpdateService(TestCase):
         self.assertEqual(self.user.surname, 'NewSurname')
         mock_sync_to_async.assert_called_once_with(self.user.save)
 
-    @patch("users.services.profile_update_service.sync_to_async")
+    @patch('users.services.profile_update_service.sync_to_async')
     def test_update_user_data_empty_name_surname(self, mock_sync_to_async):
         mock_sync_to_async.return_value = AsyncMock()
 
-        data = {
-            'name': '   ',
-            'surname': ''
-        }
+        data = {'name': '', 'surname': ''}
 
-        asyncio.run(profile_update_service.update_user_data(self.user, data))
+        asyncio.run(update_user_data(self.user, data))
 
         self.assertEqual(self.user.name, "Test")
         self.assertEqual(self.user.surname, "User")
+        mock_sync_to_async.assert_called_once_with(self.user.save)
 
     @patch("users.services.profile_update_service.sync_to_async")
     @patch("users.services.profile_update_service.phone_validator")

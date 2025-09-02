@@ -2,16 +2,16 @@
 import json
 from unittest.mock import patch, AsyncMock, Mock
 
-from django.core.signing import SignatureExpired, BadSignature
-from django.test import TestCase, RequestFactory
 from django.contrib.auth import logout
+from django.core.exceptions import ValidationError
+from django.core.signing import SignatureExpired, BadSignature
+from django.db import IntegrityError
+from django.test import TestCase, RequestFactory
+from django.utils.translation import gettext
 
 from smartStudy_backend import settings
-from users.views import LogoutView, LoginView, RegisterView, VerifyEmailView
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext
-from django.db import IntegrityError
 from users.models import CustomUser, UserSettings
+from users.views import LogoutView, LoginView, RegisterView, VerifyEmailView
 
 
 class TestLoginView(TestCase):
