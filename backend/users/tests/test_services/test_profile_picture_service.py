@@ -50,7 +50,7 @@ class TestProfilePictureService(TestCase):
         self.assertIn("File too large", str(cm.exception))
 
     @patch('users.services.profile_picture_service.supabase')
-    @patch('users.services.file_validation_service.magic.from_buffer')
+    @patch('common.services.picture_validation_service.magic.from_buffer')
     async def test_handle_profile_picture_success_no_existing_picture(self, mock_magic, mock_supabase):
         mock_magic.return_value = "image/jpeg"
 
@@ -68,7 +68,7 @@ class TestProfilePictureService(TestCase):
 
     @patch('users.services.profile_picture_service.delete_profile_picture')
     @patch('users.services.profile_picture_service.supabase')
-    @patch('users.services.file_validation_service.magic.from_buffer')
+    @patch('common.services.picture_validation_service.magic.from_buffer')
     async def test_handle_profile_picture_success_with_existing_picture(self, mock_magic, mock_supabase, mock_delete):
         mock_magic.return_value = "image/jpeg"
 
@@ -94,7 +94,7 @@ class TestProfilePictureService(TestCase):
 
     @patch('users.services.profile_picture_service.delete_profile_picture')
     @patch('users.services.profile_picture_service.supabase')
-    @patch('users.services.file_validation_service.magic.from_buffer')
+    @patch('common.services.picture_validation_service.magic.from_buffer')
     async def test_handle_profile_picture_delete_old_picture_fails(self, mock_magic, mock_supabase, mock_delete):
         mock_magic.return_value = "image/jpeg"
         mock_delete.side_effect = Exception("Delete failed")
@@ -133,7 +133,7 @@ class TestProfilePictureService(TestCase):
         self.assertIn("Dangerous file extension", str(cm.exception))
 
     @patch('users.services.profile_picture_service.supabase')
-    @patch('users.services.file_validation_service.magic.from_buffer')
+    @patch('common.services.picture_validation_service.magic.from_buffer')
     def test_handle_profile_picture_upload_fails(self, mock_magic, mock_supabase):
         mock_magic.return_value = "image/jpeg"
 
@@ -147,7 +147,7 @@ class TestProfilePictureService(TestCase):
             asyncio.run(handle_profile_picture(self.user_profile, valid_jpeg))
         self.assertIn("Failed to upload file", str(cm.exception))
 
-    @patch('users.services.file_validation_service.magic.from_buffer')
+    @patch('common.services.picture_validation_service.magic.from_buffer')
     def test_handle_profile_picture_content_type_spoofing(self, mock_magic):
         mock_magic.return_value = "image/png"
         spoofed_file = self.create_valid_jpeg_file("test.jpg")

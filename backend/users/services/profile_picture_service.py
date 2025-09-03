@@ -7,12 +7,12 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
 from smartStudy_backend import settings
-from users.services.file_validation_service import validate_file_security
+from common.services import validate_picture_file_security
 from users.user_utils import supabase
 
 
 async def handle_profile_picture(user_profile, profile_picture):
-    validate_file_security(profile_picture)
+    validate_picture_file_security(profile_picture)
 
     user_id = await sync_to_async(lambda: user_profile.user.id)()
 

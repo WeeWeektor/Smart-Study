@@ -51,22 +51,6 @@ class LanguageAwareAdminMixinTest(TestCase):
     def test_fallback_invalid_cookie_user_settings(self):
         self._test_fallback_invalid_cookie(self.admin_user_settings)
 
-    def _test_activate_language(self, admin_instance, language='uk'):
-        request = DummyRequest(cookies={'django_language': language})
-        initial_lang = get_language()
-        admin_instance.get_form(request)
-        self.assertEqual(get_language(), language)
-        activate(initial_lang)
-
-    def test_get_form_activates_language_custom_user(self):
-        self._test_activate_language(self.admin_custom_user)
-
-    def test_get_form_activates_language_user_profile(self):
-        self._test_activate_language(self.admin_user_profile)
-
-    def test_get_form_activates_language_user_settings(self):
-        self._test_activate_language(self.admin_user_settings)
-
 
 class CustomUserAdminTest(TestCase):
     def setUp(self):

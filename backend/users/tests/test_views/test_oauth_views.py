@@ -200,7 +200,7 @@ class TestBaseAuthView(TestCase):
     @patch('users.views.handle_oauth_login')
     async def test_base_auth_view_post_oauth_service_exception(self, mock_handle_oauth):
         """Тест коли handle_oauth_login викидає виняток"""
-        mock_handle_oauth.side_effect = ValueError('OAuth service error')
+        mock_handle_oauth.side_effect = ValueError('OAuth services error')
 
         request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
 
@@ -211,7 +211,7 @@ class TestBaseAuthView(TestCase):
 
         self.assertEqual(response.status_code, 400)
         response_data = json.loads(response.content.decode())
-        self.assertEqual(response_data['error'], 'OAuth service error')
+        self.assertEqual(response_data['error'], 'OAuth services error')
 
     def test_base_auth_view_provider_none(self):
         """Тест що provider за замовчуванням None"""

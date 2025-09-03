@@ -12,7 +12,7 @@ ALLOWED_FILE_TYPES = {
 MAX_FILE_SIZE = 5 * 1024 * 1024
 
 
-def validate_file_security(file):
+def validate_picture_file_security(file):
     """Валідація безпеки файлу"""
 
     if file.size > MAX_FILE_SIZE:

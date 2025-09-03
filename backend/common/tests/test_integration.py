@@ -1,8 +1,11 @@
-from django.test import TestCase, Client, override_settings
-from django.http import HttpRequest, HttpResponse
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+
+from django.core.cache import cache
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.test import TestCase, Client, override_settings, RequestFactory
 from rest_framework.response import Response
 
+from common.middleware import SecurityHeadersMiddleware, SessionSecurityMiddleware, RateLimitMiddleware
 from common.utils import get_language_from_request, validate_language
 from common.views import LocalizedView, LocalizedAPIView
 
@@ -169,6 +172,62 @@ class TestLanguageUtilsIntegration(TestCase):
         result = get_language_from_request(request)
 
         self.assertEqual(result, 'uk')
+
+
+class TestMiddlewareIntegration(TestCase):
+    """
+    Інтеграційні тести для SecurityHeadersMiddleware,
+    SessionSecurityMiddleware, RateLimitMiddleware middleware разом
+    """
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_multiple_middleware_chain(self):
+        """Тест роботи кількох middleware в ланцюгу"""
+
+        def get_response(request):
+            return JsonResponse({'success': True})
+
+        # Створюємо ланцюг middleware
+        security_middleware = SecurityHeadersMiddleware(get_response)
+        session_middleware = SessionSecurityMiddleware(security_middleware)
+        rate_limit_middleware = RateLimitMiddleware(session_middleware)
+
+        request = self.factory.get('/api/public/')
+        response = rate_limit_middleware(request)
+
+        # Перевіряємо що всі middleware спрацювали
+        self.assertIsInstance(response, JsonResponse)
+        self.assertIn('X-Frame-Options', response)
+
+    def test_rate_limit_blocks_before_other_middleware(self):
+        """Тест що rate limit блокує до інших middleware"""
+
+        def get_response(request):
+            return JsonResponse({'success': True})
+
+        rate_limit_middleware = RateLimitMiddleware(get_response)
+
+        # Досягаємо ліміту
+        for i in range(5):
+            request = self.factory.post('/api/auth/login/')
+            response = rate_limit_middleware.process_request(request)
+            if hasattr(request, '_rate_limit_key'):
+                mock_response = Mock()
+                mock_response.status_code = 400
+                rate_limit_middleware.process_response(request, mock_response)
+
+        # Наступний запит повинен бути заблокований
+        request = self.factory.post('/api/auth/login/')
+        response = rate_limit_middleware.process_request(request)
+
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 429)
 
 
 class TestEndToEndScenarios(TestCase):

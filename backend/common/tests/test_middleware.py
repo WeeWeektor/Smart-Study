@@ -1,8 +1,13 @@
 from unittest.mock import Mock, patch
-from django.test import TestCase, override_settings
-from django.http import HttpRequest, HttpResponse
 
-from common.middleware import LanguageMiddleware
+from django.contrib.auth.middleware import AuthenticationMiddleware
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.cache import cache
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.test import TestCase, override_settings, RequestFactory
+
+from common.middleware import LanguageMiddleware, RateLimitMiddleware, SessionSecurityMiddleware, \
+    SecurityHeadersMiddleware
 
 
 class TestLanguageMiddleware(TestCase):
@@ -259,3 +264,405 @@ class TestLanguageMiddleware(TestCase):
         self.assertNotIn('\r', lang_header)
         self.assertNotIn('\n', lang_header)
         self.assertNotIn('\x00', lang_header)
+
+
+class TestRateLimitMiddleware(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.middleware = RateLimitMiddleware(lambda request: JsonResponse({'success': True}))
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_get_request_not_rate_limited(self):
+        """GET запити не повинні обмежуватися"""
+        request = self.factory.get('/api/auth/login/')
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_post_request_to_non_protected_endpoint(self):
+        """POST запити до незахищених endpoints не обмежуються"""
+        request = self.factory.post('/api/unprotected/')
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_login_rate_limiting(self):
+        """Тест rate limiting для login endpoint"""
+        for i in range(5):
+            request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'test'})
+            response = self.middleware.process_request(request)
+            self.assertIsNone(response)
+
+            if hasattr(request, '_rate_limit_key'):
+                mock_response = Mock()
+                mock_response.status_code = 400
+                self.middleware.process_response(request, mock_response)
+
+        request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'test'})
+        response = self.middleware.process_request(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 429)
+
+    def test_register_rate_limiting(self):
+        """Тест rate limiting для register endpoint"""
+        for i in range(3):
+            request = self.factory.post('/api/auth/register/', {'username': f'test{i}', 'password': 'test'})
+            response = self.middleware.process_request(request)
+            self.assertIsNone(response)
+
+            if hasattr(request, '_rate_limit_key'):
+                mock_response = Mock()
+                mock_response.status_code = 400
+                self.middleware.process_response(request, mock_response)
+
+        request = self.factory.post('/api/auth/register/', {'username': 'test4', 'password': 'test'})
+        response = self.middleware.process_request(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 429)
+
+    def test_successful_request_clears_counter(self):
+        """Успішний запит скидає лічильник спроб"""
+        for i in range(2):
+            request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'test'})
+            self.middleware.process_request(request)
+
+            if hasattr(request, '_rate_limit_key'):
+                mock_response = Mock()
+                mock_response.status_code = 400
+                self.middleware.process_response(request, mock_response)
+
+        request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'correct'})
+        self.middleware.process_request(request)
+
+        if hasattr(request, '_rate_limit_key'):
+            mock_response = Mock()
+            mock_response.status_code = 200
+            self.middleware.process_response(request, mock_response)
+
+        key = f"login_attempts_127.0.0.1"
+        self.assertIsNone(cache.get(key))
+
+    def test_different_ips_have_separate_limits(self):
+        """Різні IP мають окремі ліміти"""
+        for i in range(5):
+            request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'test'})
+            request.META['REMOTE_ADDR'] = '192.168.1.1'
+            response = self.middleware.process_request(request)
+            self.assertIsNone(response)
+
+            if hasattr(request, '_rate_limit_key'):
+                mock_response = Mock()
+                mock_response.status_code = 400
+                self.middleware.process_response(request, mock_response)
+
+        request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'test'})
+        request.META['REMOTE_ADDR'] = '192.168.1.2'
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_x_forwarded_for_header(self):
+        """Тест обробки X-Forwarded-For заголовка"""
+        request = self.factory.post('/api/auth/login/')
+        request.META['HTTP_X_FORWARDED_FOR'] = '192.168.1.100, 10.0.0.1'
+
+        ip = self.middleware.get_client_ip(request)
+        self.assertEqual(ip, '192.168.1.100')
+
+    def test_get_rate_limit_config(self):
+        """Тест отримання конфігурації rate limit"""
+        config = self.middleware.get_rate_limit_config('/api/auth/login/')
+        self.assertEqual(config['max_attempts'], 5)
+        self.assertEqual(config['window'], 300)
+        self.assertEqual(config['key_prefix'], 'login')
+
+        config = self.middleware.get_rate_limit_config('/api/unprotected/')
+        self.assertIsNone(config)
+
+    @override_settings(DISABLE_RATE_LIMITING=True)
+    def test_rate_limiting_disabled(self):
+        """Тест відключення rate limiting через налаштування"""
+        for i in range(10):
+            request = self.factory.post('/api/auth/login/', {'username': 'test', 'password': 'test'})
+            response = self.middleware.process_request(request)
+            self.assertIsNone(response)
+
+    def test_exception_handling(self):
+        """Тест обробки винятків"""
+        with patch('common.middleware.cache.get', side_effect=Exception("Cache error")):
+            request = self.factory.post('/api/auth/login/')
+            response = self.middleware.process_request(request)
+            self.assertIsNone(response)
+
+
+class TestSessionSecurityMiddleware(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        self.factory = RequestFactory()
+        self.middleware = SessionSecurityMiddleware(lambda request: JsonResponse({'success': True}))
+        self.user = User.objects.create_user(
+            email='testuser@example.com',
+            password='testpass',
+            name='Test',
+            surname='User',
+            role='student'
+        )
+
+    def _add_session_middleware(self, request):
+        """Додає session middleware до request"""
+        session_middleware = SessionMiddleware(lambda r: None)
+        session_middleware.process_request(request)
+        request.session.save()
+
+        auth_middleware = AuthenticationMiddleware(lambda r: None)
+        auth_middleware.process_request(request)
+
+    def _create_authenticated_user_mock(self):
+        """Створює mock об'єкт авторизованого користувача"""
+        mock_user = Mock()
+        mock_user.is_authenticated = True
+        return mock_user
+
+    def _create_unauthenticated_user_mock(self):
+        """Створює mock об'єкт неавторизованого користувача"""
+        mock_user = Mock()
+        mock_user.is_authenticated = False
+        return mock_user
+
+    def test_unprotected_endpoint_allowed(self):
+        """Незахищені endpoints пропускаються"""
+        request = self.factory.get('/api/public/')
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_protected_endpoint_unauthenticated_user(self):
+        """Неавторизовані користувачі на захищених endpoints"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_unauthenticated_user_mock()
+
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_protected_endpoint_same_ip(self):
+        """Захищений endpoint з тим же IP"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.session['ip_address'] = '127.0.0.1'
+
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+        self.assertEqual(request.session['ip_address'], '127.0.0.1')
+
+    def test_protected_endpoint_different_ip_security_violation(self):
+        """Захищений endpoint з іншим IP - порушення безпеки"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.session['ip_address'] = '192.168.1.1'
+        request.META['REMOTE_ADDR'] = '192.168.1.2'
+
+        response = self.middleware.process_request(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 401)
+
+    def test_local_ip_changes_allowed(self):
+        """Зміни між локальними IP дозволені"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.session['ip_address'] = '127.0.0.1'
+        request.META['REMOTE_ADDR'] = 'localhost'
+
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_first_request_sets_ip(self):
+        """Перший запит встановлює IP в сесії"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.META['REMOTE_ADDR'] = '192.168.1.100'
+
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+        self.assertEqual(request.session['ip_address'], '192.168.1.100')
+
+    def test_x_forwarded_for_header(self):
+        """Тест обробки X-Forwarded-For заголовка"""
+        request = self.factory.get('/api/user/profile/')
+        request.META['HTTP_X_FORWARDED_FOR'] = '192.168.1.100, 10.0.0.1'
+
+        ip = self.middleware.get_client_ip(request)
+        self.assertEqual(ip, '192.168.1.100')
+
+    def test_is_protected_endpoint(self):
+        """Тест визначення захищених endpoints"""
+        self.assertTrue(self.middleware.is_protected_endpoint('/api/user/profile/'))
+        self.assertTrue(self.middleware.is_protected_endpoint('/api/user/change-password/'))
+        self.assertTrue(self.middleware.is_protected_endpoint('/admin/'))
+        self.assertTrue(self.middleware.is_protected_endpoint('/admin/users/'))
+        self.assertFalse(self.middleware.is_protected_endpoint('/api/public/'))
+
+    def test_is_local_ip_change(self):
+        """Тест визначення локальних змін IP"""
+        self.assertTrue(self.middleware.is_local_ip_change('127.0.0.1', 'localhost'))
+        self.assertTrue(self.middleware.is_local_ip_change('localhost', '::1'))
+        self.assertFalse(self.middleware.is_local_ip_change('127.0.0.1', '192.168.1.1'))
+        self.assertFalse(self.middleware.is_local_ip_change('192.168.1.1', '192.168.1.2'))
+
+    def test_exception_handling(self):
+        """Тест обробки винятків"""
+        request = self.factory.get('/api/user/profile/')
+        request.user = self._create_authenticated_user_mock()
+
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+    def test_session_flush_on_security_violation(self):
+        """Тест очищення сесії при порушенні безпеки"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.session['ip_address'] = '192.168.1.1'
+        request.session['test_data'] = 'some_value'
+        request.META['REMOTE_ADDR'] = '192.168.1.2'
+
+        initial_session_key = request.session.session_key
+        response = self.middleware.process_request(request)
+
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 401)
+        self.assertNotEqual(request.session.session_key, initial_session_key)
+
+    def test_admin_endpoint_protection(self):
+        """Тест захисту admin endpoints"""
+        request = self.factory.get('/admin/users/user/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.session['ip_address'] = '192.168.1.1'
+        request.META['REMOTE_ADDR'] = '192.168.1.2'
+
+        response = self.middleware.process_request(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 401)
+
+    def test_remote_addr_fallback(self):
+        """Тест fallback на REMOTE_ADDR коли X-Forwarded-For відсутній"""
+        request = self.factory.get('/api/user/profile/')
+        request.META['REMOTE_ADDR'] = '192.168.1.50'
+
+        ip = self.middleware.get_client_ip(request)
+        self.assertEqual(ip, '192.168.1.50')
+
+    def test_default_ip_fallback(self):
+        """Тест fallback на default IP"""
+        request = self.factory.get('/api/user/profile/')
+        if 'REMOTE_ADDR' in request.META:
+            del request.META['REMOTE_ADDR']
+
+        ip = self.middleware.get_client_ip(request)
+        self.assertEqual(ip, '127.0.0.1')
+
+    def test_multiple_x_forwarded_for_ips(self):
+        """Тест обробки множинних IP в X-Forwarded-For"""
+        request = self.factory.get('/api/user/profile/')
+        request.META['HTTP_X_FORWARDED_FOR'] = '192.168.1.100, 10.0.0.1, 172.16.0.1'
+
+        ip = self.middleware.get_client_ip(request)
+        self.assertEqual(ip, '192.168.1.100')
+
+    def test_ip_update_on_valid_request(self):
+        """Тест оновлення IP в сесії на валідному запиті"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_authenticated_user_mock()
+        request.META['REMOTE_ADDR'] = '192.168.1.100'
+
+        self.assertNotIn('ip_address', request.session)
+
+        response = self.middleware.process_request(request)
+
+        self.assertIsNone(response)
+        self.assertEqual(request.session['ip_address'], '192.168.1.100')
+
+    def test_non_authenticated_user_skipped(self):
+        """Тест пропуску неавторизованих користувачів на захищених endpoints"""
+        request = self.factory.get('/api/user/profile/')
+        self._add_session_middleware(request)
+        request.user = self._create_unauthenticated_user_mock()
+
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
+
+
+class TestSecurityHeadersMiddleware(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.middleware = SecurityHeadersMiddleware(lambda request: JsonResponse({'success': True}))
+
+    def test_security_headers_added(self):
+        """Тест додавання security заголовків"""
+        request = self.factory.get('/')
+        response = JsonResponse({'test': 'data'})
+
+        processed_response = self.middleware.process_response(request, response)
+
+        self.assertEqual(processed_response['X-Frame-Options'], 'DENY')
+        self.assertEqual(processed_response['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(processed_response['Referrer-Policy'], 'strict-origin-when-cross-origin')
+        self.assertEqual(processed_response['Permissions-Policy'], 'geolocation=(), microphone=(), camera=()')
+
+    def test_headers_not_added_to_non_http_response(self):
+        """Тест що заголовки не додаються до non-HTTP response"""
+        request = self.factory.get('/')
+        response = "Not an HTTP response"
+
+        processed_response = self.middleware.process_response(request, response)
+        self.assertEqual(processed_response, "Not an HTTP response")
+
+    def test_headers_added_to_different_response_types(self):
+        """Тест додавання заголовків до різних типів відповідей"""
+        from django.http import HttpResponse
+
+        request = self.factory.get('/')
+
+        json_response = JsonResponse({'test': 'data'})
+        processed = self.middleware.process_response(request, json_response)
+        self.assertIn('X-Frame-Options', processed)
+
+        http_response = HttpResponse("Hello World")
+        processed = self.middleware.process_response(request, http_response)
+        self.assertIn('X-Frame-Options', processed)
+
+    def test_all_security_headers_present(self):
+        """Тест присутності всіх security заголовків"""
+        request = self.factory.get('/')
+        response = JsonResponse({'test': 'data'})
+
+        processed_response = self.middleware.process_response(request, response)
+
+        expected_headers = [
+            'X-Frame-Options',
+            'X-Content-Type-Options',
+            'Referrer-Policy',
+            'Permissions-Policy'
+        ]
+
+        for header in expected_headers:
+            self.assertIn(header, processed_response)
+
+    def test_header_values_correct(self):
+        """Тест правильності значень заголовків"""
+        request = self.factory.get('/')
+        response = JsonResponse({'test': 'data'})
+
+        processed_response = self.middleware.process_response(request, response)
+
+        self.assertEqual(processed_response['X-Frame-Options'], 'DENY')
+        self.assertEqual(processed_response['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(processed_response['Referrer-Policy'], 'strict-origin-when-cross-origin')
+        self.assertEqual(processed_response['Permissions-Policy'], 'geolocation=(), microphone=(), camera=()')

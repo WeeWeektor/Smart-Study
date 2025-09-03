@@ -4,6 +4,7 @@ from unittest.mock import patch, AsyncMock, Mock
 from django.test import RequestFactory, TestCase
 
 from users.services import oauth_service
+from users.services.oauth_service import verify_facebook_token, handle_oauth_login
 
 
 class DummyUser:
@@ -75,7 +76,7 @@ class TestOAuthService(TestCase):
 
     @patch("users.services.oauth_service.settings")
     @patch("users.services.oauth_service.httpx.AsyncClient")
-    async def test_verify_facebook_token_api_error(self, mock_client, mock_settings):
+    async def test_verify_facebook_token_api_error_bed_token(self, mock_client, mock_settings):
         mock_settings.SOCIAL_AUTH_FACEBOOK_KEY = "test_app_id"
         mock_settings.SOCIAL_AUTH_FACEBOOK_SECRET = "test_app_secret"
 
@@ -89,6 +90,25 @@ class TestOAuthService(TestCase):
 
         with self.assertRaises(Exception):
             await oauth_service.verify_facebook_token("bad_token")
+
+    @patch('users.services.oauth_service.httpx.AsyncClient')
+    async def test_verify_facebook_token_api_error_invalid_token(self, mock_client):
+        """Тест обробки помилки Facebook API"""
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "error": {
+                "message": "Invalid access token",
+                "type": "OAuthException",
+                "code": 190
+            }
+        }
+
+        mock_client.return_value.__aenter__.return_value.get.return_value = mock_response
+
+        with self.assertRaises(ValueError) as context:
+            await verify_facebook_token("invalid_token")
+
+        self.assertIn("Invalid Facebook token", str(context.exception))
 
     @patch("users.services.oauth_service.cache")
     @patch("users.services.oauth_service.get_user_model")
@@ -247,3 +267,45 @@ class TestOAuthService(TestCase):
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.content)
         self.assertIn("Unexpected error", data["error"])
+
+    @patch('users.services.oauth_service.sync_to_async')
+    @patch('users.services.oauth_service.cache')
+    @patch('users.services.oauth_service.get_user_model')
+    @patch('users.services.oauth_service.verify_facebook_token')
+    @patch('users.services.oauth_service.login')
+    @patch('users.services.oauth_service.warm_user_cache')
+    @patch('users.services.oauth_service.invalidate_user_existence_cache')
+    async def test_handle_oauth_login_existing_user_verified_active(self, mock_invalidate, mock_warm,
+                                                                    mock_login, mock_verify_fb,
+                                                                    mock_get_user_model, mock_cache,
+                                                                    mock_sync_to_async):
+        """Тест OAuth логіну для існуючого верифікованого та активного користувача"""
+        mock_user = Mock()
+        mock_user.email = 'test@example.com'
+        mock_user.name = 'Test'
+        mock_user.surname = 'User'
+        mock_user.role = 'student'
+        mock_user.is_verified_email = True
+        mock_user.is_active = True
+
+        mock_verify_fb.return_value = {
+            'email': 'test@example.com',
+            'given_name': 'Test',
+            'family_name': 'User'
+        }
+
+        mock_cache.get.return_value = None
+        mock_sync_to_async.side_effect = lambda func: func
+
+        mock_get_user_model.return_value.objects.filter.return_value.first.return_value = mock_user
+
+        request = Mock()
+        result = await handle_oauth_login(
+            request=request,
+            token="test_token",
+            provider="facebook",
+            role="student"
+        )
+
+        self.assertTrue(mock_user.is_verified_email)
+        self.assertTrue(mock_user.is_active)

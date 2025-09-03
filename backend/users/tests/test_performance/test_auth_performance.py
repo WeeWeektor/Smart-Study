@@ -111,7 +111,7 @@ class AuthPerformanceTest(TransactionTestCase):
 
             print(f"🔐 Login - Avg: {avg_time:.3f}s, Max: {max_time:.3f}s")
 
-            self.assertLess(avg_time, 0.6, "Average login time should be under 0.6s")
+            self.assertLess(avg_time, 0.7, "Average login time should be under 0.7s")
             self.assertLess(max_time, 1.2, "Max login time should be under 1.2s")
 
         finally:

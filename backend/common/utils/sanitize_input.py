@@ -8,10 +8,14 @@ from django.core.exceptions import ValidationError
 
 def sanitize_input(value):
     """Санітизація користувацького вводу"""
-    if not value:
+    if value is None:
         return None
 
-    sanitized = strip_tags(str(value))
+    sanitized = str(value)
+    if not sanitized.strip():
+        return None if value == '' else ''
+
+    sanitized = strip_tags(sanitized)
     sanitized = unicodedata.normalize('NFKC', sanitized)
     sanitized = ''.join(char for char in sanitized if unicodedata.category(char)[0] != 'C')
 

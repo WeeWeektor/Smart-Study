@@ -226,7 +226,7 @@ class TestForgotPasswordView(TestCase):
             'is_active': True,
             'is_verified': True
         }
-        mock_send_email.side_effect = Exception('Email service error')
+        mock_send_email.side_effect = Exception('Email services error')
 
         data = {'email': self.valid_email}
         request = self.factory.post('/', data=json.dumps(data), content_type='application/json')
@@ -236,7 +236,7 @@ class TestForgotPasswordView(TestCase):
 
             await self.view.post(request)
 
-            expected_message = 'Error processing request: Email service error'
+            expected_message = 'Error processing request: Email services error'
             mock_error_response.assert_called_once_with(expected_message, 500)
 
     @patch('users.views.sync_to_async')

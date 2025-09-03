@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from users.services import profile_update_service
-from users.services.profile_update_service import update_user_data
+from users.services.profile_update_service import update_user_data, update_user_profile
 
 
 class TestProfileUpdateService(TestCase):
@@ -212,3 +212,58 @@ class TestProfileUpdateService(TestCase):
         asyncio.run(profile_update_service.update_user_profile(self.user, data))
 
         mock_sync_to_async.assert_called()
+
+    @patch('users.services.profile_update_service.sync_to_async')
+    @patch('users.services.profile_update_service.sanitize_input')
+    def test_update_user_data_name_too_long(self, mock_sanitize, mock_sync_to_async):
+        """Тест перевищення довжини імені"""
+        mock_sync_to_async.return_value = AsyncMock()
+
+        data = {'name': 'a' * 101}
+
+        with self.assertRaises(ValidationError) as context:
+            asyncio.run(update_user_data(self.user, data))
+
+        self.assertEqual(str(context.exception), "['Name too long']")
+
+    @patch('users.services.profile_update_service.sync_to_async')
+    @patch('users.services.profile_update_service.sanitize_input')
+    def test_update_user_data_surname_too_long(self, mock_sanitize, mock_sync_to_async):
+        """Тест перевищення довжини прізвища"""
+        mock_sync_to_async.return_value = AsyncMock()
+
+        data = {'surname': 'b' * 101}
+
+        with self.assertRaises(ValidationError) as context:
+            asyncio.run(update_user_data(self.user, data))
+
+        self.assertEqual(str(context.exception), "['Surname too long']")
+
+    @patch('users.services.profile_update_service.sync_to_async')
+    @patch('users.services.profile_update_service.sanitize_input')
+    def test_update_user_profile_set_field_to_none(self, mock_sanitize, mock_sync_to_async):
+        """Тест встановлення поля профілю в None через else гілку"""
+        mock_user_profile = Mock()
+        mock_user_profile.bio = None
+        mock_user_profile.location = None
+        mock_user_profile.organization = None
+        mock_user_profile.specialization = None
+        mock_user_profile.education_level = None
+
+        mock_sync_to_async.side_effect = lambda func: AsyncMock() if 'save' in str(func) else AsyncMock(
+            return_value=(mock_user_profile, True))
+
+        test_cases = [
+            {'bio': None},
+            {'location': ''},
+            {'organization': '   '},
+            {'specialization': None},
+            {'education_level': ''},
+        ]
+
+        for data in test_cases:
+            with self.subTest(data=data):
+                asyncio.run(update_user_profile(self.user, data))
+
+                field_name = list(data.keys())[0]
+                self.assertIsNone(getattr(mock_user_profile, field_name))
