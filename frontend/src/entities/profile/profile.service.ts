@@ -1,5 +1,5 @@
-import { apiClient, tokenService } from '@/shared/api'
 import type { ApiResponse } from '@/shared/api'
+import { apiClient, tokenService } from '@/shared/api'
 import { type ProfileData, type UpdateProfileRequest } from './model'
 import { ClassTranslator } from '@/shared/lib/i18n'
 
@@ -51,7 +51,7 @@ class ProfileService {
       }
     } catch (error) {
       console.error(this.t('Помилка завантаження профілю:'), error)
-      throw new Error(this.t('Не вдалося завантажити профіль'))
+      throw new Error(this.t('Не вдалося завантажити профіль') + error)
     }
   }
 
@@ -79,7 +79,7 @@ class ProfileService {
       }
     } catch (error) {
       console.error(this.t('Помилка оновлення профілю:'), error)
-      throw new Error(this.t('Не вдалося оновити профіль'))
+      throw new Error(this.t('Не вдалося оновити профіль') + error)
     }
   }
 
@@ -110,7 +110,7 @@ class ProfileService {
       }
     } catch (error) {
       console.error(this.t('Помилка завантаження фото профілю:'), error)
-      throw new Error(this.t('Не вдалося завантажити фото профілю'))
+      throw new Error(this.t('Не вдалося завантажити фото профілю') + error)
     }
   }
 
@@ -127,7 +127,7 @@ class ProfileService {
       tokenService.removeToken()
     } catch (error) {
       console.error(this.t('Помилка видалення профілю:'), error)
-      throw new Error(this.t('Не вдалося видалити профіль'))
+      throw new Error(this.t('Не вдалося видалити профіль') + error)
     }
   }
 
@@ -158,7 +158,7 @@ class ProfileService {
       }
     } catch (error) {
       console.error(this.t('Помилка зміни паролю:'), error)
-      throw new Error(this.t('Не вдалося змінити пароль'))
+      throw new Error(this.t('Не вдалося змінити пароль') + ': ' + error)
     }
   }
 }

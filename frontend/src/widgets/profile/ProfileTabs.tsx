@@ -239,12 +239,12 @@ export const ProfileTabs = ({
         new_password: newPassword,
         confirm_password: confirmPassword,
       })
-      setPasswordSuccess(res.message || t('Пароль змінено успішно'))
+      setPasswordSuccess(t('Пароль змінено успішно') || `${res.message}`)
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      setPasswordError(err.message || t('Не вдалося змінити пароль'))
+      setPasswordError(t('Не вдалося змінити пароль') || err.message)
     } finally {
       setIsPasswordLoading(false)
     }

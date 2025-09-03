@@ -46,6 +46,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = _('User')
         verbose_name_plural = _('Users')
 
+    def __str__(self):
+        return f"{_('User')} {self.name} {self.surname}"
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile', verbose_name=_('User'))
@@ -83,3 +86,6 @@ class UserSettings(models.Model):
     class Meta:
         verbose_name = _('User Settings')
         verbose_name_plural = _('User Settings')
+
+    def __str__(self):
+        return f"{_('Settings')} {self.user.name} {self.user.surname}"

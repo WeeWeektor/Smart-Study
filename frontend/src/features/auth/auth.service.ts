@@ -1,5 +1,5 @@
+import type { ApiResponse, User } from '@/shared/api'
 import { apiClient, tokenService } from '@/shared/api'
-import type { User, ApiResponse } from '@/shared/api'
 import axios from 'axios'
 import { ClassTranslator } from '@/shared/lib/i18n/class-translator'
 
@@ -132,6 +132,8 @@ class AuthService {
           throw new Error(
             this.t('Помилка CSRF перевірки. Спробуйте оновити сторінку')
           )
+        } else if (error.response.status === 429) {
+          throw new Error(this.t('Забагато спроб входу. Спробуйте пізніше.'))
         } else {
           throw new Error(this.t('Помилка сервера: ') + error.response.status)
         }
@@ -218,6 +220,14 @@ class AuthService {
       if (axios.isAxiosError(error)) {
         if (error.response && error.response.status === 409) {
           throw new Error(this.t('Користувач з таким email вже існує'))
+        } else if (error.response && error.response.status === 429) {
+          throw new Error(
+            this.t('Забагато спроб реєстрації. Спробуйте пізніше.')
+          )
+        } else if (error.response && error.response.status === 403) {
+          throw new Error(
+            this.t('Помилка CSRF перевірки. Спробуйте оновити сторінку')
+          )
         } else if (
           error.response &&
           error.response.data &&
@@ -226,10 +236,6 @@ class AuthService {
         ) {
           const message = String(error.response.data.message)
           throw new Error(message)
-        } else if (error.response && error.response.status === 403) {
-          throw new Error(
-            this.t('Помилка CSRF перевірки. Спробуйте оновити сторінку')
-          )
         }
       }
 
@@ -273,9 +279,13 @@ class AuthService {
       }
     } catch (error: unknown) {
       console.error('Помилка відновлення паролю:', error)
-      if (error instanceof Error) {
+
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        throw new Error(this.t('Забагато спроб. Спробуйте пізніше.'))
+      } else if (error instanceof Error) {
         throw new Error(error.message || this.t('Не вдалося скинути пароль'))
       }
+
       throw new Error(this.t('Невідома помилка під час скидання пароля'))
     }
   }
@@ -312,7 +322,10 @@ class AuthService {
       }
     } catch (error: unknown) {
       console.error('Помилка зміни паролю:', error)
-      if (error instanceof Error) {
+
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        throw new Error(this.t('Забагато спроб. Спробуйте пізніше.'))
+      } else if (error instanceof Error) {
         throw new Error(error.message || this.t('Не вдалося змінити пароль'))
       }
       throw new Error(this.t('Невідома помилка під час зміни пароля'))
