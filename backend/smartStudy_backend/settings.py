@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 
     'core',
     'users',
+    'courses',
 ]
 
 CHANNEL_LAYERS = {
@@ -133,7 +134,8 @@ CACHES = {
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
-SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")  # Bucket for tests
+SUPABASE_USERS_PROFILE_PICTURES_BUCKET = os.getenv("SUPABASE_USERS_PROFILE_PICTURES_BUCKET")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"

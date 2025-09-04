@@ -25,11 +25,11 @@ async def handle_profile_picture(user_profile, profile_picture):
 
     file_extension = profile_picture.name.split('.')[-1].lower()
     unique_filename = f"{uuid.uuid4()}_{int(time.time())}.{file_extension}"
-    file_path = f"usersavatarts/{user_id}/{unique_filename}"
+    file_path = f"{user_id}/{unique_filename}"
 
     try:
         file_content = await sync_to_async(profile_picture.read)()
-        bucket = supabase.storage.from_(settings.SUPABASE_BUCKET)
+        bucket = supabase.storage.from_(settings.SUPABASE_USERS_PROFILE_PICTURES_BUCKET)
 
         await sync_to_async(bucket.upload)(
             path=file_path,
@@ -48,8 +48,8 @@ async def handle_profile_picture(user_profile, profile_picture):
 
 async def delete_profile_picture(user_id, delete_folder=False):
     try:
-        folder_path = f"usersavatarts/{user_id}/"
-        bucket = supabase.storage.from_(settings.SUPABASE_BUCKET)
+        folder_path = f"{user_id}/"
+        bucket = supabase.storage.from_(settings.SUPABASE_USERS_PROFILE_PICTURES_BUCKET)
 
         files = await sync_to_async(bucket.list)(folder_path)
         if files:
