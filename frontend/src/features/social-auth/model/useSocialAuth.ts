@@ -113,8 +113,12 @@ export function useSocialAuth({
 
       if (
         error.response?.status === 400 &&
-        (error.response?.data?.error?.includes('role') ||
-          error.response?.data?.error?.includes('Необхідно вказати'))
+        (error.response?.data?.error?.includes(
+          t('Ви повинні вказати роль і прізвище')
+        ) ||
+          error.response?.data?.error?.includes(
+            'You must specify role and surname'
+          ))
       ) {
         console.log(
           '[SocialAuth] Користувач не існує, перенаправляємо на реєстрацію'
