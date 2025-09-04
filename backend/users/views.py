@@ -1,28 +1,24 @@
-import json
 import asyncio
+import json
 from typing import Optional
-from asgiref.sync import sync_to_async
 
+from asgiref.sync import sync_to_async
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.shortcuts import redirect
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.db import IntegrityError, transaction
 from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
+from django.views.decorators.csrf import ensure_csrf_cookie
 
-from smartStudy_backend import settings
 from common import LocalizedView, LocalizedAPIView
+from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
 from .services.oauth_service import handle_oauth_login
-from .user_utils import send_verification_email, error_response, success_response, send_password_reset_email
-from .utils.validators import cached_email_validator, phone_validator
-from .utils.request_parsing import parse_request_data
-from .services.profile_picture_service import handle_profile_picture, delete_profile_picture
 from .services.profile_cache_service import (
     get_cached_profile,
     invalidate_user_cache,
@@ -31,7 +27,11 @@ from .services.profile_cache_service import (
     get_user_existence_cache,
     invalidate_user_existence_cache, invalidate_all_user_caches
 )
+from .services.profile_picture_service import handle_profile_picture, delete_profile_picture
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
+from .user_utils import send_verification_email, error_response, success_response, send_password_reset_email
+from .utils.request_parsing import parse_request_data
+from .utils.validators import cached_email_validator, phone_validator
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -46,51 +46,83 @@ class RegisterView(LocalizedView):
                 if field not in data:
                     return error_response(f"{gettext("Required field missing:")} {field}")
 
-            try:
-                await cached_email_validator(data['email'])
-            except ValidationError as e:
-                return error_response(str(e))
-
-            try:
-                await sync_to_async(validate_password)(data['password'])
-            except ValidationError as e:
-                return error_response(', '.join(e.messages))
+            validation_tasks = [
+                cached_email_validator(data['email']),
+                sync_to_async(validate_password)(data['password']),
+                get_allowed_roles(),
+            ]
 
             if 'phone_number' in data and data['phone_number'] is not None:
-                try:
-                    await sync_to_async(phone_validator)(data['phone_number'])
-                except ValidationError as e:
-                    return error_response(str(e))
+                validation_tasks.insert(0, sync_to_async(phone_validator)(data['phone_number']))
 
-            allowed_roles = await get_allowed_roles()
+            try:
+                results = await asyncio.gather(*validation_tasks, return_exceptions=True)
+
+                phone_validation_offset = 1 if 'phone_number' in data and data['phone_number'] is not None else 0
+                validation_results = results[:-1]
+
+                for i, result in enumerate(validation_results):
+                    if isinstance(result, Exception):
+                        if i == 0 and phone_validation_offset:
+                            return error_response(f"Phone: {str(result)}")
+                        elif (i == phone_validation_offset and 'email' in str(result).lower()) or (
+                                i == 0 and not phone_validation_offset):
+                            return error_response(f"Email: {str(result)}")
+                        elif 'password' in str(result).lower():
+                            return error_response(
+                                f"Password: {', '.join(result.messages) if hasattr(result, 'messages') else str(result)}")
+                        else:
+                            return error_response(str(result))
+
+                allowed_roles = results[-1]
+                if isinstance(allowed_roles, Exception):
+                    return error_response(str(allowed_roles))
+
+            except Exception as e:
+                return error_response(f"{gettext('Error during validation:')} {str(e)}")
+
             if data['role'] not in allowed_roles:
                 return error_response(
-                    f'{gettext("Incorrect role. Acceptable values:")} {", ".join(allowed_roles)}')
+                    f'{gettext("Incorrect role. Acceptable values:")} {", ".join(str(allowed_roles))}')
 
             if not data['name'].strip() or not data['surname'].strip():
                 return error_response(gettext('First and last names cannot be left blank.'))
 
-            user = await sync_to_async(CustomUser.objects.create_user)(
-                name=data['name'].strip(),
-                surname=data['surname'].strip(),
-                phone_number=data.get('phone_number'),
-                role=data['role'],
-                email=data['email'],
-                password=data['password'],
-                is_active=False
-            )
+            async def create_user_with_settings():
+                @sync_to_async
+                def create_user_atomic():
+                    with transaction.atomic():
+                        user = CustomUser.objects.create_user(
+                            name=data['name'].strip(),
+                            surname=data['surname'].strip(),
+                            phone_number=data.get('phone_number'),
+                            role=data['role'],
+                            email=data['email'],
+                            password=data['password'],
+                            is_active=False
+                        )
+
+                        UserSettings.objects.create(
+                            user=user,
+                            email_notifications=data.get('email_notifications', True),
+                            push_notifications=data.get('push_notifications', True)
+                        )
+
+                        UserProfile.objects.create(user=user)
+
+                        return user
+
+                return await create_user_atomic()
+
+            user = await create_user_with_settings()
 
             await asyncio.gather(
                 invalidate_user_existence_cache(data['email']),
-                sync_to_async(UserSettings.objects.create)(
-                    user=user,
-                    email_notifications=data.get('email_notifications', True),
-                    push_notifications=data.get('push_notifications', True)
-                ),
                 send_verification_email(user)
             )
 
             return success_response({"message": gettext('Please confirm your email address.')})
+
         except IntegrityError:
             return error_response(gettext('Email already registered.'))
         except json.JSONDecodeError:

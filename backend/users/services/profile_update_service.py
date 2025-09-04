@@ -13,14 +13,21 @@ async def update_user_data(user, data):
         for field in forbidden_fields:
             data.pop(field, None)
 
+    updated_fields = []
+
     if 'name' in data and data['name']:
         if len(data['name'].strip()) > 100:
             raise ValidationError("Name too long")
         user.name = sanitize_input(data['name'])
+        updated_fields.append('name')
+
     if 'surname' in data and data['surname']:
         if len(data['surname'].strip()) > 100:
             raise ValidationError("Surname too long")
         user.surname = sanitize_input(data['surname'])
+        updated_fields.append('surname')
+
+
     if 'phone_number' in data:
         try:
             if data['phone_number'] is None or data['phone_number'].strip() == '':
@@ -28,27 +35,36 @@ async def update_user_data(user, data):
             else:
                 phone_validator(data['phone_number'])
                 user.phone_number = data['phone_number']
+            updated_fields.append('phone_number')
         except ValidationError as e:
             raise ValidationError(str(e))
-    await sync_to_async(user.save)()
 
+    if updated_fields:
+        await sync_to_async(user.save)(update_fields=updated_fields)
 
 async def update_user_settings(user, data, is_multipart=False):
     user_settings, _ = await sync_to_async(UserSettings.objects.get_or_create)(user=user)
     settings_fields = ['email_notifications', 'push_notifications', 'deadline_reminders',
                        'show_profile_to_others', 'show_achievements']
+
+    updated_fields = []
     for field in settings_fields:
         if field in data:
             if is_multipart:
                 setattr(user_settings, field, data[field].lower() == 'true')
             else:
                 setattr(user_settings, field, data[field])
-    await sync_to_async(user_settings.save)()
+            updated_fields.append(field)
+
+    if updated_fields:
+        await sync_to_async(user_settings.save)(update_fields=updated_fields)
 
 
 async def update_user_profile(user, data):
     user_profile, _ = await sync_to_async(UserProfile.objects.get_or_create)(user=user)
     profile_fields = ['bio', 'location', 'organization', 'specialization', 'education_level']
+
+    updated_fields = []
     for field in profile_fields:
         if field in data:
             value = data[field]
@@ -57,4 +73,7 @@ async def update_user_profile(user, data):
                 setattr(user_profile, field, sanitized_value if sanitized_value else None)
             else:
                 setattr(user_profile, field, None)
-    await sync_to_async(user_profile.save)()
+            updated_fields.append(field)
+
+    if updated_fields:
+        await sync_to_async(user_profile.save)(update_fields=updated_fields)

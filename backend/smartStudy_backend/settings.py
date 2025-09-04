@@ -1,8 +1,9 @@
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
+
 from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -114,6 +115,8 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('DATABASE_HOST'),
         'PORT': os.getenv('DATABASE_PORT'),
+
+        'CONN_MAX_AGE': 60,
     }
 }
 

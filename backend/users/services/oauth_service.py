@@ -1,3 +1,5 @@
+import asyncio
+
 from asgiref.sync import sync_to_async
 from django.contrib.auth import login, get_user_model
 from django.http import JsonResponse
@@ -79,14 +81,21 @@ async def handle_oauth_login(request, token, provider, name=None, surname=None, 
         user = await sync_to_async(lambda: User.objects.filter(email=email).first())()
 
         if user:
+            updates_needed = []
             if not user.is_verified_email:
                 user.is_verified_email = True
+                updates_needed.append("is_verified_email")
             if not user.is_active:
                 user.is_active = True
-            await sync_to_async(user.save)()
+                updates_needed.append("is_active")
 
-            await invalidate_user_existence_cache(email)
-            await warm_user_cache(user)
+            if updates_needed:
+                await sync_to_async(user.save)(update_fields=updates_needed)
+
+            await asyncio.gather(
+                invalidate_user_existence_cache(email),
+                warm_user_cache(user)
+            )
 
             await sync_to_async(login)(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return JsonResponse({

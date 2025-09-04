@@ -47,17 +47,17 @@ class BaseUserRelatedAdmin(admin.ModelAdmin):
     search_fields_for_user = ('user__email', 'user__name', 'user__surname')
     ordering_for_user = ('user__email',)
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('user')
+
     def get_user_display(self, obj):
-        if getattr(obj, 'user', None):
-            return f"{obj.user.name} {obj.user.surname}"
-        return 'user__name user__surname'
+        return f"{obj.user.name} {obj.user.surname}"
 
     get_user_display.short_description = _('Користувач')
 
     def get_user_email(self, obj):
-        if getattr(obj, 'user', None):
-            return obj.user.email
-        return 'user__email'
+        return obj.user.email
 
     get_user_email.short_description = _('Електронна пошта')
 
@@ -65,6 +65,8 @@ class BaseUserRelatedAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(BaseUserRelatedAdmin):
     model = UserProfile
+    list_select_related = ('user',)
+    raw_id_fields = ('user',)
 
     list_display = ('get_user_display', 'get_user_email', 'location', 'organization', 'specialization', 'education_level')
     list_filter = ('education_level', 'user__is_active', 'user__role')
@@ -82,6 +84,8 @@ class UserProfileAdmin(BaseUserRelatedAdmin):
 @admin.register(UserSettings)
 class UserSettingsAdmin(BaseUserRelatedAdmin):
     model = UserSettings
+    list_select_related = ('user',)
+    raw_id_fields = ('user',)
 
     list_display = ('get_user_display', 'get_user_email', 'email_notifications', 'push_notifications', 'show_profile_to_others')
     list_filter = ('show_profile_to_others', 'show_achievements', 'user__is_active', 'user__role')

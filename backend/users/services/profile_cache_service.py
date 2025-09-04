@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.utils.translation import gettext
 
 from smartStudy_backend import settings
-from ..models import UserSettings, UserProfile, CustomUser
+from ..models import UserSettings, CustomUser, UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -121,9 +121,13 @@ async def get_cached_profile(user):
         return cached_data
 
     try:
-        user_profile, _ = await sync_to_async(UserProfile.objects.get_or_create)(user=user)
+        user_with_profile = await sync_to_async(
+            CustomUser.objects.select_related('profile', 'settings').get
+        )(id=user.id)
 
-        settings_data = await get_cached_user_settings(user)
+        user_profile, _ = await sync_to_async(UserProfile.objects.get_or_create)(user=user_with_profile)
+        user_settings, _ = await sync_to_async(UserSettings.objects.get_or_create)(user=user_with_profile)
+
         status_data = await get_cached_user_status(user)
 
         profile_data = {
@@ -136,7 +140,13 @@ async def get_cached_profile(user):
                 "role": user.role,
                 **status_data
             },
-            "settings": settings_data,
+            "settings": {
+                "email_notifications": user_settings.email_notifications,
+                "push_notifications": user_settings.push_notifications,
+                "deadline_reminders": user_settings.deadline_reminders,
+                "show_profile_to_others": user_settings.show_profile_to_others,
+                "show_achievements": user_settings.show_achievements,
+            },
             "profile": {
                 "bio": user_profile.bio if user_profile.bio else None,
                 "profile_picture": user_profile.profile_picture if user_profile.profile_picture else None,
