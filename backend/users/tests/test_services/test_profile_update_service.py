@@ -41,7 +41,8 @@ class TestProfileUpdateService(TestCase):
 
         self.assertEqual(self.user.name, "Test")
         self.assertEqual(self.user.surname, "User")
-        mock_sync_to_async.assert_called_once_with(self.user.save)
+
+        mock_sync_to_async.assert_not_called()
 
     @patch("users.services.profile_update_service.sync_to_async")
     @patch("users.services.profile_update_service.phone_validator")

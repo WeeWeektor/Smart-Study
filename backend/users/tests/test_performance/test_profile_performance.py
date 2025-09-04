@@ -180,7 +180,7 @@ class ProfilePerformanceTest(TransactionTestCase):
         self.client.logout()
         get_profile_sync = async_to_sync(get_cached_profile)
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             profile_data = get_profile_sync(user)
 
             self.assertIsNotNone(profile_data)

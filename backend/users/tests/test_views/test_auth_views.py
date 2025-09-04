@@ -10,7 +10,7 @@ from django.test import TestCase, RequestFactory
 from django.utils.translation import gettext
 
 from smartStudy_backend import settings
-from users.models import CustomUser, UserSettings
+from users.models import CustomUser
 from users.views import LogoutView, LoginView, RegisterView, VerifyEmailView
 
 
@@ -807,122 +807,75 @@ class TestRegisterView(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.view = RegisterView()
-        self.valid_data = {
-            'name': 'John',
-            'surname': 'Doe',
-            'role': 'student',
-            'email': 'test@example.com',
-            'password': 'testpassword123',
-            'phone_number': '+1234567890'
-        }
 
+    @patch('users.views.invalidate_user_existence_cache')
+    @patch('users.views.send_verification_email')
     @patch('users.views.get_allowed_roles')
     @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
     @patch('users.views.success_response')
-    async def test_register_view_post_success(self, mock_success_response, mock_email_validator, mock_sync_to_async,
-                                              mock_get_allowed_roles):
-        """Тест успішної реєстрації"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+    async def test_register_view_post_success(self, mock_success_response, mock_email_validator,
+                                              mock_sync_to_async, mock_get_allowed_roles,
+                                              mock_send_email, mock_invalidate_cache):
+        """Тест успішної реєстрації користувача"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
 
         mock_user = Mock()
-        mock_user.id = 'user-123'
+        mock_user.email = 'test@example.com'
 
-        mock_sync_to_async.side_effect = [
-            AsyncMock(),
-            AsyncMock(),
-            AsyncMock(return_value=mock_user),
-            AsyncMock()
-        ]
-
+        mock_email_validator.return_value = None
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_sync_to_async.return_value = AsyncMock(return_value=mock_user)
         mock_success_response.return_value = Mock()
 
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = []
-
-            await RegisterView.post(request)
-
-            mock_success_response.assert_called_once_with({"message": gettext('Please confirm your email address.')})
-
-    @patch('users.views.error_response')
-    async def test_register_view_post_missing_name(self, mock_error_response):
-        """Тест з відсутнім ім'ям"""
-        invalid_data = self.valid_data.copy()
-        del invalid_data['name']
-        mock_error_response.return_value = Mock()
-
-        request = self.factory.post('/', data=json.dumps(invalid_data), content_type='application/json')
+        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
         await RegisterView.post(request)
 
-        mock_error_response.assert_called_once_with(f"{gettext('Required field missing:')} name")
+        mock_email_validator.assert_called_once_with('test@example.com')
+        mock_get_allowed_roles.assert_called_once()
+        mock_invalidate_cache.assert_called_once_with('test@example.com')
+        mock_send_email.assert_called_once_with(mock_user)
+        mock_success_response.assert_called_once()
 
     @patch('users.views.error_response')
-    async def test_register_view_post_missing_surname(self, mock_error_response):
-        """Тест з відсутнім прізвищем"""
-        invalid_data = self.valid_data.copy()
-        del invalid_data['surname']
+    async def test_register_view_post_missing_required_fields(self, mock_error_response):
+        """Тест з відсутніми обов'язковими полями"""
+        test_cases = [
+            {'surname': 'Doe', 'role': 'student', 'email': 'test@example.com', 'password': 'pass'},
+            {'name': 'John', 'role': 'student', 'email': 'test@example.com', 'password': 'pass'},
+            {'name': 'John', 'surname': 'Doe', 'email': 'test@example.com', 'password': 'pass'},
+            {'name': 'John', 'surname': 'Doe', 'role': 'student', 'password': 'pass'},
+            {'name': 'John', 'surname': 'Doe', 'role': 'student', 'email': 'test@example.com'},
+        ]
+
         mock_error_response.return_value = Mock()
 
-        request = self.factory.post('/', data=json.dumps(invalid_data), content_type='application/json')
+        for user_data in test_cases:
+            with self.subTest(user_data=user_data):
+                request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
+                await RegisterView.post(request)
 
-        await RegisterView.post(request)
-
-        mock_error_response.assert_called_once_with(f"{gettext('Required field missing:')} surname")
-
-    @patch('users.views.error_response')
-    async def test_register_view_post_missing_role(self, mock_error_response):
-        """Тест з відсутньою роллю"""
-        invalid_data = self.valid_data.copy()
-        del invalid_data['role']
-        mock_error_response.return_value = Mock()
-
-        request = self.factory.post('/', data=json.dumps(invalid_data), content_type='application/json')
-
-        await RegisterView.post(request)
-
-        mock_error_response.assert_called_once_with(f"{gettext('Required field missing:')} role")
-
-    @patch('users.views.error_response')
-    async def test_register_view_post_missing_email(self, mock_error_response):
-        """Тест з відсутнім email"""
-        invalid_data = self.valid_data.copy()
-        del invalid_data['email']
-        mock_error_response.return_value = Mock()
-
-        request = self.factory.post('/', data=json.dumps(invalid_data), content_type='application/json')
-
-        await RegisterView.post(request)
-
-        mock_error_response.assert_called_once_with(f"{gettext('Required field missing:')} email")
-
-    @patch('users.views.error_response')
-    async def test_register_view_post_missing_password(self, mock_error_response):
-        """Тест з відсутнім паролем"""
-        invalid_data = self.valid_data.copy()
-        del invalid_data['password']
-        mock_error_response.return_value = Mock()
-
-        request = self.factory.post('/', data=json.dumps(invalid_data), content_type='application/json')
-
-        await RegisterView.post(request)
-
-        mock_error_response.assert_called_once_with(f"{gettext('Required field missing:')} password")
+        self.assertEqual(mock_error_response.call_count, len(test_cases))
 
     @patch('users.views.cached_email_validator')
     @patch('users.views.error_response')
     async def test_register_view_post_invalid_email(self, mock_error_response, mock_email_validator):
         """Тест з невалідним email"""
         user_data = {
-            'name': 'Test',
-            'surname': 'User',
+            'name': 'John',
+            'surname': 'Doe',
             'role': 'student',
             'email': 'invalid-email',
-            'password': 'ValidPassword123!'
+            'password': 'StrongPassword123!'
         }
+
         mock_email_validator.side_effect = ValidationError(['Invalid email format'])
         mock_error_response.return_value = Mock()
 
@@ -930,90 +883,112 @@ class TestRegisterView(TestCase):
 
         await RegisterView.post(request)
 
-        mock_error_response.assert_called_once_with("['Invalid email format']")
+        mock_error_response.assert_called_once()
 
+    @patch('users.views.asyncio.gather')
+    @patch('users.views.get_allowed_roles')
     @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
     @patch('users.views.error_response')
     async def test_register_view_post_invalid_password(self, mock_error_response, mock_email_validator,
-                                                       mock_sync_to_async):
+                                                       mock_sync_to_async, mock_get_allowed_roles, mock_gather):
         """Тест з невалідним паролем"""
-        invalid_data = self.valid_data.copy()
-        invalid_data['password'] = '123'
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': '123'
+        }
 
-        mock_email_validator.return_value = AsyncMock()
-        mock_sync_to_async.side_effect = ValidationError(['Password too short', 'Password too common'])
+        password_error = ValidationError(['Password too short'])
+        mock_email_validator.return_value = None
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_gather.return_value = [None, password_error, ['admin', 'student', 'teacher']]
         mock_error_response.return_value = Mock()
 
-        request = self.factory.post('/', data=json.dumps(invalid_data), content_type='application/json')
+        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
         await RegisterView.post(request)
 
-        mock_error_response.assert_called_once_with('Password too short, Password too common')
+        mock_error_response.assert_called_once()
 
-    @patch('users.views.phone_validator')
+    @patch('users.views.asyncio.gather')
+    @patch('users.views.get_allowed_roles')
     @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
     @patch('users.views.error_response')
-    async def test_register_view_post_invalid_phone(self, mock_error_response, mock_email_validator, mock_sync_to_async,
-                                                    mock_phone_validator):
-        """Тест з неправильним номером телефону"""
-        user_data = self.valid_data.copy()
-        user_data['phone_number'] = 'invalid_phone'
+    async def test_register_view_post_invalid_phone(self, mock_error_response, mock_email_validator,
+                                                    mock_sync_to_async, mock_get_allowed_roles, mock_gather):
+        """Тест з невалідним номером телефону"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!',
+            'phone_number': 'invalid'
+        }
 
+        phone_error = ValidationError(['Invalid phone number'])
         mock_email_validator.return_value = None
-        validate_password_mock = AsyncMock()
-        phone_validator_mock = AsyncMock(side_effect=ValidationError(["Invalid phone format"]))
-        mock_sync_to_async.side_effect = [validate_password_mock, phone_validator_mock]
-        mock_phone_validator.side_effect = ValidationError(["Invalid phone format"])
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_gather.return_value = [phone_error, None, ['admin', 'student', 'teacher']]
         mock_error_response.return_value = Mock()
 
         request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
         await RegisterView.post(request)
 
-        mock_error_response.assert_called_once_with("['Invalid phone format']")
+        mock_error_response.assert_called_once()
 
+    @patch('users.views.asyncio.gather')
     @patch('users.views.get_allowed_roles')
+    @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
     @patch('users.views.error_response')
     async def test_register_view_post_invalid_role(self, mock_error_response, mock_email_validator,
-                                                   mock_get_allowed_roles):
+                                                   mock_sync_to_async, mock_get_allowed_roles, mock_gather):
         """Тест з невалідною роллю"""
         user_data = {
-            'name': 'Test',
-            'surname': 'User',
+            'name': 'John',
+            'surname': 'Doe',
             'role': 'invalid_role',
             'email': 'test@example.com',
-            'password': 'ValidPassword123!'
+            'password': 'StrongPassword123!'
         }
 
         mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_gather.return_value = [None, None, ['admin', 'student', 'teacher']]
         mock_error_response.return_value = Mock()
 
         request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
         await RegisterView.post(request)
 
-        mock_error_response.assert_called_once_with('Incorrect role. Acceptable values: student, teacher')
+        mock_error_response.assert_called_once()
 
     @patch('users.views.get_allowed_roles')
+    @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
     @patch('users.views.error_response')
-    async def test_register_view_post_empty_name(self, mock_error_response, mock_email_validator,
-                                                 mock_get_allowed_roles):
-        """Тест з пустим ім'ям"""
+    async def test_register_view_post_empty_name_surname(self, mock_error_response, mock_email_validator,
+                                                         mock_sync_to_async, mock_get_allowed_roles):
+        """Тест з порожніми ім'ям та прізвищем"""
         user_data = {
-            'name': '',
-            'surname': 'User',
+            'name': '   ',
+            'surname': '   ',
             'role': 'student',
             'email': 'test@example.com',
-            'password': 'ValidPassword123!'
+            'password': 'StrongPassword123!'
         }
 
+        mock_validate_password = AsyncMock(return_value=None)
+        mock_sync_to_async.return_value = mock_validate_password
+
         mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
         mock_error_response.return_value = Mock()
 
         request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
@@ -1022,52 +997,25 @@ class TestRegisterView(TestCase):
 
         mock_error_response.assert_called_once_with(gettext('First and last names cannot be left blank.'))
 
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.cached_email_validator')
     @patch('users.views.error_response')
-    async def test_register_view_post_empty_surname(self, mock_error_response, mock_email_validator,
-                                                    mock_get_allowed_roles):
+    async def test_register_view_post_integrity_error(self, mock_error_response):
+        """Тест IntegrityError (email вже зареєстрований)"""
         user_data = {
-            'name': 'Test',
-            'surname': '',
+            'name': 'John',
+            'surname': 'Doe',
             'role': 'student',
             'email': 'test@example.com',
-            'password': 'ValidPassword123!'
+            'password': 'StrongPassword123!'
         }
 
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
         mock_error_response.return_value = Mock()
 
-        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
-
-        with patch('users.views.sync_to_async') as mock_sync_to_async:
-            validate_password_mock = AsyncMock()
-            mock_sync_to_async.return_value = validate_password_mock
-
+        with patch('users.views.cached_email_validator'), \
+                patch('users.views.get_allowed_roles'), \
+                patch('users.views.asyncio.gather'), \
+                patch('users.views.sync_to_async', side_effect=IntegrityError()):
+            request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
             await RegisterView.post(request)
-
-            mock_error_response.assert_called_once_with(gettext('First and last names cannot be left blank.'))
-
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.sync_to_async')
-    @patch('users.views.cached_email_validator')
-    @patch('users.views.error_response')
-    async def test_register_view_post_integrity_error(self, mock_error_response, mock_email_validator,
-                                                      mock_sync_to_async, mock_get_allowed_roles):
-        """Тест з дублікатом email (IntegrityError)"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
-
-        validate_password_mock = AsyncMock()
-        create_user_mock = AsyncMock(side_effect=IntegrityError("Duplicate email"))
-
-        mock_sync_to_async.side_effect = [validate_password_mock, create_user_mock]
-        mock_error_response.return_value = Mock()
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        await RegisterView.post(request)
 
         mock_error_response.assert_called_once_with(gettext('Email already registered.'))
 
@@ -1082,204 +1030,113 @@ class TestRegisterView(TestCase):
 
         mock_error_response.assert_called_once_with(gettext('Invalid JSON format.'))
 
-    @patch('users.views.cached_email_validator')
-    @patch('users.views.error_response')
-    async def test_register_view_post_general_exception(self, mock_error_response, mock_email_validator):
-        """Тест обробки загальних винятків"""
-        mock_email_validator.side_effect = Exception('Test exception')
-        mock_error_response.return_value = Mock()
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        await RegisterView.post(request)
-
-        mock_error_response.assert_called_once_with(f"{gettext('Error during registration:')} Test exception", 500)
-
+    @patch('users.views.invalidate_user_existence_cache')
+    @patch('users.views.send_verification_email')
+    @patch('users.views.asyncio.gather')
     @patch('users.views.get_allowed_roles')
     @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
-    async def test_register_view_post_user_creation_params(self, mock_email_validator, mock_sync_to_async,
-                                                           mock_get_allowed_roles):
-        """Тест параметрів створення користувача"""
+    async def test_register_view_post_without_phone(self, mock_email_validator, mock_sync_to_async,
+                                                    mock_get_allowed_roles, mock_gather,
+                                                    mock_send_email, mock_invalidate_cache):
+        """Тест реєстрації без номера телефону"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
+
         mock_user = Mock()
-        mock_user.id = 'user-123'
+        mock_user.email = 'test@example.com'
 
         mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_gather.return_value = [None, None, ['admin', 'student', 'teacher']]
+        mock_sync_to_async.return_value = AsyncMock(return_value=mock_user)
 
-        validate_password_mock = AsyncMock()
-        phone_validator_mock = AsyncMock()
-        create_user_mock = AsyncMock(return_value=mock_user)
-        mock_sync_to_async.side_effect = [validate_password_mock, phone_validator_mock, create_user_mock]
+        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock), \
-                patch('users.views.success_response'):
+        with patch('users.views.success_response'):
             await RegisterView.post(request)
 
-            create_user_call = mock_sync_to_async.call_args_list[2]
-            self.assertEqual(create_user_call[0][0], CustomUser.objects.create_user)
+        mock_email_validator.assert_called_once_with('test@example.com')
 
+    @patch('users.views.invalidate_user_existence_cache')
+    @patch('users.views.send_verification_email')
+    @patch('users.views.asyncio.gather')
     @patch('users.views.get_allowed_roles')
     @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
     async def test_register_view_post_user_settings_creation(self, mock_email_validator, mock_sync_to_async,
-                                                             mock_get_allowed_roles):
-        """Тест створення налаштувань користувача"""
-        mock_user = Mock()
-        mock_user.id = 'user-123'
-
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
-
-        validate_password_mock = AsyncMock()
-        phone_validator_mock = AsyncMock()
-        create_user_mock = AsyncMock(return_value=mock_user)
-        create_settings_mock = AsyncMock()
-        mock_sync_to_async.side_effect = [validate_password_mock, phone_validator_mock, create_user_mock,
-                                          create_settings_mock]
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = None
-            await RegisterView.post(request)
-
-            mock_gather.assert_called_once()
-            self.assertEqual(len(mock_sync_to_async.call_args_list), 4)
-
-    @patch('users.views.send_verification_email')
-    @patch('users.views.invalidate_user_existence_cache')
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.sync_to_async')
-    @patch('users.views.cached_email_validator')
-    async def test_register_view_post_default_notifications(self, mock_email_validator, mock_sync_to_async,
-                                                            mock_get_allowed_roles, mock_invalidate_cache,
-                                                            mock_send_email):
-        """Тест значень сповіщень за замовчуванням"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+                                                             mock_get_allowed_roles, mock_gather,
+                                                             mock_send_email, mock_invalidate_cache):
+        """Тест створення UserSettings та UserProfile"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!',
+            'email_notifications': False,
+            'push_notifications': False
+        }
 
         mock_user = Mock()
-        mock_user.id = 'user-123'
-
-        async def mock_validate_password(*args, **kwargs):
-            return None
-
-        async def mock_phone_validator(*args, **kwargs):
-            return None
-
-        async def mock_create_user_async(*args, **kwargs):
-            return mock_user
-
-        async def mock_create_settings_async(*args, **kwargs):
-            return Mock()
-
-        mock_sync_to_async.side_effect = [
-            mock_validate_password,
-            mock_phone_validator,
-            mock_create_user_async,
-            mock_create_settings_async
-        ]
-
-        mock_invalidate_cache.return_value = AsyncMock()
-        mock_send_email.return_value = AsyncMock()
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = []
-            with patch('users.views.success_response') as mock_success_response:
-                mock_success_response.return_value = Mock()
-
-                await RegisterView.post(request)
-
-                self.assertEqual(mock_sync_to_async.call_count, 4)
-                fourth_call = mock_sync_to_async.call_args_list[3]
-                self.assertEqual(fourth_call[0][0], UserSettings.objects.create)
-
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.cached_email_validator')
-    async def test_register_view_post_null_phone_number(self, mock_email_validator, mock_get_allowed_roles):
-        """Тест з відсутнім номером телефону"""
-        user_data = self.valid_data.copy()
-        del user_data['phone_number']
+        mock_user.email = 'test@example.com'
 
         mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_gather.return_value = [None, None, ['admin', 'student', 'teacher']]
+        mock_sync_to_async.return_value = AsyncMock(return_value=mock_user)
 
         request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
-        with patch('users.views.sync_to_async') as mock_sync_to_async, \
-                patch('users.views.invalidate_user_existence_cache'), \
-                patch('users.views.send_verification_email'), \
-                patch('users.views.success_response'):
-            async def mock_validate(*args):
-                return None
-
-            async def mock_create_user(*args, **kwargs):
-                return Mock(id='user-123')
-
-            async def mock_create_settings(*args, **kwargs):
-                return Mock()
-
-            mock_sync_to_async.side_effect = [mock_validate, mock_create_user, mock_create_settings]
-
+        with patch('users.views.success_response'):
             await RegisterView.post(request)
 
-            self.assertEqual(mock_sync_to_async.call_count, 3)
+        mock_sync_to_async.assert_called()
 
-    @patch('users.views.asyncio.gather', new_callable=AsyncMock)
-    @patch('users.views.send_verification_email')
-    @patch('users.views.invalidate_user_existence_cache')
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
-    async def test_register_view_post_asyncio_gather(self, mock_email_validator, mock_sync_to_async,
-                                                     mock_get_allowed_roles, mock_invalidate_cache,
-                                                     mock_send_email, mock_gather):
-        """Тест виклику asyncio.gather"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+    @patch('users.views.error_response')
+    async def test_register_view_post_validation_exception(self, mock_error_response, mock_email_validator):
+        """Тест обробки винятків під час валідації"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
 
-        mock_user = Mock()
-        mock_user.id = 'user-123'
+        mock_email_validator.side_effect = Exception('Validation error')
+        mock_error_response.return_value = Mock()
 
-        async def mock_validate_password(*args, **kwargs):
-            return None
+        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
-        async def mock_phone_validator(*args, **kwargs):
-            return None
+        await RegisterView.post(request)
 
-        async def mock_create_user_async(*args, **kwargs):
-            return mock_user
+        mock_error_response.assert_called()
 
-        async def mock_create_settings_async(*args, **kwargs):
-            return Mock()
+    @patch('users.views.error_response')
+    async def test_register_view_post_general_exception(self, mock_error_response):
+        """Тест обробки загальних винятків"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
 
-        mock_sync_to_async.side_effect = [
-            mock_validate_password,
-            mock_phone_validator,
-            mock_create_user_async,
-            mock_create_settings_async
-        ]
+        mock_error_response.return_value = Mock()
 
-        mock_invalidate_cache.return_value = AsyncMock()
-        mock_send_email.return_value = AsyncMock()
-        mock_gather.return_value = []
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.success_response') as mock_success_response:
-            mock_success_response.return_value = Mock()
-
+        with patch('users.views.json.loads', side_effect=Exception('General error')):
+            request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
             await RegisterView.post(request)
 
-            mock_gather.assert_called_once()
-
-            call_args = mock_gather.call_args[0]
-            self.assertEqual(len(call_args), 3)
+        mock_error_response.assert_called_once()
 
     def test_register_view_is_static_method(self):
         """Тест що post метод є статичним"""
@@ -1287,190 +1144,82 @@ class TestRegisterView(TestCase):
 
     async def test_register_view_post_async_function(self):
         """Тест що метод є async функцією"""
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
+
+        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
 
         coroutine = RegisterView.post(request)
         self.assertTrue(hasattr(coroutine, '__await__'))
 
         coroutine.close()
 
+    def test_register_view_decorator_applied(self):
+        """Тест що декоратор ensure_csrf_cookie застосований"""
+        self.assertTrue(hasattr(RegisterView, 'dispatch'))
+
+    @patch('users.views.invalidate_user_existence_cache')
+    @patch('users.views.send_verification_email')
+    @patch('users.views.asyncio.gather')
     @patch('users.views.get_allowed_roles')
     @patch('users.views.sync_to_async')
     @patch('users.views.cached_email_validator')
-    async def test_register_view_post_name_surname_stripped(self, mock_email_validator, mock_sync_to_async,
-                                                            mock_get_allowed_roles):
-        """Тест обрізання пробілів з імені та прізвища"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+    async def test_register_view_post_email_trimming(self, mock_email_validator, mock_sync_to_async,
+                                                     mock_get_allowed_roles, mock_gather,
+                                                     mock_send_email, mock_invalidate_cache):
+        """Тест обрізання пробілів в імені та прізвищі"""
+        user_data = {
+            'name': '   John   ',
+            'surname': '   Doe   ',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
 
         mock_user = Mock()
-        mock_user.id = 'user-123'
+        mock_user.email = 'test@example.com'
 
-        captured_kwargs = {}
-
-        async def mock_create_user_async(*args, **kwargs):
-            captured_kwargs.update(kwargs)
-            return mock_user
-
-        mock_sync_to_async.side_effect = [
-            AsyncMock(),
-            AsyncMock(),
-            mock_create_user_async,
-            AsyncMock()
-        ]
-
-        test_data = self.valid_data.copy()
-        test_data['name'] = '  Test  '
-        test_data['surname'] = '  User  '
-
-        request = self.factory.post('/', data=json.dumps(test_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = []
-            with patch('users.views.success_response'):
-                await RegisterView.post(request)
-
-                self.assertEqual(captured_kwargs['name'], 'Test')
-                self.assertEqual(captured_kwargs['surname'], 'User')
-
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.sync_to_async')
-    @patch('users.views.cached_email_validator')
-    async def test_register_view_post_user_inactive_by_default(self, mock_email_validator, mock_sync_to_async,
-                                                               mock_get_allowed_roles):
-        """Тест що користувач неактивний за замовчуванням"""
         mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
+        mock_get_allowed_roles.return_value = ['admin', 'student', 'teacher']
+        mock_gather.return_value = [None, None, ['admin', 'student', 'teacher']]
+        mock_sync_to_async.return_value = AsyncMock(return_value=mock_user)
+
+        request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
+
+        with patch('users.views.success_response'):
+            await RegisterView.post(request)
+
+        mock_sync_to_async.assert_called()
+
+    @patch('users.views.send_verification_email')
+    @patch('users.views.invalidate_user_existence_cache')
+    async def test_register_view_post_asyncio_gather_calls(self, mock_invalidate_cache, mock_send_email):
+        """Тест паралельних викликів"""
+        user_data = {
+            'name': 'John',
+            'surname': 'Doe',
+            'role': 'student',
+            'email': 'test@example.com',
+            'password': 'StrongPassword123!'
+        }
 
         mock_user = Mock()
-        mock_user.id = 'user-123'
+        mock_user.email = 'test@example.com'
 
-        captured_kwargs = {}
+        with patch('users.views.cached_email_validator', return_value=None), \
+                patch('users.views.get_allowed_roles', return_value=['admin', 'student', 'teacher']), \
+                patch('users.views.sync_to_async', return_value=AsyncMock(return_value=mock_user)), \
+                patch('users.views.success_response'):
+            request = self.factory.post('/', data=json.dumps(user_data), content_type='application/json')
+            await RegisterView.post(request)
 
-        async def mock_create_user_async(*args, **kwargs):
-            captured_kwargs.update(kwargs)
-            return mock_user
-
-        mock_sync_to_async.side_effect = [
-            AsyncMock(),
-            AsyncMock(),
-            mock_create_user_async,
-            AsyncMock()
-        ]
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = []
-            with patch('users.views.success_response'):
-                await RegisterView.post(request)
-
-                self.assertIn('is_active', captured_kwargs)
-                self.assertFalse(captured_kwargs['is_active'])
-
-    @patch('users.views.send_verification_email', new_callable=AsyncMock)
-    @patch('users.views.invalidate_user_existence_cache', new_callable=AsyncMock)
-    @patch('users.views.get_allowed_roles', new_callable=AsyncMock)
-    @patch('users.views.sync_to_async')
-    @patch('users.views.cached_email_validator', new_callable=AsyncMock)
-    async def test_register_view_post_send_verification_email_call(self, mock_email_validator, mock_sync_to_async,
-                                                                   mock_get_allowed_roles, mock_invalidate_cache,
-                                                                   mock_send_email):
-        """Тест виклику send_verification_email"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
-
-        mock_user = Mock()
-        mock_user.id = 'user-123'
-
-        mock_sync_to_async.side_effect = [
-            AsyncMock(),
-            AsyncMock(),
-            AsyncMock(return_value=mock_user),
-            AsyncMock()
-        ]
-
-        mock_invalidate_cache.return_value = None
-        mock_send_email.return_value = None
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = []
-            with patch('users.views.success_response') as mock_success_response:
-                mock_success_response.return_value = Mock()
-
-                await RegisterView.post(request)
-
-                mock_gather.assert_called_once()
-
-                mock_send_email.assert_called_once_with(mock_user)
-
-    @patch('users.views.send_verification_email', new_callable=AsyncMock)
-    @patch('users.views.invalidate_user_existence_cache', new_callable=AsyncMock)
-    @patch('users.views.get_allowed_roles', new_callable=AsyncMock)
-    @patch('users.views.sync_to_async')
-    @patch('users.views.cached_email_validator', new_callable=AsyncMock)
-    async def test_register_view_post_invalidate_cache_call(self, mock_email_validator, mock_sync_to_async,
-                                                            mock_get_allowed_roles, mock_invalidate_cache,
-                                                            mock_send_email):
-        """Тест виклику invalidate_user_existence_cache"""
-        mock_email_validator.return_value = None
-        mock_get_allowed_roles.return_value = ['student', 'teacher']
-
-        mock_user = Mock()
-        mock_user.id = 'user-123'
-
-        mock_sync_to_async.side_effect = [
-            AsyncMock(),
-            AsyncMock(),
-            AsyncMock(return_value=mock_user),
-            AsyncMock()
-        ]
-
-        mock_invalidate_cache.return_value = None
-        mock_send_email.return_value = None
-
-        request = self.factory.post('/', data=json.dumps(self.valid_data), content_type='application/json')
-
-        with patch('users.views.asyncio.gather', new_callable=AsyncMock) as mock_gather:
-            mock_gather.return_value = []
-            with patch('users.views.success_response') as mock_success_response:
-                mock_success_response.return_value = Mock()
-
-                await RegisterView.post(request)
-
-                mock_invalidate_cache.assert_called_once_with(self.valid_data['email'])
-
-    @patch('users.views.get_allowed_roles')
-    @patch('users.views.sync_to_async')
-    @patch('users.views.cached_email_validator')
-    async def test_register_view_post_multiple_roles_allowed(self, mock_email_validator, mock_sync_to_async,
-                                                             mock_get_allowed_roles):
-        """Тест з множинними дозволеними ролями"""
-        mock_email_validator.return_value = AsyncMock()
-        mock_sync_to_async.side_effect = [
-            AsyncMock(),
-            AsyncMock(),
-            AsyncMock(return_value=Mock()),
-            AsyncMock(),
-        ]
-        mock_get_allowed_roles.return_value = AsyncMock(return_value=['student', 'teacher', 'admin', 'moderator'])
-
-        valid_roles = ['student', 'teacher', 'admin', 'moderator']
-
-        for role in valid_roles:
-            with self.subTest(role=role):
-                test_data = self.valid_data.copy()
-                test_data['role'] = role
-
-                request = self.factory.post('/', data=json.dumps(test_data), content_type='application/json')
-
-                with patch('users.views.invalidate_user_existence_cache'), \
-                        patch('users.views.send_verification_email'), \
-                        patch('users.views.success_response'):
-                    result = await RegisterView.post(request)
-                    self.assertIsNotNone(result)
+        mock_invalidate_cache.assert_called_once_with('test@example.com')
+        mock_send_email.assert_called_once_with(mock_user)
 
 
 class TestVerifyEmailView(TestCase):

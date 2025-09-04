@@ -158,21 +158,31 @@ class ProfileCacheServiceTestCase(TestCase):
 
     @patch("users.services.profile_cache_service.cache")
     @patch("users.services.profile_cache_service.UserProfile")
-    @patch("users.services.profile_cache_service.get_cached_user_settings", new_callable=AsyncMock)
-    @patch("users.services.profile_cache_service.get_cached_user_status", new_callable=AsyncMock)
-    def test_get_cached_profile_cache_miss(self, mock_status, mock_settings, mock_UserProfile, mock_cache):
+    @patch("users.services.profile_cache_service.UserSettings")
+    @patch("users.services.profile_cache_service.CustomUser")
+    def test_get_cached_profile_cache_miss(self, mock_CustomUser, mock_UserSettings, mock_UserProfile, mock_cache):
         mock_cache.get.return_value = None
         mock_cache.set = Mock()
 
         dummy_profile = DummyProfile()
+        dummy_settings = DummySettings()
+        dummy_user = DummyUser()
+
+        mock_user_queryset = Mock()
+        mock_user_queryset.get.return_value = dummy_user
+        mock_CustomUser.objects.select_related.return_value = mock_user_queryset
+
         mock_UserProfile.objects.get_or_create.return_value = (dummy_profile, False)
-        mock_settings.return_value = {"email_notifications": True}
-        mock_status.return_value = {"is_active": True}
+        mock_UserSettings.objects.get_or_create.return_value = (dummy_settings, False)
 
         result = asyncio.run(profile_cache_service.get_cached_profile(self.user))
 
         self.assertIsNotNone(result)
-        mock_cache.set.assert_called_once()
+        self.assertIn('user', result)
+        self.assertIn('settings', result)
+        self.assertIn('profile', result)
+
+        self.assertGreaterEqual(mock_cache.set.call_count, 1)
 
     @patch("users.services.profile_cache_service.cache")
     def test_get_cached_profile_cache_hit(self, mock_cache):

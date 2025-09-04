@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
@@ -40,7 +42,8 @@ class CustomUserModelTest(TestCase):
 
     def test_user_str_method(self):
         user = CustomUser.objects.create_user(**self.user_data)
-        self.assertEqual(str(user), user.email)
+        expected = f"User {user.name} {user.surname}"
+        self.assertEqual(str(user), expected)
 
     def test_invalid_role_raises_validation_error(self):
         user = CustomUser(
@@ -64,6 +67,57 @@ class CustomUserModelTest(TestCase):
         self.assertEqual(updated_user.surname, 'UpdatedSurname')
         self.assertEqual(updated_user.role, 'teacher')
         self.assertTrue(updated_user.is_active)
+
+    def test_user_uuid_primary_key(self):
+        """Тест UUID первинного ключа"""
+        user = CustomUser.objects.create_user(**self.user_data)
+        self.assertTrue(isinstance(user.id, uuid.UUID))
+
+    def test_user_email_uniqueness(self):
+        """Тест унікальності email"""
+        CustomUser.objects.create_user(**self.user_data)
+        with self.assertRaises(Exception):
+            CustomUser.objects.create_user(
+                email='test@example.com',
+                name='Jane',
+                surname='Doe',
+                password='password456',
+                role='teacher'
+            )
+
+    def test_user_default_values(self):
+        """Тест значень за замовчуванням"""
+        user = CustomUser.objects.create_user(**self.user_data)
+        self.assertFalse(user.is_verified_email)
+        self.assertFalse(user.is_active)
+        self.assertFalse(user.is_staff)
+        self.assertIsNotNone(user.created_at)
+
+    def test_custom_manager_get_with_profile_and_settings(self):
+        """Тест кастомного менеджера"""
+        user = CustomUser.objects.create_user(**self.user_data)
+        UserProfile.objects.create(user=user)
+        UserSettings.objects.create(user=user)
+
+        retrieved_user = CustomUser.objects.get_with_profile_and_settings(id=user.id)
+        self.assertEqual(retrieved_user, user)
+
+    def test_user_phone_number_optional(self):
+        """Тест опціонального номера телефону"""
+        user_data = self.user_data.copy()
+        user_data['phone_number'] = '+380123456789'
+        user = CustomUser.objects.create_user(**user_data)
+        self.assertEqual(user.phone_number, '+380123456789')
+
+    def test_user_meta_verbose_names(self):
+        """Тест verbose_name моделі"""
+        self.assertEqual(CustomUser._meta.verbose_name, 'User')
+        self.assertEqual(CustomUser._meta.verbose_name_plural, 'Users')
+
+    def test_user_indexes_exist(self):
+        """Тест наявності індексів"""
+        indexes = [index.name for index in CustomUser._meta.indexes]
+        self.assertTrue(len(indexes) > 0)
 
 
 class UserProfileModelTest(TestCase):
@@ -113,6 +167,82 @@ class UserProfileModelTest(TestCase):
         self.assertEqual(updated_profile.bio, 'Hello world')
         self.assertEqual(updated_profile.profile_picture, 'https://example.com/pic.png')
 
+    def test_profile_uuid_primary_key(self):
+        """Тест UUID первинного ключа профілю"""
+        profile = UserProfile.objects.create(user=self.user)
+        self.assertTrue(isinstance(profile.id, uuid.UUID))
+
+    def test_profile_one_to_one_relationship(self):
+        """Тест зв'язку один-до-одного з користувачем"""
+        profile = UserProfile.objects.create(user=self.user)
+        self.assertEqual(self.user.profile, profile)
+
+    def test_profile_cascade_delete(self):
+        """Тест каскадного видалення профілю при видаленні користувача"""
+        profile = UserProfile.objects.create(user=self.user)
+        user_id = self.user.id
+        profile_id = profile.id
+
+        self.user.delete()
+
+        self.assertFalse(CustomUser.objects.filter(id=user_id).exists())
+        self.assertFalse(UserProfile.objects.filter(id=profile_id).exists())
+
+    def test_valid_education_levels(self):
+        """Тест валідних рівнів освіти"""
+        valid_levels = ['bachelor', 'master', 'doctor of science', 'diploma', 'certificate']
+
+        for level in valid_levels:
+            profile = UserProfile(user=self.user, education_level=level)
+            try:
+                profile.full_clean()
+            except ValidationError:
+                self.fail(f"ValidationError raised for valid education level: {level}")
+
+    def test_profile_picture_url_field(self):
+        """Тест URL поля для фото профілю"""
+        profile = UserProfile.objects.create(
+            user=self.user,
+            profile_picture='https://example.com/avatar.jpg'
+        )
+        self.assertEqual(profile.profile_picture, 'https://example.com/avatar.jpg')
+
+    def test_bio_max_length(self):
+        """Тест що довгий текст зберігається без обрізання"""
+        long_bio = 'x' * 501
+        profile = UserProfile.objects.create(user=self.user, bio=long_bio)
+
+        self.assertEqual(len(profile.bio), 501)
+        self.assertTrue(profile.bio.endswith('x'))
+
+    def test_bio_field_max_length_property(self):
+        """Тест що поле має правильний max_length"""
+        bio_field = UserProfile._meta.get_field('bio')
+        self.assertEqual(bio_field.max_length, 500)
+
+    def test_bio_full_clean_validation(self):
+        """Тест що full_clean не викидає помилку для TextField"""
+        long_bio = 'x' * 501
+        profile = UserProfile(user=self.user, bio=long_bio)
+
+        try:
+            profile.full_clean()
+            self.assertEqual(len(profile.bio), 501)
+        except ValidationError:
+            self.fail("ValidationError не повинна виникати для TextField")
+
+    def test_bio_field_type(self):
+        """Тест типу поля bio"""
+        bio_field = UserProfile._meta.get_field('bio')
+        self.assertEqual(bio_field.__class__.__name__, 'TextField')
+        self.assertTrue(bio_field.blank)
+        self.assertTrue(bio_field.null)
+
+    def test_profile_meta_verbose_names(self):
+        """Тест verbose_name моделі профілю"""
+        self.assertEqual(UserProfile._meta.verbose_name, 'User Profile')
+        self.assertEqual(UserProfile._meta.verbose_name_plural, 'User Profiles')
+
 
 class UserSettingsModelTest(TestCase):
     def setUp(self):
@@ -151,3 +281,64 @@ class UserSettingsModelTest(TestCase):
         self.assertFalse(updated_settings.deadline_reminders)
         self.assertFalse(updated_settings.show_profile_to_others)
         self.assertFalse(updated_settings.show_achievements)
+
+    def test_settings_uuid_primary_key(self):
+        """Тест UUID первинного ключа налаштувань"""
+        settings_obj = UserSettings.objects.create(user=self.user)
+        self.assertTrue(isinstance(settings_obj.id, uuid.UUID))
+
+    def test_settings_str_method(self):
+        """Тест __str__ методу налаштувань"""
+        settings_obj = UserSettings.objects.create(user=self.user)
+        expected = f"Settings {self.user.name} {self.user.surname}"
+        self.assertEqual(str(settings_obj), expected)
+
+    def test_settings_cascade_delete(self):
+        """Тест каскадного видалення налаштувань при видаленні користувача"""
+        settings_obj = UserSettings.objects.create(user=self.user)
+        user_id = self.user.id
+        settings_id = settings_obj.id
+
+        self.user.delete()
+
+        self.assertFalse(CustomUser.objects.filter(id=user_id).exists())
+        self.assertFalse(UserSettings.objects.filter(id=settings_id).exists())
+
+    def test_settings_default_values(self):
+        """Тест значень за замовчуванням для налаштувань"""
+        settings_obj = UserSettings.objects.create(user=self.user)
+        self.assertTrue(settings_obj.email_notifications)
+        self.assertTrue(settings_obj.push_notifications)
+        self.assertTrue(settings_obj.deadline_reminders)
+        self.assertTrue(settings_obj.show_profile_to_others)
+        self.assertTrue(settings_obj.show_achievements)
+
+    def test_settings_boolean_fields(self):
+        """Тест булевих полів налаштувань"""
+        settings_obj = UserSettings(
+            user=self.user,
+            email_notifications=False,
+            push_notifications=True,
+            deadline_reminders=False,
+            show_profile_to_others=True,
+            show_achievements=False
+        )
+        settings_obj.save()
+
+        self.assertFalse(settings_obj.email_notifications)
+        self.assertTrue(settings_obj.push_notifications)
+        self.assertFalse(settings_obj.deadline_reminders)
+        self.assertTrue(settings_obj.show_profile_to_others)
+        self.assertFalse(settings_obj.show_achievements)
+
+    def test_settings_meta_verbose_names(self):
+        """Тест verbose_name моделі налаштувань"""
+        self.assertEqual(UserSettings._meta.verbose_name, 'User Settings')
+        self.assertEqual(UserSettings._meta.verbose_name_plural, 'User Settings')
+
+    def test_settings_unique_per_user(self):
+        """Тест унікальності налаштувань для кожного користувача"""
+        UserSettings.objects.create(user=self.user)
+
+        with self.assertRaises(Exception):
+            UserSettings.objects.create(user=self.user)
