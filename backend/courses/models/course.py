@@ -111,6 +111,7 @@ class Course(BaseModel):
         return f"{_("Course")} - {self.title}"
 
     class Meta:
+        db_table = "courses"
         verbose_name = _("Course")
         verbose_name_plural = _("Courses")
         ordering = ['-created_at', 'id']

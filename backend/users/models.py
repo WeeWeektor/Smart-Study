@@ -47,6 +47,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     class Meta:
+        db_table = "users"
         verbose_name = _('User')
         verbose_name_plural = _('Users')
         indexes = [
@@ -79,6 +80,7 @@ class UserProfile(models.Model):
     bio = models.TextField(max_length=500, blank=True, null=True, verbose_name=_('About me'))
 
     class Meta:
+        db_table = "users_profiles"
         verbose_name = _('User Profile')
         verbose_name_plural = _('User Profiles')
 
@@ -96,6 +98,7 @@ class UserSettings(models.Model):
     show_achievements = models.BooleanField(default=True, verbose_name=_('Show achievements'))
 
     class Meta:
+        db_table = "users_settings"
         verbose_name = _('User Settings')
         verbose_name_plural = _('User Settings')
 

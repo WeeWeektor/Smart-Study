@@ -42,6 +42,7 @@ class CourseVersion(BaseModel):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Version created at"))
 
     class Meta:
+        db_table = "course_versions"
         verbose_name = _("Course Version")
         verbose_name_plural = _("Course Versions")
         ordering = ['-version_number']

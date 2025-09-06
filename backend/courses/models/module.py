@@ -39,6 +39,7 @@ class Module(BaseModel):
         return f"{_('Module')} - {self.title} ({self.course.title})"
 
     class Meta:
+        db_table = "modules"
         verbose_name = _("Module")
         verbose_name_plural = _("Modules")
         ordering = ['order', 'id']

@@ -46,6 +46,7 @@ class TestAttempt(BaseModel):
     attempt_number = models.PositiveIntegerField(verbose_name=_("Attempt Number"))
 
     class Meta:
+        db_table = "test_attempts"
         verbose_name = _("Test Attempt")
         verbose_name_plural = _("Test Attempts")
         ordering = ['-started_at']

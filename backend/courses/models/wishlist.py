@@ -37,6 +37,7 @@ class Wishlist(BaseModel):
     added_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Added at"))
 
     class Meta:
+        db_table = "user_wishlist"
         verbose_name = _("Wishlist")
         verbose_name_plural = _("Wishlists")
         constraints = [

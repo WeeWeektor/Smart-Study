@@ -36,6 +36,7 @@ class CourseAnnouncement(BaseModel):
     is_important = models.BooleanField(default=False, verbose_name=_("Is important"))
 
     class Meta:
+        db_table = "course_announcements"
         verbose_name = _("Course Announcement")
         verbose_name_plural = _("Course Announcements")
         ordering = ['-created_at']

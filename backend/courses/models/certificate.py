@@ -51,6 +51,7 @@ class Certificate(BaseModel):
         super().save(*args, **kwargs)
 
     class Meta:
+        db_table = "course_certificates"
         verbose_name = _("Certificate")
         verbose_name_plural = _("Certificates")
         constraints = [

@@ -69,6 +69,7 @@ class Lesson(BaseModel):
         return f"{_('Lesson')} - {self.title} ({self.module.title})"
 
     class Meta:
+        db_table = "lessons"
         verbose_name = _("Lesson")
         verbose_name_plural = _("Lessons")
         ordering = ['order', 'id']

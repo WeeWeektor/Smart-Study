@@ -47,6 +47,7 @@ class CourseReview(BaseModel):
     is_verified = models.BooleanField(default=False, verbose_name=_("Is verified"))
 
     class Meta:
+        db_table = "course_reviews"
         verbose_name = _("Course Review")
         verbose_name_plural = _("Course Reviews")
         constraints = [

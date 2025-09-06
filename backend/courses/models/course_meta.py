@@ -75,6 +75,7 @@ class CourseMeta(BaseModel):
         return f"{_('CourseMeta')} - {self.course.title}"
 
     class Meta:
+        db_table = "course_meta"
         verbose_name = _("Course detail")
         verbose_name_plural = _("Course details")
         indexes = [

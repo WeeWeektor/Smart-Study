@@ -92,6 +92,7 @@ class UserCourseEnrollment(BaseModel):
                 self.course.details.update_counters()
 
     class Meta:
+        db_table = "user_course_enrollments"
         verbose_name = _('User Course Enrollment')
         verbose_name_plural = _('User Course Enrollments')
         constraints = [
@@ -107,5 +108,4 @@ class UserCourseEnrollment(BaseModel):
             Index(fields=['enrolled_at'], name="ix_enrollment_enrolled_at"),
             Index(fields=['progress'], name="ix_enrollment_progress"),
             Index(fields=['course_version'], name="ix_enrollment_course_version"),
-
         ]

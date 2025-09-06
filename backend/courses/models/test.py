@@ -135,6 +135,7 @@ class Test(BaseModel):
         return f"{_('Test')} - {self.title}{suffix}"
 
     class Meta:
+        db_table = "tests"
         verbose_name = _("Test")
         verbose_name_plural = _("Tests")
         ordering = ['order', 'id']

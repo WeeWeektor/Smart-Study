@@ -46,6 +46,7 @@ class LessonProgress(BaseModel):
     notes = models.TextField(blank=True, verbose_name=_("Notes"))
 
     class Meta:
+        db_table = "lesson_progress"
         verbose_name = _("Lesson Progress")
         verbose_name_plural = _("Lesson Progresses")
         constraints = [

@@ -50,6 +50,7 @@ class CustomLessonType(BaseModel):
         self.save(update_fields=['usage_count'])
 
     class Meta:
+        db_table = "custom_lesson_types"
         verbose_name = _("Custom Lesson Type")
         verbose_name_plural = _("Custom Lesson Types")
         constraints = [
