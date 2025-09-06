@@ -11,6 +11,7 @@ from common.utils import error_response, success_response
 from courses.choices import VALID_CATEGORIES_CHOICES
 from courses.decorators import teacher_required
 from courses.models import Course, CourseMeta
+from courses.services import get_cached_course_by_id, get_cached_all_courses
 from courses.utils import validate_choice
 
 
@@ -23,15 +24,20 @@ class CourseView(LocalizedView):
         """Отримання всіх курсів або одного курсу за id"""
         if course_id:
             try:
-                pass
+                course = await sync_to_async(Course.objects.select_related('details', 'owner').get)(pk=course_id)
+                course_data = await get_cached_course_by_id(course)
+                return success_response(course_data)
             except Course.DoesNotExist:
                 return error_response(gettext("Course not found"), status=404)
             except Exception as e:
                 return error_response(f"{gettext('Error retrieving course:')} {str(e)}", status=500)
-
         else:
             try:
-                pass
+                categories = request.GET.get('cate')
+                if categories:
+                    categories = [c.strip() for c in categories.split(",")]
+                courses_data = await get_cached_all_courses(categories)
+                return success_response(courses_data)
             except Exception as e:
                 return error_response(f"{gettext('Error retrieving courses:')} {str(e)}", status=500)
 
