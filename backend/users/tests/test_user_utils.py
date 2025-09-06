@@ -5,6 +5,7 @@ from unittest.mock import patch, AsyncMock
 from django.http import JsonResponse
 from django.test import TestCase
 
+from common.utils import success_response, error_response, send_template_email, generate_activation_token
 from users import user_utils
 from users.utils.email_templates import (
     get_verification_email_plain,
@@ -20,7 +21,7 @@ class DummyUser:
 
 class TestSyncFunctions(TestCase):
     def test_error_response(self):
-        response = user_utils.error_response("Test error", status=422)
+        response = error_response("Test error", status=422)
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 422)
         data = json.loads(response.content.decode())
@@ -29,21 +30,21 @@ class TestSyncFunctions(TestCase):
 
     def test_success_response_with_data(self):
         data = {"key": "value"}
-        response = user_utils.success_response(data=data, message="Done")
+        response = success_response(data=data, message="Done")
         resp_data = json.loads(response.content.decode())
         self.assertEqual(resp_data["status"], "success")
         self.assertEqual(resp_data["message"], "Done")
         self.assertEqual(resp_data["key"], "value")
 
     def test_success_response_without_data(self):
-        response = user_utils.success_response()
+        response = success_response()
         resp_data = json.loads(response.content.decode())
         self.assertEqual(resp_data["status"], "success")
         self.assertEqual(resp_data["message"], "Successfully")
 
     def test_generate_activation_token(self):
         email = "user@example.com"
-        token = user_utils.generate_activation_token(email)
+        token = generate_activation_token(email)
         self.assertIsInstance(token, str)
         self.assertIn(email, token)
 
@@ -52,8 +53,8 @@ class TestSyncFunctions(TestCase):
         email1 = "user1@example.com"
         email2 = "user2@example.com"
 
-        token1 = user_utils.generate_activation_token(email1)
-        token2 = user_utils.generate_activation_token(email2)
+        token1 = generate_activation_token(email1)
+        token2 = generate_activation_token(email2)
 
         self.assertNotEqual(token1, token2)
         self.assertIn(email1, token1)
@@ -61,12 +62,12 @@ class TestSyncFunctions(TestCase):
 
     def test_generate_activation_token_empty_email(self):
         """Тест генерації токену з порожнім email"""
-        token = user_utils.generate_activation_token("")
+        token = generate_activation_token("")
         self.assertIsInstance(token, str)
 
     def test_success_response_with_empty_data(self):
         """Тест success_response з порожніми даними"""
-        response = user_utils.success_response(data={})
+        response = success_response(data={})
         resp_data = json.loads(response.content.decode())
 
         self.assertEqual(resp_data["status"], "success")
@@ -84,7 +85,7 @@ class TestSyncFunctions(TestCase):
 
         for status_code, message in test_cases:
             with self.subTest(status_code=status_code):
-                response = user_utils.error_response(message, status=status_code)
+                response = error_response(message, status=status_code)
                 self.assertEqual(response.status_code, status_code)
                 data = json.loads(response.content.decode())
                 self.assertEqual(data["message"], message)
@@ -100,7 +101,7 @@ class TestAsyncFunctions(TestCase):
         mock_sync.return_value = mock_send
 
         async def runner():
-            await user_utils.send_template_email(
+            await send_template_email(
                 user=self.user,
                 subject="Subject",
                 url_path="/verify/",
@@ -119,7 +120,7 @@ class TestAsyncFunctions(TestCase):
         user_no_name = DummyUser(email="test@example.com", name=None)
 
         async def runner():
-            await user_utils.send_template_email(
+            await send_template_email(
                 user=user_no_name,
                 subject="Test",
                 url_path="/path/",
@@ -131,7 +132,7 @@ class TestAsyncFunctions(TestCase):
         mock_sync.assert_called_once()
         mock_send.assert_awaited_once()
 
-    @patch("users.user_utils.generate_activation_token", return_value=None)
+    @patch("common.utils.generate_activation_token", return_value=None)
     @patch("users.user_utils.sync_to_async")
     def test_send_template_email_raises_value_error_if_no_token(self, mock_sync, mock_token):
         mock_send = AsyncMock()
@@ -139,7 +140,7 @@ class TestAsyncFunctions(TestCase):
 
         async def runner():
             with self.assertRaises(ValueError) as cm:
-                await user_utils.send_template_email(
+                await send_template_email(
                     user=self.user,
                     subject="Subject",
                     url_path="/",
@@ -150,7 +151,7 @@ class TestAsyncFunctions(TestCase):
 
         asyncio.run(runner())
 
-    @patch("users.user_utils.send_template_email", new_callable=AsyncMock)
+    @patch("common.utils.send_template_email", new_callable=AsyncMock)
     def test_send_verification_email_calls_template_email(self, mock_send_template):
         async def runner():
             await user_utils.send_verification_email(self.user)
@@ -161,7 +162,7 @@ class TestAsyncFunctions(TestCase):
         self.assertEqual(kwargs["user"], self.user)
         self.assertIn("/api/auth/verify-email/", kwargs["url_path"])
 
-    @patch("users.user_utils.send_template_email", new_callable=AsyncMock)
+    @patch("common.utils.send_template_email", new_callable=AsyncMock)
     def test_send_password_reset_email_calls_template_email(self, mock_send_template):
         async def runner():
             await user_utils.send_password_reset_email(self.user)
@@ -182,7 +183,7 @@ class TestAsyncFunctions(TestCase):
         mock_sync.return_value = mock_send
 
         async def runner():
-            await user_utils.send_template_email(
+            await send_template_email(
                 user=self.user,
                 subject="Test",
                 url_path="/test/",
@@ -201,7 +202,7 @@ class TestAsyncFunctions(TestCase):
 
         async def runner():
             with self.assertRaises(Exception) as cm:
-                await user_utils.send_template_email(
+                await send_template_email(
                     user=self.user,
                     subject="Test",
                     url_path="/test/",

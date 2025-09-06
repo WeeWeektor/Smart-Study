@@ -8,7 +8,7 @@ from django.utils.translation import gettext
 
 from smartStudy_backend import settings
 from common.services import validate_picture_file_security
-from users.user_utils import supabase
+from common.utils import supabase
 
 
 async def handle_profile_picture(user_profile, profile_picture):

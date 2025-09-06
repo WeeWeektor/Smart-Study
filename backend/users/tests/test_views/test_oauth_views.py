@@ -1,6 +1,6 @@
 # BaseAuth, GoogleAuth, FacebookAuth
 import json
-from gettext import gettext
+from django.utils.translation import gettext
 from unittest.mock import patch
 
 from django.http import JsonResponse

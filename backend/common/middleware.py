@@ -1,4 +1,4 @@
-from gettext import gettext
+from django.utils.translation import gettext
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils import translation

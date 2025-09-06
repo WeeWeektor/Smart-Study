@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -16,6 +16,8 @@ from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView, LocalizedAPIView
+from common.decorators import login_required_async
+from common.utils import error_response, success_response, signer
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
 from .services.oauth_service import handle_oauth_login
@@ -29,7 +31,7 @@ from .services.profile_cache_service import (
 )
 from .services.profile_picture_service import handle_profile_picture, delete_profile_picture
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
-from .user_utils import send_verification_email, error_response, success_response, send_password_reset_email
+from .user_utils import send_verification_email, send_password_reset_email
 from .utils.request_parsing import parse_request_data
 from .utils.validators import cached_email_validator, phone_validator
 
@@ -140,7 +142,6 @@ class VerifyEmailView(LocalizedView):
         if not token:
             return error_response(gettext('Invalid token. The ‘token’ parameter is missing.'))
 
-        signer = TimestampSigner()
         try:
             email = signer.unsign(token, max_age=60 * 60 * 24)
             try:
@@ -313,7 +314,6 @@ class ResetPasswordView(LocalizedView):
         if not token:
             return error_response(gettext('No token to reset the password.'), 400)
 
-        signer = TimestampSigner()
         try:
             email = signer.unsign(token, max_age=60 * 60 * 24)
             try:
@@ -342,7 +342,7 @@ class ResetPasswordView(LocalizedView):
             except ValidationError as e:
                 return error_response(', '.join(e.messages))
 
-            signer = TimestampSigner()
+
             try:
                 email = signer.unsign(token, max_age=60 * 60 * 24)
                 try:
@@ -367,19 +367,16 @@ class ResetPasswordView(LocalizedView):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class LogoutView(LocalizedView):
-    @staticmethod
-    async def post(request):
+    @login_required_async
+    async def post(self, request):
         await sync_to_async(logout)(request)
         return success_response({"message": gettext('You have successfully logged out.')})
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ChangePasswordView(LocalizedView):
-    @staticmethod
-    async def patch(request):
-        if not await sync_to_async(lambda: request.user.is_authenticated)():
-            return error_response(gettext('The user is not authorized.'), 401)
-
+    @login_required_async
+    async def patch(self, request):
         try:
             data = json.loads(request.body)
 
@@ -419,23 +416,17 @@ class ChangePasswordView(LocalizedView):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ProfileView(LocalizedView):
-    @staticmethod
-    async def get(request):
-        if not await sync_to_async(lambda: request.user.is_authenticated)():
-            return error_response(gettext('User not authorized.'), 401)
-
+    @login_required_async
+    async def get(self, request):
         try:
             profile_data = await get_cached_profile(request.user)
             return success_response(profile_data)
         except Exception as e:
             return error_response(f"{gettext('Error retrieving profile:')} {str(e)}", 500)
 
-    @staticmethod
-    async def post(request):
+    @login_required_async
+    async def post(self, request):
         """Separate endpoint for uploading avatars"""
-        if not await sync_to_async(lambda: request.user.is_authenticated)():
-            return error_response(gettext('User not authorized.'), 401)
-
         try:
             if 'profile_picture' not in request.FILES:
                 return error_response(gettext('File not found.'), 400)
@@ -456,11 +447,8 @@ class ProfileView(LocalizedView):
         except Exception as e:
             return error_response(f"{gettext('Error loading avatar:')} {str(e)}", 500)
 
-    @staticmethod
-    async def patch(request):
-        if not await sync_to_async(lambda: request.user.is_authenticated)():
-            return error_response(gettext('User not authorized.'), 401)
-
+    @login_required_async
+    async def patch(self, request):
         try:
             data, is_multipart = parse_request_data(request)
             user = request.user
@@ -491,11 +479,8 @@ class ProfileView(LocalizedView):
         except Exception as e:
             return error_response(f"{gettext('Error updating profile:')} {str(e)}", 500)
 
-    @staticmethod
-    async def delete(request):
-        if not await sync_to_async(lambda: request.user.is_authenticated)():
-            return error_response(gettext('User not authorized.'), 401)
-
+    @login_required_async
+    async def delete(self, request):
         try:
             user = request.user
             user_id = await sync_to_async(lambda: user.id)()

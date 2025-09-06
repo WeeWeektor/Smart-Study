@@ -5,12 +5,7 @@ COURSE_LEVELS = [
     ('intermediate', _('Intermediate')),
     ('advanced', _('Advanced')),
 ]
-
-USER_ROLES = [
-    ('admin', _('Admin')),
-    ('student', _('Student')),
-    ('teacher', _('Teacher')),
-]
+VALID_COURSE_LEVELS = {key for key, _ in COURSE_LEVELS}
 
 CATEGORY_CHOICES = [
     ('programming', _('Programming')),
@@ -24,6 +19,7 @@ CATEGORY_CHOICES = [
     ('photography', _('Photography')),
     ('language_learning', _('Language Learning')),
 ]
+VALID_CATEGORIES_CHOICES = {key for key, _ in CATEGORY_CHOICES}
 
 CATEGORY_LESSONS = [
     ('video', _('Video')),
@@ -35,9 +31,11 @@ CATEGORY_LESSONS = [
     ('text', _('Text')),
     ('custom', _('Custom')),
 ]
+VALID_CATEGORIES_LESSONS = {key for key, _ in CATEGORY_LESSONS}
 
 CERTIFICATE_STATUS = [
     ('active', _('Active')),
     ('revoked', _('Revoked')),
     ('expired', _('Expired')),
 ]
+VALID_CERTIFICATE_STATUS = {key for key, _ in CERTIFICATE_STATUS}

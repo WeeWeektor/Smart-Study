@@ -1,7 +1,7 @@
 import re
 import html
 import unicodedata
-from gettext import gettext
+from django.utils.translation import gettext
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 
