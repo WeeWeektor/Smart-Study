@@ -54,12 +54,12 @@ class BaseUserRelatedAdmin(admin.ModelAdmin):
     def get_user_display(self, obj):
         return f"{obj.user.name} {obj.user.surname}"
 
-    get_user_display.short_description = _('Користувач')
+    get_user_display.short_description = _('User')
 
     def get_user_email(self, obj):
         return obj.user.email
 
-    get_user_email.short_description = _('Електронна пошта')
+    get_user_email.short_description = _('Email')
 
 
 @admin.register(UserProfile)
@@ -68,7 +68,13 @@ class UserProfileAdmin(BaseUserRelatedAdmin):
     list_select_related = ('user',)
     raw_id_fields = ('user',)
 
-    list_display = ('get_user_display', 'get_user_email', 'location', 'organization', 'specialization', 'education_level')
+    list_display = (
+        'get_user_display',
+        'get_user_email',
+        'location', 'organization',
+        'specialization',
+        'education_level'
+    )
     list_filter = ('education_level', 'user__is_active', 'user__role')
     search_fields = BaseUserRelatedAdmin.search_fields_for_user
     ordering = BaseUserRelatedAdmin.ordering_for_user
@@ -87,7 +93,13 @@ class UserSettingsAdmin(BaseUserRelatedAdmin):
     list_select_related = ('user',)
     raw_id_fields = ('user',)
 
-    list_display = ('get_user_display', 'get_user_email', 'email_notifications', 'push_notifications', 'show_profile_to_others')
+    list_display = (
+        'get_user_display',
+        'get_user_email',
+        'email_notifications',
+        'push_notifications',
+        'show_profile_to_others'
+    )
     list_filter = ('show_profile_to_others', 'show_achievements', 'user__is_active', 'user__role')
     search_fields = BaseUserRelatedAdmin.search_fields_for_user
     ordering = BaseUserRelatedAdmin.ordering_for_user

@@ -63,7 +63,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile', verbose_name=_('User'))
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    profile_picture = models.URLField(max_length=500, blank=True, null=True, verbose_name=_('Profile Picture'))
+    profile_picture = models.URLField(max_length=500, blank=True, null=True, verbose_name=_('Profile Picture URL'))
     location = models.CharField(max_length=100, blank=True, null=True, verbose_name=_('Location'))
     organization = models.CharField(max_length=200, blank=True, null=True, verbose_name=_('Organization'))
     specialization = models.CharField(max_length=150, blank=True, null=True, verbose_name=_('Specialization'))
