@@ -2,7 +2,7 @@ import logging
 from typing import Union
 
 from asgiref.sync import sync_to_async
-from django.core.cache import cache
+from django.core.cache import caches
 from django.utils.translation import gettext
 
 from courses.models import Course, CourseMeta
@@ -10,6 +10,8 @@ from courses.services import build_course_json_success
 from users.models import CustomUser
 
 logger = logging.getLogger(__name__)
+
+courses_cache = caches["courses"]
 
 ALL_COURSES_CACHE_TIMEOUT = 60 * 60 * 2
 
@@ -26,7 +28,7 @@ def get_all_courses_cache_key(courses_category: Union[str, list, None] = None):
 
 async def get_cached_all_courses(courses_category: Union[str, list, None] = None):
     cache_key = get_all_courses_cache_key(courses_category)
-    cached_data = await sync_to_async(lambda: cache.get(cache_key, default=None, version=1))()
+    cached_data = await sync_to_async(lambda: courses_cache.get(cache_key, default=None, version=1))()
     if cached_data:
         return cached_data
 
@@ -63,7 +65,7 @@ async def get_cached_all_courses(courses_category: Union[str, list, None] = None
                 build_course_json_success(c, details, owner)
             )
 
-        await sync_to_async(lambda: cache.set(cache_key, course_data, ALL_COURSES_CACHE_TIMEOUT, version=1))()
+        await sync_to_async(lambda: courses_cache.set(cache_key, course_data, ALL_COURSES_CACHE_TIMEOUT, version=1))()
         return course_data
 
     except Exception as e:
@@ -76,7 +78,7 @@ async def get_cached_all_courses(courses_category: Union[str, list, None] = None
 
 async def invalidate_cached_all_courses(courses_category: Union[str, list, None] = None):
     cache_key = get_all_courses_cache_key(courses_category)
-    result = await sync_to_async(lambda: cache.delete(cache_key, version=1))()
+    result = await sync_to_async(lambda: courses_cache.delete(cache_key, version=1))()
     logger.info(
         f"{gettext('Invalidating course existence cache by category:')} "
         f"{courses_category if courses_category else gettext('all')} - "

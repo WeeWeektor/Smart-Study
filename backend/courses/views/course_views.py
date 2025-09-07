@@ -9,7 +9,7 @@ from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import error_response, success_response
 from courses.choices import VALID_CATEGORIES_CHOICES
-from courses.decorators import teacher_required
+from courses.decorators import teacher_required, owner_course_required
 from courses.models import Course, CourseMeta
 from courses.services import get_cached_course_by_id, get_cached_all_courses
 from courses.utils import validate_choice
@@ -37,7 +37,7 @@ class CourseView(LocalizedView):
                 if categories:
                     categories = [c.strip() for c in categories.split(",")]
                 courses_data = await get_cached_all_courses(categories)
-                return success_response(courses_data)
+                return success_response({"courses": courses_data})
             except Exception as e:
                 return error_response(f"{gettext('Error retrieving courses:')} {str(e)}", status=500)
 
@@ -53,7 +53,7 @@ class CourseView(LocalizedView):
                 if field not in data:
                     return error_response(f"{gettext('Missing required field:')} {field}", status=400)
 
-            validate_category = validate_choice(data.get("category"), VALID_CATEGORIES_CHOICES, "category")
+            validate_category = validate_choice(data.get("category"), VALID_CATEGORIES_CHOICES, gettext("category"))
             if validate_category:
                 return validate_category
 
@@ -79,13 +79,21 @@ class CourseView(LocalizedView):
             return error_response(f"{gettext("Error creating course:")} {str(e)}", status=500)
 
     @login_required_async
-    @teacher_required
+    @owner_course_required
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
-        pass
+        try:
+            data = json.loads(request.body)
+
+            return success_response({
+                "message": gettext("Course edit successfully"),
+                "course_id": course_id
+            })
+        except Exception as e:
+            return error_response(f"{gettext('Error updating course:')} {str(e)}", status=500)
 
     @login_required_async
-    @teacher_required
+    @owner_course_required
     async def delete(self, request, course_id):
         """Видалення курсу за id власником курсу"""
         pass

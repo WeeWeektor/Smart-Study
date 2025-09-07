@@ -1,5 +1,5 @@
 from django.utils.translation import gettext
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.http import JsonResponse
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
@@ -43,6 +43,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         '/api/auth/reset-password/': {'max_attempts': 5, 'window': 300, 'key_prefix': 'reset_password'},
         '/api/user/change-password/': {'max_attempts': 3, 'window': 300, 'key_prefix': 'change_password'},
     }
+    sessions_cache = caches["sessions"]
 
     def process_request(self, request):
         if getattr(settings, 'DISABLE_RATE_LIMITING', False):
@@ -55,7 +56,7 @@ class RateLimitMiddleware(MiddlewareMixin):
                     ip = self.get_client_ip(request)
                     key = f"{config['key_prefix']}_attempts_{ip}"
 
-                    attempts = cache.get(key, 0)
+                    attempts = self.sessions_cache.get(key, 0)
                     if attempts >= config['max_attempts']:
                         return JsonResponse(
                             {'error': gettext('Too many requests. Try again later.')},
@@ -70,18 +71,17 @@ class RateLimitMiddleware(MiddlewareMixin):
 
         return None
 
-    @staticmethod
-    def process_response(request, response):
+    def process_response(self, request, response):
         try:
             if hasattr(request, '_rate_limit_key') and hasattr(request, '_rate_limit_config'):
                 key = request._rate_limit_key
                 config = request._rate_limit_config
 
                 if response.status_code >= 400:
-                    attempts = cache.get(key, 0)
-                    cache.set(key, attempts + 1, config['window'])
+                    attempts = self.sessions_cache.get(key, 0)
+                    self.sessions_cache.set(key, attempts + 1, config['window'])
                 elif response.status_code == 200:
-                    cache.delete(key)
+                    self.sessions_cache.delete(key)
 
         except Exception:
             pass

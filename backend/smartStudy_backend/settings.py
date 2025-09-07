@@ -124,21 +124,34 @@ DATABASES = {
 # Cache Configuration
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/{os.getenv('REDIS_DB')}",
+        "BACKEND": os.getenv("BACKEND"),
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/0",
         "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
         }
-    }
+    },
+    "sessions": {
+        "BACKEND": os.getenv("BACKEND"),
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+        }
+    },
+    "courses": {
+        "BACKEND": os.getenv("BACKEND"),
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+        }
+    },
 }
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
-SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")  # Bucket for tests
 SUPABASE_USERS_PROFILE_PICTURES_BUCKET = os.getenv("SUPABASE_USERS_PROFILE_PICTURES_BUCKET")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+SESSION_CACHE_ALIAS = "sessions"
 
 # Authentication
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -178,9 +191,9 @@ LOCALE_PATHS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://localhost:5173',
+    'https://localhost:8000',
     'https://127.0.0.1:5173',
-    'https://192.168.56.1:5173',
-    'https://192.168.0.105:5173',
+    'https://127.0.0.1:8000',
 ]
 
 # Static Files
@@ -253,6 +266,8 @@ LANGUAGE_COOKIE_SAMESITE = 'Lax'
 TESTING = 'test' in sys.argv or 'pytest' in sys.modules
 
 if TESTING:
+    SUPABASE_USERS_PROFILE_PICTURES_BUCKET = os.getenv("SUPABASE_BUCKET")
+
     MIDDLEWARE = [
         m for m in MIDDLEWARE
         if not any(skip in m.lower() for skip in ['silk'])

@@ -1,1 +1,2 @@
 from .role_decorators import teacher_required
+from .course_owner_decorator import owner_course_required
