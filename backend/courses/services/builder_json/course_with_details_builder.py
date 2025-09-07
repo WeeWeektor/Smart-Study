@@ -30,7 +30,7 @@ def build_course_json_success(course, course_details, course_owner):
                 "number_completed": getattr(course_details, "number_completed", 0),
                 "number_of_active": getattr(course_details, "number_of_active", 0),
                 "feedback_count": getattr(course_details, "feedback_count", 0),
-                "feedback": getattr(course_details, "feedback", {}),
+                "feedback_summary": getattr(course_details, "feedback_summary", {}),
             }
         }
     }

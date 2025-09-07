@@ -31,7 +31,7 @@ from datetime import timedelta
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import Index, Q, Count
+from django.db.models import Index, Q, Count, Avg
 from django.utils.translation import gettext_lazy as _
 
 from .base import BaseModel
@@ -57,7 +57,7 @@ class CourseMeta(BaseModel):
     number_completed = models.PositiveIntegerField(default=0, verbose_name=_("Count is completed course"))
     number_of_active = models.PositiveIntegerField(default=0, verbose_name=_("Count active course"))
     feedback_count = models.PositiveIntegerField(default=0, verbose_name=_("Review count"))
-    feedback = models.JSONField(default=dict, blank=True, verbose_name=_("Feedback"))
+    feedback_summary = models.JSONField(default=dict, blank=True, verbose_name=_("Feedback summary"))
 
     def update_counters(self):
         """Метод для автоматичного оновлення лічильників"""
@@ -70,6 +70,24 @@ class CourseMeta(BaseModel):
         self.number_completed = enrollments['completed_count'] or 0
 
         self.save(update_fields=['number_of_active', 'number_completed'])
+
+    def update_feedback_count_summary_and_rating(self):
+        """Метод для оновлення кількості відгуків, їх зведення та рейтингу курсу"""
+        reviews = self.course.reviews.all()
+
+        stats = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            count_reviews=Count('id'),
+        )
+        self.rating = stats['avg_rating'] or 0
+        self.feedback_count = stats['count_reviews'] or 0
+
+        summary = {}
+        for r in range(1, 6):
+            summary[str(r)] = reviews.filter(rating=r).count()
+        self.feedback_summary = summary
+
+        self.save(update_fields=['rating', 'feedback_count', 'feedback_summary'])
 
     def __str__(self):
         return f"{_('CourseMeta')} - {self.course.title}"
