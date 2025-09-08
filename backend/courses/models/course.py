@@ -34,7 +34,7 @@ from django.db.models import Index, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from common.services import handle_profile_picture
+from common.services import handle_picture
 from users.models import CustomUser
 from .base import BaseModel
 from ..choices import CATEGORY_CHOICES
@@ -62,7 +62,7 @@ class Course(BaseModel):
         if not file:
             raise ValidationError(_("Image not found."))
 
-        await handle_profile_picture(
+        await handle_picture(
             instance=self,
             picture=file,
             instance_type="course",

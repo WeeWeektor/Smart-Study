@@ -88,7 +88,6 @@ class CourseView(LocalizedView):
         try:
             uuid_obj = validate_uuid(course_id)
             course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
-
             return await remove_course(course)
         except ValidationError as e:
             return error_response(str(e), status=400)

@@ -1,2 +1,2 @@
 from .picture_validation_service import ALLOWED_FILE_TYPES, MAX_FILE_SIZE, validate_picture_file_security
-from .picture_service import delete_profile_picture, handle_profile_picture
+from .picture_service import delete_picture, handle_picture

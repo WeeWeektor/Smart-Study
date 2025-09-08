@@ -17,7 +17,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView, LocalizedAPIView
 from common.decorators import login_required_async
-from common.services import handle_profile_picture, delete_profile_picture
+from common.services import delete_picture, handle_picture
 from common.utils import error_response, success_response, signer
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
@@ -433,11 +433,11 @@ class ProfileView(LocalizedView):
             profile_picture = request.FILES['profile_picture']
             user_profile, _ = await sync_to_async(UserProfile.objects.get_or_create)(user=request.user)
 
-            await handle_profile_picture(instance=user_profile,
-                                         picture=profile_picture,
-                                         instance_type="user",
-                                         picture_field="profile_picture"
-                                         )
+            await handle_picture(instance=user_profile,
+                                 picture=profile_picture,
+                                 instance_type="user",
+                                 picture_field="profile_picture"
+                                 )
             await invalidate_user_cache(await sync_to_async(lambda: request.user.id)())
 
             return success_response({
@@ -462,7 +462,7 @@ class ProfileView(LocalizedView):
 
             if 'profile_picture' in request.FILES:
                 user_profile = await sync_to_async(UserProfile.objects.get)(user=user)
-                await handle_profile_picture(
+                await handle_picture(
                     instance=user_profile,
                     picture=request.FILES['profile_picture'],
                     instance_type="user",
@@ -495,7 +495,7 @@ class ProfileView(LocalizedView):
             user_email = await sync_to_async(lambda: user.email)()
 
             await sync_to_async(logout)(request)
-            await delete_profile_picture(
+            await delete_picture(
                 instance_id=user_id,
                 instance_type="user",
                 delete_folder=True

@@ -1,15 +1,14 @@
-import uuid
-import time
 import logging
+import time
+import uuid
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
-from smartStudy_backend import settings
 from common.services import validate_picture_file_security
 from common.utils import supabase
-
+from smartStudy_backend import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ def _get_bucket(instance_type: str):
         raise ValidationError(gettext("Unsupported instance type"))
 
 
-async def handle_profile_picture(instance, picture, instance_type: str, picture_field: str):
+async def handle_picture(instance, picture, instance_type: str, picture_field: str):
     """
     Завантажує фото (для User або Course).
     :param instance: модель (user_profile чи course)
@@ -39,7 +38,7 @@ async def handle_profile_picture(instance, picture, instance_type: str, picture_
 
     if current_picture:
         try:
-            await delete_profile_picture(instance_id, instance_type, delete_folder=False)
+            await delete_picture(instance_id, instance_type, delete_folder=False)
         except (FileNotFoundError, ValidationError, Exception) as e:
             logger.warning(f"{gettext('Unable to delete previous photo:')} {str(e)}")
 
@@ -67,7 +66,7 @@ async def handle_profile_picture(instance, picture, instance_type: str, picture_
         raise ValidationError(f"{gettext('Failed to upload file:')} {str(e)}")
 
 
-async def delete_profile_picture(instance_id, instance_type: str, delete_folder=False):
+async def delete_picture(instance_id, instance_type: str, delete_folder=False):
     """
     Видаляє фото (User або Course).
     :param instance_id: id моделі
