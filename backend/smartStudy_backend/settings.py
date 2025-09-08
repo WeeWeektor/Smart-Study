@@ -123,7 +123,7 @@ DATABASES = {
 
 # Cache Configuration
 CACHES = {
-    "default": {
+    "default": {  # for user and auth
         "BACKEND": os.getenv("BACKEND"),
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/0",
         "OPTIONS": {
@@ -137,9 +137,16 @@ CACHES = {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
         }
     },
-    "courses": {
+    "courses_get": {
         "BACKEND": os.getenv("BACKEND"),
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+        }
+    },
+    "courses_before_publication": {
+        "BACKEND": os.getenv("BACKEND"),
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/3",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
         }
@@ -149,6 +156,7 @@ CACHES = {
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 SUPABASE_USERS_PROFILE_PICTURES_BUCKET = os.getenv("SUPABASE_USERS_PROFILE_PICTURES_BUCKET")
+SUPABASE_COURSES_COVER_PICTURES_BUCKET = os.getenv("SUPABASE_COURSES_COVER_PICTURES_BUCKET")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "sessions"

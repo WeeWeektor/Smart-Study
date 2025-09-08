@@ -2,3 +2,8 @@ from .builder_json.course_with_details_builder import build_course_json_success,
 
 from .cache_service.get_course_by_id_cache import get_cached_course_by_id, invalidate_cached_course_by_id
 from .cache_service.get_all_courses_cache import get_cached_all_courses, invalidate_cached_all_courses
+
+from .course_actions_service.validators import validate_course_data
+from .course_actions_service.cover_service import upload_course_cover_image
+from .course_actions_service.create_course import create_course
+from .course_actions_service.remove_course import remove_course

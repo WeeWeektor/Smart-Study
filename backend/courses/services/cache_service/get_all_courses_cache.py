@@ -11,7 +11,7 @@ from users.models import CustomUser
 
 logger = logging.getLogger(__name__)
 
-courses_cache = caches["courses"]
+courses_cache = caches["courses_get"]
 
 ALL_COURSES_CACHE_TIMEOUT = 60 * 60 * 2
 

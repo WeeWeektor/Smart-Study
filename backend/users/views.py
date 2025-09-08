@@ -17,6 +17,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView, LocalizedAPIView
 from common.decorators import login_required_async
+from common.services import handle_profile_picture, delete_profile_picture
 from common.utils import error_response, success_response, signer
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
@@ -29,7 +30,6 @@ from .services.profile_cache_service import (
     get_user_existence_cache,
     invalidate_user_existence_cache, invalidate_all_user_caches
 )
-from .services.profile_picture_service import handle_profile_picture, delete_profile_picture
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 from .user_utils import send_verification_email, send_password_reset_email
 from .utils.request_parsing import parse_request_data
@@ -342,7 +342,6 @@ class ResetPasswordView(LocalizedView):
             except ValidationError as e:
                 return error_response(', '.join(e.messages))
 
-
             try:
                 email = signer.unsign(token, max_age=60 * 60 * 24)
                 try:
@@ -434,7 +433,11 @@ class ProfileView(LocalizedView):
             profile_picture = request.FILES['profile_picture']
             user_profile, _ = await sync_to_async(UserProfile.objects.get_or_create)(user=request.user)
 
-            await handle_profile_picture(user_profile, profile_picture)
+            await handle_profile_picture(instance=user_profile,
+                                         picture=profile_picture,
+                                         instance_type="user",
+                                         picture_field="profile_picture"
+                                         )
             await invalidate_user_cache(await sync_to_async(lambda: request.user.id)())
 
             return success_response({
@@ -459,7 +462,12 @@ class ProfileView(LocalizedView):
 
             if 'profile_picture' in request.FILES:
                 user_profile = await sync_to_async(UserProfile.objects.get)(user=user)
-                await handle_profile_picture(user_profile, request.FILES['profile_picture'])
+                await handle_profile_picture(
+                    instance=user_profile,
+                    picture=request.FILES['profile_picture'],
+                    instance_type="user",
+                    picture_field="profile_picture"
+                )
 
             await invalidate_user_cache(await sync_to_async(lambda: user.id)())
             updated_profile_data = await get_cached_profile(user)
@@ -487,7 +495,11 @@ class ProfileView(LocalizedView):
             user_email = await sync_to_async(lambda: user.email)()
 
             await sync_to_async(logout)(request)
-            await delete_profile_picture(user_id, delete_folder=True)
+            await delete_profile_picture(
+                instance_id=user_id,
+                instance_type="user",
+                delete_folder=True
+            )
             await sync_to_async(user.delete)()
 
             await invalidate_all_user_caches(user_id, user_email)

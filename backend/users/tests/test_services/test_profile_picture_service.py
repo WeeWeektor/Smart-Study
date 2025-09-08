@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from users.models import CustomUser, UserProfile
-from users.services.profile_picture_service import handle_profile_picture, delete_profile_picture
+from common.services import handle_profile_picture, delete_profile_picture
 
 
 class TestProfilePictureService(TestCase):

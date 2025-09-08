@@ -28,11 +28,13 @@ Meta:
 """
 
 from django.core import serializers
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Index, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from common.services import handle_profile_picture
 from users.models import CustomUser
 from .base import BaseModel
 from ..choices import CATEGORY_CHOICES
@@ -54,6 +56,19 @@ class Course(BaseModel):
     published_at = models.DateTimeField(blank=True, null=True, verbose_name=_("Published at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
     version = models.PositiveIntegerField(default=1, verbose_name=_("Course version"))
+
+    async def upload_cover_image(self, file):
+        """Завантаження або оновлення обкладинки курсу"""
+        if not file:
+            raise ValidationError(_("Image not found."))
+
+        await handle_profile_picture(
+            instance=self,
+            picture=file,
+            instance_type="course",
+            picture_field="cover_image"
+        )
+        return self.cover_image
 
     def create_version_snapshot(self):
         """Метод для створення знімка версії курсу"""

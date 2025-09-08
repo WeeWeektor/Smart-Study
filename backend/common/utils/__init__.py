@@ -4,3 +4,4 @@ from .status_response import error_response, success_response
 from .generate_activation_token import signer, generate_activation_token
 from .send_template_email import send_template_email
 from .supabase import supabase
+from .validate_uuid import validate_uuid

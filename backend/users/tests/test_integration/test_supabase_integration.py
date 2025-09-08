@@ -1,7 +1,7 @@
 from django.test import TransactionTestCase
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from users.services.profile_picture_service import handle_profile_picture, delete_profile_picture
+from common.services import handle_profile_picture, delete_profile_picture
 from users.models import UserProfile
 from unittest.mock import patch, MagicMock
 import asyncio
