@@ -71,9 +71,6 @@ class CourseView(LocalizedView):
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
         try:
-            data = json.loads(request.body)
-            data.get("is_published", False)
-
             return success_response({
                 "message": gettext("Course edit successfully"),
                 "course_id": course_id

@@ -42,6 +42,7 @@ from django.db import models
 from django.db.models import Index, Q
 from django.utils.translation import gettext_lazy as _
 
+from users.models import CustomUser
 from .base import BaseModel
 from .course import Course
 from .module import Module
@@ -78,6 +79,14 @@ class Test(BaseModel):
     test_data_ids = models.JSONField(default=list, verbose_name=_("Mongo question IDs"))
     order = models.PositiveIntegerField(verbose_name=_("Test order"))
     is_public = models.BooleanField(default=False, db_index=True, verbose_name=_("Is public"))
+    owner = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="tests",
+        blank=True,
+        null=True,
+        verbose_name=_("Test owner (public tests only)"),
+    )
 
     def has_time_limit(self):
         """Перевіряє чи тест має обмеження за часом"""
@@ -97,10 +106,10 @@ class Test(BaseModel):
             return True
         return user_attempts < self.count_attempts
 
-    def is_passed(self, user_score):
-        """Перевіряє чи пройшов користувач тест
-        Якщо pass_score = 0, тест вважається пройденим при будь-якому балі > 0
-        Але користувач все одно має пройти тест (відповісти на питання)
+    def is_passed(self, user_score: float) -> bool:
+        """Перевіряє, чи користувач пройшов тест.
+        Якщо викладач не встановив мінімальної кількості балів (pass_score == 0), то
+        тест вважається пройденим при будь-якому результаті ≥ 0.
         """
         if not self.has_pass_score_requirement():
             return user_score >= 0
@@ -109,16 +118,18 @@ class Test(BaseModel):
     def clean(self):
         from django.core.exceptions import ValidationError
 
-        if self.is_public and (self.course or self.module):
-            raise ValidationError(_("Public test cannot be linked to course or module"))
+        if self.is_public:
+            if self.course or self.module:
+                raise ValidationError(_("Public test cannot be linked to course or module"))
+            if not self.owner:
+                raise ValidationError(_("Public test must have an owner"))
+            return
 
-        if not self.is_public and not self.course and not self.module:
+        if not (self.course or self.module):
             raise ValidationError(_("Non-public test must be linked to either course or module"))
-
         if self.course and self.module:
             raise ValidationError(_("Test cannot be linked to both course and module"))
-
-        if self.module and self.course and self.module.course != self.course:
+        if self.module and self.course and self.module.course_id != self.course_id:
             raise ValidationError(_("Module must belong to the specified course"))
 
     def save(self, *args, **kwargs):
@@ -132,6 +143,8 @@ class Test(BaseModel):
             suffix = f" for {self.module.title}"
         else:
             suffix = f" ({_('Public')})"
+            if self.owner:
+                suffix += f" by {self.owner.name} {self.owner.surname}"
         return f"{_('Test')} - {self.title}{suffix}"
 
     class Meta:
