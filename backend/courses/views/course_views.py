@@ -71,11 +71,10 @@ class CourseView(LocalizedView):
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
         try:
-            return success_response({
-                "message": gettext("Course edit successfully"),
-                "course_id": course_id
-            })
-        except Exception as e:
+            uuid_obj = validate_uuid(course_id)
+            course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
+            # return await update_course(request, course) # TODO
+        except Exception as e: # TODO add specific exceptions
             return error_response(f"{gettext('Error updating course:')} {str(e)}", status=500)
 
     @login_required_async

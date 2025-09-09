@@ -46,6 +46,7 @@ from users.models import CustomUser
 from .base import BaseModel
 from .course import Course
 from .module import Module
+from ..choices import CATEGORY_CHOICES, LEVELS
 
 
 class Test(BaseModel):
@@ -87,6 +88,24 @@ class Test(BaseModel):
         null=True,
         verbose_name=_("Test owner (public tests only)"),
     )
+    category = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name=_("Category"),
+        choices=CATEGORY_CHOICES
+    )
+    level = models.CharField(
+        max_length=100,
+        db_index=True,
+        null=True,
+        blank=True,
+        verbose_name=_("Test level"),
+        choices=LEVELS
+    )
+
+
 
     def has_time_limit(self):
         """Перевіряє чи тест має обмеження за часом"""

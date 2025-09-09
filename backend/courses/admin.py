@@ -207,7 +207,6 @@ class CourseMetaAdmin(admin.ModelAdmin):
     list_display = ("course", "total_modules", "total_lessons", "total_tests", "number_completed", "number_of_active")
     search_fields = ("course__title",)
     raw_id_fields = ("course",)
-    readonly_fields = ("course_structure",)
 
 
 @admin.register(CourseVersion)

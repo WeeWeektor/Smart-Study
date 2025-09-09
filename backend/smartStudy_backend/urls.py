@@ -9,7 +9,8 @@ urlpatterns = [
     path('silk/', include('silk.urls', namespace='silk')),
     path('api/auth/', include('users.auth_urls', namespace='auth_urls')),
     path('api/user/', include('users.user_urls', namespace='user_urls')),
-    path('api/course/', include('courses.course_urls', namespace='course_urls')),
+    path('api/course/', include('courses.urls.course_urls', namespace='course_urls')),
+    path('api/test/', include('courses.urls.test_urls', namespace='test_urls')),
 ]
 
 if settings.DEBUG:

@@ -1,11 +1,11 @@
 from django.utils.translation import gettext_lazy as _
 
-COURSE_LEVELS = [
-    ('starting', _('Starting')),
+LEVELS = [
+    ('beginner', _('Beginner')),
     ('intermediate', _('Intermediate')),
     ('advanced', _('Advanced')),
 ]
-VALID_COURSE_LEVELS = {key for key, _ in COURSE_LEVELS}
+VALID_CATEGORY_LEVELS = {key for key, _ in LEVELS}
 
 CATEGORY_CHOICES = [
     ('programming', _('Programming')),

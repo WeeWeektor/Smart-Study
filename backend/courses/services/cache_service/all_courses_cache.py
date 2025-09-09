@@ -15,7 +15,7 @@ courses_cache = caches["courses_get"]
 
 ALL_COURSES_CACHE_TIMEOUT = 60 * 60 * 2
 
-
+# TODO add category_level_present filter to cache key adn переробити на спільне використання
 def get_all_courses_cache_key(courses_category: Union[str, list, None] = None):
     if courses_category is None:
         return 'courses_all_categories'

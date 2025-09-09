@@ -18,6 +18,7 @@ async def create_course(user, data, cover_file=None):
         course=course_created,
         level=data.get("level"),
         course_language=data.get("course_language"),
+        time_to_complete=data.get("time_to_complete"),
     ))()
 
     if cover_file:

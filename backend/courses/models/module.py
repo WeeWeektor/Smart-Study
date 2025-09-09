@@ -33,7 +33,6 @@ class Module(BaseModel):
     title = models.CharField(max_length=100, verbose_name=_("Module title"))
     description = models.TextField(max_length=1000, blank=True, null=True, verbose_name=_("Module description"))
     order = models.PositiveIntegerField(verbose_name=_("Module order"))
-    module_structure = models.JSONField(default=list, blank=True, verbose_name=_("Module structure"))
 
     def __str__(self):
         return f"{_('Module')} - {self.title} ({self.course.title})"

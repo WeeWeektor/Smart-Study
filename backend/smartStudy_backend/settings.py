@@ -151,6 +151,13 @@ CACHES = {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
         }
     },
+    "public_tests": {
+        "BACKEND": os.getenv("BACKEND"),
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+        }
+    },
 }
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")

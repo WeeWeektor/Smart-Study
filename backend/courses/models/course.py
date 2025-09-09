@@ -118,6 +118,7 @@ class Course(BaseModel):
     def publish(self):
         """Метод для публікації курсу з автоматичним встановленням часу"""
         if not self.is_published:
+            self.details.before_publish()
             self.is_published = True
             self.published_at = timezone.now()
             self.save(update_fields=['is_published', 'published_at'])

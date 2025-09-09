@@ -19,7 +19,6 @@ def build_course_json_success(course, course_details, course_owner):
             "updated_at": getattr(course, "updated_at", None),
             "version": getattr(course, "version", None),
             "details": {
-                "course_structure": getattr(course_details, "course_structure", {}),
                 "total_modules": getattr(course_details, "total_modules", 0),
                 "total_lessons": getattr(course_details, "total_lessons", 0),
                 "total_tests": getattr(course_details, "total_tests", 0),
