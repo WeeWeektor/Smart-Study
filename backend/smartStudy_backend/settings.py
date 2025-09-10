@@ -144,16 +144,9 @@ CACHES = {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
         }
     },
-    "courses_before_publication": {
+    "public_tests_get": {
         "BACKEND": os.getenv("BACKEND"),
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/3",
-        "OPTIONS": {
-            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
-        }
-    },
-    "public_tests": {
-        "BACKEND": os.getenv("BACKEND"),
-        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/4",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
         }

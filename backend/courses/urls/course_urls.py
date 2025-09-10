@@ -5,6 +5,5 @@ from courses.views import CourseView
 app_name = 'course'
 urlpatterns = [
     path('courses/', CourseView.as_view(), name='course-list'),
-    path('courses/<uuid:course_id>/', CourseView.as_view(), name='course-detail'),
+    path('course/<uuid:course_id>/', CourseView.as_view(), name='course-detail'),
 ]
-

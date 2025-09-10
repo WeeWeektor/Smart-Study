@@ -66,49 +66,49 @@ class CourseMeta(BaseModel):
         self.save(update_fields=['total_modules', 'total_lessons', 'total_tests'])
 
 
-def update_counters(self):
-    """Метод для автоматичного оновлення лічильників"""
-    enrollments = self.course.enrollments.aggregate(
-        active_count=Count('id', filter=Q(completed=False)),
-        completed_count=Count('id', filter=Q(completed=True)),
-    )
+    def update_counters(self):
+        """Метод для автоматичного оновлення лічильників"""
+        enrollments = self.course.enrollments.aggregate(
+            active_count=Count('id', filter=Q(completed=False)),
+            completed_count=Count('id', filter=Q(completed=True)),
+        )
 
-    self.number_of_active = enrollments['active_count'] or 0
-    self.number_completed = enrollments['completed_count'] or 0
+        self.number_of_active = enrollments['active_count'] or 0
+        self.number_completed = enrollments['completed_count'] or 0
 
-    self.save(update_fields=['number_of_active', 'number_completed'])
-
-
-def update_feedback_count_summary_and_rating(self):
-    """Метод для оновлення кількості відгуків, їх зведення та рейтингу курсу"""
-    reviews = self.course.reviews.all()
-
-    stats = reviews.aggregate(
-        avg_rating=Avg('rating'),
-        count_reviews=Count('id'),
-    )
-    self.rating = stats['avg_rating'] or 0
-    self.feedback_count = stats['count_reviews'] or 0
-
-    summary = {}
-    for r in range(1, 6):
-        summary[str(r)] = reviews.filter(rating=r).count()
-    self.feedback_summary = summary
-
-    self.save(update_fields=['rating', 'feedback_count', 'feedback_summary'])
+        self.save(update_fields=['number_of_active', 'number_completed'])
 
 
-def __str__(self):
-    return f"{_('CourseMeta')} - {self.course.title}"
+    def update_feedback_count_summary_and_rating(self):
+        """Метод для оновлення кількості відгуків, їх зведення та рейтингу курсу"""
+        reviews = self.course.reviews.all()
+
+        stats = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            count_reviews=Count('id'),
+        )
+        self.rating = stats['avg_rating'] or 0
+        self.feedback_count = stats['count_reviews'] or 0
+
+        summary = {}
+        for r in range(1, 6):
+            summary[str(r)] = reviews.filter(rating=r).count()
+        self.feedback_summary = summary
+
+        self.save(update_fields=['rating', 'feedback_count', 'feedback_summary'])
 
 
-class Meta:
-    db_table = "course_meta"
-    verbose_name = _("Course detail")
-    verbose_name_plural = _("Course details")
-    indexes = [
-        Index(fields=['course'], name="ix_meta_course"),
-        Index(fields=['level'], name="ix_meta_level"),
-        Index(fields=['-rating'], name="ix_meta_rating_desc"),
-        Index(fields=['-number_completed'], name="ix_meta_completed_desc"),
-    ]
+    def __str__(self):
+        return f"{_('CourseMeta')} - {self.course.title}"
+
+
+    class Meta:
+        db_table = "course_meta"
+        verbose_name = _("Course detail")
+        verbose_name_plural = _("Course details")
+        indexes = [
+            Index(fields=['course'], name="ix_meta_course"),
+            Index(fields=['level'], name="ix_meta_level"),
+            Index(fields=['-rating'], name="ix_meta_rating_desc"),
+            Index(fields=['-number_completed'], name="ix_meta_completed_desc"),
+        ]

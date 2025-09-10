@@ -22,16 +22,16 @@ class BaseTestView(LocalizedView):
                 # return success_response({"tests": tests_data})
                 pass
 
-            if test_id is not None:
+            elif test_id is not None:
                 uuid_obj = validate_uuid(test_id)
 
                 if self.test_type == "module":
                     # Логіка для тестів модулів
                     pass
-                if self.test_type == "course":
+                elif self.test_type == "course":
                     # Логіка для тестів курсів
                     pass
-                if self.test_type == "public":
+                elif self.test_type == "public":
                     # Логіка для публічних тестів
                     pass
 

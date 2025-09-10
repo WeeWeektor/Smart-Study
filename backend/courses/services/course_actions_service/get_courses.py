@@ -1,0 +1,102 @@
+import logging
+from typing import Union
+
+from asgiref.sync import sync_to_async
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
+
+from common.utils import validate_uuid, error_response
+from courses.models import Course, CourseMeta
+from courses.services import build_course_json_success
+from users.models import CustomUser
+
+logger = logging.getLogger(__name__)
+
+
+async def get_published_courses_by_autor(author_id) -> Union[dict, list]:
+    try:
+        uuid_obj = validate_uuid(author_id)
+        courses = await sync_to_async(lambda: list(
+            Course.objects.select_related("details").filter(owner=uuid_obj, is_published=True)
+        ))()
+        owner = await sync_to_async(lambda: CustomUser.objects.get(id=uuid_obj))()
+
+        return [build_course_json_success(c, getattr(c, "details", None), owner) for c in courses]
+    except ValidationError as e:
+        return error_response(str(e), status=400)
+    except Exception as e:
+        logger.error(f"{gettext('Error receiving courses by author id')} ({author_id}): {str(e)}")
+        return error_response(
+            f"{gettext('Error receiving courses by author id')} ({author_id}): {str(e)})",
+            status=500
+        )
+
+
+async def get_courses(cate: Union[list, None], level: Union[str, None]) -> Union[dict, list]:
+    try:
+        if not cate:
+            if not level:
+                courses = await sync_to_async(lambda: list(
+                    Course.objects.select_related("details", 'owner').filter(is_published=True)
+                ))()
+            else:
+                courses = await sync_to_async(lambda: list(Course.objects
+                                                           .select_related("details", 'owner')
+                                                           .filter(details__level=level, is_published=True)
+                                                           ))()
+        else:
+            if not level:
+                courses = await sync_to_async(lambda: list(Course.objects
+                                                           .select_related("details", 'owner')
+                                                           .filter(category__in=cate, is_published=True)
+                                                           ))()
+            else:
+                courses = await sync_to_async(lambda: list(
+                    Course.objects
+                    .select_related("details", 'owner')
+                    .filter(category__in=cate, details__level=level, is_published=True)
+                ))()
+
+        details_ids = [c.details.id for c in courses if getattr(c, 'details', None)]
+        owner_ids = [c.owner.id for c in courses if getattr(c, 'owner', None)]
+
+        course_details = await sync_to_async(lambda: list(CourseMeta.objects.filter(id__in=details_ids)))()
+        course_owners = await sync_to_async(lambda: list(CustomUser.objects.filter(id__in=owner_ids)))()
+
+        details_map = {d.id: d for d in course_details}
+        owners_map = {o.id: o for o in course_owners}
+
+        course_data = []
+        for c in courses:
+            details = details_map.get(c.details.id) if getattr(c, "details", None) else None
+            owner = owners_map.get(c.owner.id) if getattr(c, "owner", None) else None
+
+            course_data.append(
+                build_course_json_success(c, details, owner)
+            )
+
+        return course_data
+    except Exception as e:
+        logger.error(f"{gettext('Error retrieving courses from DB:')} {str(e)}")
+        return error_response(gettext("Error retrieving courses from DB"), status=500)
+
+
+async def get_course_by_id(course_id) -> dict:
+    try:
+        uuid_obj = validate_uuid(course_id)
+        course = await sync_to_async(lambda: Course.objects.select_related('details', 'owner').get(pk=uuid_obj))()
+
+        course_data = build_course_json_success(course, course.details, course.owner)
+
+        return course_data
+
+    except ValidationError as e:
+        return error_response(str(e), status=400)
+    except Course.DoesNotExist:
+        return error_response(gettext("Course not found"), status=404)
+    except Exception as e:
+        logger.error(f"{gettext('Error receiving courses by id')} ({course_id}): {str(e)}")
+        return error_response(
+            f"{gettext('Error receiving courses by id')} ({course_id}): {str(e)})",
+            status=500
+        )

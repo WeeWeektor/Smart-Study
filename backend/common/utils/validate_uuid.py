@@ -16,7 +16,3 @@ def validate_uuid(value: str) -> uuid.UUID:
             raise ValidationError(_("Invalid UUID format"))
 
     raise ValidationError(_("Invalid UUID type"))
-
-
-
-
