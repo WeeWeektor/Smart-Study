@@ -84,7 +84,7 @@ class CourseView(LocalizedView):
 
     @login_required_async
     @owner_course_required
-    async def delete(self, request, course_id):  # TODO invaledate cache
+    async def delete(self, request, course_id):
         """Видалення курсу за id власником курсу"""
         try:
             uuid_obj = validate_uuid(course_id)

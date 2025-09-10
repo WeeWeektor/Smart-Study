@@ -18,21 +18,13 @@ def validate_course_data(data):
             if not data.get(field):
                 raise ValidationError(f"{_('Missing required field for publish:')} {field}")
 
-    validate_category(data.get("category"))
-    validate_level(data.get("level"))
+    validate_choice(data.get("category"), VALID_CATEGORIES_CHOICES, "category")
+    validate_choice(data.get("level"), VALID_CATEGORY_LEVELS, "level")
 
 
-def validate_category(category):
-    """Валідатор для категорії"""
-    if category not in VALID_CATEGORIES_CHOICES:
+def validate_choice(choice: str, valid_choices: set, name: str) -> None:
+    """Валідатор для вибору"""
+    if choice and choice not in valid_choices:
         raise ValidationError(
-            _(f"Invalid category: '{category}'. Must be one of {', '.join(VALID_CATEGORIES_CHOICES)}.")
-        )
-
-
-def validate_level(level):
-    """Валідатор для рівня"""
-    if level and level not in VALID_CATEGORY_LEVELS:
-        raise ValidationError(
-            _(f"Invalid level: '{level}'. Must be one of {', '.join(VALID_CATEGORY_LEVELS)}.")
+            _(f"Invalid {name}: '{choice}'. Must be one of {', '.join(valid_choices)}.")
         )

@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 
-from courses.services import validate_category, validate_level
+from courses.services import validate_choice
+from courses.choices import VALID_CATEGORIES_CHOICES, VALID_CATEGORY_LEVELS
 
 
 def categories_level_present(request) -> list | None and str | None:
@@ -12,7 +13,7 @@ def categories_level_present(request) -> list | None and str | None:
         category_list = [c.strip() for c in categories.split(",")]
         for f in category_list:
             try:
-                validate_category(f)
+                validate_choice(f, VALID_CATEGORIES_CHOICES, "category")
             except ValidationError:
                 raise ValidationError(f"Invalid category: {f}")
     else:
@@ -20,7 +21,7 @@ def categories_level_present(request) -> list | None and str | None:
 
     if level:
         try:
-            validate_level(level)
+            validate_choice(level, VALID_CATEGORY_LEVELS, "level")
         except ValidationError:
             raise ValidationError(f"Invalid level: {level}")
 

@@ -1,4 +1,4 @@
-from courses.services.validators import validate_course_data, validate_category, validate_level
+from courses.services.validators import validate_course_data, validate_choice
 from .builder_json.course_with_details_builder import build_course_json_success, build_course_json_failure
 from .cache_service.category_level_all_for_instance_cache import get_instance_cached_all
 from .cache_service.instance_by_id_cache import get_cached_instance_by_id, invalidate_cached_instance_by_id
