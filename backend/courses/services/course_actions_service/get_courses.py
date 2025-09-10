@@ -22,6 +22,8 @@ async def get_published_courses_by_autor(author_id) -> Union[dict, list]:
         owner = await sync_to_async(lambda: CustomUser.objects.get(id=uuid_obj))()
 
         return [build_course_json_success(c, getattr(c, "details", None), owner) for c in courses]
+    except CustomUser.DoesNotExist:
+        return error_response(gettext("Author not found"), status=404)
     except ValidationError as e:
         return error_response(str(e), status=400)
     except Exception as e:

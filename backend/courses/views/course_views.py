@@ -14,6 +14,7 @@ from courses.models import Course
 from courses.services import get_cached_instance_by_id, get_instance_cached_all, create_course, remove_course, \
     get_instance_cached_by_author_id
 from courses.utils import categories_level_present
+from django.http import JsonResponse
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -24,7 +25,7 @@ class CourseView(LocalizedView):
     async def get(self, request, course_id=None):
         """Отримання всіх курсів або одного курсу за id"""
         if course_id:
-            course_data = await get_cached_instance_by_id("course", "courses", course_id)
+            course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
             return success_response(course_data)
         else:
             author_id = request.GET.get("author")
@@ -32,9 +33,12 @@ class CourseView(LocalizedView):
 
             if not author_id:
                 category_list, level = categories_level_present(request)
-                courses_data = await get_instance_cached_all("courses", "courses", category_list, level)
+                courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level)
             else:
-                courses_data = await get_instance_cached_by_author_id("courses", "courses", author_id)
+                courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id)
+
+            if isinstance(courses_data, JsonResponse):
+                return courses_data
 
             paged_data_dict = await sync_to_async(lambda: paginate_list(courses_data, int(page), 24))()
 
@@ -54,7 +58,7 @@ class CourseView(LocalizedView):
         cover_file = request.FILES.get('cover_image')
 
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
-# TODO wen publish error
+
         try:
             course = await create_course(request.user, data, cover_file)
             return success_response({
@@ -80,7 +84,7 @@ class CourseView(LocalizedView):
 
     @login_required_async
     @owner_course_required
-    async def delete(self, request, course_id):
+    async def delete(self, request, course_id):  # TODO invaledate cache
         """Видалення курсу за id власником курсу"""
         try:
             uuid_obj = validate_uuid(course_id)

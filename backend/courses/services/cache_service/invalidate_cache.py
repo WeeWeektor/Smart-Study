@@ -19,17 +19,14 @@ async def invalidate_instance_cached_all(
     if not keys:
         return
 
-    to_delete = set()
-
-    for key in keys:
-        if (category and level) and (category in key and f"_{level}_level" in key):
-            to_delete.add(key)
-        elif category and category in key:
-            to_delete.add(key)
-        elif level and f"_{level}_level" in key:
-            to_delete.add(key)
-        elif author_id and author_id in key:
-            to_delete.add(key)
+    to_delete = {
+        key for key in keys
+        if (
+            (category in key if category else True) and
+            (f"_{level}_level" in key if level else True) or
+            (author_id in key if author_id else True)
+        )
+    }
 
     to_delete.add(f'all_{instance_type}')
 
@@ -40,11 +37,4 @@ async def invalidate_instance_cached_all(
     await sync_to_async(delete_keys)(to_delete)
 
     keys -= to_delete
-
     await sync_to_async(lambda: instance_cache.set("all_cache_keys", keys, None))()
-
-
-
-
-
-

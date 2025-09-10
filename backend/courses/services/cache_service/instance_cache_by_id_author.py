@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 from django.core.cache import caches
 from django.utils.translation import gettext
 
+from common.services import register_cache_key
 from common.utils import error_response
 
 logger = logging.getLogger(__name__)
@@ -12,16 +13,19 @@ logger = logging.getLogger(__name__)
 CACHE_TIMEOUT = 60 * 15
 
 
-def get_cache_key(instance_type: str, author_id: str) -> str:
-    return f"{instance_type}_by_author_{author_id}"
+async def get_cache_key(instance_type: str, instance_type_cache: str, author_id: str) -> str:
+    key = f"{instance_type}_by_author_{author_id}"
+
+    await register_cache_key(key, instance_type_cache)
+    return key
 
 
 async def get_instance_cached_by_author_id(instance_type: str,
                                            instance_type_cache: str,
                                            author_id: str
                                            ) -> Union[dict, list]:
-    instance_cache = caches[f"{instance_type_cache}_get"]
-    cache_key = get_cache_key(instance_type, author_id)
+    instance_cache = caches[f"{instance_type_cache}"]
+    cache_key = await get_cache_key(instance_type, instance_type_cache, author_id)
 
     cached_data = await sync_to_async(lambda: instance_cache.get(cache_key, default=None, version=1))()
     if cached_data:
@@ -36,17 +40,3 @@ async def get_instance_cached_by_author_id(instance_type: str,
 
     await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT, version=1))()
     return instance_data
-
-
-async def invalidate_instance_cached_by_author_id(instance_type: str,
-                                                  instance_type_cache: str,
-                                                  author_id: str
-                                                  ) -> bool:
-    instance_cache = caches[f"{instance_type_cache}_get"]
-    cache_key = get_cache_key(instance_type, author_id)
-    result = await sync_to_async(lambda: instance_cache.delete(cache_key, version=1))()
-    logger.info(
-        f"{gettext(f'Invalidating {instance_type} existence cache by author:')} "
-        f"{author_id} - {gettext('successfully') if result else gettext('key not found')}"
-    )
-    return result
