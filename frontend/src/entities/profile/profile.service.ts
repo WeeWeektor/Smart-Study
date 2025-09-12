@@ -110,7 +110,7 @@ class ProfileService {
       }
     } catch (error) {
       console.error(this.t('Помилка завантаження фото профілю:'), error)
-      throw new Error(this.t('Не вдалося завантажити фото профілю') + error)
+      throw new Error(this.t('Не вдалося завантажити фото профілю: ') + error)
     }
   }
 

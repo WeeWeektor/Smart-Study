@@ -39,11 +39,11 @@ async def handle_picture(instance, picture, instance_type: str, picture_field: s
     if current_picture:
         try:
             await delete_picture(instance_id, instance_type, delete_folder=False)
-        except (FileNotFoundError, ValidationError, Exception) as e:
+        except (ValidationError, Exception) as e:
             logger.warning(f"{gettext('Unable to delete previous photo:')} {str(e)}")
 
-    file_extension = picture.name.split('.')[-1].lower()
-    unique_filename = f"{uuid.uuid4()}_{int(time.time())}.{file_extension}"
+    file_extension = picture.name.split('.')
+    unique_filename = f"{uuid.uuid4()}_{int(time.time())}.{file_extension[0]}.{file_extension[1]}"
     file_path = f"{instance_id}/{unique_filename}"
 
     try:

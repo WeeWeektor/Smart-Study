@@ -2,6 +2,7 @@ import json
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -12,9 +13,8 @@ from common.utils import error_response, success_response, sanitize_input, valid
 from courses.decorators import teacher_required, owner_course_required
 from courses.models import Course
 from courses.services import get_cached_instance_by_id, get_instance_cached_all, create_course, remove_course, \
-    get_instance_cached_by_author_id
+    get_instance_cached_by_author_id, update_course, parse_multipart_request
 from courses.utils import categories_level_present
-from django.http import JsonResponse
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -75,11 +75,30 @@ class CourseView(LocalizedView):
     @owner_course_required
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
+
+        data, files, parse_error = parse_multipart_request(request)
+        if parse_error:
+            return parse_error
+
+        cover_file = files.get('cover_image') if files else None
+        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
+
+        if data == {} and not cover_file:
+            return error_response('No data provided for update', status=400)
+
         try:
             uuid_obj = validate_uuid(course_id)
             course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
-            # return await update_course(request, course) # TODO
-        except Exception as e:  # TODO add specific exceptions
+
+            if course.is_published:
+                pass  # TODO
+            else:
+                return await update_course(course, data, cover_file)
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except Course.DoesNotExist:
+            return error_response(gettext("Course not found"), status=404)
+        except Exception as e:
             return error_response(f"{gettext('Error updating course:')} {str(e)}", status=500)
 
     @login_required_async

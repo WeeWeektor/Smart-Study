@@ -1,0 +1,73 @@
+from datetime import timedelta
+
+from asgiref.sync import sync_to_async
+from django.utils import timezone
+
+from common.utils import success_response, error_response, parse_time_str
+from courses.services import upload_course_cover_image, validate_category_level
+
+
+async def update_course(course, data: dict, cover_file: object | None) -> dict:
+    """Оновлення курсу власником курсу"""
+
+    validate_category_level(data)
+
+    updated_course_fields, updated_course_meta_fields = update_fields(course, data)
+    cover_file, cover_updated_fields = await update_course_cover_image(course, cover_file)
+
+    updated_course_fields.extend(cover_updated_fields)
+
+    if updated_course_fields or updated_course_meta_fields:
+        course.updated_at = timezone.now()
+        updated_course_fields.append("updated_at")
+
+        if updated_course_meta_fields:
+            await sync_to_async(course.details.save)(update_fields=updated_course_meta_fields)
+
+        await sync_to_async(course.save)(update_fields=updated_course_fields)
+
+        return success_response({"data": "Course updated successfully.",
+                                 "cover_image": cover_file if cover_file else None,
+                                 "course_id": str(course.id),
+                                 })
+    else:
+        return error_response(message="No changes detected to update the course.")
+
+
+def update_fields(course, data: dict) -> tuple[list, list]:
+    updated_course_fields = []
+    updated_course_meta_fields = []
+
+    for field, value in data.items():
+        if hasattr(course, field) and getattr(course, field) != value:
+            setattr(course, field, value)
+            updated_course_fields.append(field)
+        elif hasattr(course.details, field):
+            field_value = getattr(course.details, field)
+            if isinstance(field_value, timedelta) and isinstance(value, str):
+                value = parse_time_str(value)
+            if field_value != value:
+                setattr(course.details, field, value)
+                updated_course_meta_fields.append(field)
+
+    return updated_course_fields, updated_course_meta_fields
+
+
+async def update_course_cover_image(course, cover_file: object | None) -> tuple[object | None, list]:
+    """Оновлення обкладинки курсу"""
+    updated_fields = []
+
+    if not cover_file:
+        return None, updated_fields
+
+    file_name = getattr(course, "cover_image", None)
+    if file_name:
+        file_name = file_name.split('.')
+        file_name = f'{file_name[3]}.{file_name[4].replace("?", "")}'
+
+    if file_name != str(cover_file):
+        cover_file = await upload_course_cover_image(course, cover_file)
+        course.cover_image = cover_file
+        updated_fields.append("cover_image")
+
+    return cover_file, updated_fields

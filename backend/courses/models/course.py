@@ -54,7 +54,7 @@ class Course(BaseModel):
     is_published = models.BooleanField(default=False, db_index=True, verbose_name=_("Is published"))
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name=_("Created at"))
     published_at = models.DateTimeField(blank=True, null=True, verbose_name=_("Published at"))
-    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
+    updated_at = models.DateTimeField(blank=True, null=True, verbose_name=_("Updated at"))
     version = models.PositiveIntegerField(default=1, verbose_name=_("Course version"))
 
     async def upload_cover_image(self, file):

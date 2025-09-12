@@ -32,7 +32,7 @@ from .services.profile_cache_service import (
 )
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 from .user_utils import send_verification_email, send_password_reset_email
-from .utils.request_parsing import parse_request_data
+from common.utils.request_parsing import parse_request_data
 from .utils.validators import cached_email_validator, phone_validator
 
 
@@ -459,15 +459,6 @@ class ProfileView(LocalizedView):
             await update_user_data(user, data.get('user', {}))
             await update_user_settings(user, data.get('settings', {}), is_multipart)
             await update_user_profile(user, data.get('profile', {}))
-
-            if 'profile_picture' in request.FILES:
-                user_profile = await sync_to_async(UserProfile.objects.get)(user=user)
-                await handle_picture(
-                    instance=user_profile,
-                    picture=request.FILES['profile_picture'],
-                    instance_type="user",
-                    picture_field="profile_picture"
-                )
 
             await invalidate_user_cache(await sync_to_async(lambda: user.id)())
             updated_profile_data = await get_cached_profile(user)

@@ -12,7 +12,7 @@ export const UploadAvatar = ({ onFileSelect }: UploadAvatarProps) => {
       <input
         type="file"
         id="profile-photo"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp, image/gif"
         className="hidden"
         onChange={onFileSelect}
       />
