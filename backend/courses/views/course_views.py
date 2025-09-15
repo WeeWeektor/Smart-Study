@@ -76,23 +76,27 @@ class CourseView(LocalizedView):
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
 
-        data, files, parse_error = parse_multipart_request(request)
+        parsed_data, files, raw_form, parse_error = parse_multipart_request(request)
         if parse_error:
             return parse_error
 
         cover_file = files.get('cover_image') if files else None
-        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
+        change_info_course = raw_form.get('change_info_course', 'false').lower()
+        change_structure_course = raw_form.get('change_structure_course', 'false').lower()
 
-        if data == {} and not cover_file:
+        if not parsed_data and not cover_file:
             return error_response('No data provided for update', status=400)
+
+        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in parsed_data.items()}
 
         try:
             uuid_obj = validate_uuid(course_id)
             course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
 
-            if course.is_published:
-                pass  # TODO
-            else:
+            # TODO cache invalidation
+            if course.is_published and change_structure_course == 'true': # 1 курс опубілкований і змінюється структура
+                pass
+            elif change_info_course == 'true': # 2 курс не опублікований і змінюється структура 3 курс неопублікований і змінюється інфа 4 курс опублікований і змінюється інфа
                 return await update_course(course, data, cover_file)
         except ValidationError as e:
             return error_response(str(e), status=400)

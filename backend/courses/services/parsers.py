@@ -19,8 +19,10 @@ def parse_multipart_request(request):
 
     raw_json = data.get('data', '{}')
     try:
-        data = json.loads(raw_json)
-    except json.JSONDecodeError:
-        data = {}
+        if isinstance(raw_json, str):
+            raw_json = raw_json.replace("True", "true").replace("False", "false")
+        parsed_data = json.loads(raw_json)
+    except (json.JSONDecodeError, TypeError):
+        parsed_data = {}
 
-    return data, files, None
+    return parsed_data, files, data, None

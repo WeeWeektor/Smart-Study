@@ -128,6 +128,7 @@ CACHES = {
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/0",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+            "IGNORE_EXCEPTIONS": True,
         }
     },
     "sessions": {
@@ -135,6 +136,7 @@ CACHES = {
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/1",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+            "IGNORE_EXCEPTIONS": True,
         }
     },
     "courses_get": {
@@ -142,6 +144,7 @@ CACHES = {
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/2",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+            "IGNORE_EXCEPTIONS": True,
         }
     },
     "public_tests_get": {
@@ -149,6 +152,7 @@ CACHES = {
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/3",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+            "IGNORE_EXCEPTIONS": True,
         }
     },
 }

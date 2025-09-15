@@ -160,6 +160,12 @@ const Profile = () => {
           await profileService.uploadProfilePicture(selectedFile)
         if (uploadResponse.status === 'success' && uploadResponse.data?.url) {
           profilePictureUrl = uploadResponse.data.url
+        } else if (
+          uploadResponse.status === 'error' &&
+          uploadResponse.message
+        ) {
+          setError(uploadResponse.message)
+          return
         } else {
           setError(t('Помилка завантаження фото'))
           return

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from asgiref.sync import sync_to_async
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from common.utils import success_response, error_response, parse_time_str
 from courses.services import upload_course_cover_image, validate_category_level
@@ -12,36 +13,64 @@ async def update_course(course, data: dict, cover_file: object | None) -> dict:
 
     validate_category_level(data)
 
-    updated_course_fields, updated_course_meta_fields = update_fields(course, data)
+    updated_course_fields, updated_course_meta_fields, to_publish = update_fields(course, data)
     cover_file, cover_updated_fields = await update_course_cover_image(course, cover_file)
 
     updated_course_fields.extend(cover_updated_fields)
 
     if updated_course_fields or updated_course_meta_fields:
-        course.updated_at = timezone.now()
-        updated_course_fields.append("updated_at")
-
-        if updated_course_meta_fields:
-            await sync_to_async(course.details.save)(update_fields=updated_course_meta_fields)
-
-        await sync_to_async(course.save)(update_fields=updated_course_fields)
-
-        return success_response({"data": "Course updated successfully.",
-                                 "cover_image": cover_file if cover_file else None,
-                                 "course_id": str(course.id),
-                                 })
+        return await save_course(course, updated_course_fields, updated_course_meta_fields, cover_file, to_publish)
+    elif to_publish:
+        from courses.services import publish_course
+        await sync_to_async(publish_course)(course)
+        return success_response({"data": "Course published successfully.",
+                                 "course_id": str(course.id)})
     else:
-        return error_response(message="No changes detected to update the course.")
+        return error_response(message=_("No changes detected to update the course."))
 
 
-def update_fields(course, data: dict) -> tuple[list, list]:
+async def save_course(course,
+                      updated_course_fields: list,
+                      updated_course_meta_fields: list,
+                      cover_file: object | None,
+                      publish: bool
+                      ) -> dict:
+    course.updated_at = timezone.now()
+    updated_course_fields.append("updated_at")
+
+    if updated_course_meta_fields:
+        await sync_to_async(course.details.save)(update_fields=updated_course_meta_fields)
+
+    await sync_to_async(course.save)(update_fields=updated_course_fields)
+
+    if publish:
+        from courses.services import publish_course
+        await sync_to_async(publish_course)(course)
+
+    return success_response({"data": "Course updated successfully.",
+                             "cover_image": str(cover_file) if cover_file else None,
+                             "course_id": str(course.id),
+                             "publish": course.is_published
+                             })
+
+
+def update_fields(course, data: dict) -> tuple[list, list, bool]:
+    """Оновлення полів курсу та метаданих курсу"""
     updated_course_fields = []
     updated_course_meta_fields = []
+    to_publish = False
 
     for field, value in data.items():
         if hasattr(course, field) and getattr(course, field) != value:
-            setattr(course, field, value)
-            updated_course_fields.append(field)
+            if field == 'is_published':
+                if str(value).lower() == 'true':
+                    to_publish = True
+                else:
+                    setattr(course, field, False)
+                    updated_course_fields.append(field)
+            else:
+                setattr(course, field, value)
+                updated_course_fields.append(field)
         elif hasattr(course.details, field):
             field_value = getattr(course.details, field)
             if isinstance(field_value, timedelta) and isinstance(value, str):
@@ -50,7 +79,7 @@ def update_fields(course, data: dict) -> tuple[list, list]:
                 setattr(course.details, field, value)
                 updated_course_meta_fields.append(field)
 
-    return updated_course_fields, updated_course_meta_fields
+    return updated_course_fields, updated_course_meta_fields, to_publish
 
 
 async def update_course_cover_image(course, cover_file: object | None) -> tuple[object | None, list]:
@@ -69,5 +98,7 @@ async def update_course_cover_image(course, cover_file: object | None) -> tuple[
         cover_file = await upload_course_cover_image(course, cover_file)
         course.cover_image = cover_file
         updated_fields.append("cover_image")
+    else:
+        cover_file = None
 
     return cover_file, updated_fields

@@ -24,7 +24,7 @@ async def get_instance_cached_by_author_id(instance_type: str,
                                            instance_type_cache: str,
                                            author_id: str
                                            ) -> Union[dict, list]:
-    instance_cache = caches[f"{instance_type_cache}"]
+    instance_cache = caches[instance_type_cache]
     cache_key = await get_cache_key(instance_type, instance_type_cache, author_id)
 
     cached_data = await sync_to_async(lambda: instance_cache.get(cache_key, default=None, version=1))()
