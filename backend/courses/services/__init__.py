@@ -9,5 +9,5 @@ from .course_actions_service.create_course import create_course
 from .course_actions_service.get_courses import get_courses, get_course_by_id, get_published_courses_by_autor
 from .course_actions_service.remove_course import remove_course
 from .cache_service.invalidate_cache import invalidate_instance_cached_all
-from .course_actions_service.update_course import update_course
+from .course_actions_service.update_course import update_course, update_published_course_with_structure
 from .course_actions_service.publish_course import publish_course

@@ -22,7 +22,7 @@ async def update_course(course, data: dict, cover_file: object | None) -> dict:
         return await save_course(course, updated_course_fields, updated_course_meta_fields, cover_file, to_publish)
     elif to_publish:
         from courses.services import publish_course
-        await sync_to_async(publish_course)(course)
+        await publish_course(course)
         return success_response({"data": "Course published successfully.",
                                  "course_id": str(course.id)})
     else:
@@ -45,7 +45,7 @@ async def save_course(course,
 
     if publish:
         from courses.services import publish_course
-        await sync_to_async(publish_course)(course)
+        await publish_course(course)
 
     return success_response({"data": "Course updated successfully.",
                              "cover_image": str(cover_file) if cover_file else None,
@@ -102,3 +102,15 @@ async def update_course_cover_image(course, cover_file: object | None) -> tuple[
         cover_file = None
 
     return cover_file, updated_fields
+
+
+async def update_published_course_with_structure(course):
+    """Асинхронне оновлення курсу:
+        - створює snapshot (версію)
+        - знімає з публікації
+    """
+    await sync_to_async(course.update_version)()
+    course.is_published = False
+    course.published_at = None
+    await sync_to_async(course.save)(update_fields=['is_published', 'published_at'])
+    return success_response({"data": "Create version snapshot and unpublished course"})

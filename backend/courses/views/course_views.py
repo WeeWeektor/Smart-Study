@@ -13,7 +13,7 @@ from common.utils import error_response, success_response, sanitize_input, valid
 from courses.decorators import teacher_required, owner_course_required
 from courses.models import Course
 from courses.services import get_cached_instance_by_id, get_instance_cached_all, create_course, remove_course, \
-    get_instance_cached_by_author_id, update_course, parse_multipart_request
+    get_instance_cached_by_author_id, update_course, parse_multipart_request, update_published_course_with_structure
 from courses.utils import categories_level_present
 
 
@@ -93,10 +93,9 @@ class CourseView(LocalizedView):
             uuid_obj = validate_uuid(course_id)
             course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
 
-            # TODO cache invalidation
-            if course.is_published and change_structure_course == 'true': # 1 курс опубілкований і змінюється структура
-                pass
-            elif change_info_course == 'true': # 2 курс не опублікований і змінюється структура 3 курс неопублікований і змінюється інфа 4 курс опублікований і змінюється інфа
+            if course.is_published and change_structure_course == 'true':
+                return await update_published_course_with_structure(course)
+            elif change_info_course == 'true':
                 return await update_course(course, data, cover_file)
         except ValidationError as e:
             return error_response(str(e), status=400)
