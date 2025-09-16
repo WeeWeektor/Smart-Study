@@ -7,7 +7,7 @@ from django.utils.translation import gettext
 
 from common.utils import validate_uuid, error_response
 from courses.models import Course, CourseMeta
-from courses.services import build_course_json_success
+from courses.services.builder_json import build_course_json_success
 from users.models import CustomUser
 
 logger = logging.getLogger(__name__)

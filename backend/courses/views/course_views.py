@@ -12,8 +12,11 @@ from common.decorators import login_required_async
 from common.utils import error_response, success_response, sanitize_input, validate_uuid, paginate_list
 from courses.decorators import teacher_required, owner_course_required
 from courses.models import Course
-from courses.services import get_cached_instance_by_id, get_instance_cached_all, create_course, remove_course, \
-    get_instance_cached_by_author_id, update_course, parse_multipart_request, update_published_course_with_structure
+from courses.services import parse_multipart_request
+from courses.services.cache_service import get_cached_instance_by_id, get_instance_cached_all, \
+    get_instance_cached_by_author_id
+from courses.services.course_actions_service import create_course, remove_course, update_course, \
+    update_published_course_with_structure
 from courses.utils import categories_level_present
 
 

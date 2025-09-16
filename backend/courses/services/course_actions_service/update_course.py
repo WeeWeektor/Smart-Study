@@ -5,7 +5,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from common.utils import success_response, error_response, parse_time_str
-from courses.services import upload_course_cover_image, validate_category_level
+from courses.services import validate_category_level
+from courses.services.course_actions_service import upload_course_cover_image
 
 
 async def update_course(course, data: dict, cover_file: object | None) -> dict:

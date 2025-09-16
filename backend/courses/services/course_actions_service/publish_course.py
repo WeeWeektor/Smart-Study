@@ -2,7 +2,7 @@ from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
-from courses.services import invalidate_instance_cached_all
+from courses.services.cache_service import invalidate_instance_cached_all
 
 
 async def publish_course(course):

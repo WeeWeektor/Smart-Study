@@ -74,8 +74,6 @@ class Course(BaseModel):
         """Метод для створення знімка версії курсу"""
         from .course_version import CourseVersion
 
-        CourseVersion.objects.filter(course_id=self.id).delete()
-
         course_data = {
             'course': serializers.serialize('json', [self]),
             'modules': [],

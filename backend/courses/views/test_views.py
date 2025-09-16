@@ -6,6 +6,7 @@ from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import validate_uuid, error_response, success_response
 from courses.decorators import teacher_required, owner_public_test_required
+from courses.models import Test
 from courses.utils import categories_level_present
 
 
@@ -16,9 +17,10 @@ class BaseTestView(LocalizedView):
     @login_required_async
     async def get(self, request, test_id=None):
         try:
-            filter_list = categories_level_present(request)
+            # add test filter from author id
             if self.test_type == "public" and test_id is None:
-                # tests_data = await get_cached_all_tests(is_public=True, filt=filter_list, owner=request.user)
+                filter_list = categories_level_present(request)
+                # tests_data = await get_cached_all_tests(is_public=True, filt=filter_list)
                 # return success_response({"tests": tests_data})
                 pass
 
@@ -37,6 +39,8 @@ class BaseTestView(LocalizedView):
 
         except ValidationError as e:
             return error_response(str(e), status=400)
+        except Test.DoesNotExist:
+            return error_response("Test not found", status=404)
         except Exception as e:
             return error_response(f"Error retrieving test: {str(e)}", status=500)
 

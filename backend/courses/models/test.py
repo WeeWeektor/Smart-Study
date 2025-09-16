@@ -105,8 +105,6 @@ class Test(BaseModel):
         choices=LEVELS
     )
 
-
-
     def has_time_limit(self):
         """Перевіряє чи тест має обмеження за часом"""
         return self.time_limit > 0

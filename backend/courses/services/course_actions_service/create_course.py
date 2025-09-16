@@ -1,7 +1,8 @@
 from asgiref.sync import sync_to_async
 
 from courses.models import CourseMeta, Course
-from courses.services import validate_course_data, upload_course_cover_image
+from courses.services import validate_course_data
+from courses.services.course_actions_service import upload_course_cover_image
 
 
 async def create_course(user, data, cover_file=None):
