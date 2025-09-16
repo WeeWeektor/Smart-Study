@@ -32,8 +32,11 @@ async def get_instance_cached_by_author_id(instance_type: str,
         return cached_data
 
     if instance_type == "courses":
-        from courses.services import get_published_courses_by_autor
+        from courses.services.course_actions_service import get_published_courses_by_autor
         instance_data = await get_published_courses_by_autor(author_id)
+    elif instance_type == "tests":
+        from courses.services.test_actions_service import get_public_tests_by_author
+        instance_data = await get_public_tests_by_author(author_id)
     else:
         logger.error(gettext("Unsupported instance type for caching"))
         return error_response(gettext("Unsupported instance type for caching"), status=400)

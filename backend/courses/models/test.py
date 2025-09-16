@@ -78,7 +78,7 @@ class Test(BaseModel):
     randomize_questions = models.BooleanField(default=False, verbose_name=_("Randomize questions"))
     show_correct_answers = models.BooleanField(default=True, verbose_name=_("Show correct answers"))
     test_data_ids = models.JSONField(default=list, verbose_name=_("Mongo question IDs"))
-    order = models.PositiveIntegerField(verbose_name=_("Test order"))
+    order = models.PositiveIntegerField(verbose_name=_("Test order"))   # TODO порядок тесту в курсі або модулі для паблік немає сенсу
     is_public = models.BooleanField(default=False, db_index=True, verbose_name=_("Is public"))
     owner = models.ForeignKey(
         CustomUser,

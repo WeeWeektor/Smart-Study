@@ -1,1 +1,2 @@
-from .course_with_details_builder import build_course_json_success, build_course_json_failure
+from .course_with_details_builder import build_course_json_success
+from .test_builder import build_public_test_json, build_course_test_json, build_module_test_json

@@ -11,6 +11,7 @@ from common.utils import error_response
 logger = logging.getLogger(__name__)
 
 CACHE_TIMEOUT = 60 * 60
+CACHE_TIMEOUT_TEST = 60 * 20
 
 
 async def get_instance_by_id_cache_key(instance_id: uuid.UUID, instance_type: str, instance_type_cache: str) -> str:
@@ -33,14 +34,30 @@ async def get_cached_instance_by_id(
         return cached_data
 
     if instance_type == "course":
-        from courses.services import get_course_by_id
+        from courses.services.course_actions_service import get_course_by_id
         instance_data = await get_course_by_id(instance_id)
+    elif " test" in instance_type:
+        from courses.services.test_actions_service import get_test_by_id
+        if instance_type == "public test":
+            instance_data = await get_test_by_id(instance_id, is_public=True)
+        elif instance_type == "course test":
+            instance_data = await get_test_by_id(instance_id, course=True)
+        elif instance_type == "module test":
+            instance_data = await get_test_by_id(instance_id, module=True)
+        else:
+            instance_data = None
     else:
         logger.error(gettext("Unsupported instance type for caching"))
         return error_response(gettext("Unsupported instance type for caching"), status=400)
 
-    if instance_data["course"]["is_published"]:
+    if instance_data.get("course", {}).get("is_published"):
         await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT, version=1))()
+    elif instance_data.get("test", {}).get("is_public"):
+        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT_TEST, version=1))()
+    elif instance_data.get("test", {}).get("course", {}).get("is_published"):
+        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT_TEST, version=1))()
+    elif instance_data.get("test", {}).get("module", {}).get("is_published"):
+        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT_TEST, version=1))()
 
     return instance_data
 

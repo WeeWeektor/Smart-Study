@@ -10,7 +10,7 @@ def build_course_json_success(course, course_details, course_owner):
                 "name": getattr(course_owner, "name", ""),
                 "surname": getattr(course_owner, "surname", ""),
                 "email": getattr(course_owner, "email", ""),
-                "profile_image": getattr(course_owner, "profile_image", None),
+                "profile_picture": getattr(course_owner, "profile_picture", None),
             },
             "cover_image": getattr(course, "cover_image", ""),
             "is_published": getattr(course, "is_published", False),
@@ -31,27 +31,5 @@ def build_course_json_success(course, course_details, course_owner):
                 "feedback_count": getattr(course_details, "feedback_count", 0),
                 "feedback_summary": getattr(course_details, "feedback_summary", {}),
             }
-        }
-    }
-
-
-def build_course_json_failure(course):
-    return {
-        "course": {
-            "id": getattr(course, "id", None),
-            "title": getattr(course, "title", ""),
-            "description": getattr(course, "description", ""),
-            "category": getattr(course, "category", ""),
-            "owner": {
-                "id": getattr(course, "owner_id", None),
-                "data": {}
-            },
-            "cover_image": getattr(course, "cover_image", ""),
-            "is_published": getattr(course, "is_published", False),
-            "created_at": getattr(course, "created_at", None),
-            "published_at": getattr(course, "published_at", None),
-            "updated_at": getattr(course, "updated_at", None),
-            "version": getattr(course, "version", None),
-            "details": {}
         }
     }

@@ -1,12 +1,14 @@
-from django.core.exceptions import ValidationError
+from asgiref.sync import sync_to_async
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
 from common.decorators import login_required_async
-from common.utils import validate_uuid, error_response, success_response
+from common.utils import success_response, paginate_list
 from courses.decorators import teacher_required, owner_public_test_required
-from courses.models import Test
+from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
+    get_cached_instance_by_id
 from courses.utils import categories_level_present
 
 
@@ -16,33 +18,38 @@ class BaseTestView(LocalizedView):
 
     @login_required_async
     async def get(self, request, test_id=None):
-        try:
-            # add test filter from author id
-            if self.test_type == "public" and test_id is None:
-                filter_list = categories_level_present(request)
-                # tests_data = await get_cached_all_tests(is_public=True, filt=filter_list)
-                # return success_response({"tests": tests_data})
-                pass
+        if self.test_type == "public" and test_id is None:
+            author_id = request.GET.get("author")
+            page = request.Get.get("page", 1)
 
-            elif test_id is not None:
-                uuid_obj = validate_uuid(test_id)
+            if not author_id:
+                category_list, level = categories_level_present(request)
+                public_test_data = await get_instance_cached_all("tests", "public_tests_get", category_list, level)
+            else:
+                public_test_data = await get_instance_cached_by_author_id("tests", "public_tests_get", author_id)
 
-                if self.test_type == "module":
-                    # Логіка для тестів модулів
-                    pass
-                elif self.test_type == "course":
-                    # Логіка для тестів курсів
-                    pass
-                elif self.test_type == "public":
-                    # Логіка для публічних тестів
-                    pass
+            if isinstance(public_test_data, JsonResponse):
+                return public_test_data
 
-        except ValidationError as e:
-            return error_response(str(e), status=400)
-        except Test.DoesNotExist:
-            return error_response("Test not found", status=404)
-        except Exception as e:
-            return error_response(f"Error retrieving test: {str(e)}", status=500)
+            paged_data_dict = await sync_to_async(lambda: paginate_list(public_test_data, int(page), 24))()
+
+            return success_response({
+                "page": int(page),
+                "total_tests": len(public_test_data),
+                "total_pages": paged_data_dict["total_pages"],
+                "tests": paged_data_dict["results"]
+            })
+
+        elif test_id is not None:
+            if self.test_type == "module":
+                module_test_data = await get_cached_instance_by_id("module test", "courses_get", test_id)
+                return success_response(module_test_data)
+            elif self.test_type == "course":
+                course_test_data = await get_cached_instance_by_id("course test", "courses_get", test_id)
+                return success_response(course_test_data)
+            elif self.test_type == "public":
+                public_test_data = await get_cached_instance_by_id("public test", "public_tests_get", test_id)
+                return success_response(public_test_data)
 
     @login_required_async
     @teacher_required
