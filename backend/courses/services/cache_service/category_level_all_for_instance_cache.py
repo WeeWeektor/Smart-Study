@@ -51,7 +51,7 @@ async def get_instance_cached_all(
     if instance_type == "courses":
         from courses.services.course_actions_service import get_courses
         instance_data = await get_courses(cate, level)
-    elif instance_type == "tests":
+    elif instance_type == "public test":
         from courses.services.test_actions_service import get_public_tests
         instance_data = await get_public_tests(cate, level)
     else:

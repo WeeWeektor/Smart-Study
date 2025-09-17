@@ -27,9 +27,9 @@ class BaseTestView(LocalizedView):
 
         if not author_id:
             category_list, level = categories_level_present(request)
-            test_data = await get_instance_cached_all("tests", "public_tests_get", category_list, level)
+            test_data = await get_instance_cached_all("public test", "public_tests_get", category_list, level)
         else:
-            test_data = await get_instance_cached_by_author_id("tests", "public_tests_get", author_id)
+            test_data = await get_instance_cached_by_author_id("public test", "public_tests_get", author_id)
 
         if isinstance(test_data, JsonResponse):
             return test_data

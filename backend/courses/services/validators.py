@@ -16,14 +16,15 @@ def validate_course_data(data: dict):
     validate_category_level(data)
 
 
-def validate_test_data(data: dict):
+def validate_test_data(data: dict, test_type: str):
     """Валідатор для даних тесту"""
 
     validate_required_fields(data, ["title", "description"])
 
-    if data.get("is_public", False):
+    if test_type == "public":
         validate_required_fields(data, ["level", "category"],
                                  msg=_("Missing required field for public test:"))
+        validate_category_level(data)
     else:
         validate_required_fields(data, ["order"],
                                  msg=_("Missing required field for course/module test:"))

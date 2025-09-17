@@ -6,7 +6,7 @@ from courses.services.cache_service import invalidate_instance_cached_all, inval
 
 
 async def create_test(test_type: str, user, data: dict, instance_type: str):
-    validate_test_data(data)
+    validate_test_data(data, test_type)
 
     data_to_create_test = {
         "title": data["title"].strip(),

@@ -50,16 +50,24 @@ async def get_cached_instance_by_id(
         logger.error(gettext("Unsupported instance type for caching"))
         return error_response(gettext("Unsupported instance type for caching"), status=400)
 
-    if instance_data.get("course", {}).get("is_published"):
-        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT, version=1))()
-    elif instance_data.get("test", {}).get("is_public"):
-        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT_TEST, version=1))()
-    elif instance_data.get("test", {}).get("course", {}).get("is_published"):
-        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT_TEST, version=1))()
-    elif instance_data.get("test", {}).get("module", {}).get("is_published"):
-        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT_TEST, version=1))()
+    timeout = _resolve_cache_timeout(instance_data)
+    if timeout:
+        await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, timeout, version=1))()
 
     return instance_data
+
+
+def _resolve_cache_timeout(instance_data: dict) -> int | None:
+    """Визначає час кешування залежно від типу даних"""
+    if instance_data.get("course", {}).get("is_published"):
+        return CACHE_TIMEOUT
+    if instance_data.get("test", {}).get("is_public"):
+        return CACHE_TIMEOUT_TEST
+    if instance_data.get("test", {}).get("course", {}).get("is_published"):
+        return CACHE_TIMEOUT_TEST
+    if instance_data.get("test", {}).get("module", {}).get("is_published"):
+        return CACHE_TIMEOUT_TEST
+    return None
 
 
 async def invalidate_cached_instance_by_id(instance_id: uuid.UUID,
