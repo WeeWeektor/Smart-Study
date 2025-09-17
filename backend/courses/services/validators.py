@@ -4,21 +4,40 @@ from django.utils.translation import gettext as _
 from courses.choices import VALID_CATEGORIES_CHOICES, VALID_CATEGORY_LEVELS
 
 
-def validate_course_data(data):
+def validate_course_data(data: dict):
     """Валідатор для даних курсу"""
 
-    required_fields = ["title", "description", "category"]
-    for field in required_fields:
-        if field not in data or not data[field]:
-            raise ValidationError(f"{_('Missing required field:')} {field}")
+    validate_required_fields(data, ["title", "description", "category"])
 
     if data.get("is_published", False):
-        extra_fields = ["level", "course_language", "time_to_complete"]
-        for field in extra_fields:
-            if not data.get(field):
-                raise ValidationError(f"{_('Missing required field for publish:')} {field}")
+        validate_required_fields(data, ["level", "course_language", "time_to_complete"],
+                                 msg=_("Missing required field for publish:"))
 
     validate_category_level(data)
+
+
+def validate_test_data(data: dict):
+    """Валідатор для даних тесту"""
+
+    validate_required_fields(data, ["title", "description"])
+
+    if data.get("is_public", False):
+        validate_required_fields(data, ["level", "category"],
+                                 msg=_("Missing required field for public test:"))
+    else:
+        validate_required_fields(data, ["order"],
+                                 msg=_("Missing required field for course/module test:"))
+
+
+def validate_required_fields(data: dict, required_fields: list[str], msg: str | None = None) -> None:
+    """Перевірка наявності required полів"""
+    if msg is None:
+        msg = _("Missing required field:")
+
+    for field in required_fields:
+        if field not in data or not data[field]:
+            raise ValidationError(f"{msg} {field}")
+
 
 
 def validate_choice(choice: str, valid_choices: set, name: str) -> None:

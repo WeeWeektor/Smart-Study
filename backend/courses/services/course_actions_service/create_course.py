@@ -25,7 +25,7 @@ async def create_course(user, data, cover_file=None):
         await upload_course_cover_image(course_created, cover_file)
 
     if data.get("is_published") is True:
-        from courses.services import publish_course
+        from courses.services.course_actions_service import publish_course
         await publish_course(course_created)
 
     return course_created

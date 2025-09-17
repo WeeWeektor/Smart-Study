@@ -67,7 +67,7 @@ class Test(BaseModel):
         verbose_name=_("Module")
     )
     title = models.CharField(max_length=100, verbose_name=_("Test title"))
-    description = models.TextField(max_length=500, blank=True, null=True, verbose_name=_("Test description"))
+    description = models.TextField(max_length=500, verbose_name=_("Test description"))
     time_limit = models.PositiveIntegerField(default=0, verbose_name=_("Time limit (in minutes)"))
     count_attempts = models.PositiveIntegerField(default=0, verbose_name=_("Count attempts"))
     pass_score = models.FloatField(
@@ -77,8 +77,8 @@ class Test(BaseModel):
     )
     randomize_questions = models.BooleanField(default=False, verbose_name=_("Randomize questions"))
     show_correct_answers = models.BooleanField(default=True, verbose_name=_("Show correct answers"))
-    test_data_ids = models.JSONField(default=list, verbose_name=_("Mongo question IDs"))
-    order = models.PositiveIntegerField(verbose_name=_("Test order"))   # TODO порядок тесту в курсі або модулі для паблік немає сенсу
+    test_data_ids = models.JSONField(default=list, verbose_name=_("Mongo question IDs")) # TODO
+    order = models.PositiveIntegerField(verbose_name=_("Test order"))
     is_public = models.BooleanField(default=False, db_index=True, verbose_name=_("Is public"))
     owner = models.ForeignKey(
         CustomUser,

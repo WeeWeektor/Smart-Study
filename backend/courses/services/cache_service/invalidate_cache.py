@@ -29,7 +29,7 @@ def invalidate_instance_cached_all(
         key_has_level = level and f"_{level}_level" in key
 
         if key_has_category:
-            add_key = _find_level_in_key(level, key, key_has_level)
+            add_key = _match_key_with_category_and_level(level, key, key_has_level)
             if add_key:
                 to_delete.add(add_key)
 
@@ -42,7 +42,7 @@ def invalidate_instance_cached_all(
     instance_cache.set("all_cache_keys", keys, None)
 
 
-def _find_level_in_key(level: str, key: str, key_has_level: bool) -> str | None:
+def _match_key_with_category_and_level(level: str, key: str, key_has_level: bool) -> str | None:
     if level:
         if key_has_level:
             return key
@@ -51,3 +51,17 @@ def _find_level_in_key(level: str, key: str, key_has_level: bool) -> str | None:
                 return key
     else:
         return key
+
+def invalidate_test_cache_by_course_or_module(instance_id: str, instance_type: str) -> None:
+    instance_cache = caches["courses_get"]
+
+    keys: set[str] = instance_cache.get("all_cache_keys", set())
+    if not keys:
+        return
+    key = f"{instance_type}_by_id_{instance_id}"
+
+    instance_cache.delete(key)
+    if key in keys:
+        keys.remove(key)
+
+    instance_cache.set("all_cache_keys", keys, None)

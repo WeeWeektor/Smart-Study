@@ -22,7 +22,7 @@ async def update_course(course, data: dict, cover_file: object | None) -> dict:
     if updated_course_fields or updated_course_meta_fields:
         return await save_course(course, updated_course_fields, updated_course_meta_fields, cover_file, to_publish)
     elif to_publish:
-        from courses.services import publish_course
+        from courses.services.course_actions_service import publish_course
         await publish_course(course)
         return success_response({"data": "Course published successfully.",
                                  "course_id": str(course.id)})
@@ -45,7 +45,7 @@ async def save_course(course,
     await sync_to_async(course.save)(update_fields=updated_course_fields)
 
     if publish:
-        from courses.services import publish_course
+        from courses.services.course_actions_service import publish_course
         await publish_course(course)
 
     return success_response({"data": "Course updated successfully.",
