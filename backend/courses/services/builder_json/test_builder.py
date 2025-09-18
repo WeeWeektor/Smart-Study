@@ -11,7 +11,7 @@ def build_public_test_json(test, owner):
             "pass_score": getattr(test, "pass_score", 0),
             "randomize_questions": getattr(test, "randomize_questions", False),
             "show_correct_answers": getattr(test, "show_correct_answers", True),
-            "test_data_ids": getattr(test, "test_data_ids", []),
+            "test_data_ids": getattr(test, "test_data_ids", ""),
             "is_public": getattr(test, "is_public", False),
             "owner": {
                 "id": getattr(owner, "id", None),
@@ -35,7 +35,7 @@ def build_course_test_json(test, course):
             "pass_score": getattr(test, "pass_score", 0),
             "randomize_questions": getattr(test, "randomize_questions", False),
             "show_correct_answers": getattr(test, "show_correct_answers", True),
-            "test_data_ids": getattr(test, "test_data_ids", []),
+            "test_data_ids": getattr(test, "test_data_ids", ""),
             "order": getattr(test, "order", False),
             "is_public": getattr(test, "is_public", False),
             "course": {
@@ -60,7 +60,7 @@ def build_module_test_json(test, module):
             "pass_score": getattr(test, "pass_score", 0),
             "randomize_questions": getattr(test, "randomize_questions", False),
             "show_correct_answers": getattr(test, "show_correct_answers", True),
-            "test_data_ids": getattr(test, "test_data_ids", []),
+            "test_data_ids": getattr(test, "test_data_ids", ""),
             "order": getattr(test, "order", False),
             "is_public": getattr(test, "is_public", False),
             "module": {

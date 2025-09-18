@@ -64,6 +64,7 @@ class BaseTestView(LocalizedView):
             return await self._get_test_by_id(self.test_type, test_id)
         return error_response(gettext("Invalid request"), status=400)
 
+    #  TODO Додати отримання тетсу для get
     @login_required_async
     @teacher_required
     async def post(self, request):

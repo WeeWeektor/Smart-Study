@@ -19,7 +19,7 @@ def validate_course_data(data: dict):
 def validate_test_data(data: dict, test_type: str):
     """Валідатор для даних тесту"""
 
-    validate_required_fields(data, ["title", "description"])
+    validate_required_fields(data, ["title", "description", "questions"])
 
     if test_type == "public":
         validate_required_fields(data, ["level", "category"],
