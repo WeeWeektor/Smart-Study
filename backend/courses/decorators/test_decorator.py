@@ -9,6 +9,21 @@ from courses.decorators import teacher_required
 from courses.models import Test, Course, Module
 
 
+async def _validata_public_test_owner(user, test_id, action_msg):
+    """Перевіряє чи user є власником public тесту"""
+    try:
+        uuid_obj = validate_uuid(test_id)
+        test = await sync_to_async(Test.objects.only("owner_id").get)(pk=uuid_obj)
+    except Test.DoesNotExist:
+        return False, _("Test not found.")
+    except ValidationError as e:
+        return False, str(e)
+
+    if test.owner_id != user.id:
+        return False, _(f"Only owner can {action_msg} this test.")
+    return True, None
+
+
 async def _validate_course_owner(user, course_id, action_msg):
     """Перевіряє чи user є власником курсу"""
     try:
@@ -72,7 +87,7 @@ async def _check_test_permission(user, test_id=None, data=None):
         return False, _("Test not found.")
 
     if test.is_public:
-        return True, None
+        return await _validata_public_test_owner(user, test.id, "modify")
     if test.course_id:
         return await _validate_course_owner(user, test.course_id, "modify test in")
     if test.module_id:

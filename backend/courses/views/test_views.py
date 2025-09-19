@@ -9,11 +9,12 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
 from common.decorators import login_required_async
-from common.utils import success_response, paginate_list, sanitize_input, error_response
+from common.utils import success_response, paginate_list, sanitize_input, error_response, validate_uuid
 from courses.decorators import permission_test_required
+from courses.models import Test
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
-from courses.services.test_actions_service import create_test
+from courses.services.test_actions_service import create_test, remove_test
 from courses.utils import categories_level_present
 
 
@@ -92,7 +93,15 @@ class BaseTestView(LocalizedView):
     @login_required_async
     @permission_test_required
     async def delete(self, request, test_id):
-        pass
+        try:
+            uuid_obj = validate_uuid(test_id)
+            return await remove_test(uuid_obj, self.test_type)
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except Test.DoesNotExist as e:
+            return error_response(str(e), status=404)
+        except Exception as e:
+            return error_response(f"{gettext('Test deletion error:')} {str(e)}", status=500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")

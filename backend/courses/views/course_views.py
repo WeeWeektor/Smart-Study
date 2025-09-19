@@ -120,4 +120,4 @@ class CourseView(LocalizedView):
         except Course.DoesNotExist:
             return error_response(gettext("Course not found"), status=404)
         except Exception as e:
-            return error_response(f"{gettext('Error retrieving course:')} {str(e)}", status=500)
+            return error_response(f"{gettext('Course deletion error:')} {str(e)}", status=500)
