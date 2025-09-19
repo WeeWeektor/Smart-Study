@@ -4,13 +4,13 @@ from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.translation import gettext
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import success_response, paginate_list, sanitize_input, error_response
-from courses.decorators import teacher_required, owner_public_test_required
+from courses.decorators import permission_test_required
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
 from courses.services.test_actions_service import create_test
@@ -65,7 +65,7 @@ class BaseTestView(LocalizedView):
         return error_response(gettext("Invalid request"), status=400)
 
     @login_required_async
-    @teacher_required
+    @permission_test_required
     async def post(self, request):
         data = json.loads(request.POST.get("data", "{}"))
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
@@ -85,12 +85,12 @@ class BaseTestView(LocalizedView):
             return error_response(f"{gettext("Error creating test:")} {str(e)}", status=500)
 
     @login_required_async
-    @owner_public_test_required  #  TODO створити декоратори для course і module тестів
+    @permission_test_required
     async def patch(self, request, test_id):
         pass
 
     @login_required_async
-    @owner_public_test_required
+    @permission_test_required
     async def delete(self, request, test_id):
         pass
 

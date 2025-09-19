@@ -1,3 +1,3 @@
 from .role_decorators import teacher_required
 from .course_owner_decorator import owner_course_required
-from .public_test_owner_decorator import owner_public_test_required
+from .test_decorator import permission_test_required
