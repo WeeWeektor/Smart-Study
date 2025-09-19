@@ -40,7 +40,6 @@ def validate_required_fields(data: dict, required_fields: list[str], msg: str | 
             raise ValidationError(f"{msg} {field}")
 
 
-
 def validate_choice(choice: str, valid_choices: set, name: str) -> None:
     """Валідатор для вибору"""
     if choice and choice not in valid_choices:
@@ -55,3 +54,31 @@ def validate_category_level(data: dict):
         validate_choice(category, VALID_CATEGORIES_CHOICES, "category")
     if level := data.get("level"):
         validate_choice(level, VALID_CATEGORY_LEVELS, "level")
+
+
+def validate_list_of_strings(lst: list[str], field_name: str) -> None:
+    if not isinstance(lst, list) or not all(isinstance(item, str) for item in lst):
+        raise ValidationError(_(f"{field_name} must be a list of strings"))
+
+
+def validate_positive_int(value, field_name: str) -> None:
+    if value is not None and (not isinstance(value, int) or value < 1):
+        raise ValidationError(_(f"{field_name} must be integer >= 1"))
+
+
+def validate_test_question_data(q):
+    question_text = q.get("question_text")
+    if not isinstance(question_text, str) or not question_text.strip():
+        raise ValueError(_("question_text must be a non-empty string"))
+
+    choices = q.get("choices", [])
+    correct_answers = q.get("correct_answers", [])
+
+    validate_list_of_strings(choices, "choices")
+    validate_list_of_strings(correct_answers, "correct_answers")
+
+    if not all(answer in choices for answer in correct_answers):
+        raise ValidationError(_("All correct_answers must be present in choices"))
+
+    validate_positive_int(q.get("points", 1), "points")
+    validate_positive_int(q.get("order"), "order")

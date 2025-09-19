@@ -1,4 +1,4 @@
-def build_public_test_json(test, owner):
+def build_public_test_json(test, owner, questions_data):
     return {
         "test": {
             "id": getattr(test, "id", None),
@@ -19,12 +19,13 @@ def build_public_test_json(test, owner):
                 "surname": getattr(owner, "surname", ""),
                 "email": getattr(owner, "email", ""),
                 "profile_picture": getattr(owner, "profile_picture", None),
-            }
+            },
+            "questions": questions_data["questions"],
         }
     }
 
 
-def build_course_test_json(test, course):
+def build_course_test_json(test, course, questions_data):
     return {
         "test": {
             "id": getattr(test, "id", None),
@@ -44,12 +45,13 @@ def build_course_test_json(test, course):
                 "course owner": getattr(course, "owner", ""),
                 "is_published": getattr(course, "is_published", False),
                 "course version": getattr(course, "version", None),
-            }
+            },
+            "questions": questions_data["questions"],
         }
     }
 
 
-def build_module_test_json(test, module):
+def build_module_test_json(test, module, questions_data):
     return {
         "test": {
             "id": getattr(test, "id", None),
@@ -69,6 +71,7 @@ def build_module_test_json(test, module):
                 "title": getattr(module, "title", ""),
                 "is_published": getattr(module.course, "is_published", False),
                 "description": getattr(module, "description", None),
-            }
+            },
+            "questions": questions_data["questions"],
         }
     }

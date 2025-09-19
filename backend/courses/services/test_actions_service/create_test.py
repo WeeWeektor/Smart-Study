@@ -2,7 +2,7 @@ from asgiref.sync import sync_to_async
 
 from common.services import mongo_repo
 from courses.models import Test
-from courses.services import validate_test_data
+from courses.services import validate_test_data, validate_test_question_data
 from courses.services.cache_service import invalidate_instance_cached_all, invalidate_test_cache_by_course_or_module
 
 
@@ -44,17 +44,16 @@ async def create_test(test_type: str, user, data: dict, instance_type: str):
 
     data_to_create_test.update(test_config[test_type])
 
-    #  TODO sanitize questions data
-    questions_data = [
-        {
-            "question_text": qd.get("question_text", ""),
+    questions_data = []
+    for qd in data.get("questions", []):
+        await sync_to_async(validate_test_question_data)(qd)
+        questions_data.append({
+            "question_text": qd["question_text"].strip(),
             "choices": qd.get("choices", []),
             "correct_answers": qd.get("correct_answers", []),
             "points": qd.get("points", 1),
             "order": qd.get("order"),
-        }
-        for qd in data.get("questions", [])
-    ]
+        })
 
     mongo_document_id = await sync_to_async(lambda: mongo_repo.insert_document(
         "questions_data_for_test", {"questions": questions_data}
