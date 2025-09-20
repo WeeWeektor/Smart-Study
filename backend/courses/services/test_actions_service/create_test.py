@@ -3,10 +3,9 @@ from asgiref.sync import sync_to_async
 from common.services import mongo_repo
 from courses.models import Test
 from courses.services import validate_test_data, validate_test_question_data
-from courses.services.cache_service import invalidate_instance_cached_all, invalidate_test_cache_by_course_or_module
 
 
-async def create_test(test_type: str, user, data: dict, instance_type: str):
+async def create_test(test_type: str, user, data: dict):
     validate_test_data(data, test_type)
 
     data_to_create_test = {
@@ -62,23 +61,10 @@ async def create_test(test_type: str, user, data: dict, instance_type: str):
 
     test_created = await sync_to_async(Test.objects.create)(**data_to_create_test)
 
-    cache_invalidator = {
-        "public": lambda: invalidate_instance_cached_all(
-            instance_type=f"{instance_type} test",
-            instance_type_cache="public_tests_get",
-            category=test_created.category,
-            level=test_created.level,
-            author_id=user.id
-        ),
-        "course": lambda: invalidate_test_cache_by_course_or_module(
-            instance_id=str(test_created.id),
-            instance_type=f"{instance_type} test",
-        ),
-        "module": lambda: invalidate_test_cache_by_course_or_module(
-            instance_id=str(test_created.id),
-            instance_type=f"{instance_type} test",
-        ),
-    }
+    from courses.services.test_actions_service import cache_invalidators
+    await sync_to_async(
+        cache_invalidators(test_type, test_created, user),
+        thread_sensitive=True
+    )()
 
-    await sync_to_async(cache_invalidator[test_type], thread_sensitive=True)()
     return test_created

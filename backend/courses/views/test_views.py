@@ -11,10 +11,10 @@ from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import success_response, paginate_list, sanitize_input, error_response, validate_uuid
 from courses.decorators import permission_test_required
-from courses.models import Test
+from courses.models import Test, Course, Module
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
-from courses.services.test_actions_service import create_test, remove_test
+from courses.services.test_actions_service import create_test, remove_test, validate_test_editable
 from courses.utils import categories_level_present
 
 
@@ -72,15 +72,19 @@ class BaseTestView(LocalizedView):
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
 
         try:
-            test = await create_test(self.test_type, request.user, data, self.test_type)
+            error = await validate_test_editable(self.test_type, data, "add")
+            if error:
+                return error
+
+            test = await create_test(self.test_type, request.user, data)
             return success_response({
                 "message": gettext("Test created successfully."),
                 "test_type": self.test_type,
                 "test_id": test.id
             })
-        except ValidationError as e:
-            return error_response(str(e), status=400)
-        except ValueError as e:
+        except (Course.DoesNotExist, Module.DoesNotExist) as e:
+            return error_response(gettext(f"{str(e).split()[0]} not found"), status=404)
+        except (ValidationError, ValueError) as e:
             return error_response(str(e), status=400)
         except Exception as e:
             return error_response(f"{gettext("Error creating test:")} {str(e)}", status=500)
@@ -98,8 +102,8 @@ class BaseTestView(LocalizedView):
             return await remove_test(uuid_obj, self.test_type)
         except ValidationError as e:
             return error_response(str(e), status=400)
-        except Test.DoesNotExist as e:
-            return error_response(str(e), status=404)
+        except (Course.DoesNotExist, Module.DoesNotExist, Test.DoesNotExist) as e:
+            return error_response(gettext(f"{str(e).split()[0]} not found"), status=404)
         except Exception as e:
             return error_response(f"{gettext('Test deletion error:')} {str(e)}", status=500)
 
