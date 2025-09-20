@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
 from common.services import mongo_repo
-from common.utils import error_response, validate_uuid
+from common.utils import error_response, validate_uuid, success_response
 from courses.models import Test
 from courses.services.builder_json import build_public_test_json, build_course_test_json, build_module_test_json
 from users.models import CustomUser
@@ -125,6 +125,7 @@ async def get_test_by_id(
         test_loader, build_func = strategies[key]
         test = await sync_to_async(test_loader)()
         questions_data = await sync_to_async(fetch_questions)("questions_data_for_test", test.test_data_ids)
+
         return build_func(test, questions_data)
 
     except ValidationError as e:

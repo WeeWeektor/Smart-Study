@@ -54,15 +54,15 @@ class BaseTestView(LocalizedView):
             return error_response(gettext("Unsupported test type"), status=400)
 
         instance_type, cache_name = cache_config[test_type]
-        test_data = await get_cached_instance_by_id(instance_type, cache_name, test_id)
-        return success_response(test_data)
+        return await get_cached_instance_by_id(instance_type, cache_name, test_id)
 
     @login_required_async
     async def get(self, request, test_id=None):
         if self.test_type == "public" and test_id is None:
             return await self._get_public_tests(request)
         elif test_id is not None:
-            return await self._get_test_by_id(self.test_type, test_id)
+            test = await self._get_test_by_id(self.test_type, test_id)
+            return success_response(data={"test": test})
         return error_response(gettext("Invalid request"), status=400)
 
     @login_required_async

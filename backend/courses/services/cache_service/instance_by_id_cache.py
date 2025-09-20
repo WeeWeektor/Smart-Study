@@ -29,7 +29,7 @@ async def get_cached_instance_by_id(
     instance_cache = caches[f"{instance_type_cache}"]
     cache_key = await get_instance_by_id_cache_key(instance_id, instance_type, instance_type_cache)
 
-    cached_data = await sync_to_async(lambda: instance_cache.get(cache_key, default=None, version=1))()
+    cached_data = await sync_to_async(lambda: instance_cache.get(cache_key, version=1))()
     if cached_data:
         return cached_data
 

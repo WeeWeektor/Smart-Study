@@ -42,7 +42,7 @@ def build_course_test_json(test, course, questions_data):
             "course": {
                 "id": getattr(course, "id", None),
                 "title": getattr(course, "title", ""),
-                "course owner": getattr(course, "owner", ""),
+                "course owner": getattr(course, "owner_id", ""),
                 "is_published": getattr(course, "is_published", False),
                 "course version": getattr(course, "version", None),
             },
