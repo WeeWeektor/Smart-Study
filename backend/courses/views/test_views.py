@@ -14,7 +14,7 @@ from courses.decorators import permission_test_required
 from courses.models import Test, Course, Module
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
-from courses.services.test_actions_service import create_test, remove_test, validate_test_editable
+from courses.services.test_actions_service import create_test, remove_test, validate_test_editable, update_test
 from courses.utils import categories_level_present
 
 
@@ -92,7 +92,19 @@ class BaseTestView(LocalizedView):
     @login_required_async
     @permission_test_required
     async def patch(self, request, test_id):
-        pass
+        data = json.loads(request.POST.get("data", "{}"))
+        all_new_questions_data = data.get("all_new_questions_data", "false").lower()
+        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
+
+        try:
+            uuid_obj = validate_uuid(test_id)
+            return await update_test(data, uuid_obj, self.test_type, all_new_questions_data)
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except (Course.DoesNotExist, Module.DoesNotExist, Test.DoesNotExist) as e:
+            return error_response(gettext(f"{str(e).split()[0]} not found"), status=404)
+        except Exception as e:
+            return error_response(f"{gettext('Test deletion error:')} {str(e)}", status=500)
 
     @login_required_async
     @permission_test_required
