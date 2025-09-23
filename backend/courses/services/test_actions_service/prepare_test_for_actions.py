@@ -1,8 +1,11 @@
+import json
+
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
 from courses.models import Test
+from courses.services import validate_test_question_data
 from courses.services.test_actions_service import cache_invalidators, validate_test_editable
 
 TEST_FETCH_STRATEGIES = {
@@ -30,11 +33,29 @@ async def prepare_test_for_action(test_id, test_type: str, action: str):
 
     error = await validate_test_editable(test_type, data, action=action)
     if error:
-        raise ValidationError(error)
+        data = json.loads(error.content)
+        message = data.get("message", _("Unknown error"))
+        raise ValidationError(message)
 
     await sync_to_async(
         cache_invalidators(test_type, test, data["owner"] if "owner" in data else None),
         thread_sensitive=True
     )()
 
-    return test, data
+    return test
+
+
+async def prepare_questions_data(questions: list[dict]) -> list[dict]:
+    """Валідує та форматує список питань для збереження у mongodb"""
+    questions_data = []
+    for qd in questions:
+        await sync_to_async(validate_test_question_data)(qd)
+        questions_data.append({
+            "question_text": qd["question_text"].strip(),
+            "choices": qd.get("choices", []),
+            "correct_answers": qd.get("correct_answers", []),
+            "points": qd.get("points", 1),
+            "order": qd.get("order"),
+        })
+
+    return questions_data

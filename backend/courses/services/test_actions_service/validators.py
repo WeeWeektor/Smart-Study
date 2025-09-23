@@ -36,7 +36,7 @@ async def validate_test_editable(test_type: str, data: dict, action: str):
         return None
 
     if course and course.is_published:
-        return error_response(_("Cannot add/delete/edit test in a published course"), status=400)
+        return error_response(message=_("Cannot add/delete/edit test in a published course"), status=400)
 
     if (action == "delete" or action == "edit") and course.version != 1:
         return error_response(

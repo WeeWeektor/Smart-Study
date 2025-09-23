@@ -12,6 +12,7 @@ from common.decorators import login_required_async
 from common.utils import success_response, paginate_list, sanitize_input, error_response, validate_uuid
 from courses.decorators import permission_test_required
 from courses.models import Test, Course, Module
+from courses.services import parse_multipart_request
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
 from courses.services.test_actions_service import create_test, remove_test, validate_test_editable, update_test
@@ -92,9 +93,14 @@ class BaseTestView(LocalizedView):
     @login_required_async
     @permission_test_required
     async def patch(self, request, test_id):
-        data = json.loads(request.POST.get("data", "{}"))
-        all_new_questions_data = data.get("all_new_questions_data", "false").lower()
-        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
+        parsed_data, _, raw_form, parse_error = parse_multipart_request(request)
+        if parse_error:
+            return parse_error
+        if not parsed_data:
+            return error_response(gettext("No data provided for update"), status=400)
+
+        all_new_questions_data = raw_form.get("all_new_questions_data", "false").lower()
+        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in parsed_data.items()}
 
         try:
             uuid_obj = validate_uuid(test_id)

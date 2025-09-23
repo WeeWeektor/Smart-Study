@@ -4,7 +4,7 @@ from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
-from common.services import delete_picture
+from common.services import delete_picture, mongo_repo
 from common.utils import success_response
 from courses.models import CourseVersion, Lesson, Test, Course
 
@@ -91,6 +91,12 @@ async def remove_course(course):
         delete_message = _("Course deleted successfully.")
 
     all_tests_to_delete = course_tests_to_delete | module_tests_to_delete
+
+    for test_id in all_tests_to_delete:
+        test_obj = await sync_to_async(Test.objects.only('test_data_ids').get)(pk=test_id)
+        if test_obj and test_obj.test_data_ids:
+            await sync_to_async(
+                mongo_repo.delete_document_by_id)("questions_data_for_test", str(test_obj.test_data_ids))
 
     await sync_to_async(delete_data)(course, modules_to_delete, lessons_to_delete, all_tests_to_delete)
 

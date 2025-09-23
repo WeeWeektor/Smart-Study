@@ -2,7 +2,7 @@ from asgiref.sync import sync_to_async
 
 from common.services import mongo_repo
 from courses.models import Test
-from courses.services import validate_test_data, validate_test_question_data
+from courses.services import validate_test_data
 
 
 async def create_test(test_type: str, user, data: dict):
@@ -43,16 +43,8 @@ async def create_test(test_type: str, user, data: dict):
 
     data_to_create_test.update(test_config[test_type])
 
-    questions_data = []
-    for qd in data.get("questions", []):
-        await sync_to_async(validate_test_question_data)(qd)
-        questions_data.append({
-            "question_text": qd["question_text"].strip(),
-            "choices": qd.get("choices", []),
-            "correct_answers": qd.get("correct_answers", []),
-            "points": qd.get("points", 1),
-            "order": qd.get("order"),
-        })
+    from courses.services.test_actions_service import prepare_questions_data, cache_invalidators
+    questions_data = await prepare_questions_data(data.get("questions", []))
 
     mongo_document_id = await sync_to_async(lambda: mongo_repo.insert_document(
         "questions_data_for_test", {"questions": questions_data}
@@ -61,7 +53,6 @@ async def create_test(test_type: str, user, data: dict):
 
     test_created = await sync_to_async(Test.objects.create)(**data_to_create_test)
 
-    from courses.services.test_actions_service import cache_invalidators
     await sync_to_async(
         cache_invalidators(test_type, test_created, user),
         thread_sensitive=True
