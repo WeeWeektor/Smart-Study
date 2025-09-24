@@ -1,11 +1,13 @@
 from django.utils.translation import gettext as _
 
+from common.decorators import login_required_async
 from common.utils import error_response
 
 
 def teacher_required(func):
     """Декоратор для перевірки, чи є користувач викладачем"""
 
+    @login_required_async
     async def wrapper(self, request, *args, **kwargs):
         if getattr(request.user, 'role', None) != 'teacher':
             return error_response(_("Only teachers can make changes to courses."), status=403)

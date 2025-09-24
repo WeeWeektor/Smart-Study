@@ -66,7 +66,6 @@ class BaseTestView(LocalizedView):
             return success_response(data={"test": test})
         return error_response(gettext("Invalid request"), status=400)
 
-    @login_required_async
     @permission_test_required
     async def post(self, request):
         data = json.loads(request.POST.get("data", "{}"))
@@ -90,7 +89,6 @@ class BaseTestView(LocalizedView):
         except Exception as e:
             return error_response(f"{gettext("Error creating test:")} {str(e)}", status=500)
 
-    @login_required_async
     @permission_test_required
     async def patch(self, request, test_id):
         parsed_data, _, raw_form, parse_error = parse_multipart_request(request)
@@ -112,7 +110,6 @@ class BaseTestView(LocalizedView):
         except Exception as e:
             return error_response(f"{gettext('Test deletion error:')} {str(e)}", status=500)
 
-    @login_required_async
     @permission_test_required
     async def delete(self, request, test_id):
         try:
@@ -128,7 +125,7 @@ class BaseTestView(LocalizedView):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class ModuleTestView(BaseTestView):
-    """View для тестів модулля"""
+    """View для тестів модуля"""
     test_type = "module"
 
 

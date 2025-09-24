@@ -52,7 +52,6 @@ class CourseView(LocalizedView):
                 "courses": paged_data_dict["results"]
             })
 
-    @login_required_async
     @teacher_required
     async def post(self, request):
         """Створення курсу викладачем"""
@@ -74,7 +73,6 @@ class CourseView(LocalizedView):
         except Exception as e:
             return error_response(f"{gettext("Error creating course:")} {str(e)}", status=500)
 
-    @login_required_async
     @owner_course_required
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
@@ -107,7 +105,6 @@ class CourseView(LocalizedView):
         except Exception as e:
             return error_response(f"{gettext('Error updating course:')} {str(e)}", status=500)
 
-    @login_required_async
     @owner_course_required
     async def delete(self, request, course_id):
         """Видалення курсу за id власником курсу"""

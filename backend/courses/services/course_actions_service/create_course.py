@@ -1,18 +1,20 @@
 from asgiref.sync import sync_to_async
 
+from common.utils import validate_uuid
 from courses.models import CourseMeta, Course
 from courses.services import validate_course_data
 from courses.services.course_actions_service import upload_course_cover_image
 
 
 async def create_course(user, data, cover_file=None):
+    uuid_obj = validate_uuid(user.id)
     validate_course_data(data)
 
     course_created = await sync_to_async(Course.objects.create)(
         title=data["title"].strip(),
         description=data["description"].strip(),
         category=data["category"],
-        owner_id=user.id,
+        owner_id=uuid_obj,
     )
     await sync_to_async(CourseMeta.objects.create)(
         course=course_created,

@@ -56,6 +56,7 @@ class Course(BaseModel):
     published_at = models.DateTimeField(blank=True, null=True, verbose_name=_("Published at"))
     updated_at = models.DateTimeField(blank=True, null=True, verbose_name=_("Updated at"))
     version = models.PositiveIntegerField(default=1, verbose_name=_("Course version"))
+    structure_ids = models.CharField(max_length=24, unique=True, verbose_name=_("Mongo id for course structure")) # TODO
 
     async def upload_cover_image(self, file):
         """Завантаження або оновлення обкладинки курсу"""

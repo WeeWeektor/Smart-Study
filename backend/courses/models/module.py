@@ -31,9 +31,8 @@ from .course import Course
 class Module(BaseModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='modules', verbose_name=_("Course"))
     title = models.CharField(max_length=100, verbose_name=_("Module title"))
-    description = models.TextField(max_length=1000, blank=True, null=True, verbose_name=_("Module description"))
     order = models.PositiveIntegerField(verbose_name=_("Module order"))
-    # module Structure
+    structure_ids = models.CharField(max_length=24, unique=True, verbose_name=_("Mongo id for module structure"))
 
     def __str__(self):
         return f"{_('Module')} - {self.title} ({self.course.title})"

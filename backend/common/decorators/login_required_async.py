@@ -1,7 +1,7 @@
 from functools import wraps
-from django.utils.translation import gettext as _
 
 from asgiref.sync import sync_to_async
+from django.utils.translation import gettext as _
 
 from common.utils import error_response
 

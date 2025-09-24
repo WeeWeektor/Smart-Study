@@ -16,6 +16,13 @@ def validate_course_data(data: dict):
     validate_category_level(data)
 
 
+def validate_module_data(data: dict):
+    """Валідатор для даних модуля"""
+
+    validate_required_fields(data, ["title", "order"])
+    validate_positive_int(data.get("order"), "order")
+
+
 def validate_test_data(data: dict, test_type: str):
     """Валідатор для даних тесту"""
 
