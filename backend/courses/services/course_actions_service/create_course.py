@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 
+from common.services import mongo_repo
 from common.utils import validate_uuid
 from courses.models import CourseMeta, Course
 from courses.services import validate_course_data
@@ -10,11 +11,14 @@ async def create_course(user, data, cover_file=None):
     uuid_obj = validate_uuid(user.id)
     validate_course_data(data)
 
+    structure_ids = await sync_to_async(mongo_repo.insert_document)("course_structures", {})
+
     course_created = await sync_to_async(Course.objects.create)(
         title=data["title"].strip(),
         description=data["description"].strip(),
         category=data["category"],
         owner_id=uuid_obj,
+        structure_ids=structure_ids
     )
     await sync_to_async(CourseMeta.objects.create)(
         course=course_created,

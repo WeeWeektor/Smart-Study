@@ -22,11 +22,25 @@ class MongoRepository:
         result = self.collection(collection_name).insert_one(data)
         return str(result.inserted_id)
 
-    def update_document(self, collection_name: str, doc_id: str, update_data: dict) -> dict:
+    def update_document(
+            self,
+            collection_name: str,
+            doc_id: str,
+            update_data: dict,
+            action: str = "set",
+            array_filters: list[dict] | None = None
+    ) -> dict:
+        """
+        Підтримує push, set, unset для оновлення документа.
+        Можна передавати array_filters для онновлення елементів масиву.
+        """
+        update_query = {f"${action}": update_data}
+
         result = self.collection(collection_name).find_one_and_update(
             {"_id": ObjectId(doc_id)},
-            {"$set": update_data},
-            return_document=True
+            update_query,
+            return_document=True,
+            array_filters=array_filters
         )
         return {self.info_str: "Update success", "data": result} if result else self.doc_not_found
 

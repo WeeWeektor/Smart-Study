@@ -4,6 +4,7 @@ from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from common.services import mongo_repo
 from common.utils import success_response, error_response, parse_time_str
 from courses.services import validate_category_level
 from courses.services.course_actions_service import upload_course_cover_image
@@ -113,5 +114,10 @@ async def update_published_course_with_structure(course):
     await sync_to_async(course.update_version)()
     course.is_published = False
     course.published_at = None
-    await sync_to_async(course.save)(update_fields=['is_published', 'published_at'])
+
+    course_structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", course.structure_ids)
+    new_structure = await sync_to_async(mongo_repo.insert_document)("course_structures", course_structure)
+    course.structure_ids = new_structure
+
+    await sync_to_async(course.save)(update_fields=['is_published', 'published_at', 'structure_ids'])
     return success_response({"data": "Create version snapshot and unpublished course"})

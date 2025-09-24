@@ -19,15 +19,15 @@ class ModuleView(LocalizedView):
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
 
         try:
-            module = await create_module(data, request.course.id)
+            module = await create_module(data, data.get("course_id"))
             return success_response({
                 "message": gettext("Module created successfully."),
-                "module": module
+                "module": str(module.id)
             })
         except ValidationError as e:
             return error_response(str(e), status=400)
         except Exception as e:
-            return error_response(f"{gettext("Error creating course:")} {str(e)}", status=500)
+            return error_response(f"{gettext("Error creating module:")} {str(e)}", status=500)
 
     @permission_module_required
     async def patch(self, request, module_id):

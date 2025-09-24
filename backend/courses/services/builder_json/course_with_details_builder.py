@@ -1,4 +1,4 @@
-def build_course_json_success(course, course_details, course_owner):
+def build_course_json_success(course, course_details, course_owner, structure=None):
     return {
         "course": {
             "id": getattr(course, "id", None),
@@ -30,6 +30,8 @@ def build_course_json_success(course, course_details, course_owner):
                 "number_of_active": getattr(course_details, "number_of_active", 0),
                 "feedback_count": getattr(course_details, "feedback_count", 0),
                 "feedback_summary": getattr(course_details, "feedback_summary", {}),
-            }
+            },
+            "structure_ids": str(getattr(course, "structure_ids")) if getattr(course, "structure_ids") else None,
+            "structure": structure if structure else {},
         }
     }

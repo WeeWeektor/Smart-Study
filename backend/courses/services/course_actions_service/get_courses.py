@@ -2,9 +2,11 @@ import logging
 from typing import Union
 
 from asgiref.sync import sync_to_async
+from bson import ObjectId
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
+from common.services import mongo_repo
 from common.utils import validate_uuid, error_response
 from courses.models import Course, CourseMeta
 from courses.services.builder_json import build_course_json_success
@@ -88,7 +90,10 @@ async def get_course_by_id(course_id) -> dict:
         uuid_obj = validate_uuid(course_id)
         course = await sync_to_async(lambda: Course.objects.select_related('details', 'owner').get(pk=uuid_obj))()
 
-        course_data = build_course_json_success(course, course.details, course.owner)
+        structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", str(course.structure_ids))
+        structure = _convert_object_id_to_str(structure)
+
+        course_data = build_course_json_success(course, course.details, course.owner, structure)
 
         return course_data
 
@@ -102,3 +107,18 @@ async def get_course_by_id(course_id) -> dict:
             f"{gettext('Error receiving courses by id')} ({course_id}): {str(e)})",
             status=500
         )
+
+
+def _convert_object_id_to_str(doc):
+    if not doc:
+        return {}
+    for k, v in doc.items():
+        if isinstance(v, ObjectId):
+            doc[k] = str(v)
+        elif isinstance(v, list):
+            for item in v:
+                _convert_object_id_to_str(item) if isinstance(item, dict) else None
+        elif isinstance(v, dict):
+            _convert_object_id_to_str(v)
+    return doc
+

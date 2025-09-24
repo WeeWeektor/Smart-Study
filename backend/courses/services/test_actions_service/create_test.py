@@ -3,6 +3,7 @@ from asgiref.sync import sync_to_async
 from common.services import mongo_repo
 from courses.models import Test
 from courses.services import validate_test_data
+from courses.services.structure_course_module_action_service import add_data_to_structure
 
 
 async def create_test(test_type: str, user, data: dict):
@@ -52,6 +53,15 @@ async def create_test(test_type: str, user, data: dict):
     data_to_create_test["test_data_ids"] = mongo_document_id
 
     test_created = await sync_to_async(Test.objects.create)(**data_to_create_test)
+
+    if test_type == "course" or test_type == "module":
+        target_id = data.get(f"{test_type}_id")
+        await add_data_to_structure(
+            target_type=test_type,
+            target_id=target_id,
+            structure_type="test",
+            structure_data={"test_id": str(test_created.id), "title": test_created.title, "order": test_created.order},
+        )
 
     await sync_to_async(
         cache_invalidators(test_type, test_created, user),

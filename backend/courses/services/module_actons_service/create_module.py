@@ -4,6 +4,7 @@ from common.services import mongo_repo
 from common.utils import validate_uuid
 from courses.models import Module
 from courses.services import validate_module_data
+from courses.services.structure_course_module_action_service import add_data_to_structure
 
 
 async def create_module(data: dict, course_id):
@@ -17,6 +18,17 @@ async def create_module(data: dict, course_id):
         title=data["title"].strip(),
         order=data["order"],
         structure_ids=structure_ids
+    )
+
+    await add_data_to_structure(
+        target_type="course",
+        target_id=data.get("course_id"),
+        structure_type="module",
+        structure_data={
+            "module_id": str(module_create.id),
+            "title": module_create.title,
+            "order": module_create.order
+        }
     )
 
     return module_create
