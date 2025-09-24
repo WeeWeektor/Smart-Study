@@ -18,6 +18,9 @@ class MongoRepository:
     def get_document_by_id(self, collection_name: str, doc_id: str) -> dict | None:
         return self.collection(collection_name).find_one({"_id": ObjectId(doc_id)})
 
+    def get_document_by_field(self, collection_name: str, field: str, value: str) -> dict | None:
+        return self.collection(collection_name).find_one({field: value})
+
     def insert_document(self, collection_name: str, data: dict) -> str:
         result = self.collection(collection_name).insert_one(data)
         return str(result.inserted_id)

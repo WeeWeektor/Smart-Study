@@ -93,6 +93,10 @@ async def get_course_by_id(course_id) -> dict:
         structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", str(course.structure_ids))
         structure = _convert_object_id_to_str(structure)
 
+        if structure and "structure" in structure:
+            for item in structure["structure"]:
+                await fill_module_structure(item)
+
         course_data = build_course_json_success(course, course.details, course.owner, structure)
 
         return course_data
@@ -122,3 +126,15 @@ def _convert_object_id_to_str(doc):
             _convert_object_id_to_str(v)
     return doc
 
+
+async def fill_module_structure(item: dict):
+    """Підвантажує тести всередині модуля (module_id з PostgreSQL)"""
+    if item.get("type") != "module" or "module_id" not in item:
+        return
+
+    module_doc = await sync_to_async(mongo_repo.collection("module_structures").find_one)({
+        "module_id": str(item["module_id"])
+    })
+    module_doc = _convert_object_id_to_str(module_doc)
+
+    item["structure"] = module_doc.get("structure", [])

@@ -98,7 +98,7 @@ async def remove_course(course):
             await sync_to_async(
                 mongo_repo.delete_document_by_id)("questions_data_for_test", str(test_obj.test_data_ids))
 
-    await sync_to_async(mongo_repo.delete_document)("course_structures", str(course.structure_ids))
+    await sync_to_async(mongo_repo.delete_document_by_id)("course_structures", str(course.structure_ids))
 
     await sync_to_async(delete_data)(course, modules_to_delete, lessons_to_delete, all_tests_to_delete)
 

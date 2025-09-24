@@ -116,6 +116,8 @@ async def update_published_course_with_structure(course):
     course.published_at = None
 
     course_structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", course.structure_ids)
+    if "_id" in course_structure:
+        course_structure.pop("_id")
     new_structure = await sync_to_async(mongo_repo.insert_document)("course_structures", course_structure)
     course.structure_ids = new_structure
 
