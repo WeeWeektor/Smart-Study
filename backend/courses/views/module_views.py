@@ -6,9 +6,9 @@ from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
-from common.utils import sanitize_input, error_response, success_response
+from common.utils import sanitize_input, error_response, success_response, validate_uuid
 from courses.decorators import permission_module_required
-from courses.services.module_actons_service import create_module
+from courses.services.module_actons_service import create_module, remove_module
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -35,4 +35,10 @@ class ModuleView(LocalizedView):
 
     @permission_module_required
     async def delete(self, request, module_id):
-        pass
+        try:
+            uuid_obj = validate_uuid(module_id)
+            return await remove_module(uuid_obj)
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except Exception as e:
+            return error_response(f"{gettext('Module deletion error:')} {str(e)}", status=500)

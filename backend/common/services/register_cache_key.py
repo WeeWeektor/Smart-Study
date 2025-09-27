@@ -9,4 +9,4 @@ async def register_cache_key(key: str, instance_type_cache: str):
     keys = await sync_to_async(lambda: instance_cache.get('all_cache_keys', set()))()
     if key not in keys:
         keys.add(key)
-        await sync_to_async(lambda: instance_cache.set("all_cache_keys", keys, None))()
+        await sync_to_async(lambda: instance_cache.set("all_cache_keys", keys, 3600*12))()

@@ -29,6 +29,8 @@ class CourseView(LocalizedView):
         """Отримання всіх курсів або одного курсу за id"""
         if course_id:
             course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
+            if isinstance(course_data, JsonResponse):
+                return course_data
             return success_response(course_data)
         else:
             author_id = request.GET.get("author")

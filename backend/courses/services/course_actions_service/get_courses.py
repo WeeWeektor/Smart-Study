@@ -8,7 +8,7 @@ from django.utils.translation import gettext
 
 from common.services import mongo_repo
 from common.utils import validate_uuid, error_response
-from courses.models import Course, CourseMeta
+from courses.models import Course, CourseMeta, Module
 from courses.services.builder_json import build_course_json_success
 from users.models import CustomUser
 
@@ -84,7 +84,6 @@ async def get_courses(cate: Union[list, None], level: Union[str, None]) -> Union
         logger.error(f"{gettext('Error retrieving courses from DB:')} {str(e)}")
         return error_response(gettext("Error retrieving courses from DB"), status=500)
 
-
 async def get_course_by_id(course_id) -> dict:
     try:
         uuid_obj = validate_uuid(course_id)
@@ -95,7 +94,7 @@ async def get_course_by_id(course_id) -> dict:
 
         if structure and "structure" in structure:
             for item in structure["structure"]:
-                await fill_module_structure(item)
+                await _fill_module_structure(item)
 
         course_data = build_course_json_success(course, course.details, course.owner, structure)
 
@@ -127,14 +126,18 @@ def _convert_object_id_to_str(doc):
     return doc
 
 
-async def fill_module_structure(item: dict):
+async def _fill_module_structure(item: dict):
     """Підвантажує тести всередині модуля (module_id з PostgreSQL)"""
     if item.get("type") != "module" or "module_id" not in item:
         return
 
-    module_doc = await sync_to_async(mongo_repo.collection("module_structures").find_one)({
-        "module_id": str(item["module_id"])
-    })
+    structure_module_ids = await sync_to_async(Module.objects.only("structure_ids").get)(pk=item["module_id"])
+
+    module_doc = await sync_to_async(mongo_repo.get_document_by_id)(
+        collection_name="module_structures",
+        doc_id=structure_module_ids.structure_ids
+    )
+
     module_doc = _convert_object_id_to_str(module_doc)
 
     item["structure"] = module_doc.get("structure", [])

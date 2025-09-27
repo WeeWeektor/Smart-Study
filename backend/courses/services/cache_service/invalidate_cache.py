@@ -39,7 +39,7 @@ def invalidate_instance_cached_all(
         instance_cache.delete(k)
 
     keys -= to_delete
-    instance_cache.set("all_cache_keys", keys, None)
+    instance_cache.set("all_cache_keys", keys, 3600*12)
 
 
 def _match_key_with_category_and_level(level: str, key: str, key_has_level: bool) -> str | None:
@@ -62,6 +62,6 @@ def invalidate_test_cache_by_course_or_module(instance_id: str, instance_type: s
 
     instance_cache.delete(key)
     if key in keys:
-        keys.remove(key)
+        keys -= key
 
-    instance_cache.set("all_cache_keys", keys, None)
+    instance_cache.set("all_cache_keys", keys, 3600*12)
