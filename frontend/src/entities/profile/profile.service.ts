@@ -1,6 +1,10 @@
 import type { ApiResponse } from '@/shared/api'
 import { apiClient, tokenService } from '@/shared/api'
-import { type ProfileData, type UpdateProfileRequest } from './model'
+import {
+  type ProfileData,
+  type UpdateProfileRequest,
+  type UpdateProfileResponse,
+} from './model'
 import { ClassTranslator } from '@/shared/lib/i18n'
 
 function getCookie(name: string): string | undefined {
@@ -61,7 +65,7 @@ class ProfileService {
     try {
       const csrfToken = await this.ensureCsrfToken()
 
-      const response = await apiClient.patch<ProfileData>(
+      const response = await apiClient.patch<UpdateProfileResponse>(
         '/user/profile/',
         data,
         {
@@ -73,7 +77,7 @@ class ProfileService {
       )
 
       return {
-        data: response.data,
+        data: response.data.profile_data,
         status: 'success',
         message: this.t('Профіль оновлено успішно'),
       }

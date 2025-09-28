@@ -1,27 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { profileService } from '@/entities/profile'
-import { type ProfileData, type UpdateProfileRequest } from '@/entities/profile'
+import { profileService, type UpdateProfileRequest } from '@/entities/profile'
 import { authService } from '@/features/auth'
-import { Button, Alert, AlertDescription } from '@/shared/ui'
-import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import {
+  Alert,
+  AlertDescription,
+  ErrorProfile,
+  LoadingProfile,
+} from '@/shared/ui'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { Sidebar } from '@/widgets/layout'
 import {
+  LearningStats,
   ProfileHeader,
   ProfileInfoCard,
-  LearningStats,
   ProfileTabs,
 } from '@/widgets/profile'
 import { learningStats } from '@/shared/lib/mock-data'
 import { useI18n } from '@/shared/lib'
+import { useProfileData } from '@/shared/hooks/useProfileData'
 
 const Profile = () => {
   const navigate = useNavigate()
   const { t } = useI18n()
+
+  const {
+    profileData,
+    loading,
+    error: profileError,
+    refreshProfile,
+    updateProfile,
+  } = useProfileData()
+
   const [searchParams] = useSearchParams()
   const [isEditing, setIsEditing] = useState(false)
-  const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
@@ -48,8 +60,30 @@ const Profile = () => {
   const [initialFormData, setInitialFormData] = useState(formData)
 
   useEffect(() => {
-    loadProfile()
-  }, [])
+    if (profileData) {
+      const newFormData = {
+        name: profileData.user.name,
+        surname: profileData.user.surname,
+        phone: profileData.user?.phone_number || '',
+        location: profileData.profile?.location || '',
+        organization: profileData.profile?.organization || '',
+        specialization: profileData.profile?.specialization || '',
+        bio: profileData.profile?.bio || '',
+        profile_picture:
+          typeof profileData.profile?.profile_picture === 'string'
+            ? profileData.profile.profile_picture
+            : '',
+        education_level: profileData.profile?.education_level || '',
+        email_notifications: profileData.settings.email_notifications,
+        push_notifications: profileData.settings.push_notifications,
+        deadline_reminders: profileData.settings.deadline_reminders,
+        show_profile_to_others: profileData.settings.show_profile_to_others,
+        show_achievements: profileData.settings.show_achievements,
+      }
+      setFormData(newFormData)
+      setInitialFormData(newFormData)
+    }
+  }, [profileData])
 
   useEffect(() => {
     const emailVerified = searchParams.get('emailVerified')
@@ -57,7 +91,7 @@ const Profile = () => {
       setSuccess(t('Email успішно підтверджено!'))
       navigate('/profile', { replace: true })
     }
-  }, [searchParams, navigate])
+  }, [searchParams, navigate, t])
 
   useEffect(() => {
     return () => {
@@ -73,75 +107,6 @@ const Profile = () => {
       return () => clearTimeout(timer)
     }
   }, [success])
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true)
-      setError('')
-
-      const response = await profileService.getProfile()
-      console.log('Завантажені дані профілю:', response)
-
-      if (response.status === 'success' && response.data) {
-        setProfileData(response.data)
-
-        setFormData({
-          name: response.data.user.name,
-          surname: response.data.user.surname,
-          phone: response.data.user?.phone_number || '',
-          location: response.data.profile?.location || '',
-          organization: response.data.profile?.organization || '',
-          specialization: response.data.profile?.specialization || '',
-          bio: response.data.profile?.bio || '',
-          profile_picture:
-            typeof response.data.profile?.profile_picture === 'string'
-              ? response.data.profile.profile_picture
-              : '',
-          education_level: response.data.profile?.education_level || '',
-          email_notifications: response.data.settings.email_notifications,
-          push_notifications: response.data.settings.push_notifications,
-          deadline_reminders: response.data.settings.deadline_reminders,
-          show_profile_to_others: response.data.settings.show_profile_to_others,
-          show_achievements: response.data.settings.show_achievements,
-        })
-      }
-    } catch (error) {
-      console.error('Помилка завантаження профілю:', error)
-      setError(
-        error instanceof Error ? error.message : 'Помилка завантаження профілю'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setError(t('Будь ласка, оберіть файл зображення'))
-        return
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        setError(t('Розмір файлу не повинен перевищувати 5MB'))
-        return
-      }
-
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl)
-      }
-
-      setSelectedFile(file)
-
-      const url = URL.createObjectURL(file)
-      setPreviewUrl(url)
-      setFormData(prev => ({
-        ...prev,
-        profile_picture: url as string,
-      }))
-    }
-  }
 
   const handleSave = async () => {
     try {
@@ -171,9 +136,7 @@ const Profile = () => {
           return
         }
       }
-      if (typeof profilePictureUrl !== 'string') {
-        profilePictureUrl = ''
-      }
+
       const updateData: UpdateProfileRequest = {
         user: {
           name: formData.name.trim(),
@@ -212,11 +175,12 @@ const Profile = () => {
 
       const response = await profileService.updateProfile(updateData)
 
-      if (response.status === 'success') {
+      if (response.status === 'success' && response.data) {
+        updateProfile(response.data)
+
         setSuccess(t('Профіль успішно оновлено!'))
         setIsEditing(false)
         setSelectedFile(null)
-        await loadProfile()
 
         if (previewUrl && previewUrl.startsWith('blob:')) {
           URL.revokeObjectURL(previewUrl)
@@ -233,6 +197,27 @@ const Profile = () => {
     }
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError(t('Будь ласка, оберіть файл зображення'))
+        return
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError(t('Розмір файлу не повинен перевищувати 5MB'))
+        return
+      }
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+      setSelectedFile(file)
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+      setFormData(prev => ({ ...prev, profile_picture: url }))
+    }
+  }
+
   const handleDeleteAccount = async () => {
     if (
       window.confirm(
@@ -244,7 +229,6 @@ const Profile = () => {
         await authService.logout()
         navigate('/?showDeleteAccountSuccess=true')
       } catch (error) {
-        console.error('Помилка видалення акаунта:', error)
         setError(
           error instanceof Error
             ? error.message
@@ -289,47 +273,23 @@ const Profile = () => {
     !isFormChanged() || !formData.name.trim() || !formData.surname.trim()
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
-          <p className="mt-4 text-muted-foreground">
-            {t('Завантаження профілю...')}
-          </p>
-        </div>
-      </div>
-    )
+    return <LoadingProfile />
   }
 
-  if (!profileData) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <p className="text-destructive mb-4">
-            {t('Помилка завантаження профілю')}
-          </p>
-          <Button
-            onClick={loadProfile}
-            className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
-          >
-            {t('Спробувати знову')}
-          </Button>
-        </div>
-      </div>
-    )
+  if (profileError || !profileData) {
+    return <ErrorProfile error={profileError} onRetry={refreshProfile} />
+  }
+
+  const userInfo = {
+    name: profileData.user.name,
+    surname: profileData.user.surname,
+    email: profileData.user.email,
+    role: profileData.user.role,
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar
-        userInfo={{
-          name: profileData.user.name,
-          surname: profileData.user.surname,
-          email: profileData.user.email,
-          role: profileData.user.role,
-        }}
-      />
+      <Sidebar userInfo={userInfo} />
 
       <div className="ml-64">
         <ProfileHeader

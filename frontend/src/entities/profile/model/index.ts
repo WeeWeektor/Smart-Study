@@ -1,1 +1,5 @@
-export type { ProfileData, UpdateProfileRequest } from './types'
+export type {
+  ProfileData,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
+} from './types'

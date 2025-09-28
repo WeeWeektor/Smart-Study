@@ -49,3 +49,9 @@ export interface UpdateProfileRequest {
     education_level?: string
   }
 }
+
+export interface UpdateProfileResponse {
+  status: 'success' | 'error'
+  message: string
+  profile_data: ProfileData
+}

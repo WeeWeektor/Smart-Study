@@ -1,54 +1,32 @@
-import { useEffect, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import { Sidebar } from '@/widgets/layout'
-import { profileService } from '@/entities/profile'
 import { CourseHeader } from '@/widgets/course'
+import { ErrorProfile, LoadingProfile } from '@/shared/ui'
+import { useProfileData } from '@/shared/hooks/useProfileData'
 
 const CoursesCatalog = () => {
   const { t } = useI18n()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string>('')
-  const [userInfo, setUserInfo] = useState<{
-    name: string
-    surname: string
-    email: string
-    role: string
-  } | null>(null)
+  const { profileData, loading, error, refreshProfile } = useProfileData()
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setLoading(true)
-        const response = await profileService.getProfile()
-        if (response.status === 'success' && response.data) {
-          const user = response.data.user
-          setUserInfo({
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            role: user.role,
-          })
-          console.log('Завантажені дані профілю:', response)
-        } else {
-          setError(t('Не вдалося завантажити дані користувача'))
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t('Помилка завантаження'))
-      } finally {
-        setLoading(false)
-      }
-    }
+  if (loading) {
+    return <LoadingProfile message={t('Завантаження...')} />
+  }
 
-    loadProfile()
-  }, [])
-
-  if (loading) return <div>{t('Завантаження')}...</div>
-  if (error || !userInfo)
+  if (error || !profileData) {
     return (
-      <div>
-        {t('Помилка:')} {error}
-      </div>
+      <ErrorProfile
+        error={error || t('Помилка завантаження даних користувача')}
+        onRetry={refreshProfile}
+      />
     )
+  }
+
+  const userInfo = {
+    name: profileData.user.name,
+    surname: profileData.user.surname,
+    email: profileData.user.email,
+    role: profileData.user.role,
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,6 +34,17 @@ const CoursesCatalog = () => {
 
       <div className="ml-64">
         <CourseHeader />
+
+        {/*<main className="p-6">*/}
+        {/*  <div className="text-center">*/}
+        {/*    <h1 className="text-2xl font-bold text-foreground mb-4">*/}
+        {/*      {t('Каталог курсів')}*/}
+        {/*    </h1>*/}
+        {/*    <p className="text-muted-foreground">*/}
+        {/*      {t('Ласкаво просимо')}, {userInfo.name} {userInfo.surname}!*/}
+        {/*    </p>*/}
+        {/*  </div>*/}
+        {/*</main>*/}
       </div>
     </div>
   )
