@@ -10,6 +10,7 @@ import {
   PrivacyPolicy,
   Profile,
   EmailVerification,
+  CoursesCatalog,
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
@@ -45,6 +46,10 @@ const App = () => {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/verify-email" element={<EmailVerification />} />
+
+          <Route path="/find-new-courses" element={<CoursesCatalog />} />
+          {/*<Route path="/course/:courseName" element={<CourseDetail />} />*/}
+          {/*<Route path="/create-course" element={<CreateCourse />} />*/}
 
           <Route path="*" element={<NotFound />} />
         </Routes>

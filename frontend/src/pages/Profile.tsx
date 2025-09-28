@@ -327,7 +327,7 @@ const Profile = () => {
           name: profileData.user.name,
           surname: profileData.user.surname,
           email: profileData.user.email,
-          is_admin: profileData.user.role,
+          role: profileData.user.role,
         }}
       />
 
