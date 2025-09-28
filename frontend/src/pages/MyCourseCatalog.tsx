@@ -4,7 +4,7 @@ import { CourseHeader } from '@/widgets/course'
 import { ErrorProfile, LoadingProfile } from '@/shared/ui'
 import { useProfileData } from '@/shared/hooks/useProfileData'
 
-const CoursesCatalog = () => {
+const MyCourseCatalog = () => {
   const { t } = useI18n()
   const { profileData, loading, error, refreshProfile } = useProfileData()
 
@@ -34,23 +34,23 @@ const CoursesCatalog = () => {
 
       <div className="ml-64">
         <CourseHeader
-          title={t('Підібрати курс')}
-          description={t('Підберіть курс за вашими інтересами та цілями')}
+          title={t('Ваші підписки на курси')}
+          description={t('Продовжуйте виконання ваших курсів')}
         />
 
-        <main className="p-6">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">
-              {t('Каталог курсів')}
-            </h1>
-            <p className="text-muted-foreground">
-              {t('Ласкаво просимо')}, {userInfo.name} {userInfo.surname}!
-            </p>
-          </div>
-        </main>
+        {/*<main className="p-6">*/}
+        {/*  <div className="text-center">*/}
+        {/*    <h1 className="text-2xl font-bold text-foreground mb-4">*/}
+        {/*      {t('Каталог курсів')}*/}
+        {/*    </h1>*/}
+        {/*    <p className="text-muted-foreground">*/}
+        {/*      {t('Ласкаво просимо')}, {userInfo.name} {userInfo.surname}!*/}
+        {/*    </p>*/}
+        {/*  </div>*/}
+        {/*</main>*/}
       </div>
     </div>
   )
 }
 
-export default CoursesCatalog
+export default MyCourseCatalog

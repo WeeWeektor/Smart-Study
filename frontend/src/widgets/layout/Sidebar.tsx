@@ -33,12 +33,12 @@ export const Sidebar = ({ userInfo }: SidebarProps) => {
       icon: BookOpen,
       text: t('Курси'),
       subItems: [
-        { to: '/catalog-my-courses', text: t('Мої курси') },
+        { to: '/my-courses-subscriptions', text: t('Мої курси') },
         { to: '/find-new-courses', text: t('Знайти нові курси') },
         ...(userInfo.role === 'teacher'
           ? [
               {
-                to: '/catalog-my-created-courses',
+                to: '/my-created-courses',
                 text: t('Мої створені курси'),
               },
             ]

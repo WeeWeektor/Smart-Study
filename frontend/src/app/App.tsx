@@ -1,16 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import {
-  Login,
-  Register,
+  CoursesCatalog,
+  EmailVerification,
   ForgotPassword,
-  NotFound,
   Index,
-  ResetPassword,
-  TermsOfService,
+  Login,
+  MyCourseCatalog,
+  MyCreatedCourseCatalog,
+  NotFound,
   PrivacyPolicy,
   Profile,
-  EmailVerification,
-  CoursesCatalog,
+  Register,
+  ResetPassword,
+  TermsOfService,
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
@@ -47,9 +49,15 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/verify-email" element={<EmailVerification />} />
 
+          <Route
+            path="/my-courses-subscriptions"
+            element={<MyCourseCatalog />}
+          />
           <Route path="/find-new-courses" element={<CoursesCatalog />} />
-          {/*<Route path="/course/:courseName" element={<CourseDetail />} />*/}
-          {/*<Route path="/create-course" element={<CreateCourse />} />*/}
+          <Route
+            path="/my-created-courses"
+            element={<MyCreatedCourseCatalog />}
+          />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
