@@ -6,40 +6,14 @@ import {
   type UpdateProfileResponse,
 } from './model'
 import { ClassTranslator } from '@/shared/lib/i18n'
-
-function getCookie(name: string): string | undefined {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) {
-    const part = parts.pop()
-    return part ? part.split(';').shift() : undefined
-  }
-  return undefined
-}
+import { ensureCsrfToken } from '@/shared/lib'
 
 class ProfileService {
   private t = ClassTranslator.translate
 
-  async ensureCsrfToken(): Promise<string | null> {
-    try {
-      let csrfToken = getCookie('csrftoken')
-
-      if (!csrfToken) {
-        await apiClient.get('/auth/get-csrf-token/')
-        await new Promise(resolve => setTimeout(resolve, 100))
-        csrfToken = getCookie('csrftoken')
-      }
-
-      return csrfToken || null
-    } catch (error) {
-      console.error(this.t('Помилка отримання CSRF токена:'), error)
-      return null
-    }
-  }
-
   async getProfile(): Promise<ApiResponse<ProfileData>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       const response = await apiClient.get<ProfileData>('/user/profile/', {
         headers: {
@@ -63,7 +37,7 @@ class ProfileService {
     data: UpdateProfileRequest
   ): Promise<ApiResponse<ProfileData>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       const response = await apiClient.patch<UpdateProfileResponse>(
         '/user/profile/',
@@ -91,7 +65,7 @@ class ProfileService {
     file: File
   ): Promise<ApiResponse<{ url: string }>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       const formData = new FormData()
       formData.append('profile_picture', file)
@@ -120,7 +94,7 @@ class ProfileService {
 
   async deleteProfile(): Promise<void> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       await apiClient.delete('/user/profile/', {
         headers: {
@@ -141,7 +115,7 @@ class ProfileService {
     confirm_password: string
   }): Promise<ApiResponse<{ message: string }>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       const response = await apiClient.patch<{ message: string }>(
         '/user/change-password/',

@@ -2,16 +2,7 @@ import type { ApiResponse, User } from '@/shared/api'
 import { apiClient, tokenService } from '@/shared/api'
 import axios from 'axios'
 import { ClassTranslator } from '@/shared/lib/i18n/class-translator'
-
-function getCookie(name: string): string | undefined {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) {
-    const part = parts.pop()
-    return part ? part.split(';').shift() : undefined
-  }
-  return undefined
-}
+import { ensureCsrfToken, getCookie } from '@/shared/lib'
 
 apiClient.interceptors.request.use(config => {
   const csrfToken = getCookie('csrftoken')
@@ -56,27 +47,9 @@ export interface ChangePasswordRequest {
 class AuthService {
   private t = ClassTranslator.translate
 
-  async ensureCsrfToken(): Promise<string | null> {
-    try {
-      let csrfToken = getCookie('csrftoken')
-
-      if (!csrfToken) {
-        await apiClient.get('/auth/get-csrf-token/')
-        await new Promise(resolve => setTimeout(resolve, 100))
-        csrfToken = getCookie('csrftoken')
-      }
-
-      console.log('CSRF токен:', csrfToken || 'не знайдено')
-      return csrfToken || null
-    } catch (error) {
-      console.error(this.t('Помилка отримання CSRF токена:'), error)
-      return null
-    }
-  }
-
   async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       if (!csrfToken) {
         throw new Error(this.t('Не вдалося отримати CSRF токен'))
@@ -156,7 +129,7 @@ class AuthService {
 
   async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       if (!csrfToken) {
         throw new Error(this.t('Не вдалося отримати CSRF токен'))
@@ -253,7 +226,7 @@ class AuthService {
     data: ForgotPasswordRequest
   ): Promise<ApiResponse<{ message: string }>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       if (!csrfToken) {
         throw new Error(this.t('Не вдалося отримати CSRF токен'))
@@ -295,7 +268,7 @@ class AuthService {
     newPassword: string
   ): Promise<ApiResponse<{ message: string }>> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       if (!csrfToken) {
         throw new Error(this.t('Не вдалося отримати CSRF токен'))
@@ -334,7 +307,7 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      const csrfToken = await this.ensureCsrfToken()
+      const csrfToken = await ensureCsrfToken(this.t)
 
       if (!csrfToken) {
         console.warn('Не вдалося отримати CSRF токен для виходу')
@@ -381,7 +354,7 @@ class AuthService {
       surname: data.surname,
     })
 
-    const csrfToken = await this.ensureCsrfToken()
+    const csrfToken = await ensureCsrfToken(this.t)
     if (!csrfToken) {
       console.error('[AuthService] Не вдалося отримати CSRF токен')
       throw new Error(this.t('Не вдалося отримати CSRF токен'))

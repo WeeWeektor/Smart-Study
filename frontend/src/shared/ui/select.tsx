@@ -144,6 +144,104 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+interface MultiSelectProps {
+  options: { value: string; label: string }[]
+  selected: string[]
+  onChange: (values: string[]) => void
+  placeholder?: string
+  className?: string
+  countLabel: string
+}
+
+const MultiSelect: React.FC<MultiSelectProps> = ({
+  options,
+  selected,
+  onChange,
+  placeholder,
+  className,
+  countLabel,
+}) => {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  const toggleValue = (value: string) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter(v => v !== value))
+    } else {
+      onChange([...selected, value])
+    }
+  }
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div className={cn('relative', className)} ref={ref}>
+      <div
+        className="flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm cursor-pointer"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="line-clamp-1">
+          {selected.length === 0
+            ? placeholder
+            : selected.length === 1
+              ? options.find(o => o.value === selected[0])?.label
+              : `${selected.length} ${countLabel}`}
+        </span>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 opacity-50 transition-transform',
+            open && 'rotate-180'
+          )}
+        />
+      </div>
+
+      {open && (
+        <div
+          className={cn(
+            'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md',
+            'scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800'
+          )}
+        >
+          <div
+            className="flex justify-center cursor-pointer px-2 py-1 text-sm font-semibold text-red-500 hover:bg-accent hover:text-accent-foreground"
+            onClick={() => onChange([])}
+          >
+            Скинути всі
+          </div>
+          <div className="border-b border-muted mb-1" />
+
+          {options.map(option => (
+            <div
+              key={option.value}
+              className={cn(
+                'relative flex cursor-pointer select-none items-center py-1.5 pl-8 pr-2 text-sm hover:bg-accent hover:text-accent-foreground',
+                selected.includes(option.value) && 'font-semibold'
+              )}
+              onClick={e => {
+                e.preventDefault()
+                toggleValue(option.value)
+              }}
+            >
+              {option.label}
+              {selected.includes(option.value) && (
+                <Check className="absolute left-2 h-4 w-4" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export {
   Select,
   SelectGroup,
@@ -155,4 +253,5 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,
+  MultiSelect,
 }

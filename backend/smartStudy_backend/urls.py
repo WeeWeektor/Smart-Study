@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/course/', include('courses.urls.course_urls', namespace='course_urls')),
     path('api/module/', include('courses.urls.module_urls', namespace='module_urls')),
     path('api/test/', include('courses.urls.test_urls', namespace='test_urls')),
+    path('api/choices/', include('courses.urls.choices_urls', namespace='choices_urls')),
 ]
 
 if settings.DEBUG:
