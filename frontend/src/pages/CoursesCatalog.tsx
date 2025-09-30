@@ -280,6 +280,7 @@ const CoursesCatalog = () => {
           <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {courses.map(course => (
               <CourseCard
+                key={course.course.id}
                 id={course.course.id}
                 title={course.course.title}
                 description={course.course.description}
@@ -287,6 +288,7 @@ const CoursesCatalog = () => {
                 instructor={
                   course.course.owner.name + ' ' + course.course.owner.surname
                 }
+                instructorId={course.course.owner.id}
                 category={course.course.category}
                 badgeLabel={course.course.details.level}
                 badgeType={'level'}

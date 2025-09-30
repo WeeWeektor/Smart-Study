@@ -28,7 +28,7 @@ from .services.profile_cache_service import (
     warm_user_cache,
     get_allowed_roles,
     get_user_existence_cache,
-    invalidate_user_existence_cache, invalidate_all_user_caches
+    invalidate_user_existence_cache, invalidate_all_user_caches, get_cached_user_info
 )
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 from .user_utils import send_verification_email, send_password_reset_email
@@ -498,3 +498,18 @@ class ProfileView(LocalizedView):
             return success_response({"message": gettext('Your account has been successfully deleted.')})
         except Exception as e:
             return error_response(f"{gettext('Error when deleting an account:')} {str(e)}", 500)
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class UserInfoView(LocalizedView):
+    @login_required_async
+    async def get(self, request, user_id):
+        try:
+            profile_data = await get_cached_user_info(user_id)
+            return success_response(profile_data)
+        except ValidationError as e:
+            return error_response(str(e), 400)
+        except CustomUser.DoesNotExist:
+            return error_response(gettext('User not found.'), 404)
+        except Exception as e:
+            return error_response(f"{gettext('Error retrieving user info:')} {str(e)}", 500)

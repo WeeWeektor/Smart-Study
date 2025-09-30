@@ -1,22 +1,34 @@
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
+import clsx from 'clsx'
 
 interface ErrorProfileProps {
   error?: string
   onRetry?: () => void
   retryText?: string
+  size?: 'full' | 'medium' | 'small'
 }
 
 export const ErrorProfile = ({
   error,
   onRetry,
   retryText,
+  size = 'full',
 }: ErrorProfileProps) => {
   const { t } = useI18n()
 
+  const containerClass = clsx(
+    'bg-background flex items-center justify-center',
+    {
+      'min-h-screen': size === 'full',
+      'min-h-[60vh]': size === 'medium',
+      'min-h-[30vh]': size === 'small',
+    }
+  )
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className={containerClass}>
       <div className="text-center">
         <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
         <p className="text-destructive mb-4">

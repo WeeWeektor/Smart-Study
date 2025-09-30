@@ -1,21 +1,21 @@
 import {
-  Card,
-  CardContent,
-  Badge,
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Badge,
   Button,
+  Card,
+  CardContent,
 } from '@/shared/ui'
 import {
-  Mail,
-  Phone,
-  MapPin,
-  GraduationCap,
-  Camera,
   Book,
-  User as UserIcon,
-  Award,
+  BookOpen,
+  Briefcase,
+  Camera,
+  Info,
+  Mail,
+  MapPin,
+  Phone,
 } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
@@ -115,7 +115,7 @@ export const ProfileInfoCard = ({
           >
             {profileData.user.name} {profileData.user.surname}
           </h2>
-          <Badge className="mt-2 bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300">
+          <Badge className="mt-2 bg-brand-100 text-brand-600 dark:bg-brand-800 dark:text-brand-300 hover:bg-brand-200 hover:text-brand-700 dark:hover:bg-brand-700 dark:hover:text-brand-200">
             <RoleText role={profileData?.user?.role} />
           </Badge>
         </div>
@@ -138,7 +138,7 @@ export const ProfileInfoCard = ({
               className="flex items-center text-sm text-muted-foreground"
               title={profileData.profile.organization}
             >
-              <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
+              <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="pl-1">
                 {truncateWithEllipsis(profileData.profile.organization, 30)}
               </span>
@@ -160,24 +160,24 @@ export const ProfileInfoCard = ({
               )}
               {profileData?.profile?.specialization && (
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <Book className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <BookOpen className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="pl-1">
                     {profileData.profile.specialization}
                   </span>
                 </div>
               )}
-              {profileData?.profile?.bio && (
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <UserIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="pl-1">{profileData.profile.bio}</span>
-                </div>
-              )}
               {profileData?.profile?.education_level && (
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <Award className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <Book className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="pl-1">
                     {profileData.profile.education_level}
                   </span>
+                </div>
+              )}
+              {profileData?.profile?.bio && (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Info className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="pl-1">{profileData.profile.bio}</span>
                 </div>
               )}
             </>

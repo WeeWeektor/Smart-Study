@@ -1,7 +1,15 @@
-import { Badge, Button, Card, CardContent, Progress } from '@/shared/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  Progress,
+  UserModal,
+} from '@/shared/ui'
 import { BookOpen, CheckCircle, Clock, Play, Star, Users } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { formatLabel, parseISODuration, useI18n } from '@/shared/lib'
+import { Link } from 'react-router-dom'
+import React from 'react'
 
 interface CourseCardProps {
   id: string
@@ -9,6 +17,7 @@ interface CourseCardProps {
   description: string
   coverImage: string
   instructor: string
+  instructorId: string
   category: string
   badgeLabel: string
   badgeType: 'level' | 'status' | 'published'
@@ -26,6 +35,7 @@ export const CourseCard = ({
   description,
   coverImage,
   instructor,
+  instructorId,
   category,
   badgeLabel,
   badgeType,
@@ -37,11 +47,12 @@ export const CourseCard = ({
   status,
 }: CourseCardProps) => {
   const { t } = useI18n()
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
 
   return (
     <Card
       key={id}
-      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800"
+      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
     >
       <div className="relative w-full overflow-hidden bg-slate-200 dark:bg-slate-700 rounded-lg">
         {coverImage ? (
@@ -77,7 +88,21 @@ export const CourseCard = ({
         </p>
 
         <div className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-400 mb-4">
-          <span>{instructor}</span>
+          <span
+            onClick={() => {
+              setIsModalOpen(true)
+            }}
+            className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors hover:underline"
+          >
+            {instructor}
+          </span>
+          <UserModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            userName={instructor}
+            userId={instructorId}
+            role={t('Викладач')}
+          />
           <span className={`font-medium text-purple-600`}>
             {formatLabel(category, t)}
           </span>

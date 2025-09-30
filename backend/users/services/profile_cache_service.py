@@ -4,12 +4,14 @@ from asgiref.sync import sync_to_async
 from django.core.cache import cache
 from django.utils.translation import gettext
 
+from common.utils import validate_uuid
 from smartStudy_backend import settings
 from ..models import UserSettings, CustomUser, UserProfile
 
 logger = logging.getLogger(__name__)
 
 PROFILE_CACHE_TIMEOUT = 60 * 60
+PROFILE_INFO_CACHE_TIMEOUT = 60 * 10
 SETTINGS_CACHE_TIMEOUT = 24 * 60 * 60
 USER_STATUS_CACHE_TIMEOUT = 30 * 60
 USER_EXISTENCE_CACHE_TIMEOUT = 10 * 60
@@ -35,6 +37,10 @@ def get_user_existence_cache_key(email):
 
 def get_profile_cache_key(user_id):
     return f"user_profile_{user_id}"
+
+
+def get_profile_info_cache_key(user_id):
+    return f"user_profile_info_{user_id}"
 
 
 def get_settings_cache_key(user_id):
@@ -173,6 +179,49 @@ async def get_cached_profile(user):
             "settings": {},
             "profile": {}
         }
+
+
+async def get_cached_user_info(user_id):
+    uuid_obj = validate_uuid(user_id)
+
+    cache_key = get_profile_info_cache_key(user_id)
+    cached_data = await sync_to_async(cache.get)(cache_key)
+
+    if cached_data:
+        if cached_data.get("not_found"):
+            raise CustomUser.DoesNotExist
+        return cached_data
+
+    try:
+        user = await sync_to_async(
+            CustomUser.objects.select_related('profile', 'settings').get
+        )(id=uuid_obj)
+    except CustomUser.DoesNotExist:
+        await sync_to_async(cache.set)(
+            cache_key, {"not_found": True}, PROFILE_INFO_CACHE_TIMEOUT
+        )
+        raise
+
+    profile_data = {
+        "profile_picture": user.profile.profile_picture if user.profile.profile_picture else None,
+    }
+
+    if user.settings.show_profile_to_others:
+        profile_data.update({
+            "phone_number": user.phone_number if user.phone_number else None,
+            "email": user.email,
+            "location": user.profile.location if user.profile.location else None,
+            "organization": user.profile.organization if user.profile.organization else None,
+            "specialization": user.profile.specialization if user.profile.specialization else None,
+            "education_level": user.profile.education_level if user.profile.education_level else None,
+            "bio": user.profile.bio if user.profile.bio else None,
+        })
+    if user.settings.show_achievements:
+        profile_data.update({})
+
+    await sync_to_async(cache.set)(cache_key, profile_data, PROFILE_INFO_CACHE_TIMEOUT)
+
+    return profile_data
 
 
 async def invalidate_user_existence_cache(email):
