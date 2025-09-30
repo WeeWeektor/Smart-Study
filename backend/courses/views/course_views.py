@@ -25,7 +25,7 @@ class CourseView(LocalizedView):
     """View для роботи з курсами"""
 
     @login_required_async
-    async def get(self, request, course_id=None):
+    async def get(self, request, course_id=None, search_query=None):
         """Отримання всіх курсів або одного курсу за id"""
         if course_id:
             course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
@@ -39,6 +39,8 @@ class CourseView(LocalizedView):
             if not author_id:
                 category_list, level = categories_level_present(request)
                 courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level)
+                # TODO додати логіку searchQuery
+                print(search_query)
             else:
                 courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id)
 

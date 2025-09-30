@@ -13,7 +13,7 @@ export const LoadingProfile = ({ message }: LoadingProfileProps) => {
       <div className="text-center">
         <Loader2 className="h-12 w-12 animate-spin mx-auto text-brand-600 dark:text-brand-400" />
         <p className="mt-4 text-muted-foreground">
-          {message || t('Завантаження профілю...')}
+          {message || t('Завантаження...')}
         </p>
       </div>
     </div>
