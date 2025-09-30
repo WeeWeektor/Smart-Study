@@ -7,6 +7,13 @@ LEVELS = [
 ]
 VALID_CATEGORY_LEVELS = {key for key, _ in LEVELS}
 
+COMPLETED_STATUS = [
+    ('not_started', _('Not Started')),
+    ('in_progress', _('In Progress')),
+    ('completed', _('Completed')),
+]
+VALID_COMPLETED_STATUS = {key for key, _ in COMPLETED_STATUS}
+
 CATEGORY_CHOICES = [
     ('programming', _('Programming')),
     ('data_science', _('Data Science')),

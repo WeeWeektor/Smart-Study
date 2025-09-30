@@ -43,7 +43,7 @@ export interface CourseDetails {
   time_to_complete: string
   course_language: string
   rating: number
-  level: string
+  level: 'beginner' | 'intermediate' | 'advanced'
   number_completed: number
   number_of_active: number
   feedback_count: number

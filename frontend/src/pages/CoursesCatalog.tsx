@@ -5,6 +5,8 @@ import {
   Alert,
   AlertDescription,
   Button,
+  CourseCard,
+  EmptyCourses,
   ErrorProfile,
   Input,
   LoadingProfile,
@@ -275,6 +277,29 @@ const CoursesCatalog = () => {
               iconClassName="text-purple-600"
             />
           </div>
+          <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {courses.map(course => (
+              <CourseCard
+                id={course.course.id}
+                title={course.course.title}
+                description={course.course.description}
+                coverImage={course.course.cover_image}
+                instructor={
+                  course.course.owner.name + ' ' + course.course.owner.surname
+                }
+                category={course.course.category}
+                badgeLabel={course.course.details.level}
+                badgeType={'level'}
+                rating={course.course.details.rating}
+                students={
+                  course.course.details.number_completed +
+                  course.course.details.number_of_active
+                }
+                duration={course.course.details.time_to_complete}
+              />
+            ))}
+          </div>
+          <div>{courses.length === 0 && <EmptyCourses />}</div>
           <Pagination
             page={page}
             totalPages={totalPages}
