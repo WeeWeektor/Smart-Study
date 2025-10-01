@@ -3,7 +3,17 @@ import { useI18n } from '@/shared/lib'
 import { userGetService, type UserInfoResponse } from '@/features/user-card'
 import { LoadingProfile } from '@/shared/ui/loading-profile.tsx'
 import { ErrorProfile } from '@/shared/ui/error-profile.tsx'
-import { BookOpen, Briefcase, Info, Mail, MapPin, Phone } from 'lucide-react'
+import {
+  BookOpen,
+  Briefcase,
+  Eye,
+  Info,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react'
+import { Button } from '@/shared/ui/button.tsx'
+import { useNavigate } from 'react-router-dom'
 
 interface UserModalProps {
   isOpen: boolean
@@ -33,6 +43,7 @@ export const UserModal: FC<UserModalProps> = ({
   role,
 }) => {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const [userInfo, setUserInfo] = useState<UserInfoResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,6 +70,14 @@ export const UserModal: FC<UserModalProps> = ({
 
   const handleBackgroundClick = () => onClose()
   const handleContentClick = (e: React.MouseEvent) => e.stopPropagation()
+  const handleWatchTeacherCourses = () => {
+    if (role === 'teacher') {
+      navigate('/my-created-courses')
+    } else {
+      const path = `/courses/teacher/${userName.replace(/\s+/g, '')}/${userId}`
+      navigate(path)
+    }
+  }
 
   return (
     <div
@@ -66,7 +85,12 @@ export const UserModal: FC<UserModalProps> = ({
       onClick={handleBackgroundClick}
     >
       <div
-        className="bg-white dark:bg-slate-800 rounded-xl w-11/12 max-w-lg max-h-[80vh] overflow-y-auto p-6 relative shadow-2xl"
+        className="bg-white dark:bg-slate-800 rounded-xl w-11/12 max-w-lg max-h-[80vh]
+           overflow-y-auto p-6 relative shadow-2xl
+           scrollbar-thin
+           scrollbar-thumb-transparent
+           hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-600
+           transition-colors"
         onClick={handleContentClick}
       >
         <button
@@ -148,6 +172,16 @@ export const UserModal: FC<UserModalProps> = ({
             )}
           </div>
         )}
+
+        <div className="mt-6 text-center">
+          <Button
+            className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+            onClick={handleWatchTeacherCourses}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            {t('Переглянути курси')}
+          </Button>
+        </div>
 
         {!loading && !error && !userInfo && (
           <div className="text-center text-red-500 font-semibold mt-6">

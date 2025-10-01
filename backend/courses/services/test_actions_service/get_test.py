@@ -7,6 +7,7 @@ from django.utils.translation import gettext
 
 from common.services import mongo_repo
 from common.utils import error_response, validate_uuid, success_response
+from courses.choices import SORTING_DICT
 from courses.models import Test
 from courses.services.builder_json import build_public_test_json, build_course_test_json, build_module_test_json
 from users.models import CustomUser
@@ -46,26 +47,35 @@ async def get_public_tests_by_author(author_id) -> Union[dict, list]:
 
 async def get_public_tests(cate: Union[list, None], level: Union[str, None]) -> Union[dict, list]:
     try:
-        if not cate:
-            if not level:
-                tests = await sync_to_async(lambda: list(Test.objects.select_related("owner").filter(is_public=True)))()
-            else:
-                tests = await sync_to_async(lambda: list(Test.objects
-                                                         .select_related("owner")
-                                                         .filter(level=level, is_public=True)
-                                                         ))()
-        else:
-            if not level:
-                tests = await sync_to_async(lambda: list(Test.objects
-                                                         .select_related("owner")
-                                                         .filter(category_in=cate, is_public=True)
-                                                         ))()
-            else:
-                tests = await sync_to_async(lambda: list(
-                    Test.objects
-                    .select_related("owner")
-                    .filter(category__in=cate, level=level, is_public=True)
-                ))()
+        # if not cate:
+        #     if not level:
+        #         tests = await sync_to_async(lambda: list(Test.objects.select_related("owner").filter(is_public=True)))()
+        #     else:
+        #         tests = await sync_to_async(lambda: list(Test.objects
+        #                                                  .select_related("owner")
+        #                                                  .filter(level=level, is_public=True)
+        #                                                  ))()
+        # else:
+        #     if not level:
+        #         tests = await sync_to_async(lambda: list(Test.objects
+        #                                                  .select_related("owner")
+        #                                                  .filter(category__in=cate, is_public=True)
+        #                                                  ))()
+        #     else:
+        #         tests = await sync_to_async(lambda: list(
+        #             Test.objects
+        #             .select_related("owner")
+        #             .filter(category__in=cate, level=level, is_public=True)
+        #         ))()
+
+        qs = Test.objects.select_related("owner").filter(is_public=True)
+
+        if cate:
+            qs = qs.filter(category__in=cate)
+        if level:
+            qs = qs.filter(level=level)
+
+        tests = await sync_to_async(lambda: list(qs))()
 
         owner_ids = [t.owner.id for t in tests if getattr(t, 'owner', None)]
         tests_owners = await sync_to_async(lambda: list(CustomUser.objects.filter(id__in=owner_ids)))()

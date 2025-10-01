@@ -8,6 +8,7 @@ from django.utils.translation import gettext
 
 from common.services import mongo_repo
 from common.utils import validate_uuid, error_response
+from courses.choices import SORTING_DICT
 from courses.models import Course, CourseMeta, Module
 from courses.services.builder_json import build_course_json_success
 from users.models import CustomUser
@@ -15,12 +16,17 @@ from users.models import CustomUser
 logger = logging.getLogger(__name__)
 
 
-async def get_published_courses_by_autor(author_id) -> Union[dict, list]:
+async def get_published_courses_by_autor(author_id, sort_keys: Union[list, None]) -> Union[dict, list]:
     try:
         uuid_obj = validate_uuid(author_id)
-        courses = await sync_to_async(lambda: list(
-            Course.objects.select_related("details").filter(owner=uuid_obj, is_published=True)
-        ))()
+
+        qs = Course.objects.select_related("details").filter(owner=uuid_obj, is_published=True)
+        if sort_keys:
+            order_fields = [SORTING_DICT[k] for k in sort_keys if k in SORTING_DICT]
+            if order_fields:
+                qs = qs.order_by(*order_fields)
+
+        courses = await sync_to_async(lambda: list(qs))()
         owner = await sync_to_async(lambda: CustomUser.objects.get(id=uuid_obj))()
 
         return [build_course_json_success(c, getattr(c, "details", None), owner) for c in courses]
@@ -36,30 +42,20 @@ async def get_published_courses_by_autor(author_id) -> Union[dict, list]:
         )
 
 
-async def get_courses(cate: Union[list, None], level: Union[str, None]) -> Union[dict, list]:
+async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None]) -> Union[dict, list]:
     try:
-        if not cate:
-            if not level:
-                courses = await sync_to_async(lambda: list(
-                    Course.objects.select_related("details", 'owner').filter(is_published=True)
-                ))()
-            else:
-                courses = await sync_to_async(lambda: list(Course.objects
-                                                           .select_related("details", 'owner')
-                                                           .filter(details__level=level, is_published=True)
-                                                           ))()
-        else:
-            if not level:
-                courses = await sync_to_async(lambda: list(Course.objects
-                                                           .select_related("details", 'owner')
-                                                           .filter(category__in=cate, is_published=True)
-                                                           ))()
-            else:
-                courses = await sync_to_async(lambda: list(
-                    Course.objects
-                    .select_related("details", 'owner')
-                    .filter(category__in=cate, details__level=level, is_published=True)
-                ))()
+        qs = Course.objects.select_related("details", "owner").filter(is_published=True)
+
+        if cate:
+            qs = qs.filter(category__in=cate)
+        if level:
+            qs = qs.filter(details__level=level)
+        if sort_keys:
+            order_fields = [SORTING_DICT[k] for k in sort_keys if k in SORTING_DICT]
+            if order_fields:
+                qs = qs.order_by(*order_fields)
+
+        courses = await sync_to_async(lambda: list(qs))()
 
         details_ids = [c.details.id for c in courses if getattr(c, 'details', None)]
         owner_ids = [c.owner.id for c in courses if getattr(c, 'owner', None)]

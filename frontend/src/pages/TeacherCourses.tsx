@@ -20,6 +20,7 @@ import {
   StatCard,
 } from '@/shared/ui'
 import { useProfileData } from '@/shared/hooks/useProfileData'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   AlertCircle,
   BookOpen,
@@ -28,28 +29,17 @@ import {
   Star,
   Users,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import {
-  type AllCoursesResponse,
-  getCourseService,
-  sorting,
-} from '@/features/courses'
-import { useChoicesData } from '@/shared/hooks/useChoiceData'
+import { useState } from 'react'
+import type { AllCoursesResponse } from '@/features/courses'
 
-interface Option {
-  value: string
-  label: string
-}
-
-const CoursesCatalog = () => {
+const TeacherCourses = () => {
   const { t } = useI18n()
+  const navigate = useNavigate()
+  const { name: teacherName, id: teacherId } = useParams<{
+    name: string
+    id: string
+  }>()
   const { profileData, loading, error, refreshProfile } = useProfileData()
-  const {
-    choicesData,
-    loading: choicesLoading,
-    error: choicesError,
-    refreshChoices,
-  } = useChoicesData()
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [categoryFilter, setCategoryFilter] = useState<string[]>([])
   const [sortingFilter, setSortingFilter] = useState<string[]>([])
@@ -57,108 +47,27 @@ const CoursesCatalog = () => {
   const [categories, setCategories] = useState<Option[]>([])
   const [levels, setLevels] = useState<Option[]>([])
   const [sort, setSort] = useState<Option[]>([])
-  const [page, setPage] = useState<number>(1)
-  const [totalPages, setTotalPages] = useState<number>(1)
-  const [totalCourses, setTotalCourses] = useState<number>(0)
-  const [countAllCourses, setCountAllCourses] = useState<number>(0)
-  const [certificatesIssued, setCertificatesIssued] = useState<number>(0)
-  const [courses, setCourses] = useState<AllCoursesResponse['courses']>([])
-  const [averageRating, setAverageRating] = useState<number>(0)
   const [courseError, setCourseError] = useState<string>('')
   const [courseLoading, setCourseLoading] = useState(false)
+  const [courses, setCourses] = useState<AllCoursesResponse['courses']>([])
+  const [page, setPage] = useState<number>(1)
+  const [totalPages, setTotalPages] = useState<number>(1)
 
-  useEffect(() => {
-    async function fetchAllCourses() {
-      try {
-        const response = await getCourseService.getCountAllCourses()
-        setCountAllCourses(response.count)
-      } catch (err) {
-        setCourseError(t('Помилка завантаження кількості курсів: ') + err)
-      }
-    }
-
-    fetchAllCourses()
-  }, [])
-
-  const fetchCourses = async () => {
-    setCourseLoading(true)
-    try {
-      const searchCourse = {
-        page: page,
-        category: categoryFilter,
-        sort_keys: sortingFilter,
-        level: levelFilter === t('Всі рівні') ? '' : levelFilter,
-        search: searchQuery,
-      }
-      const response = await getCourseService.getAllCourses(searchCourse)
-      setCourses(response.courses)
-      setTotalCourses(response.total_courses)
-      setTotalPages(response.total_pages)
-      setPage(response.page)
-      setCertificatesIssued(response.certificates_issued)
-      setAverageRating(response.average_rating)
-      setCourseError('')
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setCourseError(err.message)
-      } else {
-        setCourseError(String(err))
-      }
-      setCourses([])
-    } finally {
-      setCourseLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (choicesData) {
-      const categoriesData: Option[] = Object.entries(
-        choicesData.category[0]
-      ).map(([key, label]) => ({
-        value: key,
-        label,
-      }))
-      const levelsData: Option[] = Object.entries(choicesData.levels[0]).map(
-        ([key, label]) => ({
-          value: key,
-          label,
-        })
-      )
-
-      setCategories(categoriesData)
-      setLevels(levelsData)
-      setSort(sorting(t))
-    }
-  }, [choicesData])
-
-  useEffect(() => {
-    if (courseError) {
-      const timer = setTimeout(() => setCourseError(''), 15000)
-      return () => clearTimeout(timer)
-    }
-  }, [courseError])
-
-  useEffect(() => {
-    fetchCourses()
-  }, [categoryFilter, levelFilter, sortingFilter, page])
-
-  if (loading && choicesLoading && courseLoading) {
+  if (loading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 
-  if (error || choicesError || !profileData) {
+  if (error || !profileData) {
     return (
       <ErrorProfile
-        error={
-          error || choicesError || t('Помилка завантаження даних користувача')
-        }
-        onRetry={() => {
-          refreshProfile()
-          refreshChoices()
-        }}
+        error={error || t('Помилка завантаження даних користувача')}
+        onRetry={refreshProfile}
       />
     )
   }
+
+  const currentUserId = profileData.user.id
+  const isOwner = currentUserId === teacherId
 
   const userInfo = {
     name: profileData.user.name,
@@ -167,17 +76,36 @@ const CoursesCatalog = () => {
     role: profileData.user.role,
   }
 
+  const handleCreateCourse = () => {
+    navigate('/create-course')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar userInfo={userInfo} />
 
       <div className="ml-64">
         <CourseHeader
-          title={t('Підібрати курс')}
-          description={t('Підберіть курс за вашими інтересами та цілями')}
+          title={
+            isOwner
+              ? t('Створені вами курси')
+              : t('Курси викладача') +
+                ' ' +
+                userInfo.name +
+                ' ' +
+                userInfo.surname
+          }
+          description={
+            isOwner
+              ? t('Додавайте й редагуйте ваші курси')
+              : t('Переглядайте доступні курси цього викладача')
+          }
+          action={isOwner}
+          onActionClick={isOwner ? handleCreateCourse : undefined}
+          actionText={isOwner ? t('Створити') : undefined}
         />
 
-        <main className="p-6">
+        <main>
           {courseError && (
             <Alert className="mb-6 border-destructive bg-destructive/10">
               <AlertCircle className="h-4 w-4" />
@@ -205,7 +133,6 @@ const CoursesCatalog = () => {
                 <Search className="absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               </Button>
             </div>
-
             <MultiSelect
               options={categories}
               selected={categoryFilter}
@@ -214,7 +141,6 @@ const CoursesCatalog = () => {
               className="w-48"
               countLabel={t('вибраних категорій')}
             />
-
             <Select value={levelFilter} onValueChange={setLevelFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder={t('Рівень')} />
@@ -230,7 +156,6 @@ const CoursesCatalog = () => {
                 ))}
               </SelectContent>
             </Select>
-
             <MultiSelect
               options={sort}
               selected={sortingFilter}
@@ -239,6 +164,16 @@ const CoursesCatalog = () => {
               className="w-48"
               countLabel={t('вибраних сортувань')}
             />
+            {isOwner && (
+              <MultiSelect
+                options={statuses}
+                selected={statusesFilter}
+                onChange={setStatusesFilter}
+                placeholder={t('Всі статуси')}
+                className="w-48"
+                countLabel={t('вибраних статусів')}
+              />
+            )}
           </div>
           <div className="grid md:grid-cols-4 gap-6 mb-8">
             <StatCard
@@ -248,13 +183,23 @@ const CoursesCatalog = () => {
               iconBgClassName="bg-blue-100"
               iconClassName="text-blue-600"
             />
-            <StatCard
-              icon={CheckCircle}
-              value={totalCourses}
-              label={t('Знайдено')}
-              iconBgClassName="bg-green-100"
-              iconClassName="text-green-600"
-            />
+            {(isOwner && (
+              <StatCard
+                icon={CheckCircle}
+                value={totalPublishedCourses}
+                label={t('Опубліковані курсів')}
+                iconBgClassName="bg-green-100"
+                iconClassName="text-green-600"
+              />
+            )) || (
+              <StatCard
+                icon={CheckCircle}
+                value={totalCourses}
+                label={t('Знайдено')}
+                iconBgClassName="bg-green-100"
+                iconClassName="text-green-600"
+              />
+            )}
 
             <StatCard
               icon={Star}
@@ -267,7 +212,7 @@ const CoursesCatalog = () => {
             <StatCard
               icon={Users}
               value={certificatesIssued}
-              label={t('Видано сертифікатів')}
+              label={t('Загальна кількість студентів')}
               iconBgClassName="bg-purple-100"
               iconClassName="text-purple-600"
             />
@@ -312,4 +257,4 @@ const CoursesCatalog = () => {
   )
 }
 
-export default CoursesCatalog
+export default TeacherCourses

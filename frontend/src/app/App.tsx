@@ -6,13 +6,14 @@ import {
   Index,
   Login,
   MyCourseCatalog,
-  MyCreatedCourseCatalog,
+  TeacherCourses,
   NotFound,
   PrivacyPolicy,
   Profile,
   Register,
   ResetPassword,
   TermsOfService,
+  CreateCourse,
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
@@ -54,10 +55,12 @@ const App = () => {
             element={<MyCourseCatalog />}
           />
           <Route path="/find-new-courses" element={<CoursesCatalog />} />
+          <Route path="/my-created-courses" element={<TeacherCourses />} />
           <Route
-            path="/my-created-courses"
-            element={<MyCreatedCourseCatalog />}
+            path="/courses/teacher/:name/:id"
+            element={<TeacherCourses />}
           />
+          <Route path="/create-course" element={<CreateCourse />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

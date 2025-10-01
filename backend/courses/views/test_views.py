@@ -16,7 +16,7 @@ from courses.services import parse_multipart_request
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
 from courses.services.test_actions_service import create_test, remove_test, validate_test_editable, update_test
-from courses.utils import categories_level_present
+from courses.utils import categories_level_sort_present
 
 
 class BaseTestView(LocalizedView):
@@ -28,7 +28,7 @@ class BaseTestView(LocalizedView):
         page = request.GET.get("page", 1)
 
         if not author_id:
-            category_list, level = categories_level_present(request)
+            category_list, level = categories_level_sort_present(request)
             test_data = await get_instance_cached_all("public test", "public_tests_get", category_list, level)
         else:
             test_data = await get_instance_cached_by_author_id("public test", "public_tests_get", author_id)

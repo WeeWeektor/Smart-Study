@@ -5,6 +5,9 @@ export interface AllCoursesResponse {
   total_courses: number
   total_pages: number
   courses: CourseWrapper[]
+  average_rating: number
+  certificates_issued: number
+  count_announcements: number
 }
 
 export interface CourseWrapper {

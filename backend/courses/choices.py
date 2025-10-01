@@ -14,6 +14,15 @@ COMPLETED_STATUS = [
 ]
 VALID_COMPLETED_STATUS = {key for key, _ in COMPLETED_STATUS}
 
+SORTING_OPTIONS = [
+    ('most_popular', '-details__number_completed'),
+    ('highest_rated', '-details__rating'),
+    ('newest', '-published_at'),
+    ('oldest', 'published_at'),
+]
+VALID_SORTING_OPTIONS = {key for key, _ in SORTING_OPTIONS}
+SORTING_DICT = dict(SORTING_OPTIONS)
+
 CATEGORY_CHOICES = [
     ('programming', _('Programming')),
     ('data_science', _('Data Science')),

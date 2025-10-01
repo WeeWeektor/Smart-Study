@@ -1,1 +1,1 @@
-export { choicesGetService } from './choices.get.service'
+export { choicesGetService, type ChoicesResponse } from './choices.get.service'

@@ -17,7 +17,7 @@ from courses.services.cache_service import get_cached_instance_by_id, get_instan
     get_instance_cached_by_author_id
 from courses.services.course_actions_service import create_course, remove_course, update_course, \
     update_published_course_with_structure
-from courses.utils import categories_level_present
+from courses.utils import categories_level_sort_present, average_rating, certificates_issued, count_announcements
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -36,16 +36,23 @@ class CourseView(LocalizedView):
             author_id = request.GET.get("author")
             page = request.GET.get("page", 1)
 
+            category_list, level, sort_keys = categories_level_sort_present(request)
+
             if not author_id:
-                category_list, level = categories_level_present(request)
-                courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level)
+                courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level, sort_keys)
                 # TODO додати логіку searchQuery
                 print(search_query)
             else:
-                courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id)
+                courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id, sort_keys)
+                # TODO додати логіку searchQuery + фільтир чи опублікований
+                print(search_query)
 
             if isinstance(courses_data, JsonResponse):
                 return courses_data
+
+            average_rat = average_rating(courses_data)
+            certificates_issue = certificates_issued(courses_data)
+            count_ann = count_announcements(courses_data)
 
             paged_data_dict = await sync_to_async(lambda: paginate_list(courses_data, int(page), 24))()
 
@@ -53,7 +60,10 @@ class CourseView(LocalizedView):
                 "page": int(page),
                 "total_courses": len(courses_data),
                 "total_pages": paged_data_dict["total_pages"],
-                "courses": paged_data_dict["results"]
+                "courses": paged_data_dict["results"],
+                "average_rating": average_rat,
+                "certificates_issued": certificates_issue,
+                "count_announcements": count_ann
             })
 
     @teacher_required
