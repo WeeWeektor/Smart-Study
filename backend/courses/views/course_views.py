@@ -35,6 +35,7 @@ class CourseView(LocalizedView):
         else:
             author_id = request.GET.get("author")
             page = request.GET.get("page", 1)
+            status = request.GET.get("status")
 
             category_list, level, sort_keys = categories_level_sort_present(request)
 
@@ -43,7 +44,8 @@ class CourseView(LocalizedView):
                 # TODO додати логіку searchQuery
                 print(search_query)
             else:
-                courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id, sort_keys)
+                courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id, sort_keys,
+                                                                      status)
                 # TODO додати логіку searchQuery + фільтир чи опублікований
                 print(search_query)
 

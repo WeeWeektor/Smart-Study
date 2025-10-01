@@ -9,17 +9,33 @@ export const sorting = (t: (key: string) => string) => [
   { value: 'oldest', label: t('Спершу Старі') },
 ]
 
+export const statues = (t: (key: string) => string) => [
+  { value: 'is_published', label: t('Опубліковані') },
+  { value: 'false', label: t('Неопубліковані') },
+]
+
 export interface AllCourseRequest {
   category?: string[]
   level?: string
   search?: string
+  status?: string
   sort_keys?: string[]
   page: number
-  author_id?: number
+  author_id?: string
+}
+
+export interface CountTeacherCourseRequest {
+  author_id: string
+  owner: boolean
 }
 
 export interface CountCourseResponse {
   count: number
+}
+
+export interface CountTeacherCourseResponse {
+  allCourses: number
+  publishedCourses: number
 }
 
 class GetCourseService {
@@ -44,10 +60,35 @@ class GetCourseService {
     }
   }
 
+  async getCountTeacherCourses({
+    author_id,
+    owner,
+  }: CountTeacherCourseRequest): Promise<CountTeacherCourseResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const urls = `/counter/teacher-courses/?author=${author_id}&owner=${owner.toString()}`
+
+      const response = await apiClient.get<CountTeacherCourseResponse>(urls, {
+        headers: {
+          'X-CSRFToken': csrfToken || '',
+        },
+        withCredentials: true,
+      })
+      return {
+        allCourses: response.data.allCourses,
+        publishedCourses: response.data.publishedCourses,
+      }
+    } catch (error) {
+      throw new Error(this.t('Не вдалось завантажити кількість курсів') + error)
+    }
+  }
+
   async getAllCourses({
     category,
     level,
     search,
+    status,
     sort_keys,
     page,
     author_id,
@@ -68,15 +109,22 @@ class GetCourseService {
 
       query.push(`page=${page}`)
 
-      const response = await apiClient.get<AllCoursesResponse>(
-        `/course/courses-list${'/' + author_id}${'/' + search}/?${query.join('&')}`,
-        {
-          headers: {
-            'X-CSRFToken': csrfToken || '',
-          },
-          withCredentials: true,
+      let urls = ''
+      if (author_id) {
+        if (status && status !== '') {
+          query.push(`status=${status}`)
         }
-      )
+        urls = `/course/courses-list/?author=${author_id}${'&' + search}&${query.join('&')}`
+      } else {
+        urls = `/course/courses-list${'/' + search}/?${query.join('&')}`
+      }
+
+      const response = await apiClient.get<AllCoursesResponse>(urls, {
+        headers: {
+          'X-CSRFToken': csrfToken || '',
+        },
+        withCredentials: true,
+      })
 
       return {
         status: response.data.status,

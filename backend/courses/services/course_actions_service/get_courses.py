@@ -16,11 +16,25 @@ from users.models import CustomUser
 logger = logging.getLogger(__name__)
 
 
-async def get_published_courses_by_autor(author_id, sort_keys: Union[list, None]) -> Union[dict, list]:
+async def get_published_courses_by_autor(
+        author_id,
+        sort_keys: Union[list, None],
+        status: Union[str, None]
+) -> Union[dict, list]:
     try:
         uuid_obj = validate_uuid(author_id)
 
-        qs = Course.objects.select_related("details").filter(owner=uuid_obj, is_published=True)
+        publish = None
+        if status and status == 'false':
+            publish = False
+        elif status and status == 'is_published':
+            publish = True
+
+
+        qs = Course.objects.select_related("details").filter(owner=uuid_obj)
+        if publish is not None:
+            qs = qs.filter(is_published=publish)
+
         if sort_keys:
             order_fields = [SORTING_DICT[k] for k in sort_keys if k in SORTING_DICT]
             if order_fields:
@@ -42,7 +56,8 @@ async def get_published_courses_by_autor(author_id, sort_keys: Union[list, None]
         )
 
 
-async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None]) -> Union[dict, list]:
+async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None]) -> Union[
+    dict, list]:
     try:
         qs = Course.objects.select_related("details", "owner").filter(is_published=True)
 
@@ -79,6 +94,7 @@ async def get_courses(cate: Union[list, None], level: Union[str, None], sort_key
     except Exception as e:
         logger.error(f"{gettext('Error retrieving courses from DB:')} {str(e)}")
         return error_response(gettext("Error retrieving courses from DB"), status=500)
+
 
 async def get_course_by_id(course_id) -> dict:
     try:

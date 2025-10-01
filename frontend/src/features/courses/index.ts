@@ -1,2 +1,2 @@
 export * from './types'
-export { getCourseService, sorting } from './get.course.service'
+export { getCourseService, sorting, statues } from './get.course.service'

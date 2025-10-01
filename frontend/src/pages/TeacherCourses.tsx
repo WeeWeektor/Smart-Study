@@ -29,31 +29,114 @@ import {
   Star,
   Users,
 } from 'lucide-react'
-import { useState } from 'react'
-import type { AllCoursesResponse } from '@/features/courses'
+import { useEffect, useState } from 'react'
+import {
+  type AllCoursesResponse,
+  getCourseService,
+  sorting,
+  statues,
+} from '@/features/courses'
+
+interface Option {
+  value: string
+  label: string
+}
 
 const TeacherCourses = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const { profileData, loading, error, refreshProfile } = useProfileData()
   const { name: teacherName, id: teacherId } = useParams<{
     name: string
     id: string
   }>()
-  const { profileData, loading, error, refreshProfile } = useProfileData()
+  const currentUserId = profileData?.user.id
+  const isOwner = currentUserId === teacherId
+
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [categoryFilter, setCategoryFilter] = useState<string[]>([])
   const [sortingFilter, setSortingFilter] = useState<string[]>([])
-  const [levelFilter, setLevelFilter] = useState<string>('')
-  const [categories, setCategories] = useState<Option[]>([])
-  const [levels, setLevels] = useState<Option[]>([])
+  const [statusesFilter, setStatusesFilter] = useState<string>('')
   const [sort, setSort] = useState<Option[]>([])
+  const [statuses, setStatuses] = useState<Option[]>([])
   const [courseError, setCourseError] = useState<string>('')
   const [courseLoading, setCourseLoading] = useState(false)
   const [courses, setCourses] = useState<AllCoursesResponse['courses']>([])
   const [page, setPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
+  const [countAllTeacherCourses, setCountAllTeacherCourses] =
+    useState<number>(0)
+  const [countPublishedTeacherCourses, setCountPublishedTeacherCourses] =
+    useState<number>(0)
+  const [countAnnouncements, setCountAnnouncements] = useState<number>(0)
+  const [totalCourses, setTotalCourses] = useState<number>(0)
+  const [averageRating, setAverageRating] = useState<number>(0)
 
-  if (loading) {
+  useEffect(() => {
+    async function fetchCountTeacherCourses() {
+      if (!currentUserId) return
+      try {
+        const request = {
+          author_id: currentUserId,
+          owner: isOwner,
+        }
+        const response = await getCourseService.getCountTeacherCourses(request)
+        setCountAllTeacherCourses(response.allCourses)
+        setCountPublishedTeacherCourses(response.publishedCourses)
+      } catch (err) {
+        setCourseError(t('Помилка завантаження кількості курсів: ') + err)
+      }
+    }
+
+    fetchCountTeacherCourses()
+  }, [currentUserId, isOwner])
+
+  const fetchCourses = async () => {
+    setCourseLoading(true)
+    try {
+      const searchCourse = {
+        page: page,
+        sort_keys: sortingFilter,
+        status: statusesFilter === t('Всі рівні') ? 'all' : statusesFilter,
+        author_id: currentUserId,
+        search: searchQuery,
+      }
+      const response = await getCourseService.getAllCourses(searchCourse)
+      setCourses(response.courses)
+      setTotalCourses(response.total_courses)
+      setTotalPages(response.total_pages)
+      setPage(response.page)
+      setAverageRating(response.average_rating)
+      setCountAnnouncements(response.count_announcements)
+      setCourseError('')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setCourseError(err.message)
+      } else {
+        setCourseError(String(err))
+      }
+      setCourses([])
+    } finally {
+      setCourseLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    setSort(sorting(t))
+    setStatuses(statues(t))
+  }, [sortingFilter, statusesFilter])
+
+  useEffect(() => {
+    if (courseError) {
+      const timer = setTimeout(() => setCourseError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [courseError])
+
+  useEffect(() => {
+    fetchCourses()
+  }, [sortingFilter, statusesFilter, page])
+
+  if (loading && courseLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 
@@ -65,9 +148,6 @@ const TeacherCourses = () => {
       />
     )
   }
-
-  const currentUserId = profileData.user.id
-  const isOwner = currentUserId === teacherId
 
   const userInfo = {
     name: profileData.user.name,
@@ -105,7 +185,7 @@ const TeacherCourses = () => {
           actionText={isOwner ? t('Створити') : undefined}
         />
 
-        <main>
+        <main className="p-6">
           {courseError && (
             <Alert className="mb-6 border-destructive bg-destructive/10">
               <AlertCircle className="h-4 w-4" />
@@ -133,29 +213,7 @@ const TeacherCourses = () => {
                 <Search className="absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               </Button>
             </div>
-            <MultiSelect
-              options={categories}
-              selected={categoryFilter}
-              onChange={setCategoryFilter}
-              placeholder={t('Категорії')}
-              className="w-48"
-              countLabel={t('вибраних категорій')}
-            />
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder={t('Рівень')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem key={''} value={t('Всі рівні')}>
-                  {t('Всі рівні')}
-                </SelectItem>
-                {levels.map(level => (
-                  <SelectItem key={level.value} value={level.value}>
-                    {level.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
             <MultiSelect
               options={sort}
               selected={sortingFilter}
@@ -164,34 +222,42 @@ const TeacherCourses = () => {
               className="w-48"
               countLabel={t('вибраних сортувань')}
             />
+
             {isOwner && (
-              <MultiSelect
-                options={statuses}
-                selected={statusesFilter}
-                onChange={setStatusesFilter}
-                placeholder={t('Всі статуси')}
-                className="w-48"
-                countLabel={t('вибраних статусів')}
-              />
+              <Select value={statusesFilter} onValueChange={setStatusesFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder={t('Рівень')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem key={''} value={t('Всі рівні')}>
+                    {t('Всі рівні')}
+                  </SelectItem>
+                  {statuses.map(status => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
           <div className="grid md:grid-cols-4 gap-6 mb-8">
             <StatCard
               icon={BookOpen}
-              value={countAllCourses}
+              value={countAllTeacherCourses}
               label={t('Всього курсів')}
               iconBgClassName="bg-blue-100"
               iconClassName="text-blue-600"
             />
-            {(isOwner && (
+            {isOwner ? (
               <StatCard
                 icon={CheckCircle}
-                value={totalPublishedCourses}
+                value={countPublishedTeacherCourses}
                 label={t('Опубліковані курсів')}
                 iconBgClassName="bg-green-100"
                 iconClassName="text-green-600"
               />
-            )) || (
+            ) : (
               <StatCard
                 icon={CheckCircle}
                 value={totalCourses}
@@ -211,7 +277,7 @@ const TeacherCourses = () => {
 
             <StatCard
               icon={Users}
-              value={certificatesIssued}
+              value={countAnnouncements}
               label={t('Загальна кількість студентів')}
               iconBgClassName="bg-purple-100"
               iconClassName="text-purple-600"
@@ -258,3 +324,5 @@ const TeacherCourses = () => {
 }
 
 export default TeacherCourses
+// TODO Виправити курси на сторінці(плашки...)
+// Виправити отриммання моїх курсів сторінки MyCreatedCourses
