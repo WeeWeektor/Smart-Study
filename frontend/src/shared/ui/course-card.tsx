@@ -6,7 +6,16 @@ import {
   Progress,
   UserModal,
 } from '@/shared/ui'
-import { BookOpen, CheckCircle, Clock, Play, Star, Users } from 'lucide-react'
+import {
+  BookOpen,
+  Clock,
+  Eye,
+  RefreshCw,
+  Rocket,
+  Star,
+  UploadCloud,
+  Users,
+} from 'lucide-react'
 import { formatLabel, parseISODuration, useI18n } from '@/shared/lib'
 import { Link } from 'react-router-dom'
 import React from 'react'
@@ -146,18 +155,53 @@ export const CourseCard = ({
             {status === 'completed' ? (
               <Link to={`/courses/${id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
-                  <CheckCircle className="w-4 h-4 mr-2" />
+                  <Eye className="w-4 h-4 mr-2" />
                   {t('Переглянути')}
                 </Button>
               </Link>
             ) : (
               <Link to={`/courses/${id}`} className="flex-1">
                 <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                  <Play className="w-4 h-4 mr-2" />
+                  {status === 'not_started' ? (
+                    <Rocket className="w-4 h-4 mr-2" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
                   {status === 'not_started' ? t('Розпочати') : t('Продовжити')}
                 </Button>
               </Link>
             )}
+          </div>
+        )}
+
+        {badgeType && badgeType === 'published' && (
+          <div className="flex gap-2">
+            {badgeLabel === 'True' ? (
+              <Link to={`/courses/${id}`} className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <Eye className="w-4 h-4 mr-2" />
+                  {t('Переглянути')}
+                </Button>
+              </Link>
+            ) : (
+              <Link to={`/courses/${id}`} className="flex-1">
+                <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                  <UploadCloud className="w-4 h-4 mr-2" />
+                  {t('Переглянути та опублікувати')}
+                </Button>
+              </Link>
+            )}
+          </div>
+        )}
+
+        {badgeType && badgeType === 'level' && (
+          <div className="flex gap-2">
+            <Link to={`/courses/${id}`} className="flex-1">
+              <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                <Eye className="w-4 h-4 mr-2" />
+                {t('Переглянути')}
+              </Button>
+            </Link>
           </div>
         )}
       </CardContent>
