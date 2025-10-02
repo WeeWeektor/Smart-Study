@@ -32,11 +32,11 @@ import {
 import { useEffect, useState } from 'react'
 import {
   type AllCoursesResponse,
+  type CountTeacherCourseRequest,
   getCourseService,
   sorting,
   statues,
-} from '@/features/courses'
-import type { CountTeacherCourseRequest } from '@/features/courses/get.course.service.ts'
+} from '@/features/course'
 
 interface Option {
   value: string
@@ -52,7 +52,6 @@ const TeacherCourses = () => {
     id: string
   }>()
   const currentUserId = profileData?.user.id
-  // const isOwner = currentUserId === teacherId
   const isOwner = teacherId ? currentUserId === teacherId : true
   const resCourTeachId = isOwner ? currentUserId : teacherId
 

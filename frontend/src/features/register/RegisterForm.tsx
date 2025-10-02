@@ -497,7 +497,7 @@ export const RegisterForm = () => {
               variant="outline"
               size="sm"
               onClick={handleReturnToNormalRegistration}
-              className="border-brand-300 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900"
+              className="w-full border-brand-300 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900"
             >
               {t(' Повернутись до звичайної реєстрації')}
             </Button>

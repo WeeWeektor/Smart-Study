@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardContent,
+  ConfirmModal,
   Progress,
   UserModal,
 } from '@/shared/ui'
@@ -69,6 +70,7 @@ export const CourseCard = ({
 }: CourseCardProps) => {
   const { t } = useI18n()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
 
   const handleDelete = () => {
     console.log(`Delete course with id: ${id}`)
@@ -247,10 +249,19 @@ export const CourseCard = ({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                  onClick={handleDelete}
+                  onClick={() => setIsConfirmDelOpen(true)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
+                <ConfirmModal
+                  isOpen={isConfirmDelOpen}
+                  onClose={() => setIsConfirmDelOpen(false)}
+                  onConfirm={handleDelete}
+                  title={t('Видалення курсу')}
+                  description={t(
+                    'Ви впевнені, що хочете видалити цей курс? Цю дію неможливо скасувати.'
+                  )}
+                />
               </>
             )}
           </div>

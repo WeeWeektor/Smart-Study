@@ -1,6 +1,6 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
-import type { AllCoursesResponse } from '@/features/courses/types.ts'
+import type { AllCoursesResponse } from '@/features/course/types.ts'
 
 export const sorting = (t: (key: string) => string) => [
   { value: 'most_popular', label: t('За Популярністю') },

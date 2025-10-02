@@ -33,7 +33,7 @@ import {
   type AllCoursesResponse,
   getCourseService,
   sorting,
-} from '@/features/courses'
+} from '@/features/course'
 import { useChoicesData } from '@/shared/hooks/useChoiceData'
 
 interface Option {

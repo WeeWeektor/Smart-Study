@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { profileService, type UpdateProfileRequest } from '@/entities/profile'
-import { authService } from '@/features/auth'
 import {
   Alert,
   AlertDescription,
+  ConfirmModal,
   ErrorProfile,
   LoadingProfile,
 } from '@/shared/ui'
@@ -39,6 +39,7 @@ const Profile = () => {
   const [success, setSuccess] = useState<string>('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
+  const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -218,24 +219,19 @@ const Profile = () => {
     }
   }
 
+  const handleDeleteClick = () => {
+    setIsConfirmDelOpen(true)
+  }
+
   const handleDeleteAccount = async () => {
-    if (
-      window.confirm(
-        t('Ви впевнені, що хочете видалити свій акаунт? Ця дія незворотна.')
+    try {
+      await profileService.deleteProfile()
+      navigate('/?showDeleteAccountSuccess=true')
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : t('Помилка видалення акаунта')
       )
-    ) {
-      try {
-        await profileService.deleteProfile()
-        await authService.logout()
-        navigate('/?showDeleteAccountSuccess=true')
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : t('Помилка видалення акаунта')
-        )
-        navigate('/?showDeleteAccountSuccess=true')
-      }
+      navigate('/?showDeleteAccountSuccess=true')
     }
   }
 
@@ -354,7 +350,16 @@ const Profile = () => {
                 isEditing={isEditing}
                 onFormChange={handleFormChange}
                 onSettingsChange={handleSettingsChange}
-                onDeleteAccount={handleDeleteAccount}
+                onDeleteAccount={handleDeleteClick}
+              />
+              <ConfirmModal
+                isOpen={isConfirmDelOpen}
+                onClose={() => setIsConfirmDelOpen(false)}
+                onConfirm={handleDeleteAccount}
+                title={t('Видалення акаунта')}
+                description={t(
+                  'Ви впевнені, що хочете видалити свій акаунт? Ця дія незворотна.'
+                )}
               />
             </div>
           </div>
