@@ -25,11 +25,12 @@ async def get_published_courses_by_autor(
         uuid_obj = validate_uuid(author_id)
 
         publish = None
-        if status and status == 'false':
+        if not status:
+            publish = True
+        elif status and status == 'false':
             publish = False
         elif status and status == 'is_published':
             publish = True
-
 
         qs = Course.objects.select_related("details").filter(owner=uuid_obj)
         if publish is not None:

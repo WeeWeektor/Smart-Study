@@ -10,9 +10,13 @@ import {
   BookOpen,
   Clock,
   Eye,
+  FileCheck,
+  Layers,
+  MessageSquare,
   RefreshCw,
   Rocket,
   Star,
+  Trash2,
   UploadCloud,
   Users,
 } from 'lucide-react'
@@ -25,7 +29,7 @@ interface CourseCardProps {
   title: string
   description: string
   coverImage: string
-  instructor: string
+  instructor?: string
   instructorId: string
   category: string
   badgeLabel: string
@@ -36,6 +40,10 @@ interface CourseCardProps {
   progress?: number
   nextLesson?: string
   status?: 'completed' | 'not_started' | 'in_progress'
+  countModule?: number
+  countLesson?: number
+  countTests?: number
+  feedback_count?: number
 }
 
 export const CourseCard = ({
@@ -54,9 +62,17 @@ export const CourseCard = ({
   progress,
   nextLesson,
   status,
+  countModule,
+  countLesson,
+  countTests,
+  feedback_count,
 }: CourseCardProps) => {
   const { t } = useI18n()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+
+  const handleDelete = () => {
+    console.log(`Delete course with id: ${id}`)
+  }
 
   return (
     <Card
@@ -81,7 +97,7 @@ export const CourseCard = ({
         )}
         <div className="absolute top-4 right-4">
           <Badge
-            className={`font-medium ${getBadgeColor(badgeLabel, badgeType)}`}
+            className={`font-medium ${getBadgeColor(badgeLabel === t('Опублікований') ? 'True' : badgeLabel, badgeType)}`}
           >
             {formatLabel(badgeLabel, t)}
           </Badge>
@@ -97,25 +113,61 @@ export const CourseCard = ({
         </p>
 
         <div className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-400 mb-4">
-          <span
-            onClick={() => {
-              setIsModalOpen(true)
-            }}
-            className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors hover:underline"
-          >
-            {instructor}
-          </span>
-          <UserModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            userName={instructor}
-            userId={instructorId}
-            role={t('Викладач')}
-          />
+          {instructor ? (
+            <>
+              <span
+                onClick={() => {
+                  setIsModalOpen(true)
+                }}
+                className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors hover:underline"
+              >
+                {instructor}
+              </span>
+
+              <UserModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                userName={instructor}
+                userId={instructorId}
+                role={t('Викладач')}
+              />
+            </>
+          ) : (
+            <span className="flex items-center gap-1">
+              <MessageSquare className="w-4 h-4 text-orange-600" />
+              {feedback_count} {t('відгуків')}
+            </span>
+          )}
+
           <span className={`font-medium text-purple-600`}>
             {formatLabel(category, t)}
           </span>
         </div>
+
+        {!instructor && (
+          <>
+            <div className="flex items-center justify-between gap-4 text-sm text-slate-600 dark:text-slate-300 mb-4">
+              <span className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+                {countLesson} {t('уроків')}
+              </span>
+
+              <span className="text-slate-400">•</span>
+
+              <span className="flex items-center gap-1">
+                <FileCheck className="w-4 h-4 text-green-600" />
+                {countTests} {t('тестів')}
+              </span>
+
+              <span className="text-slate-400">•</span>
+
+              <span className="flex items-center gap-1">
+                <Layers className="w-4 h-4 text-purple-600" />
+                {countModule} {t('модулів')}
+              </span>
+            </div>
+          </>
+        )}
 
         <div className="flex items-center justify-between text-sm text-slate-800 dark:text-slate-400 mb-4">
           <div className="flex items-center">
@@ -176,7 +228,7 @@ export const CourseCard = ({
 
         {badgeType && badgeType === 'published' && (
           <div className="flex gap-2">
-            {badgeLabel === 'True' ? (
+            {badgeLabel === t('Опублікований') ? (
               <Link to={`/courses/${id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
                   <Eye className="w-4 h-4 mr-2" />
@@ -184,12 +236,22 @@ export const CourseCard = ({
                 </Button>
               </Link>
             ) : (
-              <Link to={`/courses/${id}`} className="flex-1">
-                <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                  <UploadCloud className="w-4 h-4 mr-2" />
-                  {t('Переглянути та опублікувати')}
+              <>
+                <Link to={`/courses/${id}`} className="flex-1">
+                  <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                    <UploadCloud className="w-4 h-4 mr-2" />
+                    {t('Переглянути та опублікувати')}
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
-              </Link>
+              </>
             )}
           </div>
         )}

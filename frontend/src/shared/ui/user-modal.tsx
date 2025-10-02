@@ -1,4 +1,4 @@
-import { type FC, type JSX, useEffect, useState } from 'react'
+import React, { type FC, type JSX, useEffect, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import { userGetService, type UserInfoResponse } from '@/features/user-card'
 import { LoadingProfile } from '@/shared/ui/loading-profile.tsx'
@@ -71,12 +71,8 @@ export const UserModal: FC<UserModalProps> = ({
   const handleBackgroundClick = () => onClose()
   const handleContentClick = (e: React.MouseEvent) => e.stopPropagation()
   const handleWatchTeacherCourses = () => {
-    if (role === 'teacher') {
-      navigate('/my-created-courses')
-    } else {
-      const path = `/courses/teacher/${userName.replace(/\s+/g, '')}/${userId}`
-      navigate(path)
-    }
+    const path = `/courses/teacher/${userName.replace(/\s+/g, '')}/${userId}`
+    navigate(path)
   }
 
   return (

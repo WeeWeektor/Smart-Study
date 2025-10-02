@@ -22,6 +22,7 @@ export interface AllCourseRequest {
   sort_keys?: string[]
   page: number
   author_id?: string
+  is_owner?: boolean
 }
 
 export interface CountTeacherCourseRequest {
@@ -92,6 +93,7 @@ class GetCourseService {
     sort_keys,
     page,
     author_id,
+    is_owner,
   }: AllCourseRequest): Promise<AllCoursesResponse> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
@@ -111,10 +113,13 @@ class GetCourseService {
 
       let urls = ''
       if (author_id) {
-        if (status && status !== '') {
+        if (is_owner) {
+          if (status === '') {
+            status = 'all'
+          }
           query.push(`status=${status}`)
         }
-        urls = `/course/courses-list/?author=${author_id}${'&' + search}&${query.join('&')}`
+        urls = `/course/courses-list/?author=${author_id}${'&' + search}${query.join('&')}`
       } else {
         urls = `/course/courses-list${'/' + search}/?${query.join('&')}`
       }

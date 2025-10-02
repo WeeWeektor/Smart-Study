@@ -36,6 +36,7 @@ import {
   sorting,
   statues,
 } from '@/features/courses'
+import type { CountTeacherCourseRequest } from '@/features/courses/get.course.service.ts'
 
 interface Option {
   value: string
@@ -51,7 +52,9 @@ const TeacherCourses = () => {
     id: string
   }>()
   const currentUserId = profileData?.user.id
-  const isOwner = currentUserId === teacherId
+  // const isOwner = currentUserId === teacherId
+  const isOwner = teacherId ? currentUserId === teacherId : true
+  const resCourTeachId = isOwner ? currentUserId : teacherId
 
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [sortingFilter, setSortingFilter] = useState<string[]>([])
@@ -70,18 +73,25 @@ const TeacherCourses = () => {
   const [countAnnouncements, setCountAnnouncements] = useState<number>(0)
   const [totalCourses, setTotalCourses] = useState<number>(0)
   const [averageRating, setAverageRating] = useState<number>(0)
+  const [CountAllCourseInDBs, setCountAllCourseInDBs] = useState<number>(0)
 
   useEffect(() => {
+    if (!resCourTeachId) return
+
+    const request: CountTeacherCourseRequest = {
+      author_id: resCourTeachId,
+      owner: isOwner,
+    }
+
     async function fetchCountTeacherCourses() {
-      if (!currentUserId) return
       try {
-        const request = {
-          author_id: currentUserId,
-          owner: isOwner,
-        }
-        const response = await getCourseService.getCountTeacherCourses(request)
-        setCountAllTeacherCourses(response.allCourses)
-        setCountPublishedTeacherCourses(response.publishedCourses)
+        const response1 = await getCourseService.getCountTeacherCourses(request)
+        setCountAllTeacherCourses(response1.allCourses)
+        setCountPublishedTeacherCourses(response1.publishedCourses)
+        const response2 = await getCourseService.getCountAllCourses()
+        setCountAllCourseInDBs(response2.count)
+        console.log(response1)
+        console.log(response2)
       } catch (err) {
         setCourseError(t('Помилка завантаження кількості курсів: ') + err)
       }
@@ -96,9 +106,15 @@ const TeacherCourses = () => {
       const searchCourse = {
         page: page,
         sort_keys: sortingFilter,
-        status: statusesFilter === t('Всі рівні') ? 'all' : statusesFilter,
-        author_id: currentUserId,
+        status:
+          statusesFilter === t('Всі рівні')
+            ? isOwner
+              ? 'all'
+              : ''
+            : statusesFilter,
+        author_id: resCourTeachId,
         search: searchQuery,
+        is_owner: isOwner,
       }
       const response = await getCourseService.getAllCourses(searchCourse)
       setCourses(response.courses)
@@ -133,8 +149,9 @@ const TeacherCourses = () => {
   }, [courseError])
 
   useEffect(() => {
+    if (!resCourTeachId) return
     fetchCourses()
-  }, [sortingFilter, statusesFilter, page])
+  }, [sortingFilter, statusesFilter, page, resCourTeachId])
 
   if (loading && courseLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
@@ -169,11 +186,7 @@ const TeacherCourses = () => {
           title={
             isOwner
               ? t('Створені вами курси')
-              : t('Курси викладача') +
-                ' ' +
-                userInfo.name +
-                ' ' +
-                userInfo.surname
+              : t('Курси викладача') + ' ' + teacherName
           }
           description={
             isOwner
@@ -242,14 +255,24 @@ const TeacherCourses = () => {
             )}
           </div>
           <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <StatCard
-              icon={BookOpen}
-              value={countAllTeacherCourses}
-              label={t('Всього курсів')}
-              iconBgClassName="bg-blue-100"
-              iconClassName="text-blue-600"
-            />
-            {isOwner ? (
+            {(isOwner && (
+              <StatCard
+                icon={BookOpen}
+                value={countAllTeacherCourses}
+                label={t('Всього курсів')}
+                iconBgClassName="bg-blue-100"
+                iconClassName="text-blue-600"
+              />
+            )) || (
+              <StatCard
+                icon={BookOpen}
+                value={CountAllCourseInDBs}
+                label={t('Всього курсів')}
+                iconBgClassName="bg-blue-100"
+                iconClassName="text-blue-600"
+              />
+            )}
+            {(isOwner && (
               <StatCard
                 icon={CheckCircle}
                 value={countPublishedTeacherCourses}
@@ -257,7 +280,7 @@ const TeacherCourses = () => {
                 iconBgClassName="bg-green-100"
                 iconClassName="text-green-600"
               />
-            ) : (
+            )) || (
               <StatCard
                 icon={CheckCircle}
                 value={totalCourses}
@@ -284,32 +307,65 @@ const TeacherCourses = () => {
             />
           </div>
           <div className="flex flex-wrap justify-center gap-6">
-            {courses.map(course => (
-              <div
-                key={course.course.id}
-                className="w-full sm:w-[48%] xl:w-[32%]"
-              >
-                <CourseCard
-                  id={course.course.id}
-                  title={course.course.title}
-                  description={course.course.description}
-                  coverImage={course.course.cover_image}
-                  instructor={
-                    course.course.owner.name + ' ' + course.course.owner.surname
-                  }
-                  instructorId={course.course.owner.id}
-                  category={course.course.category}
-                  badgeLabel={course.course.details.level}
-                  badgeType={'level'}
-                  rating={course.course.details.rating}
-                  students={
-                    course.course.details.number_completed +
-                    course.course.details.number_of_active
-                  }
-                  duration={course.course.details.time_to_complete}
-                />
-              </div>
-            ))}
+            {(isOwner &&
+              courses.map(course => (
+                <div
+                  key={course.course.id}
+                  className="w-full sm:w-[48%] xl:w-[32%]"
+                >
+                  <CourseCard
+                    id={course.course.id}
+                    title={course.course.title}
+                    description={course.course.description}
+                    coverImage={course.course.cover_image}
+                    instructorId={course.course.owner.id}
+                    category={course.course.category}
+                    badgeLabel={
+                      course.course.is_published
+                        ? t('Опублікований')
+                        : t('Неопублікований')
+                    }
+                    badgeType={'published'}
+                    rating={course.course.details.rating}
+                    students={
+                      course.course.details.number_completed +
+                      course.course.details.number_of_active
+                    }
+                    duration={course.course.details.time_to_complete}
+                    countModule={course.course.details.total_modules}
+                    countLesson={course.course.details.total_lessons}
+                    countTests={course.course.details.total_tests}
+                    feedback_count={course.course.details.feedback_count}
+                  />
+                </div>
+              ))) ||
+              courses.map(course => (
+                <div
+                  key={course.course.id}
+                  className="w-full sm:w-[48%] xl:w-[32%]"
+                >
+                  <CourseCard
+                    id={course.course.id}
+                    title={course.course.title}
+                    description={course.course.description}
+                    coverImage={course.course.cover_image}
+                    instructorId={course.course.owner.id}
+                    category={course.course.category}
+                    badgeLabel={course.course.details.level}
+                    badgeType={'level'}
+                    rating={course.course.details.rating}
+                    students={
+                      course.course.details.number_completed +
+                      course.course.details.number_of_active
+                    }
+                    duration={course.course.details.time_to_complete}
+                    countModule={course.course.details.total_modules}
+                    countLesson={course.course.details.total_lessons}
+                    countTests={course.course.details.total_tests}
+                    feedback_count={course.course.details.feedback_count}
+                  />
+                </div>
+              ))}
           </div>
           <div>{courses.length === 0 && <EmptyCourses />}</div>
           <Pagination
@@ -324,5 +380,3 @@ const TeacherCourses = () => {
 }
 
 export default TeacherCourses
-// TODO Виправити курси на сторінці(плашки...)
-// Виправити отриммання моїх курсів сторінки MyCreatedCourses
