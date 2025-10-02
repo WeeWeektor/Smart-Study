@@ -1,13 +1,15 @@
 def average_rating(courses_list):
     rat = 0
+    count = 0
     for course in courses_list:
         if course['course']['is_published']:
             rat += course['course']['details']['rating']
+            count += 1
 
     if rat == 0 or len(courses_list) == 0:
         return 0
 
-    return round(rat / len(courses_list), 2)
+    return round(rat / count, 2)
 
 
 def certificates_issued(courses_list):

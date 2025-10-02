@@ -40,14 +40,11 @@ class CourseView(LocalizedView):
             category_list, level, sort_keys = categories_level_sort_present(request)
 
             if not author_id:
-                courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level, sort_keys)
-                # TODO додати логіку searchQuery
-                print(search_query)
+                courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level, sort_keys,
+                                                             search_query)
             else:
                 courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id, sort_keys,
-                                                                      status)
-                # TODO додати логіку searchQuery + фільтир чи опублікований
-                print(search_query)
+                                                                      status, search_query)
 
             if isinstance(courses_data, JsonResponse):
                 return courses_data

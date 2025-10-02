@@ -111,6 +111,11 @@ class GetCourseService {
 
       query.push(`page=${page}`)
 
+      let query_search = ''
+      if (search && search.length > 0) {
+        query_search = '/' + search
+      }
+
       let urls = ''
       if (author_id) {
         if (is_owner) {
@@ -119,9 +124,10 @@ class GetCourseService {
           }
           query.push(`status=${status}`)
         }
-        urls = `/course/courses-list/?author=${author_id}${'&' + search}${query.join('&')}`
+
+        urls = `/course/courses-list${query_search}/?author=${author_id}&${query.join('&')}`
       } else {
-        urls = `/course/courses-list${'/' + search}/?${query.join('&')}`
+        urls = `/course/courses-list${query_search}/?${query.join('&')}`
       }
 
       const response = await apiClient.get<AllCoursesResponse>(urls, {

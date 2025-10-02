@@ -57,8 +57,8 @@ async def get_published_courses_by_autor(
         )
 
 
-async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None]) -> Union[
-    dict, list]:
+async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None]
+                      ) -> Union[dict, list]:
     try:
         qs = Course.objects.select_related("details", "owner").filter(is_published=True)
 

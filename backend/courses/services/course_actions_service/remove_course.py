@@ -40,7 +40,7 @@ async def remove_course(course):
         ))
 
     course_id_str = str(course.id)
-    course_owner = str(course.owner.id)
+    course_owner = str(course.owner_id)
 
     version_obj = await sync_to_async(
         lambda: CourseVersion.objects.filter(course_id=course.id)

@@ -156,7 +156,7 @@ const TeacherCourses = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [page, searchParams])
-
+  // TODO search для пошуку реалізувати на беці
   if (loading && courseLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
