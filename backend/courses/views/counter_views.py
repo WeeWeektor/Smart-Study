@@ -15,7 +15,7 @@ from courses.models import Course, CourseVersion
 class CountAllPublishedCourses(LocalizedView):
     @login_required_async
     async def get(self, request):
-        CACHE_TIMEOUT = 60 * 60 * 4
+        CACHE_TIMEOUT = 60 * 60 * 1
         cache = caches['courses_get']
         cache_key = 'CountAllPublishedCourses'
 

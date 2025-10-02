@@ -4,3 +4,5 @@ export type {
   CountTeacherCourseRequest,
   AllCourseRequest,
 } from './get.course.service'
+export { deleteCourseService } from './delete.course.service'
+export { default as DeleteCourseNotification } from './DeleteCourseNotification'

@@ -22,8 +22,9 @@ import {
   Users,
 } from 'lucide-react'
 import { formatLabel, parseISODuration, useI18n } from '@/shared/lib'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import React from 'react'
+import { deleteCourseService } from '@/features/course'
 
 interface CourseCardProps {
   id: string
@@ -69,11 +70,27 @@ export const CourseCard = ({
   feedback_count,
 }: CourseCardProps) => {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
 
-  const handleDelete = () => {
-    console.log(`Delete course with id: ${id}`)
+  const handleDelete = async () => {
+    try {
+      const response = await deleteCourseService.deleteCourse({ courseId: id })
+      navigate(
+        `/my-created-courses/?deleteMessage=${encodeURIComponent(
+          response.message
+        )}&deleteStatus=${response.status}`
+      )
+    } catch (error) {
+      navigate(
+        `/my-created-courses/?deleteMessage=${encodeURIComponent(
+          error instanceof Error ? error.message : t('Не вдалось видалити курс')
+        )}&deleteStatus=0`
+      )
+    } finally {
+      setIsConfirmDelOpen(false)
+    }
   }
 
   return (

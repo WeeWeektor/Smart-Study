@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from common.services import delete_picture, mongo_repo
 from common.utils import success_response
 from courses.models import CourseVersion, Lesson, Test, Course
+from courses.services.cache_service import invalidate_instance_cached_all
 
 
 def extract_ids(version_items, course_id=None):
@@ -39,6 +40,7 @@ async def remove_course(course):
         ))
 
     course_id_str = str(course.id)
+    course_owner = str(course.owner.id)
 
     version_obj = await sync_to_async(
         lambda: CourseVersion.objects.filter(course_id=course.id)
@@ -101,6 +103,17 @@ async def remove_course(course):
     await sync_to_async(mongo_repo.delete_document_by_id)("course_structures", str(course.structure_ids))
 
     await sync_to_async(delete_data)(course, modules_to_delete, lessons_to_delete, all_tests_to_delete)
+
+    await sync_to_async(
+        lambda: invalidate_instance_cached_all(
+            instance_type="courses",
+            instance_type_cache="courses_get",
+            category=None,
+            level=None,
+            author_id=str(course_owner)
+        ),
+        thread_sensitive=True
+    )()
 
     return success_response({
         "message": delete_message,

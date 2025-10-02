@@ -20,7 +20,7 @@ import {
   StatCard,
 } from '@/shared/ui'
 import { useProfileData } from '@/shared/hooks/useProfileData'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
   BookOpen,
@@ -33,6 +33,7 @@ import { useEffect, useState } from 'react'
 import {
   type AllCoursesResponse,
   type CountTeacherCourseRequest,
+  DeleteCourseNotification,
   getCourseService,
   sorting,
   statues,
@@ -51,10 +52,12 @@ const TeacherCourses = () => {
     name: string
     id: string
   }>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const deleteMessage = searchParams.get('deleteMessage')
+  const deleteStatus = searchParams.get('deleteStatus')
   const currentUserId = profileData?.user.id
   const isOwner = teacherId ? currentUserId === teacherId : true
   const resCourTeachId = isOwner ? currentUserId : teacherId
-
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [sortingFilter, setSortingFilter] = useState<string[]>([])
   const [statusesFilter, setStatusesFilter] = useState<string>('')
@@ -89,15 +92,13 @@ const TeacherCourses = () => {
         setCountPublishedTeacherCourses(response1.publishedCourses)
         const response2 = await getCourseService.getCountAllCourses()
         setCountAllCourseInDBs(response2.count)
-        console.log(response1)
-        console.log(response2)
       } catch (err) {
         setCourseError(t('Помилка завантаження кількості курсів: ') + err)
       }
     }
 
     fetchCountTeacherCourses()
-  }, [currentUserId, isOwner])
+  }, [currentUserId, isOwner, searchParams])
 
   const fetchCourses = async () => {
     setCourseLoading(true)
@@ -151,6 +152,10 @@ const TeacherCourses = () => {
     if (!resCourTeachId) return
     fetchCourses()
   }, [sortingFilter, statusesFilter, page, resCourTeachId])
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [page, searchParams])
 
   if (loading && courseLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
@@ -373,6 +378,18 @@ const TeacherCourses = () => {
             onPageChange={setPage}
           />
         </main>
+        {deleteMessage && deleteStatus && (
+          <DeleteCourseNotification
+            message={deleteMessage}
+            status={Number(deleteStatus)}
+            onClose={async () => {
+              searchParams.delete('deleteMessage')
+              searchParams.delete('deleteStatus')
+              setSearchParams(searchParams)
+              await fetchCourses()
+            }}
+          />
+        )}
       </div>
     </div>
   )
