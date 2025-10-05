@@ -5,4 +5,6 @@ export type {
   AllCourseRequest,
 } from './get.course.service'
 export { deleteCourseService } from './delete.course.service'
-export { default as DeleteCourseNotification } from './DeleteCourseNotification'
+export { default as CourseNotification } from './CourseNotification'
+export type { CreateCourseResponse } from './create.course.service'
+export { createCourseService } from './create.course.service'

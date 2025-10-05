@@ -2,26 +2,37 @@ import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
 import axios from 'axios'
 
-export interface DeleteCourseRequest {
-  courseId: string
-}
-
-export interface DeleteCourseResponse {
+export interface CreateCourseResponse {
   message: string
   status: number
 }
 
-class DeleteCourseService {
+class CreateCourseService {
   private t = ClassTranslator.translate
 
-  async deleteCourse({
-    courseId,
-  }: DeleteCourseRequest): Promise<DeleteCourseResponse> {
+  async createCourse(requestData: {
+    title: string
+    description: string
+    category: string
+    is_published: boolean
+    level: string
+    course_language: string
+    time_to_complete: string
+    cover_imageFile?: File | null
+  }): Promise<CreateCourseResponse> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
 
-      const response = await apiClient.delete<DeleteCourseResponse>(
-        `/course/delete-course/${courseId}/`,
+      const formData = new FormData()
+      const { cover_imageFile, ...data } = requestData
+      formData.append('data', JSON.stringify(data))
+      if (cover_imageFile) {
+        formData.append('cover_image', cover_imageFile)
+      }
+
+      const response = await apiClient.post<CreateCourseResponse>(
+        `/course/create-course/`,
+        formData,
         {
           headers: {
             'X-CSRFToken': csrfToken || '',
@@ -48,11 +59,11 @@ class DeleteCourseService {
           }
         }
 
-        throw new Error(this.t('Курс не вдалось видалити') + serverMessage)
+        throw new Error(this.t('Не вдалось зберегти курс: ') + serverMessage)
       }
-      throw new Error(this.t('Невідома помилка при видаленні курсу'))
+      throw new Error(this.t('Невідома помилка при створенні курсу'))
     }
   }
 }
 
-export const deleteCourseService = new DeleteCourseService()
+export const createCourseService = new CreateCourseService()

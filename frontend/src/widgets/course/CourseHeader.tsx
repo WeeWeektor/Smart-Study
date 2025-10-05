@@ -1,4 +1,4 @@
-import { BookOpen, Loader2, Plus, Save } from 'lucide-react'
+import { BookOpen, Globe, Loader2, Plus, Save } from 'lucide-react'
 import { Button, EditableHeader } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
 import type { ReactNode } from 'react'
@@ -9,7 +9,7 @@ interface CourseHeaderProps {
   action?: boolean
   onActionClick?: () => void
   createCourse?: boolean
-  actionOnClick?: [() => void, () => void]
+  actionOnClick?: [() => void, () => void, () => void]
   actionInfo?: boolean
   actionText?: [string, string] | string
   actionsBackPage?: ReactNode
@@ -66,6 +66,23 @@ export const CourseHeader = ({
                 <>
                   <Save className="w-4 h-4 mr-2" />
                   {t('Зберегти')}
+                </>
+              )}
+            </Button>
+            <Button
+              className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+              onClick={actionOnClick?.[2]}
+              disabled={actionInfo}
+            >
+              {actionInfo ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t('Публікація...')}
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4 mr-2" />
+                  {t('Опублікувати')}
                 </>
               )}
             </Button>

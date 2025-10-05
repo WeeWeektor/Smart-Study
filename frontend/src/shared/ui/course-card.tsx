@@ -78,15 +78,15 @@ export const CourseCard = ({
     try {
       const response = await deleteCourseService.deleteCourse({ courseId: id })
       navigate(
-        `/my-created-courses/?deleteMessage=${encodeURIComponent(
+        `/my-created-courses/?Message=${encodeURIComponent(
           response.message
-        )}&deleteStatus=${response.status}`
+        )}&Status=${response.status}&Action=delete`
       )
     } catch (error) {
       navigate(
-        `/my-created-courses/?deleteMessage=${encodeURIComponent(
+        `/my-created-courses/?Message=${encodeURIComponent(
           error instanceof Error ? error.message : t('Не вдалось видалити курс')
-        )}&deleteStatus=0`
+        )}&Status=0&Action=delete`
       )
     } finally {
       setIsConfirmDelOpen(false)

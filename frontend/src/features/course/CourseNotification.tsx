@@ -1,20 +1,37 @@
 import React from 'react'
-import { useI18n } from '@/shared/lib'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 
-interface DeleteCourseNotificationProps {
+interface CourseNotificationProps {
   message: string
   status: number
+  action_type: string
   onClose: () => void
 }
 
-const DeleteCourseNotification: React.FC<DeleteCourseNotificationProps> = ({
+const CourseNotification: React.FC<CourseNotificationProps> = ({
   message,
   status,
+  action_type,
   onClose,
 }) => {
-  const { t } = useI18n()
   const isSuccess = status === 200
+
+  const success_message =
+    action_type === 'create'
+      ? 'Курс успішно створено'
+      : action_type === 'update'
+        ? 'Курс успішно оновлено'
+        : action_type === 'delete'
+          ? 'Курс успішно видалено'
+          : 'Операція успішна'
+  const error_message =
+    action_type === 'create'
+      ? 'Помилка при створенні курсу'
+      : action_type === 'update'
+        ? 'Помилка при оновленні курсу'
+        : action_type === 'delete'
+          ? 'Помилка при видаленні курсу'
+          : 'Сталася помилка'
 
   return (
     <div className="fixed top-5 right-5 bg-card text-card-foreground rounded-lg shadow-lg z-50 max-w-xs w-full animate-slide-in">
@@ -26,9 +43,7 @@ const DeleteCourseNotification: React.FC<DeleteCourseNotificationProps> = ({
             ) : (
               <AlertCircle className="w-5 h-5 text-red-600" />
             )}
-            {isSuccess
-              ? t('Курс видалено успішно')
-              : t('Помилка видалення курсу')}
+            {isSuccess ? success_message : error_message}
           </div>
           <button
             className="bg-transparent border-none text-xl cursor-pointer px-1 text-muted-foreground hover:text-foreground"
@@ -43,4 +58,4 @@ const DeleteCourseNotification: React.FC<DeleteCourseNotificationProps> = ({
   )
 }
 
-export default DeleteCourseNotification
+export default CourseNotification

@@ -33,7 +33,7 @@ import { useEffect, useState } from 'react'
 import {
   type AllCoursesResponse,
   type CountTeacherCourseRequest,
-  DeleteCourseNotification,
+  CourseNotification,
   getCourseService,
   sorting,
   statues,
@@ -53,8 +53,9 @@ const TeacherCourses = () => {
     id: string
   }>()
   const [searchParams, setSearchParams] = useSearchParams()
-  const deleteMessage = searchParams.get('deleteMessage')
-  const deleteStatus = searchParams.get('deleteStatus')
+  const message = searchParams.get('Message')
+  const status = searchParams.get('Status')
+  const action = searchParams.get('Action')
   const currentUserId = profileData?.user.id
   const isOwner = teacherId ? currentUserId === teacherId : true
   const resCourTeachId = isOwner ? currentUserId : teacherId
@@ -379,13 +380,15 @@ const TeacherCourses = () => {
             onPageChange={setPage}
           />
         </main>
-        {deleteMessage && deleteStatus && (
-          <DeleteCourseNotification
-            message={deleteMessage}
-            status={Number(deleteStatus)}
+        {message && status && action && (
+          <CourseNotification
+            message={message}
+            status={Number(status)}
+            action_type={action}
             onClose={async () => {
-              searchParams.delete('deleteMessage')
-              searchParams.delete('deleteStatus')
+              searchParams.delete('Message')
+              searchParams.delete('Status')
+              searchParams.delete('Action')
               setSearchParams(searchParams)
               await fetchCourses()
             }}
