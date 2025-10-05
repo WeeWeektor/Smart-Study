@@ -1,6 +1,7 @@
 import { BookOpen, Loader2, Plus, Save } from 'lucide-react'
 import { Button, EditableHeader } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
+import type { ReactNode } from 'react'
 
 interface CourseHeaderProps {
   title: string
@@ -11,6 +12,7 @@ interface CourseHeaderProps {
   actionOnClick?: [() => void, () => void]
   actionInfo?: boolean
   actionText?: [string, string] | string
+  actionsBackPage?: ReactNode
 }
 
 export const CourseHeader = ({
@@ -22,6 +24,7 @@ export const CourseHeader = ({
   actionOnClick,
   actionInfo,
   actionText,
+  actionsBackPage,
 }: CourseHeaderProps) => {
   const { t } = useI18n()
 
@@ -69,6 +72,7 @@ export const CourseHeader = ({
           </div>
         ))
       }
+      actionsBackPage={actionsBackPage}
     />
   )
 }

@@ -7,6 +7,7 @@ interface EditableHeaderProps {
   description: string
   icon: ReactNode
   actions?: ReactNode
+  actionsBackPage?: ReactNode
 }
 
 export const EditableHeader = ({
@@ -14,17 +15,21 @@ export const EditableHeader = ({
   description,
   icon,
   actions,
+  actionsBackPage,
 }: EditableHeaderProps) => {
   return (
     <header className="bg-card border-b border-border text-card-foreground">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center text-foreground">
-              {icon && <span className="mr-2">{icon}</span>}
-              {title}
-            </h1>
-            <p className="text-muted-foreground">{description}</p>
+          <div className="flex items-center justify-between space-x-4">
+            {actionsBackPage}
+            <div>
+              <h1 className="text-2xl font-semibold flex items-center text-foreground">
+                {icon && <span className="mr-2">{icon}</span>}
+                {title}
+              </h1>
+              <p className="text-muted-foreground">{description}</p>
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
