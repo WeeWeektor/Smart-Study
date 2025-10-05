@@ -7,7 +7,9 @@ import {
   ErrorProfile,
   Input,
   Label,
+  TestsOfCourse,
   LoadingProfile,
+  ModulesOfCourse,
   Select,
   SelectContent,
   SelectItem,
@@ -378,6 +380,18 @@ const CreateCourse = () => {
                   className="mt-1"
                 />
               </div>
+            </CollapsibleSection>
+          </div>
+
+          <div className="flex flex-wrap justify-center mt-6">
+            <CollapsibleSection title={t('Модулі курсу')}>
+              <ModulesOfCourse></ModulesOfCourse>
+            </CollapsibleSection>
+          </div>
+
+          <div className="flex flex-wrap justify-center mt-6">
+            <CollapsibleSection title={t('Тести курсу')}>
+              <TestsOfCourse></TestsOfCourse>
             </CollapsibleSection>
           </div>
 
