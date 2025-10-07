@@ -140,8 +140,8 @@ const CourseDurationPicker = ({
 
   return (
     <div className="space-y-2">
-      <div className="items-center grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Label className="text-gray-800 dark:text-gray-200 flex-shrink-0">
+      <div className="items-center grid grid-cols-1 md:grid-cols-2">
+        <Label className="text-gray-800 dark:text-gray-200 flex-shrink-0 flex justify-end px-6">
           {t(
             'Встановіть орієнтовний час необхідний для проходження всього курсу *'
           )}
