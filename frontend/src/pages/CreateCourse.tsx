@@ -397,11 +397,7 @@ const CreateCourse = () => {
           </div>
 
           <div className="w-full max-w-6xl relative mx-auto mt-6">
-            <CreateMTOfCourse type="module"></CreateMTOfCourse>
-          </div>
-
-          <div className="w-full max-w-6xl relative mx-auto mt-6">
-            <CreateMTOfCourse type="test"></CreateMTOfCourse>
+            <CreateMTOfCourse />
           </div>
 
           <div className="flex flex-wrap justify-center mt-6">

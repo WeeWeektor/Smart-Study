@@ -1,98 +1,169 @@
 import { useI18n } from '@/shared/lib'
 import { BookOpen, Plus, Trash2 } from 'lucide-react'
-import { Button } from '@/shared/ui/button.tsx'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardTitle,
+  CollapsibleSection,
+  ConfirmModal,
+  Input,
+  Label,
+} from '@/shared/ui'
 import React, { useState } from 'react'
-import { Card, CardContent, CardTitle } from '@/shared/ui/card.tsx'
-import { Label } from '@/shared/ui/label.tsx'
-import { Input } from '@/shared/ui/input.tsx'
-import { ConfirmModal } from '@/shared/ui/confirm-dialog.tsx'
-import { CollapsibleSection } from '@/shared/ui/collapsible-section.tsx'
 
-interface CourseModule {
-  orderCourse: number
-  title: string
-  lessons: ModuleLesson[]
-  tests: ModuleTest[]
+interface CourseStructure {
+  type: 'course'
+  courseStructure: (ModuleStructure | CourseTest)[]
 }
 
-interface CourseTest {
-  orderCourse: number
+interface ModuleStructure {
+  type: 'module'
+  order: number
   title: string
+  moduleStructure: (Lesson | ModuleTest)[]
 }
 
-interface ModuleLesson {
-  orderModule: number
+interface BaseTest {
   title: string
 }
 
-interface ModuleTest {
-  orderModule: number
+interface ModuleTest extends BaseTest {
+  type: 'module-test'
+  order: number
+}
+
+interface CourseTest extends BaseTest {
+  type: 'course-test'
+  order: number
+}
+
+interface Lesson {
+  type: 'lesson'
   title: string
+  order: number
 }
 
-export interface CreateMTOfCourseProps {
-  type: 'module' | 'test'
-}
-
-export const CreateMTOfCourse = ({ type }: CreateMTOfCourseProps) => {
+export const CreateMTOfCourse = () => {
   const { t } = useI18n()
-  const [courseModules, setCourseModules] = useState<CourseModule[]>([])
-  const [courseTests, setCourseTests] = useState<CourseTest[]>([])
+  const [courseS, setCourseS] = useState<CourseStructure>({
+    type: 'course',
+    courseStructure: [],
+  })
   const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    parentType: 'course' | 'module'
+    parentOrder?: number
+    itemOrder: number
+    type: 'module' | 'course-test' | 'lesson' | 'module-test'
+  } | null>(null)
 
   const handleAddModule = () => {
-    setCourseModules(prev => [
-      ...prev,
-      { orderCourse: prev.length + 1, title: '', lessons: [], tests: [] },
-    ])
+    setCourseS(prev => {
+      const moduleOrders = prev.courseStructure.map(m => m.order)
+      const nextOrder =
+        moduleOrders.length > 0 ? Math.max(...moduleOrders) + 1 : 1
+
+      return {
+        ...prev,
+        courseStructure: [
+          ...prev.courseStructure,
+          {
+            type: 'module',
+            order: nextOrder,
+            title: '',
+            moduleStructure: [],
+          } satisfies ModuleStructure,
+        ],
+      }
+    })
   }
 
   const handleAddTest = () => {
-    setCourseTests(prev => [
-      ...prev,
-      { orderCourse: prev.length + 1, title: '' },
-    ])
+    setCourseS(prev => {
+      const testOrders = prev.courseStructure.map(t => t.order)
+      const nextOrder = testOrders.length > 0 ? Math.max(...testOrders) + 1 : 1
+
+      return {
+        ...prev,
+        courseStructure: [
+          ...prev.courseStructure,
+          {
+            type: 'course-test',
+            order: nextOrder,
+            title: '',
+          } satisfies CourseTest,
+        ],
+      }
+    })
   }
 
   const handleAddLesson = (moduleOrder: number) => {
-    setCourseModules(prev =>
-      prev.map(m =>
-        m.orderCourse === moduleOrder
-          ? {
-              ...m,
-              lessons: [
-                ...m.lessons,
-                { orderModule: m.lessons.length + 1, title: '' },
-              ],
-            }
-          : m
-      )
-    )
+    setCourseS(prev => ({
+      ...prev,
+      courseStructure: prev.courseStructure.map(item => {
+        if (item.type === 'module' && item.order === moduleOrder) {
+          const lessonOrders = item.moduleStructure.map(l => l.order)
+          const nextOrder =
+            lessonOrders.length > 0 ? Math.max(...lessonOrders) + 1 : 1
+
+          return {
+            ...item,
+            moduleStructure: [
+              ...item.moduleStructure,
+              { type: 'lesson', title: '', order: nextOrder } satisfies Lesson,
+            ],
+          }
+        }
+        return item
+      }),
+    }))
   }
 
   const handleAddModuleTest = (moduleOrder: number) => {
-    setCourseModules(prev =>
-      prev.map(m =>
-        m.orderCourse === moduleOrder
-          ? {
-              ...m,
-              tests: [
-                ...m.tests,
-                { orderModule: m.tests.length + 1, title: '' },
-              ],
-            }
-          : m
-      )
-    )
+    setCourseS(prev => ({
+      ...prev,
+      courseStructure: prev.courseStructure.map(item => {
+        if (item.type === 'module' && item.order === moduleOrder) {
+          const testOrders = item.moduleStructure.map(t => t.order)
+          const nextOrder =
+            testOrders.length > 0 ? Math.max(...testOrders) + 1 : 1
+
+          return {
+            ...item,
+            moduleStructure: [
+              ...item.moduleStructure,
+              {
+                type: 'module-test',
+                title: '',
+                order: nextOrder,
+              } satisfies ModuleTest,
+            ],
+          }
+        }
+        return item
+      }),
+    }))
   }
 
   const handleDelete = (order: number, isModule: boolean) => {
-    if (isModule) {
-      setCourseModules(prev => prev.filter(m => m.orderCourse !== order))
-    } else {
-      setCourseTests(prev => prev.filter(t => t.orderCourse !== order))
-    }
+    setCourseS(prev => {
+      const newStructure = prev.courseStructure
+        .filter(item =>
+          isModule
+            ? !(item.type === 'module' && item.order === order)
+            : !(item.type === 'course-test' && item.order === order)
+        )
+        .map((item, index) => {
+          if (item.type === 'module' || item.type === 'course-test') {
+            return { ...item, order: index + 1 }
+          }
+          return item
+        })
+
+      return { ...prev, courseStructure: newStructure }
+    })
+
     setIsConfirmDelOpen(false)
     setDeleteTarget(null)
   }
@@ -102,314 +173,335 @@ export const CreateMTOfCourse = ({ type }: CreateMTOfCourseProps) => {
     itemOrder: number,
     isTest: boolean
   ) => {
-    setCourseModules(prev =>
-      prev.map(m => {
-        if (m.orderCourse !== moduleOrder) return m
-        if (isTest) {
-          return {
-            ...m,
-            tests: m.tests.filter(t => t.orderModule !== itemOrder),
+    setCourseS(prev => ({
+      ...prev,
+      courseStructure: prev.courseStructure.map(item => {
+        if (item.type !== 'module' || item.order !== moduleOrder) return item
+
+        const filteredModuleStructure = item.moduleStructure.filter(subItem => {
+          if (isTest) {
+            return !(
+              subItem.type === 'module-test' && subItem.order === itemOrder
+            )
           }
-        } else {
-          return {
-            ...m,
-            lessons: m.lessons.filter(l => l.orderModule !== itemOrder),
-          }
-        }
-      })
-    )
+          return !(subItem.type === 'lesson' && subItem.order === itemOrder)
+        })
+
+        const newModuleStructure = filteredModuleStructure.map(
+          (subItem, index) => ({
+            ...subItem,
+            order: index + 1,
+          })
+        )
+
+        return { ...item, moduleStructure: newModuleStructure }
+      }),
+    }))
+
     setIsConfirmDelOpen(false)
     setDeleteTarget(null)
   }
 
   const handleTitleChange = (
+    parentType: 'course' | 'module',
     order: number,
     newTitle: string,
-    isModule: boolean
+    type: 'module' | 'course-test' | 'lesson' | 'module-test'
   ) => {
-    if (isModule) {
-      setCourseModules(prev =>
-        prev.map(m => (m.orderCourse === order ? { ...m, title: newTitle } : m))
-      )
-    } else {
-      setCourseTests(prev =>
-        prev.map(t => (t.orderCourse === order ? { ...t, title: newTitle } : t))
-      )
+    if (parentType === 'course') {
+      setCourseS(prev => ({
+        ...prev,
+        courseStructure: prev.courseStructure.map(item =>
+          item.type === type && item.order === order
+            ? { ...item, title: newTitle }
+            : item
+        ),
+      }))
+    } else if (parentType === 'module') {
+      setCourseS(prev => ({
+        ...prev,
+        courseStructure: prev.courseStructure.map(module => {
+          if (module.type !== 'module') return module
+          return {
+            ...module,
+            moduleStructure: module.moduleStructure.map(item =>
+              item.type === type && item.order === order
+                ? { ...item, title: newTitle }
+                : item
+            ),
+          }
+        }),
+      }))
     }
   }
 
-  const renderDeleteModuleStructureButton = (
-    moduleOrder: number,
-    itemOrder: number,
-    isTest: boolean
-  ) => (
-    <>
+  interface DeleteButtonProps {
+    parentType: 'course' | 'module'
+    parentOrder?: number
+    itemOrder: number
+    type: 'module' | 'course-test' | 'lesson' | 'module-test'
+  }
+
+  const renderDeleteButton = ({
+    parentType,
+    parentOrder,
+    itemOrder,
+    type,
+  }: DeleteButtonProps) => {
+    return (
       <Button
         variant="ghost"
         size="icon"
         className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
         onClick={() => {
-          setDeleteTarget(itemOrder)
+          setDeleteTarget({
+            parentType,
+            parentOrder: parentType === 'module' ? parentOrder : undefined,
+            itemOrder,
+            type,
+          })
           setIsConfirmDelOpen(true)
         }}
       >
         <Trash2 className="w-4 h-4" />
       </Button>
-      <ConfirmModal
-        isOpen={isConfirmDelOpen && deleteTarget === itemOrder}
-        onClose={() => setIsConfirmDelOpen(false)}
-        onConfirm={() => handleDeleteModuleItem(moduleOrder, itemOrder, isTest)}
-        title={
-          isTest ? t('Видалення тесту модуля') : t('Видалення уроку модуля')
-        }
-        description={
-          isTest
-            ? t(
-                'Ви впевнені, що хочете видалити цей тест? Цю дію неможливо скасувати.'
-              )
-            : t(
-                'Ви впевнені, що хочете видалити цей урок? Цю дію неможливо скасувати.'
-              )
-        }
-      />
-    </>
-  )
-
-  const renderDeleteCourseStructureButton = (
-    order: number,
-    isModule: boolean
-  ) => {
-    return (
-      <>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-          onClick={() => {
-            setDeleteTarget(order)
-            setIsConfirmDelOpen(true)
-          }}
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-        <ConfirmModal
-          isOpen={isConfirmDelOpen && deleteTarget === order}
-          onClose={() => setIsConfirmDelOpen(false)}
-          onConfirm={() => handleDelete(order, isModule)}
-          title={isModule ? t('Видалення модуля') : t('Видалення тесту')}
-          description={
-            isModule
-              ? t(
-                  'Ви впевнені, що хочете видалити цей модуль? Цю дію неможливо скасувати.'
-                )
-              : t(
-                  'Ви впевнені, що хочете видалити цей тест? Цю дію неможливо скасувати.'
-                )
-          }
-        />
-      </>
     )
   }
 
   return (
     <div className="w-full">
-      <CollapsibleSection
-        title={type === 'module' ? t('Модулі курсу') : t('Тести курсу')}
-      >
-        {type === 'module' &&
-          courseModules.map(module => (
-            <Card
-              key={module.orderCourse}
-              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
-            >
-              <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
-                <div className="flex items-center justify-center relative">
-                  <div className="text-center">
-                    {t('Модуль')} {module.orderCourse}{' '}
-                    {module.title && `- ${module.title}`}
-                  </div>
-                  <div className="absolute right-0 mr-6">
-                    {renderDeleteCourseStructureButton(
-                      module.orderCourse,
-                      true
-                    )}
-                  </div>
-                </div>
-              </CardTitle>
-              <CardContent className="p-6 text-slate-700 dark:text-slate-200">
-                <Label>{t('Назва модуля *')}</Label>
-                <Input
-                  value={module.title}
-                  onChange={e =>
-                    handleTitleChange(module.orderCourse, e.target.value, true)
-                  }
-                  placeholder={t('Введіть назву модуля')}
-                  className="mt-1 mb-4"
-                />
-                <div>
-                  <Card
-                    key={'previewLesson-' + module.orderCourse}
-                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-600 dark:hover:shadow-gray-500 mt-4"
-                  >
-                    <CardTitle className="text-slate-800 dark:text-slate-100 my-4">
-                      <div className="flex items-center  relative">
-                        <div className="left-0 ml-6">{t('Уроки')}</div>
-                        <div className="absolute right-0 mr-6">
+      <CollapsibleSection title={t('Структура курсу')}>
+        {courseS.courseStructure.length > 0 ? (
+          courseS.courseStructure.map(item => {
+            if (item.type === 'module') {
+              return (
+                <Card
+                  key={'module - ' + item.order}
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                >
+                  <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
+                    <div className="flex items-center justify-center relative">
+                      <div className="text-center">
+                        {t('Модуль')} {item.order}{' '}
+                        {item.title && `- ${item.title}`}
+                      </div>
+                      <div className="absolute right-0 mr-6">
+                        {renderDeleteButton({
+                          parentType: 'course',
+                          itemOrder: item.order,
+                          type: 'module',
+                        })}
+                      </div>
+                    </div>
+                  </CardTitle>
+                  <CardContent className="p-6 text-slate-700 dark:text-slate-200">
+                    <Label>{t('Назва модуля *')}</Label>
+                    <Input
+                      value={item.title}
+                      onChange={e =>
+                        handleTitleChange(
+                          'course',
+                          item.order,
+                          e.target.value,
+                          'module'
+                        )
+                      }
+                      placeholder={t('Введіть назву модуля')}
+                      className="mt-1 mb-4"
+                    />
+
+                    <Card
+                      key={'lessonOrder or testOrder' + item.order}
+                      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-600 dark:hover:shadow-gray-500 mt-4"
+                    >
+                      <CardTitle className="text-slate-800 dark:text-slate-100 my-4">
+                        <p className="text-center">{t('Структура модуля')}</p>
+                      </CardTitle>
+                      <CardContent className="p-6 pt-1 text-slate-700 dark:text-slate-200">
+                        {item.moduleStructure.length === 0 ? (
+                          <Card
+                            key={'add-first-lesson-or-test'}
+                            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
+                          >
+                            <CardContent className="text-slate-700 dark:text-slate-200">
+                              <div className="text-center text-slate-500 mt-6">
+                                <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-700 dark:text-slate-200" />
+                                <p className="text-slate-500 dark:text-slate-400">
+                                  {t(
+                                    'Додавайте уроки та тест для цього модуля'
+                                  )}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          item.moduleStructure.map(moduleElem => (
+                            <Card
+                              key={`moduleElem-courseEmem-${moduleElem.order}-${item.order}`}
+                              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                            >
+                              <div className="flex items-center relative">
+                                <div
+                                  key={'moduleElem' + moduleElem.order}
+                                  className="pl-4 m-1 left-0"
+                                >
+                                  {moduleElem.type === 'lesson'
+                                    ? `${t('Урок')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`
+                                    : `${t('Тест')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`}
+                                </div>
+                                <div className="absolute right-0 pr-4 mb-1">
+                                  {renderDeleteButton({
+                                    parentType: 'module',
+                                    parentOrder: item.order,
+                                    itemOrder: moduleElem.order,
+                                    type:
+                                      moduleElem.type === 'lesson'
+                                        ? 'lesson'
+                                        : 'module-test',
+                                  })}
+                                </div>
+                              </div>
+                            </Card>
+                          ))
+                        )}
+
+                        <div className="flex justify-center mt-6">
                           <Button
-                            className="w-52"
-                            onClick={() => handleAddLesson(module.orderCourse)}
+                            className="mr-3 w-52"
+                            onClick={() => handleAddLesson(item.order)}
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             {t('Додати урок')}
                           </Button>
-                        </div>
-                      </div>
-                    </CardTitle>
-                    <CardContent className="p-6 pt-1 text-slate-700 dark:text-slate-200">
-                      {module.lessons.length === 0 ? (
-                        <p>{t('Уроки не додано')}</p>
-                      ) : (
-                        module.lessons.map(lesson => (
-                          <Card
-                            key={`lesson-${module.orderCourse}-${lesson.orderModule}`}
-                            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
-                          >
-                            <div className="flex items-center relative">
-                              <div
-                                key={lesson.orderModule}
-                                className="pl-4 m-1 left-0"
-                              >
-                                {`${t('Урок')} ${lesson.orderModule} ${lesson.title && `- ${lesson.title}`}`}
-                              </div>
-                              <div className="absolute right-0 pr-4 mb-1">
-                                {renderDeleteModuleStructureButton(
-                                  module.orderCourse,
-                                  lesson.orderModule,
-                                  false
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        ))
-                      )}
-                    </CardContent>
-                  </Card>
-                  <Card
-                    key={'previewTest-' + module.orderCourse}
-                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-600 dark:hover:shadow-gray-500 mt-4"
-                  >
-                    <CardTitle className="text-slate-800 dark:text-slate-100 my-4">
-                      <div className="flex items-center  relative">
-                        <div className="left-0 ml-6">{t('Тести')}</div>
-                        <div className="absolute right-0 mr-6">
                           <Button
-                            className="w-52"
-                            onClick={() =>
-                              handleAddModuleTest(module.orderCourse)
-                            }
+                            className="ml-3 w-52"
+                            onClick={() => handleAddModuleTest(item.order)}
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             {t('Додати тест у модуль')}
                           </Button>
                         </div>
+                      </CardContent>
+                    </Card>
+                  </CardContent>
+                </Card>
+              )
+            } else {
+              return (
+                <Card
+                  key={'ret-item-order' + item.order}
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                >
+                  <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
+                    <div className="flex items-center justify-center relative">
+                      <div className="text-center">
+                        {t('Тест')} {item.order}{' '}
+                        {item.title && `- ${item.title}`}
                       </div>
-                    </CardTitle>
-                    <CardContent className="p-6 pt-1 text-slate-700 dark:text-slate-200">
-                      {module.tests.length === 0 ? (
-                        <p>{t('Тести не додано')}</p>
-                      ) : (
-                        module.tests.map(test => (
-                          <Card
-                            key={`test-${module.orderCourse}-${test.orderModule}`}
-                            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
-                          >
-                            <div className="flex items-center relative">
-                              <div
-                                key={test.orderModule}
-                                className="pl-4 m-1 left-0"
-                              >
-                                {`${t('Тест')} ${test.orderModule} ${test.title && `- ${test.title}`}`}
-                              </div>
-                              <div className="absolute right-0 pr-4 mb-1">
-                                {renderDeleteModuleStructureButton(
-                                  module.orderCourse,
-                                  test.orderModule,
-                                  true
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        ))
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-        {type === 'test' &&
-          courseTests.map(test => (
-            <Card
-              key={test.orderCourse}
-              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
-            >
-              <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
-                <div className="flex items-center justify-center relative">
-                  <div className="text-center">
-                    {t('Тест')} {test.orderCourse}{' '}
-                    {test.title && `- ${test.title}`}
-                  </div>
-                  <div className="absolute right-0 mr-6">
-                    {renderDeleteCourseStructureButton(test.orderCourse, false)}
-                  </div>
-                </div>
-              </CardTitle>
-              <CardContent className="p-6 text-slate-700 dark:text-slate-200">
-                <Label>{t('Назва тесту *')}</Label>
-                <Input
-                  value={test.title}
-                  onChange={e =>
-                    handleTitleChange(test.orderCourse, e.target.value, false)
-                  }
-                  placeholder={t('Введіть назву тесту')}
-                  className="mt-1"
-                />
-              </CardContent>
-            </Card>
-          ))}
-
-        {((type === 'module' && courseModules.length === 0) ||
-          (type === 'test' && courseTests.length === 0)) && (
+                      <div className="absolute right-0 mr-6">
+                        {renderDeleteButton({
+                          parentType: 'course',
+                          itemOrder: item.order,
+                          type: 'course-test',
+                        })}
+                      </div>
+                    </div>
+                  </CardTitle>
+                  <CardContent className="p-6 text-slate-700 dark:text-slate-200">
+                    <Label>{t('Назва тесту *')}</Label>
+                    <Input
+                      value={item.title}
+                      onChange={e =>
+                        handleTitleChange(
+                          'course',
+                          item.order,
+                          e.target.value,
+                          'course-test'
+                        )
+                      }
+                      placeholder={t('Введіть назву тесту')}
+                      className="mt-1"
+                    />
+                  </CardContent>
+                </Card>
+              )
+            }
+          })
+        ) : (
           <Card
-            key={'add-first-' + type}
+            key={'add-first-module-or-test'}
             className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
           >
             <CardContent className="p-6 text-slate-700 dark:text-slate-200">
               <div className="text-center text-slate-500 mt-6">
                 <BookOpen className="w-12 h-12 mx-auto mb-4 text-slate-700 dark:text-slate-200" />
                 <p className="text-lg font-medium mb-2 text-slate-600 dark:text-slate-300">
-                  {type === 'module'
-                    ? t('Модулі не додано')
-                    : t('Тести не додано')}
+                  {t('Почніть створення вашого курсу')}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400">
-                  {type === 'module'
-                    ? t('Додайте перший модуль для початку створення курсу')
-                    : t('Додайте перший тест для початку створення курсу')}
+                  {t(
+                    'Додайте перший модуль або тест для початку створення курсу'
+                  )}
                 </p>
               </div>
             </CardContent>
           </Card>
         )}
 
+        <ConfirmModal
+          isOpen={isConfirmDelOpen}
+          onClose={() => setIsConfirmDelOpen(false)}
+          onConfirm={() => {
+            if (!deleteTarget) return
+            const { parentType, parentOrder, itemOrder, type } = deleteTarget
+
+            if (parentType === 'course') {
+              handleDelete(itemOrder, type === 'module')
+            } else if (parentType === 'module' && parentOrder !== undefined) {
+              handleDeleteModuleItem(
+                parentOrder,
+                itemOrder,
+                type === 'module-test'
+              )
+            }
+
+            setIsConfirmDelOpen(false)
+            setDeleteTarget(null)
+          }}
+          title={
+            deleteTarget
+              ? deleteTarget.type === 'module'
+                ? t('Видалення модуля')
+                : deleteTarget.type === 'course-test'
+                  ? t('Видалення тесту')
+                  : deleteTarget.type === 'lesson'
+                    ? t('Видалення уроку модуля')
+                    : t('Видалення тесту модуля')
+              : ''
+          }
+          description={
+            deleteTarget
+              ? t(
+                  'Ви впевнені, що хочете видалити цей елемент? Цю дію неможливо скасувати.'
+                )
+              : ''
+          }
+        />
+
         <div className="flex justify-center mt-6">
           <Button
-            onClick={type === 'module' ? handleAddModule : handleAddTest}
-            className="w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+            onClick={handleAddModule}
+            className="mr-3 w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            {type === 'module' ? t('Додати модуль') : t('Додати тест')}
+            {t('Додати модуль')}
+          </Button>
+          <Button
+            onClick={handleAddTest}
+            className="ml-3 w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('Додати тест')}
           </Button>
         </div>
       </CollapsibleSection>
