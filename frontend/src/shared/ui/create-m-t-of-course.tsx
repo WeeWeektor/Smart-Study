@@ -1,5 +1,19 @@
 import { useI18n } from '@/shared/lib'
-import { BookOpen, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
+import {
+  Award,
+  BookOpen,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Eye,
+  FileText,
+  Plus,
+  Repeat,
+  Shuffle,
+  Trash2,
+  X,
+} from 'lucide-react'
 import {
   Button,
   Card,
@@ -7,10 +21,12 @@ import {
   CardTitle,
   CollapsibleSection,
   ConfirmModal,
+  CreateTestModal,
   Input,
   Label,
+  type Question,
 } from '@/shared/ui'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 interface CourseStructure {
   type: 'course'
@@ -24,16 +40,23 @@ interface ModuleStructure {
   moduleStructure: (Lesson | ModuleTest)[]
 }
 
-interface BaseTest {
+export interface BaseTest {
   title: string
+  description: string
+  timeLimit: number
+  countAttempts: number
+  passScore: number
+  randomQuestions: boolean
+  showAnswers: boolean
+  questions: Question[]
 }
 
-interface ModuleTest extends BaseTest {
+export interface ModuleTest extends BaseTest {
   type: 'module-test'
   order: number
 }
 
-interface CourseTest extends BaseTest {
+export interface CourseTest extends BaseTest {
   type: 'course-test'
   order: number
 }
@@ -50,14 +73,21 @@ export const CreateMTOfCourse = () => {
     type: 'course',
     courseStructure: [],
   })
-  const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
+  const [isConfirmDelOpen, setIsConfirmDelOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{
     parentType: 'course' | 'module'
     parentOrder?: number
     itemOrder: number
     type: 'module' | 'course-test' | 'lesson' | 'module-test'
   } | null>(null)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>(
+    {}
+  )
+  const [isCreateTestOpen, setIsCreateTestOpen] = useState(false)
+  const [testModalData, setTestModalData] = useState<{
+    order: number
+    type: 'module-test' | 'course-test'
+  } | null>(null)
 
   const handleAddModule = () => {
     setCourseS(prev => {
@@ -80,25 +110,6 @@ export const CreateMTOfCourse = () => {
     })
   }
 
-  const handleAddTest = () => {
-    setCourseS(prev => {
-      const testOrders = prev.courseStructure.map(t => t.order)
-      const nextOrder = testOrders.length > 0 ? Math.max(...testOrders) + 1 : 1
-
-      return {
-        ...prev,
-        courseStructure: [
-          ...prev.courseStructure,
-          {
-            type: 'course-test',
-            order: nextOrder,
-            title: '',
-          } satisfies CourseTest,
-        ],
-      }
-    })
-  }
-
   const handleAddLesson = (moduleOrder: number) => {
     setCourseS(prev => ({
       ...prev,
@@ -113,32 +124,6 @@ export const CreateMTOfCourse = () => {
             moduleStructure: [
               ...item.moduleStructure,
               { type: 'lesson', title: '', order: nextOrder } satisfies Lesson,
-            ],
-          }
-        }
-        return item
-      }),
-    }))
-  }
-
-  const handleAddModuleTest = (moduleOrder: number) => {
-    setCourseS(prev => ({
-      ...prev,
-      courseStructure: prev.courseStructure.map(item => {
-        if (item.type === 'module' && item.order === moduleOrder) {
-          const testOrders = item.moduleStructure.map(t => t.order)
-          const nextOrder =
-            testOrders.length > 0 ? Math.max(...testOrders) + 1 : 1
-
-          return {
-            ...item,
-            moduleStructure: [
-              ...item.moduleStructure,
-              {
-                type: 'module-test',
-                title: '',
-                order: nextOrder,
-              } satisfies ModuleTest,
             ],
           }
         }
@@ -269,16 +254,63 @@ export const CreateMTOfCourse = () => {
     )
   }
 
-  const renderCollapsedButton = () => {
+  const toggleCollapse = (key: string) => {
+    setCollapsedItems(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  const renderCollapsedButton = (key: string) => {
     return (
       <Button
         variant="ghost"
         size="icon"
         className="bg-white dark:bg-slate-800 dark:hover:bg-slate-600"
-        onClick={() => setIsCollapsed(prev => !prev)}
+        onClick={() => toggleCollapse(key)}
       >
-        {isCollapsed ? <ChevronDown /> : <ChevronUp />}
+        {collapsedItems[key] ? <ChevronDown /> : <ChevronUp />}
       </Button>
+    )
+  }
+
+  const renderTestData = ({ test }: { test: CourseTest | ModuleTest }) => {
+    return (
+      <div className="text-lg">
+        <div className="flex items-center mb-2">
+          <FileText className="w-4 h-4 mr-2" />
+          {t('Опис')}: {test.description}
+        </div>
+        <div className="flex items-center mb-2">
+          <Clock className="w-4 h-4 mr-2" />
+          {t('Обмеження в часі')}: {test.timeLimit} {t('хвилин')}
+        </div>
+        <div className="flex items-center mb-2">
+          <Repeat className="w-4 h-4 mr-2" />
+          {t('Кількість спроб')}: {test.countAttempts}
+        </div>
+        <div className="flex items-center mb-2">
+          <Award className="w-4 h-4 mr-2" />
+          {t('Прохідний бал')}: {test.passScore} %
+        </div>
+        <div className="flex flex-col mt-2">
+          <div className="flex items-center mb-1">
+            <Shuffle className="w-4 h-4 mr-2" />
+            {t('Перемішувати питання')}:{' '}
+            {test.randomQuestions ? (
+              <Check className="w-4 h-4 ml-2 text-green-500" />
+            ) : (
+              <X className="w-4 h-4 ml-2 text-red-500" />
+            )}
+          </div>
+          <div className="flex items-center">
+            <Eye className="w-4 h-4 mr-2" />
+            {t('Показати відповіді після завершення')}:{' '}
+            {test.showAnswers ? (
+              <Check className="w-4 h-4 ml-2 text-green-500" />
+            ) : (
+              <X className="w-4 h-4 ml-2 text-red-500" />
+            )}
+          </div>
+        </div>
+      </div>
     )
   }
 
@@ -287,6 +319,8 @@ export const CreateMTOfCourse = () => {
       <CollapsibleSection title={t('Структура курсу')}>
         {courseS.courseStructure.length > 0 ? (
           courseS.courseStructure.map(item => {
+            const collapseKey = `${item.type}-${item.order}`
+            const isCollapsed = collapsedItems[collapseKey] || false
             if (item.type === 'module') {
               return (
                 <Card
@@ -296,11 +330,12 @@ export const CreateMTOfCourse = () => {
                   <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
                     <div className="flex items-center justify-center relative">
                       <div className="absolute left-0 ml-6">
-                        {renderCollapsedButton()}
+                        {renderCollapsedButton(collapseKey)}
                       </div>
                       <div className="text-center">
                         {t('Модуль')} {item.order}{' '}
-                        {item.title && `- ${item.title}`}
+                        {item.title &&
+                          `- ${item.title.length > 30 ? item.title.slice(0, 30) + '...' : item.title}`}
                       </div>
                       <div className="absolute right-0 mr-6">
                         {renderDeleteButton({
@@ -353,34 +388,56 @@ export const CreateMTOfCourse = () => {
                               </CardContent>
                             </Card>
                           ) : (
-                            item.moduleStructure.map(moduleElem => (
-                              <Card
-                                key={`moduleElem-courseEmem-${moduleElem.order}-${item.order}`}
-                                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
-                              >
-                                <div className="flex items-center relative">
-                                  <div
-                                    key={'moduleElem' + moduleElem.order}
-                                    className="pl-4 m-1 left-0"
-                                  >
-                                    {moduleElem.type === 'lesson'
-                                      ? `${t('Урок')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`
-                                      : `${t('Тест')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`}
+                            item.moduleStructure.map(moduleElem => {
+                              const moduleElemCollapseKey = `${moduleElem.type}-${moduleElem.order}-${item.order}`
+                              const ismoduleElemCollapsed =
+                                collapsedItems[moduleElemCollapseKey] || false
+                              return (
+                                <Card
+                                  key={`moduleElem-courseElem-${moduleElem.order}-${item.order}`}
+                                  className="text-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                                >
+                                  <div className="flex items-center relative mt-4">
+                                    <div className="absolute left-0 ml-6">
+                                      {renderCollapsedButton(
+                                        moduleElemCollapseKey
+                                      )}
+                                    </div>
+                                    <div
+                                      key={'moduleElem' + moduleElem.order}
+                                      className="pl-4 ml-16"
+                                    >
+                                      {moduleElem.type === 'lesson'
+                                        ? `${t('Урок')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title.length > 30 ? moduleElem.title.slice(0, 30) + '...' : moduleElem.title}`}`
+                                        : `${t('Тест')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title.length > 30 ? moduleElem.title.slice(0, 30) + '...' : moduleElem.title}`}`}
+                                    </div>
+                                    <div className="absolute right-0 pr-4 mb-1">
+                                      {renderDeleteButton({
+                                        parentType: 'module',
+                                        parentOrder: item.order,
+                                        itemOrder: moduleElem.order,
+                                        type:
+                                          moduleElem.type === 'lesson'
+                                            ? 'lesson'
+                                            : 'module-test',
+                                      })}
+                                    </div>
                                   </div>
-                                  <div className="absolute right-0 pr-4 mb-1">
-                                    {renderDeleteButton({
-                                      parentType: 'module',
-                                      parentOrder: item.order,
-                                      itemOrder: moduleElem.order,
-                                      type:
-                                        moduleElem.type === 'lesson'
-                                          ? 'lesson'
-                                          : 'module-test',
-                                    })}
-                                  </div>
-                                </div>
-                              </Card>
-                            ))
+
+                                  {!ismoduleElemCollapsed ? (
+                                    <CardContent className="p-6 text-slate-700 dark:text-slate-200">
+                                      {moduleElem.type === 'module-test' ? (
+                                        renderTestData({ test: moduleElem })
+                                      ) : (
+                                        <p>LessonData</p>
+                                      )}
+                                    </CardContent>
+                                  ) : (
+                                    <p className="pb-4" />
+                                  )}
+                                </Card>
+                              )
+                            })
                           )}
 
                           <div className="flex justify-center mt-6">
@@ -393,7 +450,17 @@ export const CreateMTOfCourse = () => {
                             </Button>
                             <Button
                               className="ml-3 w-52"
-                              onClick={() => handleAddModuleTest(item.order)}
+                              onClick={() => {
+                                const nextOrder =
+                                  item.moduleStructure.filter(
+                                    i => i.type === 'module-test'
+                                  ).length + 1
+                                setTestModalData({
+                                  order: nextOrder,
+                                  type: 'module-test',
+                                })
+                                setIsCreateTestOpen(true)
+                              }}
                             >
                               <Plus className="w-4 h-4 mr-2" />
                               {t('Додати тест у модуль')}
@@ -408,6 +475,8 @@ export const CreateMTOfCourse = () => {
                 </Card>
               )
             } else {
+              const testCollapseKey = `course-test-${item.order}`
+              const isTestCollapsed = collapsedItems[testCollapseKey] || false
               return (
                 <Card
                   key={'ret-item-order' + item.order}
@@ -416,11 +485,12 @@ export const CreateMTOfCourse = () => {
                   <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
                     <div className="flex items-center justify-center relative">
                       <div className="absolute left-0 ml-6">
-                        {renderCollapsedButton()}
+                        {renderCollapsedButton(testCollapseKey)}
                       </div>
                       <div className="text-center">
                         {t('Тест')} {item.order}{' '}
-                        {item.title && `- ${item.title}`}
+                        {item.title &&
+                          `- ${item.title.length > 30 ? item.title.slice(0, 30) + '...' : item.title}`}
                       </div>
                       <div className="absolute right-0 mr-6">
                         {renderDeleteButton({
@@ -431,22 +501,9 @@ export const CreateMTOfCourse = () => {
                       </div>
                     </div>
                   </CardTitle>
-                  {!isCollapsed ? (
+                  {!isTestCollapsed ? (
                     <CardContent className="p-6 text-slate-700 dark:text-slate-200">
-                      <Label>{t('Назва тесту *')}</Label>
-                      <Input
-                        value={item.title}
-                        onChange={e =>
-                          handleTitleChange(
-                            'course',
-                            item.order,
-                            e.target.value,
-                            'course-test'
-                          )
-                        }
-                        placeholder={t('Введіть назву тесту')}
-                        className="mt-1"
-                      />
+                      {renderTestData({ test: item })}
                     </CardContent>
                   ) : (
                     <p className="pb-6" />
@@ -525,13 +582,53 @@ export const CreateMTOfCourse = () => {
             {t('Додати модуль')}
           </Button>
           <Button
-            onClick={handleAddTest}
+            onClick={() => {
+              const nextOrder =
+                courseS.courseStructure.filter(i => i.type === 'course-test')
+                  .length + 1
+              setTestModalData({ order: nextOrder, type: 'course-test' })
+              setIsCreateTestOpen(true)
+            }}
             className="ml-3 w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             {t('Додати тест')}
           </Button>
         </div>
+
+        {isCreateTestOpen && testModalData && (
+          <CreateTestModal
+            order={testModalData.order}
+            type={testModalData.type}
+            onClose={() => setIsCreateTestOpen(false)}
+            onAddTest={newTest => {
+              if (newTest.type === 'course-test') {
+                setCourseS(prev => ({
+                  ...prev,
+                  courseStructure: [
+                    ...prev.courseStructure,
+                    newTest as CourseTest,
+                  ],
+                }))
+              } else if (newTest.type === 'module-test') {
+                setCourseS(prev => ({
+                  ...prev,
+                  courseStructure: prev.courseStructure.map(mod => {
+                    if (mod.type !== 'module') return mod
+                    return {
+                      ...mod,
+                      moduleStructure: [
+                        ...mod.moduleStructure,
+                        newTest as ModuleTest,
+                      ],
+                    }
+                  }),
+                }))
+              }
+              setIsCreateTestOpen(false)
+            }}
+          />
+        )}
       </CollapsibleSection>
     </div>
   )

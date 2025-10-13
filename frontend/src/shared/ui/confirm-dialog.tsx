@@ -8,6 +8,7 @@ interface ConfirmModalProps {
   onConfirm: () => void
   title?: string
   description?: string
+  buttonText?: string
 }
 
 export const ConfirmModal: FC<ConfirmModalProps> = ({
@@ -16,6 +17,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
   onConfirm,
   title,
   description,
+  buttonText,
 }) => {
   const { t } = useI18n()
 
@@ -48,7 +50,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
               onClose()
             }}
           >
-            {t('Видалити')}
+            {buttonText ? buttonText : t('Видалити')}
           </Button>
           <Button variant="outline" onClick={onClose}>
             {t('Скасувати')}

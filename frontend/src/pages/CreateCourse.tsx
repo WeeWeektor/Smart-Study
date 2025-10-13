@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CollapsibleSection,
+  ConfirmModal,
   CreateMTOfCourse,
   ErrorProfile,
   Input,
@@ -72,6 +73,8 @@ const CreateCourse = () => {
   })
   const [courseStateLanguage, setCourseStateLanguage] = useState<string>('')
   const [showPreview, setShowPreview] = useState<boolean>(false)
+  const [showCanselModal, setShowCanselModal] = useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
 
   useEffect(() => {
     if (choicesData) {
@@ -139,6 +142,10 @@ const CreateCourse = () => {
   }
 
   const handleCancelCreateCourse = () => {
+    setShowCanselModal(true)
+  }
+
+  const handleConfirmCancelCreateCourse = () => {
     setCourseStateTitle('')
     setCourseStateCategory('')
     setCourseStateLevel('')
@@ -147,6 +154,7 @@ const CreateCourse = () => {
     setShowPreview(false)
     setCourseStateTimeToComplete({ days: 0, hours: 0, minutes: 0 })
     setCourseStateDescription('')
+    setShowCanselModal(false)
     handleBackPage()
   }
 
@@ -205,7 +213,12 @@ const CreateCourse = () => {
     }
   }
 
-  const handlePublishCourse = async () => {
+  const handlePublishCourse = () => {
+    setShowPublishModal(true)
+  }
+
+  const handleConfirmPublishCourse = async () => {
+    setShowPublishModal(false)
     setCourseStateIsPublished(true)
     await handleSaveCourse()
   }
@@ -500,6 +513,29 @@ const CreateCourse = () => {
           </div>
         </main>
       </div>
+
+      {showCanselModal && (
+        <ConfirmModal
+          isOpen={showCanselModal}
+          onConfirm={handleConfirmCancelCreateCourse}
+          onClose={() => setShowCanselModal(false)}
+          title={t('Ви дійсно бажаєте скасувати створення курсу?')}
+          description={t('Всі дані будуть втрачені')}
+          buttonText={t('Повернутись до курсів')}
+        />
+      )}
+      {showPublishModal && (
+        <ConfirmModal
+          isOpen={showPublishModal}
+          onConfirm={handleConfirmPublishCourse}
+          onClose={() => setShowPublishModal(false)}
+          title={t('Публікація курсу')}
+          description={t(
+            'Після публікації курс НЕ можна буде редагувати чи видалити курс'
+          )}
+          buttonText={t('Опублікувати курс')}
+        />
+      )}
     </div>
   )
 }
