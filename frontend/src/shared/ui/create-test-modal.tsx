@@ -17,7 +17,6 @@ export interface Question {
   correctAnswers: string[]
   points: number
   order: number
-  singleChoice: boolean
   image: string | null
   explanation: string | null
 }
@@ -132,9 +131,7 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
         onClick={handleContentClick}
       >
         <h2 className="flex items-center justify-center text-2xl font-semibold mb-4">
-          {type === 'course-test'
-            ? `${t('Тест курсу')} ${order}${title ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}` : ''}`
-            : `${t('Тест модуля')} ${order}${title ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}` : ''}`}
+          {`${t('Тест')} ${order}${title ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}` : ''}`}
         </h2>
 
         <button
