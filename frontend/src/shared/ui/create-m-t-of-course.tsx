@@ -1,5 +1,5 @@
 import { useI18n } from '@/shared/lib'
-import { BookOpen, Plus, Trash2 } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import {
   Button,
   Card,
@@ -57,6 +57,7 @@ export const CreateMTOfCourse = () => {
     itemOrder: number
     type: 'module' | 'course-test' | 'lesson' | 'module-test'
   } | null>(null)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const handleAddModule = () => {
     setCourseS(prev => {
@@ -268,6 +269,19 @@ export const CreateMTOfCourse = () => {
     )
   }
 
+  const renderCollapsedButton = () => {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="bg-white dark:bg-slate-800 dark:hover:bg-slate-600"
+        onClick={() => setIsCollapsed(prev => !prev)}
+      >
+        {isCollapsed ? <ChevronDown /> : <ChevronUp />}
+      </Button>
+    )
+  }
+
   return (
     <div className="w-full">
       <CollapsibleSection title={t('Структура курсу')}>
@@ -281,6 +295,9 @@ export const CreateMTOfCourse = () => {
                 >
                   <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
                     <div className="flex items-center justify-center relative">
+                      <div className="absolute left-0 ml-6">
+                        {renderCollapsedButton()}
+                      </div>
                       <div className="text-center">
                         {t('Модуль')} {item.order}{' '}
                         {item.title && `- ${item.title}`}
@@ -294,96 +311,100 @@ export const CreateMTOfCourse = () => {
                       </div>
                     </div>
                   </CardTitle>
-                  <CardContent className="p-6 text-slate-700 dark:text-slate-200">
-                    <Label>{t('Назва модуля *')}</Label>
-                    <Input
-                      value={item.title}
-                      onChange={e =>
-                        handleTitleChange(
-                          'course',
-                          item.order,
-                          e.target.value,
-                          'module'
-                        )
-                      }
-                      placeholder={t('Введіть назву модуля')}
-                      className="mt-1 mb-4"
-                    />
+                  {!isCollapsed ? (
+                    <CardContent className="p-6 text-slate-700 dark:text-slate-200 transition-all duration-300 ease-in-out">
+                      <Label>{t('Назва модуля *')}</Label>
+                      <Input
+                        value={item.title}
+                        onChange={e =>
+                          handleTitleChange(
+                            'course',
+                            item.order,
+                            e.target.value,
+                            'module'
+                          )
+                        }
+                        placeholder={t('Введіть назву модуля')}
+                        className="mt-1 mb-4"
+                      />
 
-                    <Card
-                      key={'lessonOrder or testOrder' + item.order}
-                      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-600 dark:hover:shadow-gray-500 mt-4"
-                    >
-                      <CardTitle className="text-slate-800 dark:text-slate-100 my-4">
-                        <p className="text-center">{t('Структура модуля')}</p>
-                      </CardTitle>
-                      <CardContent className="p-6 pt-1 text-slate-700 dark:text-slate-200">
-                        {item.moduleStructure.length === 0 ? (
-                          <Card
-                            key={'add-first-lesson-or-test'}
-                            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
-                          >
-                            <CardContent className="text-slate-700 dark:text-slate-200">
-                              <div className="text-center text-slate-500 mt-6">
-                                <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-700 dark:text-slate-200" />
-                                <p className="text-slate-500 dark:text-slate-400">
-                                  {t(
-                                    'Додавайте уроки та тест для цього модуля'
-                                  )}
-                                </p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ) : (
-                          item.moduleStructure.map(moduleElem => (
+                      <Card
+                        key={'lessonOrder or testOrder' + item.order}
+                        className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-600 dark:hover:shadow-gray-500 mt-4"
+                      >
+                        <CardTitle className="text-slate-800 dark:text-slate-100 my-4">
+                          <p className="text-center">{t('Структура модуля')}</p>
+                        </CardTitle>
+                        <CardContent className="p-6 pt-1 text-slate-700 dark:text-slate-200">
+                          {item.moduleStructure.length === 0 ? (
                             <Card
-                              key={`moduleElem-courseEmem-${moduleElem.order}-${item.order}`}
-                              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                              key={'add-first-lesson-or-test'}
+                              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
                             >
-                              <div className="flex items-center relative">
-                                <div
-                                  key={'moduleElem' + moduleElem.order}
-                                  className="pl-4 m-1 left-0"
-                                >
-                                  {moduleElem.type === 'lesson'
-                                    ? `${t('Урок')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`
-                                    : `${t('Тест')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`}
+                              <CardContent className="text-slate-700 dark:text-slate-200">
+                                <div className="text-center text-slate-500 mt-6">
+                                  <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-700 dark:text-slate-200" />
+                                  <p className="text-slate-500 dark:text-slate-400">
+                                    {t(
+                                      'Додавайте уроки та тест для цього модуля'
+                                    )}
+                                  </p>
                                 </div>
-                                <div className="absolute right-0 pr-4 mb-1">
-                                  {renderDeleteButton({
-                                    parentType: 'module',
-                                    parentOrder: item.order,
-                                    itemOrder: moduleElem.order,
-                                    type:
-                                      moduleElem.type === 'lesson'
-                                        ? 'lesson'
-                                        : 'module-test',
-                                  })}
-                                </div>
-                              </div>
+                              </CardContent>
                             </Card>
-                          ))
-                        )}
+                          ) : (
+                            item.moduleStructure.map(moduleElem => (
+                              <Card
+                                key={`moduleElem-courseEmem-${moduleElem.order}-${item.order}`}
+                                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                              >
+                                <div className="flex items-center relative">
+                                  <div
+                                    key={'moduleElem' + moduleElem.order}
+                                    className="pl-4 m-1 left-0"
+                                  >
+                                    {moduleElem.type === 'lesson'
+                                      ? `${t('Урок')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`
+                                      : `${t('Тест')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title}`}`}
+                                  </div>
+                                  <div className="absolute right-0 pr-4 mb-1">
+                                    {renderDeleteButton({
+                                      parentType: 'module',
+                                      parentOrder: item.order,
+                                      itemOrder: moduleElem.order,
+                                      type:
+                                        moduleElem.type === 'lesson'
+                                          ? 'lesson'
+                                          : 'module-test',
+                                    })}
+                                  </div>
+                                </div>
+                              </Card>
+                            ))
+                          )}
 
-                        <div className="flex justify-center mt-6">
-                          <Button
-                            className="mr-3 w-52"
-                            onClick={() => handleAddLesson(item.order)}
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            {t('Додати урок')}
-                          </Button>
-                          <Button
-                            className="ml-3 w-52"
-                            onClick={() => handleAddModuleTest(item.order)}
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            {t('Додати тест у модуль')}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CardContent>
+                          <div className="flex justify-center mt-6">
+                            <Button
+                              className="mr-3 w-52"
+                              onClick={() => handleAddLesson(item.order)}
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              {t('Додати урок')}
+                            </Button>
+                            <Button
+                              className="ml-3 w-52"
+                              onClick={() => handleAddModuleTest(item.order)}
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              {t('Додати тест у модуль')}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CardContent>
+                  ) : (
+                    <p className="pb-6" />
+                  )}
                 </Card>
               )
             } else {
@@ -394,6 +415,9 @@ export const CreateMTOfCourse = () => {
                 >
                   <CardTitle className="text-slate-800 dark:text-slate-100 mt-6">
                     <div className="flex items-center justify-center relative">
+                      <div className="absolute left-0 ml-6">
+                        {renderCollapsedButton()}
+                      </div>
                       <div className="text-center">
                         {t('Тест')} {item.order}{' '}
                         {item.title && `- ${item.title}`}
@@ -407,22 +431,26 @@ export const CreateMTOfCourse = () => {
                       </div>
                     </div>
                   </CardTitle>
-                  <CardContent className="p-6 text-slate-700 dark:text-slate-200">
-                    <Label>{t('Назва тесту *')}</Label>
-                    <Input
-                      value={item.title}
-                      onChange={e =>
-                        handleTitleChange(
-                          'course',
-                          item.order,
-                          e.target.value,
-                          'course-test'
-                        )
-                      }
-                      placeholder={t('Введіть назву тесту')}
-                      className="mt-1"
-                    />
-                  </CardContent>
+                  {!isCollapsed ? (
+                    <CardContent className="p-6 text-slate-700 dark:text-slate-200">
+                      <Label>{t('Назва тесту *')}</Label>
+                      <Input
+                        value={item.title}
+                        onChange={e =>
+                          handleTitleChange(
+                            'course',
+                            item.order,
+                            e.target.value,
+                            'course-test'
+                          )
+                        }
+                        placeholder={t('Введіть назву тесту')}
+                        className="mt-1"
+                      />
+                    </CardContent>
+                  ) : (
+                    <p className="pb-6" />
+                  )}
                 </Card>
               )
             }
