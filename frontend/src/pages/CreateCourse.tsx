@@ -351,6 +351,7 @@ const CreateCourse = () => {
 
                         <Button
                           variant="outline"
+                          className="hover:bg-gray-100 dark:hover:bg-gray-700"
                           onClick={() => {
                             const input = document.getElementById(
                               'course-image-input'
@@ -366,6 +367,7 @@ const CreateCourse = () => {
                         {courseStateImage && (
                           <Button
                             variant="outline"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
                             size="sm"
                             onClick={() => setShowPreview(prev => !prev)}
                           >
