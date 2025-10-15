@@ -1,5 +1,5 @@
 import { useI18n } from '@/shared/lib'
-import { Loader2, Save, Undo } from 'lucide-react'
+import { Loader2, Minus, Plus, Save, Undo } from 'lucide-react'
 import React, { type FC, useState } from 'react'
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   SelectValue,
   Textarea,
 } from '@/shared/ui'
+import { disablePageScroll, enablePageScroll } from '@/shared/scroll'
 
 interface CreateQuestionTestProps {
   order: number
@@ -39,6 +40,11 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     'choice'
   )
   const [showPreviewQImage, setShowPreviewQImage] = useState<boolean>(false)
+
+  React.useEffect(() => {
+    disablePageScroll()
+    return () => enablePageScroll()
+  }, [])
 
   const handleContentClick = (e: React.MouseEvent) => e.stopPropagation()
 
@@ -259,11 +265,13 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
             </div>
           </div>
 
-          <div>
-            {typeQuestion === 'choice' ? (
-              <div className="mt-6">
-                <Label className="mb-2 block">{t('Варіанти відповіді')}</Label>
+          <div className="mt-6">
+            <Label className="mb-3 flex items-center justify-center text-lg">
+              {t('Варіанти відповіді')}
+            </Label>
 
+            {typeQuestion === 'choice' ? (
+              <>
                 {choices.map((choice, index) => (
                   <div
                     key={index}
@@ -304,39 +312,69 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
                   </div>
                 ))}
 
-                <div className="flex gap-4 mt-2">
-                  <Button
-                    variant="outline"
-                    className="text-sm"
-                    onClick={() => setChoices([...choices, ''])}
-                  >
-                    + {t('Додати варіант')}
-                  </Button>
-
-                  {choices.length > 0 && (
-                    <Button
-                      variant="outline"
-                      className="text-sm text-red-500 border-red-500 hover:bg-red-50"
-                      onClick={() => {
-                        setChoices(choices.slice(0, -1))
-                        setCorrectAnswers(
-                          correctAnswers.filter(
-                            a => a !== choices[choices.length - 1]
+                <div className="flex items-center justify-center">
+                  <div className="flex gap-4 mt-3">
+                    {choices.length > 0 && (
+                      <Button
+                        variant="outline"
+                        className="text-sm hover:bg-gray-100 dark:hover:bg-gray-700 w-48"
+                        onClick={() => {
+                          setChoices(choices.slice(0, -1))
+                          setCorrectAnswers(
+                            correctAnswers.filter(
+                              a => a !== choices[choices.length - 1]
+                            )
                           )
-                        )
-                      }}
-                    >
-                      − {t('Видалити останній')}
-                    </Button>
-                  )}
-                </div>
+                        }}
+                      >
+                        <Minus className="w-4 h-4 mr-2" />
+                        {t('Видалити останній')}
+                      </Button>
+                    )}
 
-                <p className="text-sm text-gray-500 mt-3">
+                    <Button
+                      className="w-48 text-sm text-white bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 "
+                      onClick={() => setChoices([...choices, ''])}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t('Додати варіант')}
+                    </Button>
+                  </div>
+                </div>
+                <p className="flex items-center justify-center text-sm text-gray-500 mt-3">
                   {t('Оберіть правильну відповідь, поставивши галочку')}
                 </p>
-              </div>
+              </>
             ) : (
-              <p> jklsadf</p>
+              <div className="flex flex-col items-center mt-4 space-y-3">
+                <Label className="text-lg">
+                  {t('Оберіть правильну відповідь')}
+                </Label>
+                <div className="flex gap-6">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="yesno"
+                      value="yes"
+                      checked={correctAnswers.includes('Так')}
+                      onChange={() => setCorrectAnswers(['Так'])}
+                      className="w-5 h-5 accent-brand-600 cursor-pointer"
+                    />
+                    <span>{t('Так')}</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="yesno"
+                      value="no"
+                      checked={correctAnswers.includes('Ні')}
+                      onChange={() => setCorrectAnswers(['Ні'])}
+                      className="w-5 h-5 accent-brand-600 cursor-pointer"
+                    />
+                    <span>{t('Ні')}</span>
+                  </label>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -344,7 +382,7 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
         <div className="flex justify-center space-x-6 mt-6">
           <div>
             <Button
-              className="w-60 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+              className="w-60 hover:bg-gray-100 dark:hover:bg-gray-700"
               variant="outline"
               onClick={handleCancelAddQuestion}
               disabled={isAdding}
@@ -363,12 +401,12 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
               {isAdding ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('Додавання питання...')}
+                  {t('Збереження питання...')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {t('Додати питання')}
+                  {t('Зберегти питання')}
                 </>
               )}
             </Button>

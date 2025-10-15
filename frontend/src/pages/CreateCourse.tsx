@@ -436,7 +436,7 @@ const CreateCourse = () => {
                     <div className="flex justify-center">
                       <Button
                         variant="outline"
-                        className="w-60"
+                        className="w-60 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={handleCancelCreateCourse}
                         disabled={isSaving}
                       >

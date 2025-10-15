@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button.tsx'
 import { useNavigate } from 'react-router-dom'
+import { disablePageScroll, enablePageScroll } from '@/shared/scroll'
 
 interface UserModalProps {
   isOpen: boolean
@@ -47,6 +48,11 @@ export const UserModal: FC<UserModalProps> = ({
   const [userInfo, setUserInfo] = useState<UserInfoResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  React.useEffect(() => {
+    disablePageScroll()
+    return () => enablePageScroll()
+  }, [])
 
   const fetchUserInfo = async (id: string) => {
     setLoading(true)

@@ -7,6 +7,7 @@ import {
   ChevronUp,
   Clock,
   Eye,
+  FileCheck,
   FileText,
   Plus,
   Repeat,
@@ -289,6 +290,10 @@ export const CreateMTOfCourse = () => {
         <div className="flex items-center mb-2">
           <Award className="w-4 h-4 mr-2" />
           {t('Прохідний бал')}: {test.passScore} %
+        </div>
+        <div className="flex items-center mb-2">
+          <FileCheck className="w-4 h-4 mr-2" />
+          {t('Кількість питань')}: {test.questions.length}
         </div>
         <div className="flex flex-col mt-2">
           <div className="flex items-center mb-1">
