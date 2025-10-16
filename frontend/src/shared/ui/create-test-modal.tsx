@@ -37,6 +37,7 @@ export interface Question {
   order: number
   image: string | null
   explanation: string | null
+  imageFile: File | null
 }
 
 export const CreateTestModal: FC<CreateTestModalProps> = ({
@@ -119,11 +120,11 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
         type,
         title,
         description,
-        timeLimit,
-        countAttempts,
-        passScore,
-        randomQuestions,
-        showAnswers,
+        time_limit: timeLimit,
+        count_attempts: countAttempts,
+        pass_score: passScore,
+        random_questions: randomQuestions,
+        show_correct_answers: showAnswers,
         questions,
       },
       order,

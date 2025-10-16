@@ -74,9 +74,9 @@ def validate_positive_int(value, field_name: str) -> None:
 
 
 def validate_test_question_data(q):
-    question_text = q.get("question_text")
+    question_text = q.get("questionText")
     if not isinstance(question_text, str) or not question_text.strip():
-        raise ValueError(_("question_text must be a non-empty string"))
+        raise ValueError(_("question text must be a non-empty string"))
 
     choices = q.get("choices", [])
     correct_answers = q.get("correct_answers", [])
@@ -85,7 +85,7 @@ def validate_test_question_data(q):
     validate_list_of_strings(correct_answers, "correct_answers")
 
     if not all(answer in choices for answer in correct_answers):
-        raise ValidationError(_("All correct_answers must be present in choices"))
+        raise ValidationError(_("All correct answers must be present in choices"))
 
     validate_positive_int(q.get("points", 1), "points")
     validate_positive_int(q.get("order"), "order")

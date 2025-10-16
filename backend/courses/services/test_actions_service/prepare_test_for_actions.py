@@ -51,7 +51,7 @@ async def prepare_questions_data(questions: list[dict]) -> list[dict]:
     for qd in questions:
         await sync_to_async(validate_test_question_data)(qd)
         questions_data.append({
-            "question_text": qd["question_text"].strip(),
+            "questionText": qd["questionText"].strip(),
             "choices": qd.get("choices", []),
             "correct_answers": qd.get("correct_answers", []),
             "points": qd.get("points", 1),

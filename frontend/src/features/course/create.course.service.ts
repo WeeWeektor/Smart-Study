@@ -19,6 +19,7 @@ class CreateCourseService {
     course_language: string
     time_to_complete: string
     cover_imageFile?: File | null
+    courseStructure?: object
   }): Promise<CreateCourseResponse> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)

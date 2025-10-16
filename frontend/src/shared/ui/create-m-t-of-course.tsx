@@ -27,9 +27,9 @@ import {
   Label,
   type Question,
 } from '@/shared/ui'
-import { useState } from 'react'
+import React, { useState } from 'react'
 
-interface CourseStructure {
+export interface CourseStructure {
   type: 'course'
   courseStructure: (ModuleStructure | CourseTest)[]
 }
@@ -44,11 +44,11 @@ interface ModuleStructure {
 export interface BaseTest {
   title: string
   description: string
-  timeLimit: number
-  countAttempts: number
-  passScore: number
-  randomQuestions: boolean
-  showAnswers: boolean
+  time_limit: number
+  count_attempts: number
+  pass_score: number
+  random_questions: boolean
+  show_correct_answers: boolean
   questions: Question[]
 }
 
@@ -68,12 +68,14 @@ interface Lesson {
   order: number
 }
 
-export const CreateMTOfCourse = () => {
+export const CreateMTOfCourse = ({
+  courseStructure,
+  setCourseStructure,
+}: {
+  courseStructure: CourseStructure
+  setCourseStructure: React.Dispatch<React.SetStateAction<CourseStructure>>
+}) => {
   const { t } = useI18n()
-  const [courseS, setCourseS] = useState<CourseStructure>({
-    type: 'course',
-    courseStructure: [],
-  })
   const [isConfirmDelOpen, setIsConfirmDelOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{
     parentType: 'course' | 'module'
@@ -91,7 +93,7 @@ export const CreateMTOfCourse = () => {
   } | null>(null)
 
   const handleAddModule = () => {
-    setCourseS(prev => {
+    setCourseStructure(prev => {
       const moduleOrders = prev.courseStructure.map(m => m.order)
       const nextOrder =
         moduleOrders.length > 0 ? Math.max(...moduleOrders) + 1 : 1
@@ -112,7 +114,7 @@ export const CreateMTOfCourse = () => {
   }
 
   const handleAddLesson = (moduleOrder: number) => {
-    setCourseS(prev => ({
+    setCourseStructure(prev => ({
       ...prev,
       courseStructure: prev.courseStructure.map(item => {
         if (item.type === 'module' && item.order === moduleOrder) {
@@ -134,7 +136,7 @@ export const CreateMTOfCourse = () => {
   }
 
   const handleDelete = (order: number, isModule: boolean) => {
-    setCourseS(prev => {
+    setCourseStructure(prev => {
       const newStructure = prev.courseStructure
         .filter(item =>
           isModule
@@ -160,7 +162,7 @@ export const CreateMTOfCourse = () => {
     itemOrder: number,
     isTest: boolean
   ) => {
-    setCourseS(prev => ({
+    setCourseStructure(prev => ({
       ...prev,
       courseStructure: prev.courseStructure.map(item => {
         if (item.type !== 'module' || item.order !== moduleOrder) return item
@@ -196,7 +198,7 @@ export const CreateMTOfCourse = () => {
     type: 'module' | 'course-test' | 'lesson' | 'module-test'
   ) => {
     if (parentType === 'course') {
-      setCourseS(prev => ({
+      setCourseStructure(prev => ({
         ...prev,
         courseStructure: prev.courseStructure.map(item =>
           item.type === type && item.order === order
@@ -205,7 +207,7 @@ export const CreateMTOfCourse = () => {
         ),
       }))
     } else if (parentType === 'module') {
-      setCourseS(prev => ({
+      setCourseStructure(prev => ({
         ...prev,
         courseStructure: prev.courseStructure.map(module => {
           if (module.type !== 'module') return module
@@ -281,15 +283,15 @@ export const CreateMTOfCourse = () => {
         </div>
         <div className="flex items-center mb-2">
           <Clock className="w-4 h-4 mr-2" />
-          {t('Обмеження в часі')}: {test.timeLimit} {t('хвилин')}
+          {t('Обмеження в часі')}: {test.time_limit} {t('хвилин')}
         </div>
         <div className="flex items-center mb-2">
           <Repeat className="w-4 h-4 mr-2" />
-          {t('Кількість спроб')}: {test.countAttempts}
+          {t('Кількість спроб')}: {test.count_attempts}
         </div>
         <div className="flex items-center mb-2">
           <Award className="w-4 h-4 mr-2" />
-          {t('Прохідний бал')}: {test.passScore} %
+          {t('Прохідний бал')}: {test.pass_score} %
         </div>
         <div className="flex items-center mb-2">
           <FileCheck className="w-4 h-4 mr-2" />
@@ -299,7 +301,7 @@ export const CreateMTOfCourse = () => {
           <div className="flex items-center mb-1">
             <Shuffle className="w-4 h-4 mr-2" />
             {t('Перемішувати питання')}:{' '}
-            {test.randomQuestions ? (
+            {test.random_questions ? (
               <Check className="w-4 h-4 ml-2 text-green-500" />
             ) : (
               <X className="w-4 h-4 ml-2 text-red-500" />
@@ -308,7 +310,7 @@ export const CreateMTOfCourse = () => {
           <div className="flex items-center">
             <Eye className="w-4 h-4 mr-2" />
             {t('Показати відповіді після завершення')}:{' '}
-            {test.showAnswers ? (
+            {test.show_correct_answers ? (
               <Check className="w-4 h-4 ml-2 text-green-500" />
             ) : (
               <X className="w-4 h-4 ml-2 text-red-500" />
@@ -322,8 +324,8 @@ export const CreateMTOfCourse = () => {
   return (
     <div className="w-full">
       <CollapsibleSection title={t('Структура курсу')}>
-        {courseS.courseStructure.length > 0 ? (
-          courseS.courseStructure.map(item => {
+        {courseStructure.courseStructure.length > 0 ? (
+          courseStructure.courseStructure.map(item => {
             const collapseKey = `${item.type}-${item.order}`
             const isCollapsed = collapsedItems[collapseKey] || false
             if (item.type === 'module') {
@@ -589,8 +591,9 @@ export const CreateMTOfCourse = () => {
           <Button
             onClick={() => {
               const nextOrder =
-                courseS.courseStructure.filter(i => i.type === 'course-test')
-                  .length + 1
+                courseStructure.courseStructure.filter(
+                  i => i.type === 'course-test'
+                ).length + 1
               setTestModalData({ order: nextOrder, type: 'course-test' })
               setIsCreateTestOpen(true)
             }}
@@ -608,7 +611,7 @@ export const CreateMTOfCourse = () => {
             onClose={() => setIsCreateTestOpen(false)}
             onAddTest={newTest => {
               if (newTest.type === 'course-test') {
-                setCourseS(prev => ({
+                setCourseStructure(prev => ({
                   ...prev,
                   courseStructure: [
                     ...prev.courseStructure,
@@ -616,7 +619,7 @@ export const CreateMTOfCourse = () => {
                   ],
                 }))
               } else if (newTest.type === 'module-test') {
-                setCourseS(prev => ({
+                setCourseStructure(prev => ({
                   ...prev,
                   courseStructure: prev.courseStructure.map(mod => {
                     if (mod.type !== 'module') return mod

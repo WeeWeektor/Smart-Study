@@ -35,6 +35,7 @@ import { useChoicesData } from '@/shared/hooks/useChoiceData'
 import { useNavigate } from 'react-router-dom'
 import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
 import { createCourseService } from '@/features/course'
+import { type CourseStructure } from '@/shared/ui'
 
 interface Option {
   value: string
@@ -75,6 +76,10 @@ const CreateCourse = () => {
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [showCanselModal, setShowCanselModal] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [courseStructure, setCourseStructure] = useState<CourseStructure>({
+    type: 'course',
+    courseStructure: [],
+  })
 
   useEffect(() => {
     if (choicesData) {
@@ -188,7 +193,9 @@ const CreateCourse = () => {
           courseStateTimeToComplete.minutes
         ),
         cover_imageFile: courseStateImageFile,
+        courseStructure: courseStructure.courseStructure,
       })
+      console.log(courseStructure)
 
       if (response.status === 200 || response.status === 201) {
         handleCancelCreateCourse()
@@ -412,7 +419,10 @@ const CreateCourse = () => {
           </div>
 
           <div className="w-full max-w-6xl relative mx-auto mt-6">
-            <CreateMTOfCourse />
+            <CreateMTOfCourse
+              courseStructure={courseStructure}
+              setCourseStructure={setCourseStructure}
+            />
           </div>
 
           <div className="flex flex-wrap justify-center mt-6">

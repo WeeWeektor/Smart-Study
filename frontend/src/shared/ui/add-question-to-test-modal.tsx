@@ -46,6 +46,16 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     return () => enablePageScroll()
   }, [])
 
+  React.useEffect(() => {
+    if (typeQuestion === 'yes/no') {
+      setChoices(['yes', 'no'])
+    }
+    if (typeQuestion === 'choice') {
+      setChoices([])
+      setCorrectAnswers([])
+    }
+  }, [typeQuestion])
+
   const handleContentClick = (e: React.MouseEvent) => e.stopPropagation()
 
   const handleNumericInput = (
@@ -100,6 +110,7 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
       order,
       image,
       explanation,
+      imageFile,
     }
 
     setIsAdding(true)
@@ -234,9 +245,7 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
                 type="text"
                 value={points ?? ''}
                 onChange={e => handleNumericInput(e.target.value, setPoints)}
-                placeholder={t(
-                  'Кількість балів за правильну відповідь (мінімум 1)'
-                )}
+                placeholder={t('Кількість балів за правильну відповідь')}
                 className="mt-1"
               />
             </div>
@@ -356,8 +365,8 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
                       type="radio"
                       name="yesno"
                       value="yes"
-                      checked={correctAnswers.includes('Так')}
-                      onChange={() => setCorrectAnswers(['Так'])}
+                      checked={correctAnswers.includes('yes')}
+                      onChange={() => setCorrectAnswers(['yes'])}
                       className="w-5 h-5 accent-brand-600 cursor-pointer"
                     />
                     <span>{t('Так')}</span>
@@ -367,8 +376,8 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
                       type="radio"
                       name="yesno"
                       value="no"
-                      checked={correctAnswers.includes('Ні')}
-                      onChange={() => setCorrectAnswers(['Ні'])}
+                      checked={correctAnswers.includes('no')}
+                      onChange={() => setCorrectAnswers(['no'])}
                       className="w-5 h-5 accent-brand-600 cursor-pointer"
                     />
                     <span>{t('Ні')}</span>
