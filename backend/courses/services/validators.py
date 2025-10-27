@@ -79,10 +79,10 @@ def validate_test_question_data(q):
         raise ValueError(_("question text must be a non-empty string"))
 
     choices = q.get("choices", [])
-    correct_answers = q.get("correct_answers", [])
+    correct_answers = q.get("correctAnswers", [])
 
     validate_list_of_strings(choices, "choices")
-    validate_list_of_strings(correct_answers, "correct_answers")
+    validate_list_of_strings(correct_answers, "correctAnswers")
 
     if not all(answer in choices for answer in correct_answers):
         raise ValidationError(_("All correct answers must be present in choices"))

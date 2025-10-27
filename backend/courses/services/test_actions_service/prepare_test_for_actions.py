@@ -53,9 +53,11 @@ async def prepare_questions_data(questions: list[dict]) -> list[dict]:
         questions_data.append({
             "questionText": qd["questionText"].strip(),
             "choices": qd.get("choices", []),
-            "correct_answers": qd.get("correct_answers", []),
+            "correct_answers": qd.get("correctAnswers", []),
             "points": qd.get("points", 1),
             "order": qd.get("order"),
+            "explanation": qd.get("explanation", ""),
+            "image_url": qd.get("imageFileKey", ""),
         })
 
     return questions_data

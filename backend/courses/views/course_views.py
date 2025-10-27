@@ -71,8 +71,8 @@ class CourseView(LocalizedView):
         """Створення курсу викладачем"""
 
         data = json.loads(request.POST.get('data', '{}'))
-        cover_file = request.FILES.get('cover_image')
-        # test_image_file = request.FILES.get('imageFile')
+        files = request.FILES
+        cover_file = files.get('cover_image')
 
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
 
@@ -80,9 +80,8 @@ class CourseView(LocalizedView):
             course = await create_course(request.user, data, cover_file)
             course_id = str(course.id)
 
-
             if 'courseStructure' in data:
-                await course_structure(data['courseStructure'], request.user, course_id)
+                await course_structure(data['courseStructure'], request.user, course_id, files)
 
             return success_response({
                 "message": gettext("Course created successfully"),
