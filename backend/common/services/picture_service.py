@@ -77,14 +77,33 @@ async def delete_picture(instance_id, instance_type: str, delete_folder=False):
         folder_path = f"{instance_id}/"
         bucket = _get_bucket(instance_type)
 
-        files = await sync_to_async(bucket.list)(folder_path)
-        if files:
-            file_paths = [f"{folder_path}{file['name']}" for file in files]
-            await sync_to_async(bucket.remove)(file_paths)
-
         if delete_folder:
+            await _delete_recursively(folder_path, bucket)
             await sync_to_async(bucket.remove)([folder_path])
+        else:
+            files = await sync_to_async(bucket.list)(folder_path)
+            if files:
+                file_paths = [f"{folder_path}{file['name']}" for file in files]
+                await sync_to_async(bucket.remove)(file_paths)
 
     except Exception as e:
         logger.error(f"{gettext('Error when deleting a file from Supabase:')} {str(e)}")
         raise ValidationError(f"{gettext('Unable to delete image:')} {str(e)}")
+
+
+async def _delete_recursively(prefix: str, bucket):
+    """
+    Рекурсивно видаляє всі файли у вказаній директорії Supabase (включно з підпапками)
+    """
+    items = await sync_to_async(bucket.list)(prefix)
+    if not items:
+        return
+
+    for item in items:
+        name = item["name"]
+        full_path = f"{prefix}{name}"
+
+        if name.endswith("/"):
+            await _delete_recursively(full_path, bucket)
+        else:
+            await sync_to_async(bucket.remove)([full_path])

@@ -11,7 +11,7 @@ async def create_test(test_type: str, user, data: dict):
 
     data_to_create_test = {
         "title": data["title"].strip(),
-        "description": (data.get("description") or "").strip(),
+        "description": data.get("description").strip(),
         "time_limit": data.get("time_limit", 0),
         "count_attempts": data.get("count_attempts", 0),
         "pass_score": data.get("pass_score", 0),
