@@ -18,7 +18,8 @@ async def get_cache_key(
         instance_type_cache: str,
         cate: Union[list, None] = None,
         level: Union[str, None] = None,
-        sort_keys: Union[list, None] = None
+        sort_keys: Union[list, None] = None,
+        search_query: Union[str, None] = None,
 ) -> str:
     if isinstance(cate, list):
         category_str = ';'.join(sorted(cate))
@@ -34,6 +35,9 @@ async def get_cache_key(
     if isinstance(sort_keys, list):
         key += f"_sort_{';'.join(sorted(sort_keys))}"
 
+    if search_query:
+        key += f"_search_{search_query}"
+
     await register_cache_key(key, instance_type_cache)
     return key
 
@@ -43,10 +47,11 @@ async def get_instance_cached_all(
         instance_type_cache: str,
         cate: Union[list, None] = None,
         level: Union[str, None] = None,
-        sort_keys: Union[list, None] = None
+        sort_keys: Union[list, None] = None,
+        search_query: Union[str, None] = None
 ) -> Union[dict, list]:
     instance_cache = caches[f"{instance_type_cache}"]
-    cache_key = await get_cache_key(instance_type, instance_type_cache, cate, level, sort_keys)
+    cache_key = await get_cache_key(instance_type, instance_type_cache, cate, level, sort_keys, search_query)
 
     cached_data = await sync_to_async(lambda: instance_cache.get(cache_key, default=None, version=1))()
     if cached_data:
@@ -54,7 +59,7 @@ async def get_instance_cached_all(
 
     if instance_type == "courses":
         from courses.services.course_actions_service import get_courses
-        instance_data = await get_courses(cate, level, sort_keys)
+        instance_data = await get_courses(cate, level, sort_keys, search_query)
     elif instance_type == "public test":
         from courses.services.test_actions_service import get_public_tests
         instance_data = await get_public_tests(cate, level)

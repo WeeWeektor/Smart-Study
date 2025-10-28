@@ -4,6 +4,7 @@ from typing import Union
 from asgiref.sync import sync_to_async
 from bson import ObjectId
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.translation import gettext
 
 from common.services import mongo_repo
@@ -19,7 +20,8 @@ logger = logging.getLogger(__name__)
 async def get_published_courses_by_autor(
         author_id,
         sort_keys: Union[list, None],
-        status: Union[str, None]
+        status: Union[str, None],
+        search_query: Union[str, None] = None
 ) -> Union[dict, list]:
     try:
         uuid_obj = validate_uuid(author_id)
@@ -35,6 +37,12 @@ async def get_published_courses_by_autor(
         qs = Course.objects.select_related("details").filter(owner=uuid_obj)
         if publish is not None:
             qs = qs.filter(is_published=publish)
+
+        if search_query:
+            qs = qs.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
 
         if sort_keys:
             order_fields = [SORTING_DICT[k] for k in sort_keys if k in SORTING_DICT]
@@ -57,7 +65,8 @@ async def get_published_courses_by_autor(
         )
 
 
-async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None]
+async def get_courses(cate: Union[list, None], level: Union[str, None], sort_keys: Union[list, None],
+                      search_query: Union[str, None] = None
                       ) -> Union[dict, list]:
     try:
         qs = Course.objects.select_related("details", "owner").filter(is_published=True)
@@ -66,6 +75,13 @@ async def get_courses(cate: Union[list, None], level: Union[str, None], sort_key
             qs = qs.filter(category__in=cate)
         if level:
             qs = qs.filter(details__level=level)
+
+        if search_query:
+            qs = qs.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+
         if sort_keys:
             order_fields = [SORTING_DICT[k] for k in sort_keys if k in SORTING_DICT]
             if order_fields:

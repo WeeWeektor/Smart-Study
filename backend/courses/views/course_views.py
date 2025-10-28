@@ -38,14 +38,17 @@ class CourseView(LocalizedView):
             page = request.GET.get("page", 1)
             status = request.GET.get("status")
 
+            if search_query:
+                search_query = sanitize_input(search_query)
+
             category_list, level, sort_keys = categories_level_sort_present(request)
 
             if not author_id:
                 courses_data = await get_instance_cached_all("courses", "courses_get", category_list, level, sort_keys,
-                                                             ) # TODO search_query
+                                                             search_query=search_query)
             else:
                 courses_data = await get_instance_cached_by_author_id("courses", "courses_get", author_id, sort_keys,
-                                                                      status) # TODO search_query
+                                                                      status, search_query=search_query)
 
             if isinstance(courses_data, JsonResponse):
                 return courses_data
