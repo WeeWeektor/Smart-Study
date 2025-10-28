@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import uuid
 
@@ -74,36 +75,73 @@ async def delete_picture(instance_id, instance_type: str, delete_folder=False):
     :param delete_folder: чи видаляти всю папку
     """
     try:
-        folder_path = f"{instance_id}/"
         bucket = _get_bucket(instance_type)
 
+        folder_prefix = f"{instance_id}/"
+
         if delete_folder:
-            await _delete_recursively(folder_path, bucket)
-            await sync_to_async(bucket.remove)([folder_path])
+            all_objects = await _get_all_objects_recursive(bucket, folder_prefix)
+
+            if all_objects:
+                await sync_to_async(bucket.remove)(all_objects)
+
+            await sync_to_async(bucket.remove)([str(instance_id)])
+
         else:
-            files = await sync_to_async(bucket.list)(folder_path)
-            if files:
-                file_paths = [f"{folder_path}{file['name']}" for file in files]
-                await sync_to_async(bucket.remove)(file_paths)
+            items_in_root = await sync_to_async(bucket.list)(folder_prefix)
+
+            if items_in_root:
+                file_paths_to_delete = []
+                for item in items_in_root:
+                    name = item['name']
+
+                    if os.path.splitext(name)[1]:
+                        file_paths_to_delete.append(f"{folder_prefix}{name}")
+
+                if file_paths_to_delete:
+                    await sync_to_async(bucket.remove)(file_paths_to_delete)
 
     except Exception as e:
         logger.error(f"{gettext('Error when deleting a file from Supabase:')} {str(e)}")
         raise ValidationError(f"{gettext('Unable to delete image:')} {str(e)}")
 
 
-async def _delete_recursively(prefix: str, bucket):
+async def _get_all_objects_recursive(bucket, prefix: str) -> list[str]:
     """
-    Рекурсивно видаляє всі файли у вказаній директорії Supabase (включно з підпапками)
+    Рекурсивно збирає список ключів ВСІХ об'єктів (файлів та папок)
+    всередині заданого префікса, використовуючи перевірку розширення.
+
+    Повертає список, відсортований для безпечного видалення
+    (файли видаляються перед папками).
     """
-    items = await sync_to_async(bucket.list)(prefix)
-    if not items:
-        return
+    objects_to_delete = []
 
-    for item in items:
-        name = item["name"]
-        full_path = f"{prefix}{name}"
+    async def _walk(current_prefix: str):
+        """Внутрішня рекурсивна функція. current_prefix завжди має / на кінці."""
+        try:
+            items = await sync_to_async(bucket.list)(current_prefix)
+            if not items:
+                return
+        except Exception:
+            return
 
-        if name.endswith("/"):
-            await _delete_recursively(full_path, bucket)
-        else:
-            await sync_to_async(bucket.remove)([full_path])
+        for item in items:
+            name = item["name"]
+            full_path = f"{current_prefix}{name}"
+
+            is_folder = not os.path.splitext(name)[1]
+
+            if is_folder:
+                await _walk(full_path + "/")
+
+                objects_to_delete.append(full_path)
+            else:
+                objects_to_delete.append(full_path)
+
+    initial_walk_prefix = prefix
+    if not initial_walk_prefix.endswith('/'):
+        initial_walk_prefix += '/'
+
+    await _walk(initial_walk_prefix)
+
+    return list(reversed(objects_to_delete))

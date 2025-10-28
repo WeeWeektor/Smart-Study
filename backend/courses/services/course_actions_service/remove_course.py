@@ -88,7 +88,7 @@ async def remove_course(course):
         course_tests_to_delete = current_course_test_ids
         module_tests_to_delete = current_module_test_ids
 
-        await delete_picture(instance_id=course.id, instance_type="course", delete_folder=True)
+        await delete_picture(instance_id=course_id_str, instance_type="course", delete_folder=True)
 
         delete_message = _("Course deleted successfully.")
 
