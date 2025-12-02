@@ -4,7 +4,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
 from common.decorators import login_required_async
-from courses.choices import LEVELS, CATEGORY_CHOICES
+from courses.choices import LEVELS, CATEGORY_CHOICES, CATEGORY_LESSONS
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -14,4 +14,5 @@ class ChoicesView(LocalizedView):
         return JsonResponse({
             'levels': [dict(LEVELS)],
             'category': [dict(CATEGORY_CHOICES)],
+            'lesson_content_types': [dict(CATEGORY_LESSONS)]
         })

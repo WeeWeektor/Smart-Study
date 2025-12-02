@@ -38,14 +38,12 @@ CATEGORY_CHOICES = [
 VALID_CATEGORIES_CHOICES = {key for key, _ in CATEGORY_CHOICES}
 
 CATEGORY_LESSONS = [
-    ('video', _('Video')),
-    ('document', _('Document')),
-    ('pdf', _('PDF')),
-    ('image', _('Image')),
-    ('link', _('Link')),
-    ('code', _('Code')),
-    ('text', _('Text')),
-    ('custom', _('Custom')),
+    ('video', _('Video')),              # Відеоурок: лекції, демонстрації, скринкасти
+    ('audio', _('Audio')),              # Аудіоуроки: подкасти, голосові пояснення
+    ('document', _('Document')),        # Текстові документи: DOCX, TXT, Google Docs
+    ('presentation', _('Presentation')), # Презентації: PPTX, Keynote, Google Slides
+    ('link', _('Link')),                # Зовнішнє посилання на ресурс або матеріал
+    ('custom', _('Custom')),            # Кастомний тип уроку для розширень
 ]
 VALID_CATEGORIES_LESSONS = {key for key, _ in CATEGORY_LESSONS}
 

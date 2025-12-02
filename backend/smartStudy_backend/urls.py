@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/user/', include('users.user_urls', namespace='user_urls')),
     path('api/course/', include('courses.urls.course_urls', namespace='course_urls')),
     path('api/module/', include('courses.urls.module_urls', namespace='module_urls')),
+    path('api/lesson/', include('courses.urls.lesson_urls', namespace='lesson_urls')),
     path('api/test/', include('courses.urls.test_urls', namespace='test_urls')),
     path('api/choices/', include('courses.urls.choices_urls', namespace='choices_urls')),
     path('api/counter/', include('courses.urls.counter_urls', namespace='counter_urls')),

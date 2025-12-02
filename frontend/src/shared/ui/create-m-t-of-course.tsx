@@ -22,6 +22,7 @@ import {
   CardTitle,
   CollapsibleSection,
   ConfirmModal,
+  CreateLessonModal,
   CreateTestModal,
   Input,
   Label,
@@ -62,18 +63,25 @@ export interface CourseTest extends BaseTest {
   order: number
 }
 
-interface Lesson {
+export interface Lesson {
   type: 'lesson'
   title: string
+  description: string
   order: number
+  duration: number // todo duration field in DB
+  content_type: string // TODO
+  resources: string // TODO
+  content: string // TODO
 }
 
 export const CreateMTOfCourse = ({
   courseStructure,
   setCourseStructure,
+  lessonContentTypes,
 }: {
   courseStructure: CourseStructure
   setCourseStructure: React.Dispatch<React.SetStateAction<CourseStructure>>
+  lessonContentTypes: { value: string; label: string }[]
 }) => {
   const { t } = useI18n()
   const [isConfirmDelOpen, setIsConfirmDelOpen] = useState(false)
@@ -90,6 +98,10 @@ export const CreateMTOfCourse = ({
   const [testModalData, setTestModalData] = useState<{
     order: number
     type: 'module-test' | 'course-test'
+  } | null>(null)
+  const [isCreateLessonOpen, setIsCreateLessonOpen] = useState(false)
+  const [lessonModalData, setLessonModalData] = useState<{
+    order: number
   } | null>(null)
 
   const handleAddModule = () => {
@@ -121,6 +133,8 @@ export const CreateMTOfCourse = ({
           const lessonOrders = item.moduleStructure.map(l => l.order)
           const nextOrder =
             lessonOrders.length > 0 ? Math.max(...lessonOrders) + 1 : 1
+
+          setLessonModalData({ order: nextOrder })
 
           return {
             ...item,
@@ -321,6 +335,17 @@ export const CreateMTOfCourse = ({
     )
   }
 
+  const renderLessonData = ({ lesson }: { lesson: Lesson }) => {
+    return (
+      <div className="text-lg">
+        <div className="flex items-center mb-2">
+          <FileText className="w-4 h-4 mr-2" />
+          {t('Пізніше замінити')}: {lesson.title}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full">
       <CollapsibleSection title={t('Структура курсу')}>
@@ -433,11 +458,11 @@ export const CreateMTOfCourse = ({
 
                                   {!ismoduleElemCollapsed ? (
                                     <CardContent className="p-6 text-slate-700 dark:text-slate-200">
-                                      {moduleElem.type === 'module-test' ? (
-                                        renderTestData({ test: moduleElem })
-                                      ) : (
-                                        <p>LessonData</p>
-                                      )}
+                                      {moduleElem.type === 'module-test'
+                                        ? renderTestData({ test: moduleElem })
+                                        : renderLessonData({
+                                            lesson: moduleElem,
+                                          })}
                                     </CardContent>
                                   ) : (
                                     <p className="pb-4" />
@@ -450,7 +475,10 @@ export const CreateMTOfCourse = ({
                           <div className="flex justify-center mt-6">
                             <Button
                               className="mr-3 w-52"
-                              onClick={() => handleAddLesson(item.order)}
+                              onClick={() => {
+                                handleAddLesson(item.order)
+                                setIsCreateLessonOpen(true)
+                              }}
                             >
                               <Plus className="w-4 h-4 mr-2" />
                               {t('Додати урок')}
@@ -634,6 +662,22 @@ export const CreateMTOfCourse = ({
                 }))
               }
               setIsCreateTestOpen(false)
+            }}
+          />
+        )}
+        {isCreateLessonOpen && lessonModalData && (
+          <CreateLessonModal
+            order={lessonModalData.order}
+            onClose={() => setIsCreateLessonOpen(false)}
+            lessonContentTypes={lessonContentTypes}
+            onAddLesson={lesson => {
+              // TODO fix adding lesson to correct module
+              console.log(
+                'onAddLesson in create-m-t-of-course.tsx' +
+                  lesson.title +
+                  lesson.order
+              )
+              setIsCreateLessonOpen(false)
             }}
           />
         )}

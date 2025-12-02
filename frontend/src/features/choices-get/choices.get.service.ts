@@ -4,6 +4,7 @@ import { apiClient } from '@/shared/api'
 export interface ChoicesResponse {
   levels: Record<string, string>[]
   category: Record<string, string>[]
+  lesson_content_types: Record<string, string>[]
 }
 
 class ChoicesGetService {
@@ -22,7 +23,6 @@ class ChoicesGetService {
           withCredentials: true,
         }
       )
-
       return response.data
     } catch (error) {
       throw new Error(this.t('Не вдалося завантажити варіанти вибору') + error)

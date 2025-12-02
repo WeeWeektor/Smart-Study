@@ -6,8 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
 from common.services import mongo_repo
-from common.utils import error_response, validate_uuid, success_response
-from courses.choices import SORTING_DICT
+from common.utils import error_response, validate_uuid
 from courses.models import Test
 from courses.services.builder_json import build_public_test_json, build_course_test_json, build_module_test_json
 from users.models import CustomUser

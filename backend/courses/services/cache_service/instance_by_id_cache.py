@@ -7,11 +7,13 @@ from django.utils.translation import gettext
 
 from common.services import register_cache_key
 from common.utils import error_response
+from courses.services.lesson_actions_service import get_lesson_by_id
 
 logger = logging.getLogger(__name__)
 
 CACHE_TIMEOUT = 60 * 60
 CACHE_TIMEOUT_TEST = 60 * 20
+CACHE_TIMEOUT_LESSON = 60 * 20
 
 
 async def get_instance_by_id_cache_key(instance_id: uuid.UUID, instance_type: str, instance_type_cache: str) -> str:
@@ -46,6 +48,8 @@ async def get_cached_instance_by_id(
             instance_data = await get_test_by_id(instance_id, module=True)
         else:
             instance_data = None
+    elif instance_type == "lesson":
+        instance_data = await get_lesson_by_id(instance_id)
     else:
         logger.error(gettext("Unsupported instance type for caching"))
         return error_response(gettext("Unsupported instance type for caching"), status=400)
@@ -67,9 +71,13 @@ def _resolve_cache_timeout(instance_data: dict) -> int | None:
         return CACHE_TIMEOUT_TEST
     if instance_data.get("test", {}).get("module", {}).get("is_published"):
         return CACHE_TIMEOUT_TEST
+    if instance_data.get("lesson", {}):
+        print(instance_data)
+        return CACHE_TIMEOUT_LESSON
     return None
 
 
+#TODO не використовується
 async def invalidate_cached_instance_by_id(instance_id: uuid.UUID,
                                            instance_type_cache: str,
                                            instance_type: str

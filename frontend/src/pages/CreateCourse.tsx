@@ -7,6 +7,7 @@ import {
   CardContent,
   CollapsibleSection,
   ConfirmModal,
+  type CourseStructure,
   CreateMTOfCourse,
   ErrorProfile,
   Input,
@@ -35,7 +36,6 @@ import { useChoicesData } from '@/shared/hooks/useChoiceData'
 import { useNavigate } from 'react-router-dom'
 import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
 import { createCourseService } from '@/features/course'
-import { type CourseStructure } from '@/shared/ui'
 
 interface Option {
   value: string
@@ -55,6 +55,7 @@ const CreateCourse = () => {
   const [createCourseError, setCreateCourseError] = useState<string>('')
   const [categories, setCategories] = useState<Option[]>([])
   const [levels, setLevels] = useState<Option[]>([])
+  const [categoryLessonType, setCategoryLessonType] = useState<Option[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [courseStateTitle, setCourseStateTitle] = useState<string>('')
   const [courseStateDescription, setCourseStateDescription] =
@@ -95,9 +96,16 @@ const CreateCourse = () => {
           label,
         })
       )
+      const lessonTypesData: Option[] = Object.entries(
+        choicesData.lesson_content_types[0]
+      ).map(([key, label]) => ({
+        value: key,
+        label,
+      }))
 
       setCategories(categoriesData)
       setLevels(levelsData)
+      setCategoryLessonType(lessonTypesData)
     }
   }, [choicesData])
 
@@ -422,6 +430,7 @@ const CreateCourse = () => {
             <CreateMTOfCourse
               courseStructure={courseStructure}
               setCourseStructure={setCourseStructure}
+              lessonContentTypes={categoryLessonType}
             />
           </div>
 
