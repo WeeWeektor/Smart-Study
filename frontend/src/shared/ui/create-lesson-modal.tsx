@@ -3,6 +3,7 @@ import { useI18n } from '@/shared/lib'
 import {
   Button,
   Card,
+  ConfirmModal,
   Input,
   Label,
   type Lesson,
@@ -72,6 +73,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState<string>('')
   const [comment, setComment] = useState<string>('')
+  const [showCanselModal, setShowCanselModal] = useState(false)
 
   const [lessonStateCategoryType, setLessonStateCategoryType] =
     useState<string>('custom')
@@ -82,6 +84,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     minutes: 0,
   })
   const [blockErrors, setBlockErrors] = useState<Record<string, boolean>>({})
+
   const Fields = getLessonFields(
     lessonStateCategoryType
   ) as React.ComponentType<DynamicFieldProps> | null
@@ -173,47 +176,83 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   const checkData = () => {
     if (!title.trim()) {
       setError(t('Будь ласка, введіть назву уроку.'))
-      setIsAdding(false)
-      return
+      return false
+    }
+
+    if (
+      lessonDuration.days === 0 &&
+      lessonDuration.hours === 0 &&
+      lessonDuration.minutes === 0
+    ) {
+      setError(t('Будь ласка, встановіть орієнтовний час проходження уроку.'))
+      return false
     }
 
     if (!description.trim()) {
       setError(t('Будь ласка, введіть опис уроку.'))
-      setIsAdding(false)
-      return
+      return false
     }
 
     if (lessonStateCategoryType === 'custom') {
+      let totalTextLength: number = 0
+
       if (customContentBlocks.length === 0) {
         setError(t('Будь ласка, додайте хоча б один блок контенту.'))
-        setIsAdding(false)
-        return
+        return false
       }
 
       for (let i = 0; i < customContentBlocks.length; i++) {
-        if (customContentBlocks[i].data === null) {
-          setError(
-            t(`Будь ласка, заповніть дані для блоку контенту №${i + 1}.`)
-          )
-          setIsAdding(false)
-          return
+        const block = customContentBlocks[i]
+
+        if (block.data === null && !blockErrors[block.id]) {
+          setError(t('Заповніть всі необхідні дані'))
+          return false
         }
+
+        if (block.data) {
+          if (typeof block.data === 'string') {
+            totalTextLength += block.data.length
+          } else if (typeof block.data === 'object' && 'code' in block.data) {
+            totalTextLength += (block.data as CodeContentData).code.length
+          }
+        }
+      }
+
+      if (totalTextLength > 5000) {
+        setError(
+          t(
+            'Довжина текстового контенту не повинна перевищувати 5000 символів.'
+          )
+        )
+        return false
       }
     } else {
       if (extraData === null) {
         setError(t('Будь ласка, заповніть дані для вибраного типу контенту.'))
-        setIsAdding(false)
-        return
+        return false
+      }
+      if (comment === '' || comment.trim() === '') {
+        setError(t('Будь ласка, додайте коментар до завдання.'))
+        return false
       }
     }
 
     setError(null)
+    return true
   }
 
   const handleAddLesson = () => {
+    if (hasValidationErrors) {
+      return
+    }
+
+    const isValid = checkData()
+    if (!isValid) {
+      return
+    }
+
     setIsAdding(true)
-    checkData()
-    if (error) return
+    setError(null)
 
     const lessonData = {
       title,
@@ -232,7 +271,35 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     onAddLesson(lessonData as Lesson)
   }
 
+  const resetForm = () => {
+    setTitle('')
+    setDescription('')
+    setComment('')
+    setLessonStateCategoryType('custom')
+    setCustomTypeContent('')
+    setLessonDuration({ days: 0, hours: 0, minutes: 0 })
+    setBlockErrors({})
+    setExtraData(null)
+    setCustomContentBlocks([])
+    setCollapsedQuestions({})
+    setError(null)
+    setIsAdding(false)
+  }
+
+  const handleCancelCreateLesson = () => {
+    const hasData =
+      title.trim() ||
+      description.trim() ||
+      customContentBlocks.length > 0 ||
+      extraData
+
+    if (hasData) {
+      setShowCanselModal(true)
+    } else handleCancelAddLesson()
+  }
+
   const handleCancelAddLesson = () => {
+    resetForm()
     onClose()
   }
 
@@ -348,7 +415,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                     const FieldsComponent = getLessonFields(
                       block.type
                     ) as React.ComponentType<DynamicFieldProps> | null
-                    const isCollapsed = collapsedQuestions[index] ?? true
+                    const isVisible = collapsedQuestions[index] ?? true
 
                     const codeData =
                       typeof block.data === 'object' &&
@@ -367,7 +434,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                           onClick={() => toggleQuestionCollapse(index)}
                         >
                           <div className="flex items-center space-x-3">
-                            {isCollapsed ? (
+                            {isVisible ? (
                               <ChevronUp className="w-5 h-5" />
                             ) : (
                               <ChevronDown className="w-5 h-5" />
@@ -389,10 +456,12 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                        {isCollapsed && FieldsComponent && (
+
+                        {FieldsComponent && (
                           <div
                             className="mb-4 py-0 cursor-default"
                             onClick={e => e.stopPropagation()}
+                            style={{ display: isVisible ? 'block' : 'none' }}
                           >
                             <FieldsComponent
                               value={block.data}
@@ -450,7 +519,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                 )}
 
                 <div className="mt-6">
-                  <Label htmlFor="lessonComment">{t('Коментар')}</Label>
+                  <Label htmlFor="lessonComment">{t('Коментар*')}</Label>
                   <Textarea
                     id="lessonComment"
                     value={comment}
@@ -471,7 +540,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
             <Button
               className="w-60 hover:bg-gray-100 dark:hover:bg-gray-700"
               variant="outline"
-              onClick={handleCancelAddLesson}
+              onClick={handleCancelCreateLesson}
               disabled={isAdding}
             >
               <Undo className="w-4 h-4 mr-2" />
@@ -500,6 +569,16 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
           </div>
         </div>
       </div>
+      {showCanselModal && (
+        <ConfirmModal
+          isOpen={showCanselModal}
+          onConfirm={handleCancelAddLesson}
+          onClose={() => setShowCanselModal(false)}
+          title={t('Ви дійсно бажаєте скасувати створення уроку?')}
+          description={t('Всі внесені дані будуть втрачені')}
+          buttonText={t('Підтвердити')}
+        />
+      )}
     </div>
   )
 }
