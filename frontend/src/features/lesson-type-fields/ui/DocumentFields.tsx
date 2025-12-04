@@ -8,33 +8,81 @@ import {
   FileText,
   FileType,
   X,
+  Download,
 } from 'lucide-react'
+import { validateFile } from '@/features/lesson-type-fields/helper'
 
 type DocumentFieldsProps = {
-  onChange: (file: File | null) => void
+  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onError?: (hasError: boolean) => void
 }
 
-export const DocumentFields = ({ onChange }: DocumentFieldsProps) => {
+const ACCEPTED_DOC_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+]
+
+const INPUT_ACCEPT_ATTRIBUTE =
+  '.pdf,.doc,.docx,.txt,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
   const { t } = useI18n()
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!file) {
+      onError?.(true)
+    }
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
+
+    const validation = validateFile({
+      file: selectedFile,
+      maxSizeMB: 20,
+      acceptedTypes: ACCEPTED_DOC_TYPES,
+    })
+
+    if (!selectedFile) {
+      return
+    }
+
+    if (!validation.isValid) {
+      setError(t(validation.errorMessage || 'Помилка файлу'))
+      onError?.(true)
+
+      setFile(null)
+      setPreviewUrl(null)
+      onChange(null)
+
+      e.target.value = ''
+      return
+    }
+
+    setError(null)
+    onError?.(false)
 
     setFile(selectedFile)
-
     const url = URL.createObjectURL(selectedFile)
     setPreviewUrl(url)
 
-    onChange(selectedFile)
+    onChange({ file: selectedFile, previewUrl: url })
   }
 
   const handleRemove = () => {
     setFile(null)
     setPreviewUrl(null)
     onChange(null)
+    setError(null)
+
+    onError?.(true)
   }
 
   useEffect(() => {
@@ -80,13 +128,19 @@ export const DocumentFields = ({ onChange }: DocumentFieldsProps) => {
       {!file && (
         <Input
           type="file"
-          accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          accept={INPUT_ACCEPT_ATTRIBUTE}
           className="mt-1"
           onChange={handleFileChange}
         />
       )}
 
-      {file && (
+      {error && (
+        <div className="mb-3 mt-2 p-3 bg-red-100 text-red-700 rounded border border-red-200 text-sm">
+          {error}
+        </div>
+      )}
+
+      {file && !error && (
         <div className="mt-2 flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#09090b] shadow-sm transition-colors">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="p-2 bg-white dark:bg-[#18181b] rounded-md border border-slate-100 dark:border-slate-800 shrink-0">
@@ -114,6 +168,17 @@ export const DocumentFields = ({ onChange }: DocumentFieldsProps) => {
               >
                 <Eye size={18} />
               </button>
+            )}
+
+            {previewUrl && (
+              <a
+                href={previewUrl}
+                download={file.name}
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors flex items-center justify-center"
+                title={t('Завантажити файл')}
+              >
+                <Download size={18} />
+              </a>
             )}
 
             <button

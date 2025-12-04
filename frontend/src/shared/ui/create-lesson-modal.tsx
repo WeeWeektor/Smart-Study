@@ -1,4 +1,4 @@
-import React, { type FC, useState } from 'react'
+import React, { type FC, useMemo, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import {
   Button,
@@ -19,11 +19,39 @@ import {
   Loader2,
   PlusSquareIcon,
   Save,
+  Trash2,
   Undo,
 } from 'lucide-react'
 import { disablePageScroll, enablePageScroll } from '@/shared/scroll'
 import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
 import { getLessonFields } from '@/features/lesson-type-fields'
+
+interface FileContentData {
+  file: File
+  previewUrl: string
+}
+
+interface CodeContentData {
+  language: string
+  code: string
+}
+
+export type BlockData = string | FileContentData | CodeContentData | null
+
+interface ContentBlock {
+  id: string
+  type: string
+  data: BlockData
+}
+
+interface DynamicFieldProps {
+  value?: BlockData
+  onChange: (value: BlockData) => void
+  onError?: (hasError: boolean) => void
+  initialValue?: string
+  initialCode?: string
+  initialLanguage?: string
+}
 
 interface CreateLessonModalProps {
   order: number
@@ -44,6 +72,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState<string>('')
   const [comment, setComment] = useState<string>('')
+
   const [lessonStateCategoryType, setLessonStateCategoryType] =
     useState<string>('custom')
   const [customTypeContent, setCustomTypeContent] = useState<string>('')
@@ -52,10 +81,14 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     hours: 0,
     minutes: 0,
   })
-  const Fields = getLessonFields(lessonStateCategoryType)
-  const [extraData, setExtraData] = useState<unknown>(null)
+  const [blockErrors, setBlockErrors] = useState<Record<string, boolean>>({})
+  const Fields = getLessonFields(
+    lessonStateCategoryType
+  ) as React.ComponentType<DynamicFieldProps> | null
+
+  const [extraData, setExtraData] = useState<BlockData>(null)
   const [customContentBlocks, setCustomContentBlocks] = useState<
-    { type: string; data: unknown }[]
+    ContentBlock[]
   >([])
   const [collapsedQuestions, setCollapsedQuestions] = useState<
     Record<number, boolean>
@@ -65,6 +98,17 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     disablePageScroll()
     return () => enablePageScroll()
   }, [])
+
+  const hasValidationErrors = useMemo(() => {
+    return Object.values(blockErrors).some(isError => isError)
+  }, [blockErrors])
+
+  const handleBlockError = (blockId: string, hasError: boolean) => {
+    setBlockErrors(prev => {
+      if (prev[blockId] === hasError) return prev
+      return { ...prev, [blockId]: hasError }
+    })
+  }
 
   const handleContentClick = (e: React.MouseEvent) => e.stopPropagation()
 
@@ -98,19 +142,97 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
 
     setCustomContentBlocks(prev => [
       ...prev,
-      { type: customTypeContent, data: {} },
+      { id: crypto.randomUUID(), type: customTypeContent, data: null },
     ])
 
     setCustomTypeContent('')
   }
 
+  const handleRemoveBlock = (indexToRemove: number) => {
+    const blockToRemove = customContentBlocks[indexToRemove]
+
+    if (blockToRemove) {
+      setBlockErrors(prev => {
+        const newState = { ...prev }
+        delete newState[blockToRemove.id]
+        return newState
+      })
+    }
+
+    setCustomContentBlocks(prev =>
+      prev.filter((_, index) => index !== indexToRemove)
+    )
+
+    setCollapsedQuestions(prev => {
+      const newState = { ...prev }
+      delete newState[indexToRemove]
+      return newState
+    })
+  }
+
+  const checkData = () => {
+    if (!title.trim()) {
+      setError(t('Будь ласка, введіть назву уроку.'))
+      setIsAdding(false)
+      return
+    }
+
+    if (!description.trim()) {
+      setError(t('Будь ласка, введіть опис уроку.'))
+      setIsAdding(false)
+      return
+    }
+
+    if (lessonStateCategoryType === 'custom') {
+      if (customContentBlocks.length === 0) {
+        setError(t('Будь ласка, додайте хоча б один блок контенту.'))
+        setIsAdding(false)
+        return
+      }
+
+      for (let i = 0; i < customContentBlocks.length; i++) {
+        if (customContentBlocks[i].data === null) {
+          setError(
+            t(`Будь ласка, заповніть дані для блоку контенту №${i + 1}.`)
+          )
+          setIsAdding(false)
+          return
+        }
+      }
+    } else {
+      if (extraData === null) {
+        setError(t('Будь ласка, заповніть дані для вибраного типу контенту.'))
+        setIsAdding(false)
+        return
+      }
+    }
+
+    setError(null)
+  }
+
   const handleAddLesson = () => {
     setIsAdding(true)
-    console.log('Adding lesson...')
+    checkData()
+    if (error) return
+
+    const lessonData = {
+      title,
+      typeCategory: lessonStateCategoryType,
+      duration: lessonDuration,
+      description,
+      contentBlocks: customContentBlocks.map(block => ({
+        type: block.type,
+        data: block.data,
+      })),
+      singleContentData: extraData,
+      comment,
+    }
+
+    console.log('--- ЗІБРАНІ ДАНІ УРОКУ ---', lessonData)
+    onAddLesson(lessonData as Lesson)
   }
 
   const handleCancelAddLesson = () => {
-    console.log('Canceling lesson...')
     onClose()
   }
 
@@ -223,12 +345,22 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
               <>
                 <div className="mt-6 space-y-6">
                   {customContentBlocks.map((block, index) => {
-                    const FieldsComponent = getLessonFields(block.type)
+                    const FieldsComponent = getLessonFields(
+                      block.type
+                    ) as React.ComponentType<DynamicFieldProps> | null
                     const isCollapsed = collapsedQuestions[index] ?? true
+
+                    const codeData =
+                      typeof block.data === 'object' &&
+                      block.data !== null &&
+                      'code' in block.data
+                        ? (block.data as CodeContentData)
+                        : null
+
                     return (
                       <Card
-                        key={index}
-                        className="px-4 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-600 dark:hover:shadow-gray-700 mt-4"
+                        key={block.id}
+                        className={`px-4 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-slate-600 dark:hover:shadow-gray-700 mt-4`}
                       >
                         <div
                           className="flex justify-between items-center p-3 cursor-pointer"
@@ -245,18 +377,42 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                               {buildLessonJson[block.type] || block.type}
                             </h3>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 z-10"
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleRemoveBlock(index)
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                         {isCollapsed && FieldsComponent && (
-                          <div className="mb-4 py-0">
+                          <div
+                            className="mb-4 py-0 cursor-default"
+                            onClick={e => e.stopPropagation()}
+                          >
                             <FieldsComponent
                               value={block.data}
-                              onChange={(newData: unknown) => {
+                              onChange={(newData: BlockData) => {
                                 setCustomContentBlocks(prev =>
                                   prev.map((b, i) =>
                                     i === index ? { ...b, data: newData } : b
                                   )
                                 )
                               }}
+                              onError={(hasError: boolean) =>
+                                handleBlockError(block.id, hasError)
+                              }
+                              initialValue={
+                                typeof block.data === 'string'
+                                  ? block.data
+                                  : undefined
+                              }
+                              initialCode={codeData?.code}
+                              initialLanguage={codeData?.language}
                             />
                           </div>
                         )}
@@ -283,7 +439,15 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
               </>
             ) : (
               <>
-                {Fields && <Fields value={extraData} onChange={setExtraData} />}
+                {Fields && (
+                  <Fields
+                    value={extraData}
+                    onChange={setExtraData}
+                    onError={hasError =>
+                      handleBlockError('single-content', hasError)
+                    }
+                  />
+                )}
 
                 <div className="mt-6">
                   <Label htmlFor="lessonComment">{t('Коментар')}</Label>
@@ -319,7 +483,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
             <Button
               className="w-60 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               onClick={handleAddLesson}
-              disabled={isAdding}
+              disabled={isAdding || hasValidationErrors}
             >
               {isAdding ? (
                 <>

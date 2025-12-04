@@ -2,14 +2,17 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Input, Label } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
 import { EyeOff, ZoomInIcon, ZoomOutIcon } from 'lucide-react'
+import { validateFile } from '@/features/lesson-type-fields/helper'
 
 type ImageFieldsProps = {
-  onChange: (file: File) => void
+  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onError?: (hasError: boolean) => void
 }
 
-export const ImageFields = ({ onChange }: ImageFieldsProps) => {
+export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
   const { t } = useI18n()
   const [preview, setPreview] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
 
   const [scale, setScale] = useState(1)
@@ -18,12 +21,40 @@ export const ImageFields = ({ onChange }: ImageFieldsProps) => {
   const dragStartRef = useRef({ x: 0, y: 0 })
   const imageRef = useRef<HTMLImageElement>(null)
 
+  useEffect(() => {
+    if (!preview) {
+      onError?.(true)
+    }
+  }, [])
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
+    const validation = validateFile({
+      file,
+      maxSizeMB: 10,
+      acceptedTypes: ['image/*'],
+    })
+
     if (!file) return
+
+    if (!validation.isValid) {
+      setError(t(validation.errorMessage || 'Помилка файлу'))
+      onError?.(true)
+
+      setPreview(null)
+      onChange(null)
+
+      e.target.value = ''
+      return
+    }
+
+    setError(null)
+    onError?.(false)
+
     const url = URL.createObjectURL(file)
     setPreview(url)
-    onChange(file)
+    onChange({ file: file, previewUrl: url })
   }
 
   useEffect(() => {
@@ -80,6 +111,7 @@ export const ImageFields = ({ onChange }: ImageFieldsProps) => {
   return (
     <div className="mt-0 space-y-1">
       <Label>{t('Зображення *')}</Label>
+
       <Input
         type="file"
         accept="image/*"
@@ -87,7 +119,13 @@ export const ImageFields = ({ onChange }: ImageFieldsProps) => {
         onChange={handleFileChange}
       />
 
-      {preview && (
+      {error && (
+        <div className="mb-3 mt-2 p-3 bg-red-100 text-red-700 rounded border border-red-200 text-sm">
+          {error}
+        </div>
+      )}
+
+      {preview && !error && (
         <>
           <div
             className="mt-3 relative border border-gray-200 rounded-lg overflow-hidden h-[200px] w-full bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"

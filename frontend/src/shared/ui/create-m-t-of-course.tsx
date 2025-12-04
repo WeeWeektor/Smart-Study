@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import {
+  type BlockData,
   Button,
   Card,
   CardContent,
@@ -65,13 +66,14 @@ export interface CourseTest extends BaseTest {
 
 export interface Lesson {
   type: 'lesson'
+  typeCategory: string
   title: string
-  description: string
   order: number
-  duration: number // todo duration field in DB
-  content_type: string // TODO
-  resources: string // TODO
-  content: string // TODO
+  duration: { days: number; hours: number; minutes: number }
+  description: string
+  contentBlocks: { type: string; data: BlockData }[]
+  singleContentData: BlockData
+  comment: string
 }
 
 export const CreateMTOfCourse = ({
