@@ -203,7 +203,6 @@ const CreateCourse = () => {
         cover_imageFile: courseStateImageFile,
         courseStructure: courseStructure.courseStructure,
       })
-      console.log(courseStructure)
 
       if (response.status === 200 || response.status === 201) {
         handleCancelCreateCourse()

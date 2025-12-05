@@ -6,7 +6,6 @@ import {
   ConfirmModal,
   Input,
   Label,
-  type Lesson,
   Select,
   SelectContent,
   SelectItem,
@@ -43,6 +42,19 @@ interface ContentBlock {
   id: string
   type: string
   data: BlockData
+}
+
+export interface Lesson {
+  type: 'lesson'
+  typeCategory: string
+  title: string
+  order: number
+  moduleOrder: number
+  duration: string
+  description: string
+  contentBlocks: { type: string; data: BlockData }[]
+  singleContentData: BlockData
+  comment: string
 }
 
 interface DynamicFieldProps {
@@ -98,6 +110,15 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   const [collapsedQuestions, setCollapsedQuestions] = useState<
     Record<number, boolean>
   >({})
+
+  const padTwoDigits = (num: number): string => num.toString().padStart(2, '0')
+  const formatDuration = (
+    days: number,
+    hours: number,
+    minutes: number
+  ): string => {
+    return `${padTwoDigits(days)}:${padTwoDigits(hours)}:${padTwoDigits(minutes)}`
+  }
 
   React.useEffect(() => {
     disablePageScroll()
@@ -257,13 +278,19 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     setIsAdding(true)
     setError(null)
 
+    const formattedDuration = formatDuration(
+      lessonDuration.days,
+      lessonDuration.hours,
+      lessonDuration.minutes
+    )
+
     const lessonData = {
       order: order,
       moduleOrder: moduleOrder,
       type: 'lesson',
       title,
       typeCategory: lessonStateCategoryType,
-      duration: lessonDuration,
+      duration: formattedDuration,
       description,
       contentBlocks: customContentBlocks.map(block => ({
         type: block.type,

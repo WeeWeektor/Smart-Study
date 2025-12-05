@@ -2,7 +2,6 @@ import { useI18n } from '@/shared/lib'
 import {
   Award,
   BookOpen,
-  Check,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -13,7 +12,6 @@ import {
   Repeat,
   Shuffle,
   Trash2,
-  X,
 } from 'lucide-react'
 import {
   type BlockData,
@@ -287,58 +285,107 @@ export const CreateMTOfCourse = ({
 
   const renderTestData = ({ test }: { test: CourseTest | ModuleTest }) => {
     return (
-      <div className="text-lg">
-        <div className="flex items-center mb-2">
-          <FileText className="w-4 h-4 mr-2" />
-          {t('Опис')}: {test.description}
+      <div className="flex flex-col gap-3 text-sm">
+        <div className="flex items-center font-semibold text-lg text-slate-800 dark:text-slate-100">
+          <FileCheck className="w-5 h-5 mr-2 text-brand-600 dark:text-brand-400" />
+          {test.title || t('Тест')}
         </div>
-        <div className="flex items-center mb-2">
-          <Clock className="w-4 h-4 mr-2" />
-          {t('Обмеження в часі')}: {test.time_limit} {t('хвилин')}
-        </div>
-        <div className="flex items-center mb-2">
-          <Repeat className="w-4 h-4 mr-2" />
-          {t('Кількість спроб')}: {test.count_attempts}
-        </div>
-        <div className="flex items-center mb-2">
-          <Award className="w-4 h-4 mr-2" />
-          {t('Прохідний бал')}: {test.pass_score} %
-        </div>
-        <div className="flex items-center mb-2">
-          <FileCheck className="w-4 h-4 mr-2" />
-          {t('Кількість питань')}: {test.questions.length}
-        </div>
-        <div className="flex flex-col mt-2">
-          <div className="flex items-center mb-1">
-            <Shuffle className="w-4 h-4 mr-2" />
-            {t('Перемішувати питання')}:{' '}
-            {test.random_questions ? (
-              <Check className="w-4 h-4 ml-2 text-green-500" />
-            ) : (
-              <X className="w-4 h-4 ml-2 text-red-500" />
-            )}
+
+        <div className="flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">
+            <Clock className="w-3.5 h-3.5 mr-1.5" />
+            {test.time_limit} {t('хв')}
           </div>
-          <div className="flex items-center">
-            <Eye className="w-4 h-4 mr-2" />
-            {t('Показати відповіді після завершення')}:{' '}
-            {test.show_correct_answers ? (
-              <Check className="w-4 h-4 ml-2 text-green-500" />
-            ) : (
-              <X className="w-4 h-4 ml-2 text-red-500" />
-            )}
+
+          <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">
+            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            {test.questions.length} {t('питань')}
+          </div>
+
+          <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">
+            <Award className="w-3.5 h-3.5 mr-1.5" />
+            {t('мін.')} {test.pass_score}%
+          </div>
+
+          <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">
+            <Repeat className="w-3.5 h-3.5 mr-1.5" />
+            {test.count_attempts} {t('спроб')}
           </div>
         </div>
+
+        <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1">
+          {test.random_questions && (
+            <div className="flex items-center text-green-600 dark:text-green-400">
+              <Shuffle className="w-3.5 h-3.5 mr-1" />
+              {t('Перемішувати')}
+            </div>
+          )}
+          {test.show_correct_answers && (
+            <div className="flex items-center text-green-600 dark:text-green-400">
+              <Eye className="w-3.5 h-3.5 mr-1" />
+              {t('Показувати відповіді')}
+            </div>
+          )}
+        </div>
+
+        {test.description && (
+          <div className="mt-1 text-slate-600 dark:text-slate-300 border-l-2 border-slate-200 dark:border-slate-600 pl-3 italic line-clamp-2">
+            {test.description}
+          </div>
+        )}
       </div>
     )
   }
 
   const renderLessonData = ({ lesson }: { lesson: Lesson }) => {
+    const formatDuration = (d: {
+      days: number
+      hours: number
+      minutes: number
+    }) => {
+      const parts = []
+      if (d.days > 0) parts.push(`${d.days} ${t('дн')}`)
+      if (d.hours > 0) parts.push(`${d.hours} ${t('год')}`)
+      if (d.minutes > 0) parts.push(`${d.minutes} ${t('хв')}`)
+      return parts.length > 0 ? parts.join(' ') : t('0 хв')
+    }
+
+    const getTypeLabel = (category: string) => {
+      const foundType = lessonContentTypes.find(type => type.value === category)
+      return foundType?.label || category || t('Не вказано')
+    }
+
     return (
-      <div className="text-lg">
-        <div className="flex items-center mb-2">
-          <FileText className="w-4 h-4 mr-2" />
-          {t('Пізніше замінити')}: {lesson.title}
+      <div className="flex flex-col gap-3 text-sm">
+        <div className="flex items-center font-semibold text-lg text-slate-800 dark:text-slate-100">
+          <FileText className="w-5 h-5 mr-2 text-brand-600 dark:text-brand-400" />
+          {lesson.title}
         </div>
+
+        <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">
+            <BookOpen className="w-3 h-3 mr-1.5" />
+            {getTypeLabel(lesson.typeCategory)}
+          </div>
+
+          <div className="flex items-center text-xs">
+            <Clock className="w-3.5 h-3.5 mr-1.5" />
+            {formatDuration(lesson.duration)}
+          </div>
+        </div>
+
+        {lesson.description && (
+          <div className="mt-1 text-slate-600 dark:text-slate-300 border-l-2 border-slate-200 dark:border-slate-600 pl-3 italic line-clamp-2">
+            {lesson.description}
+          </div>
+        )}
+
+        {lesson.comment && (
+          <div className="text-xs text-slate-400 mt-1">
+            <span className="font-semibold">{t('Коментар:')}</span>{' '}
+            {lesson.comment}
+          </div>
+        )}
       </div>
     )
   }
@@ -424,7 +471,7 @@ export const CreateMTOfCourse = ({
                               return (
                                 <Card
                                   key={`moduleElem-courseElem-${moduleElem.order}-${item.order}`}
-                                  className="text-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700 mt-4"
+                                  className="text-base overflow-hidden hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-slate-700 mt-3 border border-slate-200 dark:border-slate-700"
                                 >
                                   <div className="flex items-center relative mt-4">
                                     <div className="absolute left-0 ml-6">

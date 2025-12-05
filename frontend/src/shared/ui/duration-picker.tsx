@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Label } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
 import { useCallback, useEffect, useRef } from 'react'
-import { cn } from '@/shared/lib/utils' // твоє утилітарне cn
+import { cn } from '@/shared/lib/utils'
 
 interface Duration {
   days: number
@@ -31,6 +31,7 @@ const StepperInput = ({
   onChange: (newVal: number) => void
 }) => {
   const intervalRef = useRef<number | null>(null)
+  const timeoutRef = useRef<number | null>(null)
   const currentRef = useRef<number>(val)
 
   useEffect(() => {
@@ -50,12 +51,18 @@ const StepperInput = ({
   }, [min, onChange])
 
   const startHold = useCallback((action: () => void) => {
-    if (intervalRef.current != null) return
+    if (intervalRef.current != null || timeoutRef.current != null) return
     action()
-    intervalRef.current = window.setInterval(action, 150)
+    timeoutRef.current = window.setTimeout(() => {
+      intervalRef.current = window.setInterval(action, 100)
+    }, 500)
   }, [])
 
   const stopHold = useCallback(() => {
+    if (timeoutRef.current != null) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
     if (intervalRef.current != null) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
@@ -82,7 +89,7 @@ const StepperInput = ({
           startHold(inc)
         }}
         onPointerUp={stopHold}
-        onPointerCancel={stopHold}
+        onPointerLeave={stopHold}
         className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
       >
         <ChevronUp className="w-4 h-4" />
