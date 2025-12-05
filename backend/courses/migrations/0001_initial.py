@@ -414,10 +414,6 @@ class Migration(migrations.Migration):
             model_name='lesson',
             constraint=models.CheckConstraint(condition=models.Q(('order__gt', 0)), name='lesson_order_positive'),
         ),
-        migrations.AddConstraint(
-            model_name='lesson',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('content_type', 'custom'), ('custom_type__isnull', False)), models.Q(models.Q(('content_type', 'custom'), _negated=True), ('custom_type__isnull', True)), _connector='OR'), name='lesson_custom_type_valid'),
-        ),
         migrations.AddIndex(
             model_name='test',
             index=models.Index(condition=models.Q(('course__isnull', False)), fields=['course', 'title'], name='ix_test_course_title'),

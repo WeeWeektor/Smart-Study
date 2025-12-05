@@ -16,16 +16,14 @@ from .models import (
     Certificate,
     Wishlist,
     CourseAnnouncement,
-    CustomLessonType,
 )
 
 
 class LessonInline(admin.TabularInline):
     model = Lesson
-    fields = ("title", "order", "content_type", "custom_type", "duration")
+    fields = ("title", "order", "content_type", "duration")
     extra = 0
     show_change_link = True
-    raw_id_fields = ("custom_type",)
 
 
 class TestInline(admin.TabularInline):
@@ -85,10 +83,19 @@ class ModuleAdmin(admin.ModelAdmin):
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     list_display = ("title", "module", "order", "content_type", "duration")
-    search_fields = ("title", "module__title")
-    list_filter = ("content_type",)
-    raw_id_fields = ("module", "custom_type")
+    search_fields = ("title", "module__title", "description", "content")
+    list_filter = ("content_type", "module__course")
+    raw_id_fields = ("module",)
     ordering = ("module", "order")
+    fieldsets = (
+        (None, {
+            "fields": ("module", "title", "description", "content_type", "order", "duration")
+        }),
+        (_("Content"), {
+            "fields": ("content", "comment"),
+            "classes": ("collapse",),
+        }),
+    )
 
 
 @admin.register(Test)
@@ -191,15 +198,6 @@ class CourseAnnouncementAdmin(admin.ModelAdmin):
     search_fields = ("title", "content", "course__title")
     list_filter = ("is_important",)
     raw_id_fields = ("course",)
-
-
-@admin.register(CustomLessonType)
-class CustomLessonTypeAdmin(admin.ModelAdmin):
-    list_display = ("name", "creator", "is_public", "is_active", "usage_count", "created_at")
-    search_fields = ("name", "creator__email")
-    list_filter = ("is_public", "is_active")
-    raw_id_fields = ("creator",)
-    readonly_fields = ("usage_count",)
 
 
 @admin.register(CourseMeta)

@@ -12,6 +12,7 @@ from smartStudy_backend import settings
 
 
 async def course_structure(courseStructure: list, owner, courseId, files=None):
+    print("courseStructure", courseStructure)
     for structure in courseStructure:
         if structure['type'] == 'module':
             module = await create_module({**structure, "course_id": courseId}, courseId)

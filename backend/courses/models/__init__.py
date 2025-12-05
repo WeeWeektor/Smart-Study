@@ -5,7 +5,6 @@ from .course_announcement import CourseAnnouncement
 from .course_meta import CourseMeta
 from .course_review import CourseReview
 from .course_version import CourseVersion
-from .custom_lesson_type import CustomLessonType
 from .enrollment import UserCourseEnrollment
 from .lesson import Lesson
 from .lesson_progress import LessonProgress
@@ -25,7 +24,6 @@ __all__ = [
     "LessonProgress",
     "Test",
     "TestAttempt",
-    "CustomLessonType",
     "CourseReview",
     "Certificate",
     "Wishlist",
