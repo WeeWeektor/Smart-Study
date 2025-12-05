@@ -69,6 +69,7 @@ export interface Lesson {
   typeCategory: string
   title: string
   order: number
+  moduleOrder: number
   duration: { days: number; hours: number; minutes: number }
   description: string
   contentBlocks: { type: string; data: BlockData }[]
@@ -98,11 +99,13 @@ export const CreateMTOfCourse = ({
   )
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false)
   const [testModalData, setTestModalData] = useState<{
+    moduleOrder?: number
     order: number
     type: 'module-test' | 'course-test'
   } | null>(null)
   const [isCreateLessonOpen, setIsCreateLessonOpen] = useState(false)
   const [lessonModalData, setLessonModalData] = useState<{
+    moduleOrder: number
     order: number
   } | null>(null)
 
@@ -128,27 +131,19 @@ export const CreateMTOfCourse = ({
   }
 
   const handleAddLesson = (moduleOrder: number) => {
-    setCourseStructure(prev => ({
-      ...prev,
-      courseStructure: prev.courseStructure.map(item => {
-        if (item.type === 'module' && item.order === moduleOrder) {
-          const lessonOrders = item.moduleStructure.map(l => l.order)
-          const nextOrder =
-            lessonOrders.length > 0 ? Math.max(...lessonOrders) + 1 : 1
+    const module = courseStructure.courseStructure.find(
+      item => item.type === 'module' && item.order === moduleOrder
+    ) as ModuleStructure | undefined
 
-          setLessonModalData({ order: nextOrder })
+    if (module) {
+      const existingOrders = module.moduleStructure.map(item => item.order)
 
-          return {
-            ...item,
-            moduleStructure: [
-              ...item.moduleStructure,
-              { type: 'lesson', title: '', order: nextOrder } satisfies Lesson,
-            ],
-          }
-        }
-        return item
-      }),
-    }))
+      const nextOrder =
+        existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1
+
+      setLessonModalData({ moduleOrder, order: nextOrder })
+      setIsCreateLessonOpen(true)
+    }
   }
 
   const handleDelete = (order: number, isModule: boolean) => {
@@ -477,10 +472,7 @@ export const CreateMTOfCourse = ({
                           <div className="flex justify-center mt-6">
                             <Button
                               className="mr-3 w-52"
-                              onClick={() => {
-                                handleAddLesson(item.order)
-                                setIsCreateLessonOpen(true)
-                              }}
+                              onClick={() => handleAddLesson(item.order)}
                             >
                               <Plus className="w-4 h-4 mr-2" />
                               {t('Додати урок')}
@@ -488,11 +480,15 @@ export const CreateMTOfCourse = ({
                             <Button
                               className="ml-3 w-52"
                               onClick={() => {
+                                const structureOrders =
+                                  item.moduleStructure.map(i => i.order)
                                 const nextOrder =
-                                  item.moduleStructure.filter(
-                                    i => i.type === 'module-test'
-                                  ).length + 1
+                                  structureOrders.length > 0
+                                    ? Math.max(...structureOrders) + 1
+                                    : 1
+
                                 setTestModalData({
+                                  moduleOrder: item.order,
                                   order: nextOrder,
                                   type: 'module-test',
                                 })
@@ -652,14 +648,20 @@ export const CreateMTOfCourse = ({
                 setCourseStructure(prev => ({
                   ...prev,
                   courseStructure: prev.courseStructure.map(mod => {
-                    if (mod.type !== 'module') return mod
-                    return {
-                      ...mod,
-                      moduleStructure: [
-                        ...mod.moduleStructure,
-                        newTest as ModuleTest,
-                      ],
+                    if (
+                      mod.type === 'module' &&
+                      testModalData.moduleOrder !== undefined &&
+                      mod.order === testModalData.moduleOrder
+                    ) {
+                      return {
+                        ...mod,
+                        moduleStructure: [
+                          ...mod.moduleStructure,
+                          newTest as ModuleTest,
+                        ],
+                      }
                     }
+                    return mod
                   }),
                 }))
               }
@@ -667,18 +669,34 @@ export const CreateMTOfCourse = ({
             }}
           />
         )}
+
         {isCreateLessonOpen && lessonModalData && (
           <CreateLessonModal
             order={lessonModalData.order}
+            moduleOrder={lessonModalData.moduleOrder}
             onClose={() => setIsCreateLessonOpen(false)}
             lessonContentTypes={lessonContentTypes}
             onAddLesson={lesson => {
-              // TODO fix adding lesson to correct module
-              console.log(
-                'onAddLesson in create-m-t-of-course.tsx' +
-                  lesson.title +
-                  lesson.order
-              )
+              if (lesson.type === 'lesson') {
+                setCourseStructure(prev => ({
+                  ...prev,
+                  courseStructure: prev.courseStructure.map(mod => {
+                    if (
+                      mod.type === 'module' &&
+                      mod.order === lessonModalData.moduleOrder
+                    ) {
+                      return {
+                        ...mod,
+                        moduleStructure: [
+                          ...mod.moduleStructure,
+                          lesson as Lesson,
+                        ],
+                      }
+                    }
+                    return mod
+                  }),
+                }))
+              }
               setIsCreateLessonOpen(false)
             }}
           />

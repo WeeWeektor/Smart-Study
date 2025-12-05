@@ -56,6 +56,7 @@ interface DynamicFieldProps {
 
 interface CreateLessonModalProps {
   order: number
+  moduleOrder: number
   onClose: () => void
   lessonContentTypes: { value: string; label: string }[]
   onAddLesson: (lesson: Lesson) => void
@@ -63,6 +64,7 @@ interface CreateLessonModalProps {
 
 export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   order,
+  moduleOrder,
   onClose,
   lessonContentTypes,
   onAddLesson,
@@ -242,6 +244,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   }
 
   const handleAddLesson = () => {
+    console.log(order + ' ' + moduleOrder)
     if (hasValidationErrors) {
       return
     }
@@ -255,6 +258,9 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     setError(null)
 
     const lessonData = {
+      order: order,
+      moduleOrder: moduleOrder,
+      type: 'lesson',
       title,
       typeCategory: lessonStateCategoryType,
       duration: lessonDuration,
