@@ -7,7 +7,6 @@ from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 
-from common.services import validate_picture_file_security
 from common.utils import supabase
 from smartStudy_backend import settings
 
@@ -32,7 +31,8 @@ async def handle_picture(instance, picture, instance_type: str, picture_field: s
     :param instance_type: 'user' або 'course'
     :param picture_field: назва поля у моделі ('picture', 'image' тощо)
     """
-    validate_picture_file_security(picture)
+    from common.services import validate_picture_file
+    validate_picture_file(picture)
 
     instance_id = await sync_to_async(lambda: instance.id)()
     current_picture = getattr(instance, picture_field, None)

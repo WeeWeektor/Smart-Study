@@ -265,7 +265,6 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   }
 
   const handleAddLesson = () => {
-    console.log(order + ' ' + moduleOrder)
     if (hasValidationErrors) {
       return
     }
@@ -404,7 +403,14 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
               <Label htmlFor="lessonType">{t('Тип контенту *')}</Label>
               <Select
                 value={lessonStateCategoryType}
-                onValueChange={value => setLessonStateCategoryType(value)}
+                onValueChange={value => {
+                  setLessonStateCategoryType(value)
+                  setExtraData(null)
+                  setComment('')
+                  setCustomContentBlocks([])
+                  setBlockErrors({})
+                  setCustomTypeContent('')
+                }}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder={t('Оберіть тип контенту')} />

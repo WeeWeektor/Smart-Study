@@ -736,7 +736,7 @@ export const CreateMTOfCourse = ({
                         ...mod,
                         moduleStructure: [
                           ...mod.moduleStructure,
-                          lesson as Lesson,
+                          lesson as unknown as Lesson,
                         ],
                       }
                     }

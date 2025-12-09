@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from common.services import validate_picture_file_security, MAX_FILE_SIZE
+from common.services import validate_picture_file, MAX_FILE_SIZE
 
 
 class TestFileValidationService(TestCase):
@@ -27,7 +27,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/jpeg'):
-            result = validate_picture_file_security(mock_file)
+            result = validate_picture_file(mock_file)
             self.assertTrue(result)
 
     def test_valid_png_file(self):
@@ -40,7 +40,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/png'):
-            result = validate_picture_file_security(mock_file)
+            result = validate_picture_file(mock_file)
             self.assertTrue(result)
 
     def test_valid_gif_file(self):
@@ -53,7 +53,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/gif'):
-            result = validate_picture_file_security(mock_file)
+            result = validate_picture_file(mock_file)
             self.assertTrue(result)
 
     def test_valid_webp_file(self):
@@ -66,7 +66,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/webp'):
-            result = validate_picture_file_security(mock_file)
+            result = validate_picture_file(mock_file)
             self.assertTrue(result)
 
     def test_file_too_large(self):
@@ -79,7 +79,7 @@ class TestFileValidationService(TestCase):
         )
 
         with self.assertRaises(ValidationError) as context:
-            validate_picture_file_security(mock_file)
+            validate_picture_file(mock_file)
 
         self.assertIn('File too large', str(context.exception))
 
@@ -92,7 +92,7 @@ class TestFileValidationService(TestCase):
         )
 
         with self.assertRaises(ValidationError) as context:
-            validate_picture_file_security(mock_file)
+            validate_picture_file(mock_file)
 
         self.assertIn('File type not allowed', str(context.exception))
 
@@ -106,7 +106,7 @@ class TestFileValidationService(TestCase):
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/jpeg'):
             with self.assertRaises(ValidationError) as context:
-                validate_picture_file_security(mock_file)
+                validate_picture_file(mock_file)
 
             self.assertIn('File signature does not match', str(context.exception))
 
@@ -121,7 +121,7 @@ class TestFileValidationService(TestCase):
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/png'):
             with self.assertRaises(ValidationError) as context:
-                validate_picture_file_security(mock_file)
+                validate_picture_file(mock_file)
 
             self.assertIn('Content-Type spoofing detected', str(context.exception))
 
@@ -136,7 +136,7 @@ class TestFileValidationService(TestCase):
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/jpeg'):
             with self.assertRaises(ValidationError) as context:
-                validate_picture_file_security(mock_file)
+                validate_picture_file(mock_file)
 
             self.assertIn('Dangerous file extension detected', str(context.exception))
 
@@ -151,7 +151,7 @@ class TestFileValidationService(TestCase):
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/jpeg'):
             with self.assertRaises(ValidationError) as context:
-                validate_picture_file_security(mock_file)
+                validate_picture_file(mock_file)
 
             self.assertIn('Dangerous file extension detected', str(context.exception))
 
@@ -165,7 +165,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', side_effect=Exception('Magic error')):
-            result = validate_picture_file_security(mock_file)
+            result = validate_picture_file(mock_file)
             self.assertTrue(result)
 
     def test_file_seek_called(self):
@@ -178,7 +178,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/jpeg'):
-            validate_picture_file_security(mock_file)
+            validate_picture_file(mock_file)
 
             self.assertEqual(mock_file.seek.call_count, 2)
             mock_file.seek.assert_called_with(0)
@@ -193,7 +193,7 @@ class TestFileValidationService(TestCase):
         )
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/gif'):
-            result = validate_picture_file_security(mock_file)
+            result = validate_picture_file(mock_file)
             self.assertTrue(result)
 
     def test_case_insensitive_dangerous_extensions(self):
@@ -207,6 +207,6 @@ class TestFileValidationService(TestCase):
 
         with patch('common.services.picture_validation_service.magic.from_buffer', return_value='image/jpeg'):
             with self.assertRaises(ValidationError) as context:
-                validate_picture_file_security(mock_file)
+                validate_picture_file(mock_file)
 
             self.assertIn('Dangerous file extension detected', str(context.exception))

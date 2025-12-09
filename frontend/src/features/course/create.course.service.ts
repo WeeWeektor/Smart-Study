@@ -1,7 +1,12 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
 import axios from 'axios'
-import { type CourseStructure, type Question } from '@/shared/ui'
+import {
+  type BlockData,
+  type CourseStructure,
+  type Lesson,
+  type Question,
+} from '@/shared/ui'
 
 export interface CreateCourseResponse {
   message: string
@@ -53,6 +58,7 @@ class CreateCourseService {
         {
           headers: {
             'X-CSRFToken': csrfToken || '',
+            'Content-Type': 'multipart/form-data',
           },
           withCredentials: true,
         }
@@ -96,6 +102,9 @@ class CreateCourseService {
           if (moduleItem.type === 'module-test') {
             return this.processTest(moduleItem, formData, `m${item.order}`)
           }
+          if (moduleItem.type === 'lesson') {
+            return this.processLesson(moduleItem, formData, `m${item.order}`)
+          }
           return moduleItem
         })
         return { ...item, moduleStructure: cleanModuleStructure }
@@ -107,6 +116,61 @@ class CreateCourseService {
 
       return item
     })
+  }
+
+  private processLesson(
+    lesson: Lesson,
+    formData: FormData,
+    prefix: string
+  ): Lesson {
+    const lessonPrefix = `${prefix}_l${lesson.order}`
+
+    const cleanContentBlocks = lesson.contentBlocks?.map((block, index) => {
+      const fileKey = `lesson_file_${lessonPrefix}_b${index}`
+
+      const cleanData = this.extractFileFromData(block.data, formData, fileKey)
+
+      return {
+        ...block,
+        data: cleanData,
+      }
+    })
+
+    const singleFileKey = `lesson_file_${lessonPrefix}_single`
+    const cleanSingleData = this.extractFileFromData(
+      lesson.singleContentData,
+      formData,
+      singleFileKey
+    )
+
+    return {
+      ...lesson,
+      contentBlocks: cleanContentBlocks || [],
+      singleContentData: cleanSingleData,
+    }
+  }
+
+  private extractFileFromData(
+    data: BlockData,
+    formData: FormData,
+    key: string
+  ): BlockData {
+    if (
+      data &&
+      typeof data === 'object' &&
+      'file' in data &&
+      data.file instanceof File
+    ) {
+      formData.append(key, data.file)
+
+      return {
+        ...data,
+        file: null,
+        fileKey: key,
+      } as any
+    }
+
+    return data
   }
 
   private processTest<T extends { order: number; questions: Question[] }>(

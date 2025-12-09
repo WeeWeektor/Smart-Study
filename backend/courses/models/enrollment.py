@@ -56,7 +56,6 @@ class UserCourseEnrollment(BaseModel):
     completed = models.BooleanField(default=False, db_index=True, verbose_name=_('Completed'))
     completed_at = models.DateTimeField(blank=True, null=True, verbose_name=_('Completed at'))
     time_spent = models.DurationField(default=timedelta(0), verbose_name=_('Time spent'))
-    # TODO chack this fild and add new if needed
 
     def save(self, *args, **kwargs):
         if not self.course_version:

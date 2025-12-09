@@ -114,6 +114,9 @@ class Course(BaseModel):
         self.version += 1
         self.save(update_fields=['version'])
 
+    def count_content_without_publish(self):
+        self.details.before_publish()
+
     def publish(self):
         """Метод для публікації курсу з автоматичним встановленням часу"""
         if not self.is_published:

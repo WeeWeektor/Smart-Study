@@ -16,7 +16,7 @@ from courses.services import parse_multipart_request
 from courses.services.cache_service import get_cached_instance_by_id, get_instance_cached_all, \
     get_instance_cached_by_author_id
 from courses.services.course_actions_service import create_course, remove_course, update_course, \
-    update_published_course_with_structure
+    update_published_course_with_structure, count_content_course
 from courses.utils import categories_level_sort_present, average_rating, certificates_issued, count_announcements, \
     course_structure
 
@@ -72,7 +72,6 @@ class CourseView(LocalizedView):
     @teacher_required
     async def post(self, request):
         """Створення курсу викладачем"""
-
         data = json.loads(request.POST.get('data', '{}'))
         files = request.FILES
         cover_file = files.get('cover_image')
@@ -85,6 +84,8 @@ class CourseView(LocalizedView):
 
             if 'courseStructure' in data:
                 await course_structure(data['courseStructure'], request.user, course_id, files)
+
+            await count_content_course(data, course)
 
             return success_response({
                 "message": gettext("Course created successfully"),

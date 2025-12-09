@@ -10,3 +10,8 @@ async def publish_course(course):
         raise ValidationError(_('Missing required field for publish: cover_image'))
     else:
         await sync_to_async(lambda: course.publish())()
+
+
+async def count_content(course):
+    """Підрахунок контенту курсу перед публікацією"""
+    await sync_to_async(lambda: course.count_content_without_publish())()

@@ -31,10 +31,6 @@ async def create_course(user, data, cover_file=None):
     if cover_file:
         await upload_course_cover_image(course_created, cover_file)
 
-    if data.get("is_published") is True:
-        from courses.services.course_actions_service import publish_course
-        await publish_course(course_created)
-
     await sync_to_async(
         lambda: invalidate_instance_cached_all(
             instance_type="courses",
@@ -47,3 +43,12 @@ async def create_course(user, data, cover_file=None):
     )()
 
     return course_created
+
+
+async def count_content_course(data, course_created):
+    if data.get("is_published") is True:
+        from courses.services.course_actions_service import publish_course
+        await publish_course(course_created)
+    else:
+        from courses.services.course_actions_service import count_content
+        await count_content(course_created)
