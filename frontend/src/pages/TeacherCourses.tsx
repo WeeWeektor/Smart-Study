@@ -325,11 +325,7 @@ const TeacherCourses = () => {
                     coverImage={course.course.cover_image}
                     instructorId={course.course.owner.id}
                     category={course.course.category}
-                    badgeLabel={
-                      course.course.is_published
-                        ? t('Опублікований')
-                        : t('Неопублікований')
-                    }
+                    badgeStatus={course.course.is_published}
                     badgeType={'published'}
                     rating={course.course.details.rating}
                     students={
@@ -356,7 +352,7 @@ const TeacherCourses = () => {
                     coverImage={course.course.cover_image}
                     instructorId={course.course.owner.id}
                     category={course.course.category}
-                    badgeLabel={course.course.details.level}
+                    badgeStatus={course.course.details.level}
                     badgeType={'level'}
                     rating={course.course.details.rating}
                     students={

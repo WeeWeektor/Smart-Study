@@ -109,9 +109,7 @@ export const CreateMTOfCourse = ({
 
   const handleAddModule = () => {
     setCourseStructure(prev => {
-      const moduleOrders = prev.courseStructure.map(m => m.order)
-      const nextOrder =
-        moduleOrders.length > 0 ? Math.max(...moduleOrders) + 1 : 1
+      const nextOrder = prev.courseStructure.length + 1
 
       return {
         ...prev,
@@ -663,10 +661,7 @@ export const CreateMTOfCourse = ({
           </Button>
           <Button
             onClick={() => {
-              const nextOrder =
-                courseStructure.courseStructure.filter(
-                  i => i.type === 'course-test'
-                ).length + 1
+              const nextOrder = courseStructure.courseStructure.length + 1
               setTestModalData({ order: nextOrder, type: 'course-test' })
               setIsCreateTestOpen(true)
             }}

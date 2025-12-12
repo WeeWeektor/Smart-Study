@@ -66,8 +66,6 @@ const CreateCourse = () => {
     null
   )
   const [courseStateLevel, setCourseStateLevel] = useState<string>('')
-  const [courseStateIsPublished, setCourseStateIsPublished] =
-    useState<boolean>(false)
   const [courseStateTimeToComplete, setCourseStateTimeToComplete] = useState({
     days: 0,
     hours: 0,
@@ -171,7 +169,7 @@ const CreateCourse = () => {
     handleBackPage()
   }
 
-  const handleSaveCourse = async () => {
+  const handleSaveCourse = async (publish: boolean = false) => {
     try {
       setIsSaving(true)
       if (
@@ -205,7 +203,7 @@ const CreateCourse = () => {
         title: courseStateTitle,
         description: courseStateDescription,
         category: courseStateCategory,
-        is_published: courseStateIsPublished,
+        is_published: publish,
         level: courseStateLevel,
         course_language: courseStateLanguage,
         time_to_complete: formatDuration(
@@ -246,8 +244,7 @@ const CreateCourse = () => {
 
   const handleConfirmPublishCourse = async () => {
     setShowPublishModal(false)
-    setCourseStateIsPublished(true)
-    await handleSaveCourse()
+    await handleSaveCourse(true)
   }
 
   return (
@@ -261,7 +258,7 @@ const CreateCourse = () => {
           createCourse={true}
           actionOnClick={[
             handleCancelCreateCourse,
-            handleSaveCourse,
+            () => handleSaveCourse(false),
             handlePublishCourse,
           ]}
           actionInfo={isSaving}
@@ -491,7 +488,7 @@ const CreateCourse = () => {
                     <div className="flex justify-center">
                       <Button
                         className="w-60 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
-                        onClick={handleSaveCourse}
+                        onClick={() => handleSaveCourse(false)}
                         disabled={isSaving}
                       >
                         {isSaving ? (

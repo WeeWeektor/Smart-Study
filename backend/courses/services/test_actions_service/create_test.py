@@ -1,4 +1,5 @@
 from asgiref.sync import sync_to_async
+from django.utils.translation import gettext as _
 
 from common.services import mongo_repo
 from courses.models import Test
@@ -60,7 +61,8 @@ async def create_test(test_type: str, user, data: dict):
             target_type=test_type,
             target_id=target_id,
             structure_type="test",
-            structure_data={"test_id": str(test_created.id), "title": test_created.title, "order": test_created.order},
+            structure_data={"test_id": str(test_created.id), "title": test_created.title, "order": test_created.order,
+                            "time_limit": test_created.time_limit},
         )
 
     await sync_to_async(

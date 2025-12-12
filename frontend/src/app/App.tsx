@@ -14,6 +14,7 @@ import {
   ResetPassword,
   TermsOfService,
   CreateCourse,
+  CourseReview,
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
@@ -60,6 +61,7 @@ const App = () => {
             path="/courses/teacher/:name/:id"
             element={<TeacherCourses />}
           />
+          <Route path="/course-review/:id" element={<CourseReview />} />
           <Route path="/create-course" element={<CreateCourse />} />
 
           <Route path="*" element={<NotFound />} />

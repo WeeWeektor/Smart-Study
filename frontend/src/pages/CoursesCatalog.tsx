@@ -168,10 +168,13 @@ const CoursesCatalog = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <Sidebar userInfo={userInfo} />
 
-      <div className="ml-64">
+      <div
+        className="ml-64 flex-1 h-full overflow-y-auto"
+        style={{ colorScheme: 'dark' }}
+      >
         <CourseHeader
           title={t('Підібрати курс')}
           description={t('Підберіть курс за вашими інтересами та цілями')}
@@ -288,7 +291,7 @@ const CoursesCatalog = () => {
                   }
                   instructorId={course.course.owner.id}
                   category={course.course.category}
-                  badgeLabel={course.course.details.level}
+                  badgeStatus={course.course.details.level}
                   badgeType={'level'}
                   rating={course.course.details.rating}
                   students={

@@ -19,6 +19,5 @@ class LessonView(LocalizedView):
 
 
     async def post(self, request):  #  TODO Можливо видалити цей метод і подібні йому якщо курси та структура курсів будуть створюватися тільки через курс сервіс
-        # TODO перевірити delete щоб він видаляв не тільки урок алей і всі згадки про нього так само для тестів та модулів
         print(request.POST.get("data"))
         return success_response("Post request received")

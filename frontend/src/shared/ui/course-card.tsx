@@ -34,7 +34,7 @@ interface CourseCardProps {
   instructor?: string
   instructorId: string
   category: string
-  badgeLabel: string
+  badgeStatus: string | boolean
   badgeType: 'level' | 'status' | 'published'
   rating: number
   students: number
@@ -56,7 +56,7 @@ export const CourseCard = ({
   instructor,
   instructorId,
   category,
-  badgeLabel,
+  badgeStatus,
   badgeType,
   rating,
   students,
@@ -73,6 +73,13 @@ export const CourseCard = ({
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
+
+  const getBadgeLabel = () => {
+    if (badgeType === 'published') {
+      return badgeStatus ? t('Опублікований') : t('Чорновик')
+    }
+    return formatLabel(String(badgeStatus), t)
+  }
 
   const handleDelete = async () => {
     try {
@@ -116,9 +123,9 @@ export const CourseCard = ({
         )}
         <div className="absolute top-4 right-4">
           <Badge
-            className={`font-medium ${getBadgeColor(badgeLabel === t('Опублікований') ? 'True' : badgeLabel, badgeType)}`}
+            className={`font-medium ${getBadgeColor(badgeStatus, badgeType)}`}
           >
-            {formatLabel(badgeLabel, t)}
+            {getBadgeLabel()}
           </Badge>
         </div>
       </div>
@@ -224,14 +231,14 @@ export const CourseCard = ({
         {status && (
           <div className="flex gap-2">
             {status === 'completed' ? (
-              <Link to={`/courses/${id}`} className="flex-1">
+              <Link to={`/course/${id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
                   <Eye className="w-4 h-4 mr-2" />
                   {t('Переглянути')}
                 </Button>
               </Link>
             ) : (
-              <Link to={`/courses/${id}`} className="flex-1">
+              <Link to={`/course/${id}`} className="flex-1">
                 <Button className="w-full bg-brand-600 hover:bg-brand-700">
                   {status === 'not_started' ? (
                     <Rocket className="w-4 h-4 mr-2" />
@@ -247,8 +254,8 @@ export const CourseCard = ({
 
         {badgeType && badgeType === 'published' && (
           <div className="flex gap-2">
-            {badgeLabel === t('Опублікований') ? (
-              <Link to={`/courses/${id}`} className="flex-1">
+            {badgeStatus ? (
+              <Link to={`/course/${id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
                   <Eye className="w-4 h-4 mr-2" />
                   {t('Переглянути')}
@@ -256,7 +263,7 @@ export const CourseCard = ({
               </Link>
             ) : (
               <>
-                <Link to={`/courses/${id}`} className="flex-1">
+                <Link to={`/course-review/${id}`} className="flex-1">
                   <Button className="w-full bg-brand-600 hover:bg-brand-700">
                     <UploadCloud className="w-4 h-4 mr-2" />
                     {t('Переглянути та опублікувати')}
@@ -286,7 +293,7 @@ export const CourseCard = ({
 
         {badgeType && badgeType === 'level' && (
           <div className="flex gap-2">
-            <Link to={`/courses/${id}`} className="flex-1">
+            <Link to={`/course/${id}`} className="flex-1">
               <Button className="w-full bg-brand-600 hover:bg-brand-700">
                 <Eye className="w-4 h-4 mr-2" />
                 {t('Переглянути')}
@@ -300,12 +307,12 @@ export const CourseCard = ({
 }
 
 const getBadgeColor = (
-  label: string,
+  status: string | boolean,
   type: 'level' | 'status' | 'published'
 ) => {
   switch (type) {
     case 'level':
-      switch (label.toLowerCase()) {
+      switch (String(status).toLowerCase()) {
         case 'beginner':
           return 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300 hover:bg-green-200 hover:text-green-700 dark:hover:bg-green-700 dark:hover:text-green-200'
         case 'intermediate':
@@ -316,7 +323,7 @@ const getBadgeColor = (
           return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200'
       }
     case 'status':
-      switch (label.toLowerCase()) {
+      switch (String(status).toLowerCase()) {
         case 'completed':
           return 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300 hover:bg-green-200 hover:text-green-700 dark:hover:bg-green-700 dark:hover:text-green-200'
         case 'in_progress':
@@ -327,7 +334,7 @@ const getBadgeColor = (
           return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200'
       }
     case 'published':
-      return label === 'True'
+      return status
         ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300 hover:bg-green-200 hover:text-green-700 dark:hover:bg-green-700 dark:hover:text-green-200'
         : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200'
   }

@@ -27,7 +27,9 @@ async def create_lesson(data: dict, contentData: str) -> object:
         structure_data={
             "lesson_id": str(created_lesson.id),
             "title": created_lesson.title,
-            "order": created_lesson.order
+            "order": created_lesson.order,
+            "content_type": created_lesson.content_type,
+            "duration": str(created_lesson.duration),
         },
     )
 
