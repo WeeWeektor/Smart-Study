@@ -37,6 +37,19 @@ def validate_test_data(data: dict, test_type: str):
                                  msg=_("Missing required field for course/module test:"))
 
 
+def validate_lesson_data(data: dict):
+    """Валідатор для даних уроку"""
+
+    validate_required_fields(data, ["title", "order", "typeCategory", "duration", "description", "module_id"])
+
+    if data.get("typeCategory") == "custom":
+        validate_required_fields(data, ["contentBlocks"])
+    else:
+        validate_required_fields(data, ["singleContentData", "comment"])
+
+    validate_positive_int(data.get("order"), "order")
+
+
 def validate_required_fields(data: dict, required_fields: list[str], msg: str | None = None) -> None:
     """Перевірка наявності required полів"""
     if msg is None:

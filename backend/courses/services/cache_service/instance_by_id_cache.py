@@ -77,7 +77,6 @@ def _resolve_cache_timeout(instance_data: dict) -> int | None:
     return None
 
 
-#TODO не використовується
 async def invalidate_cached_instance_by_id(instance_id: uuid.UUID,
                                            instance_type_cache: str,
                                            instance_type: str

@@ -7,7 +7,7 @@ from courses.services.structure_course_module_action_service.structure_utils imp
 async def add_data_to_structure(target_type: str, target_id: str, structure_type: str, structure_data: dict):
     """
         Універсальний метод для додавання структур:
-        - course: додає module або lesson
+        - course: додає module або test
         - module: додає lesson або test
     """
 

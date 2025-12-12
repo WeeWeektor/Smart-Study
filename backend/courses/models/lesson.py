@@ -6,12 +6,13 @@ from django.db.models import Index, Q
 from django.utils.translation import gettext_lazy as _
 
 from .base import BaseModel
+from .module import Module
 from ..choices import CATEGORY_LESSONS
 
 
 class Lesson(BaseModel):
     module = models.ForeignKey(
-        'Module',
+        Module,
         on_delete=models.CASCADE,
         related_name='lessons',
         verbose_name=_("Module")
@@ -36,11 +37,6 @@ class Lesson(BaseModel):
         max_length=7000,
         blank=True,
         verbose_name=_("Content (Markdown)")
-    )
-    comment = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Comment")
     )
     order = models.PositiveIntegerField(
         verbose_name=_("Lesson order")

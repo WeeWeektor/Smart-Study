@@ -10,6 +10,7 @@ MAX_AUDIO_FILE_SIZE = 10 * 1024 * 1024
 
 SIG_ZIP = b'\x50\x4B\x03\x04'
 SIG_OLE2 = b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
+SIG_FTYP = b'\x66\x74\x79\x70'
 
 ALLOWED_PICTURE_TYPES = {
     'image/jpeg': [b'\xff\xd8\xff'],
@@ -32,6 +33,7 @@ ALLOWED_AUDIO_TYPES = {
     'audio/ogg': [b'\x4F\x67\x67\x53'],
     'audio/mp4': [b'\x00\x00\x00'],
     'audio/x-m4a': [b'\x00\x00\x00'],
+    'video/mp4': [b'\x00\x00\x00', SIG_FTYP],
 }
 
 ALLOWED_DOCUMENT_TYPES = {
@@ -41,6 +43,7 @@ ALLOWED_DOCUMENT_TYPES = {
     'application/vnd.ms-excel': [SIG_OLE2],
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [SIG_ZIP],
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [SIG_ZIP],
+    'application/zip': [SIG_ZIP],
 }
 
 ALLOWED_PRESENTATION_TYPES = {
@@ -48,6 +51,7 @@ ALLOWED_PRESENTATION_TYPES = {
     'application/vnd.openxmlformats-officedocument.presentationml.presentation': [SIG_ZIP],
     'application/vnd.oasis.opendocument.presentation': [SIG_ZIP],
     'application/x-iwork-keynote-sffkey': [SIG_ZIP, b'\x00\x00\x00'],
+    'application/zip': [SIG_ZIP],
 }
 
 DANGEROUS_EXTENSIONS = [
@@ -111,6 +115,7 @@ def validate_file_generic(file, max_size, allowed_types_map):
         raise ValidationError(_('File signature does not match declared type'))
 
     return True
+
 
 def validate_picture_file(file):
     return validate_file_generic(file, MAX_PICTURE_FILE_SIZE, ALLOWED_PICTURE_TYPES)

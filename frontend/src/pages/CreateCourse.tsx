@@ -188,6 +188,19 @@ const CreateCourse = () => {
         return
       }
 
+      const hasEmptyModuleTitle = courseStructure.courseStructure.some(
+        item =>
+          item.type === 'module' && (!item.title || item.title.trim() === '')
+      )
+
+      if (hasEmptyModuleTitle) {
+        setCreateCourseError(
+          t('Перевірте структуру курсу. Є порожні назви модулів.')
+        )
+        setIsSaving(false)
+        return
+      }
+
       const response = await createCourseService.createCourse({
         title: courseStateTitle,
         description: courseStateDescription,
