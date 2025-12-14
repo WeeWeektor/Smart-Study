@@ -231,14 +231,14 @@ export const CourseCard = ({
         {status && (
           <div className="flex gap-2">
             {status === 'completed' ? (
-              <Link to={`/course/${id}`} className="flex-1">
+              <Link to={`/course-review/${id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
                   <Eye className="w-4 h-4 mr-2" />
                   {t('Переглянути')}
                 </Button>
               </Link>
             ) : (
-              <Link to={`/course/${id}`} className="flex-1">
+              <Link to={`/course-review/${id}`} className="flex-1">
                 <Button className="w-full bg-brand-600 hover:bg-brand-700">
                   {status === 'not_started' ? (
                     <Rocket className="w-4 h-4 mr-2" />
@@ -255,7 +255,7 @@ export const CourseCard = ({
         {badgeType && badgeType === 'published' && (
           <div className="flex gap-2">
             {badgeStatus ? (
-              <Link to={`/course/${id}`} className="flex-1">
+              <Link to={`/course-review/${id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
                   <Eye className="w-4 h-4 mr-2" />
                   {t('Переглянути')}
@@ -293,7 +293,7 @@ export const CourseCard = ({
 
         {badgeType && badgeType === 'level' && (
           <div className="flex gap-2">
-            <Link to={`/course/${id}`} className="flex-1">
+            <Link to={`/course-review/${id}`} className="flex-1">
               <Button className="w-full bg-brand-600 hover:bg-brand-700">
                 <Eye className="w-4 h-4 mr-2" />
                 {t('Переглянути')}
