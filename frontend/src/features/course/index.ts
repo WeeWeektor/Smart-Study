@@ -3,6 +3,7 @@ export { getCourseService, sorting, statues } from './get.course.service'
 export type {
   CountTeacherCourseRequest,
   AllCourseRequest,
+  CourseResponse,
 } from './get.course.service'
 export { deleteCourseService } from './delete.course.service'
 export { default as CourseNotification } from './CourseNotification'
@@ -15,3 +16,7 @@ export type {
   NormalizedItem,
 } from './course-structure-model/types'
 export { getCourseStructureService } from './get.course.structure.service'
+export {
+  getCourseOwnerProfileService,
+  type CourseOwnerProfileResponse,
+} from './get.course.owner.profile'

@@ -5,6 +5,7 @@ from courses.views.test_views import CourseTestView, ModuleTestView, PublicTestV
 from courses.views.choices_views import ChoicesView
 from courses.views.counter_views import CountAllPublishedCourses, CountTeacherCourses
 from courses.views.course_structure_views import CourseStructureView
+from courses.views.course_owner_data_views import CourseOwnerDataViews
 
 __all__ = [
     "CourseView",
@@ -17,4 +18,5 @@ __all__ = [
     "CountAllPublishedCourses",
     "CountTeacherCourses",
     "CourseStructureView",
+    "CourseOwnerDataViews",
 ]

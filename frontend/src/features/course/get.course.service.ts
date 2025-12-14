@@ -39,6 +39,16 @@ export interface CountTeacherCourseResponse {
   publishedCourses: number
 }
 
+export interface CourseRequest {
+  course_id: string
+}
+
+export interface CourseResponse {
+  status: string
+  message: string
+  course: any
+}
+
 class GetCourseService {
   private t = ClassTranslator.translate
 
@@ -150,6 +160,25 @@ class GetCourseService {
       }
     } catch (error) {
       throw new Error(this.t('Курси не вдалось завантажити') + error)
+    }
+  }
+
+  async getCourse({ course_id }: CourseRequest): Promise<CourseResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<CourseResponse>(
+        `/course/course/${course_id}/`,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+      return response.data
+    } catch (error) {
+      throw new Error(this.t('Не вдалось завантажити курс') + error)
     }
   }
 }
