@@ -14,12 +14,10 @@ import { useProfileData } from '@/shared/hooks/useProfileData'
 import { useEffect, useState } from 'react'
 import { CourseHeader, CourseSidebar } from '@/widgets/course'
 import {
-  type CourseOwnerProfileResponse,
   type CourseResponse,
   type CourseStructureResponse,
-  getCourseOwnerProfileService,
+  type CourseOwnerProfileResponse,
   getCourseService,
-  getCourseStructureService,
 } from '@/features/course'
 import { useParams } from 'react-router-dom'
 import {
@@ -49,9 +47,8 @@ const CourseReview = () => {
     refreshProfile,
   } = useProfileData()
 
-  const [courseData, setCourseData] = useState<CourseStructureResponse | null>(
-    null
-  )
+  const [courseStructureData, setCourseStructureData] =
+    useState<CourseStructureResponse | null>(null)
   const [ownerData, setOwnerData] = useState<CourseOwnerProfileResponse | null>(
     null
   )
@@ -69,23 +66,17 @@ const CourseReview = () => {
       if (!id) return
 
       setCourseLoading(true)
-      setCourseData(null)
+      setCourseStructureData(null)
       setOwnerData(null)
       setCourse(null)
 
       try {
-        const [dataStructure, dataOwner, courseData] = await Promise.all([
-          getCourseStructureService.getCourseStructure({
-            course_id: id,
-          }),
-          getCourseOwnerProfileService.getCourseOwnerProfile({
-            course_id: id,
-          }),
-          getCourseService.getCourse({ course_id: id }),
-        ])
-        setCourseData(dataStructure)
-        setOwnerData(dataOwner)
-        setCourse(courseData)
+        const response = await getCourseService.getCourse({ course_id: id })
+        setCourseStructureData(response.course.structure)
+        setOwnerData({
+          userData: response.course.owner[0],
+        } as unknown as CourseOwnerProfileResponse)
+        setCourse(response)
       } catch (err) {
         setCourseError(err instanceof Error ? err.message : String(err))
       } finally {
@@ -332,6 +323,10 @@ const CourseReview = () => {
     )
   }
 
+  const renderReviewsSection = () => {}
+  const renderStarSection = () => {}
+  const renderFooterSection = () => {}
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Sidebar
@@ -342,7 +337,7 @@ const CourseReview = () => {
       <CourseSidebar
         isCollapsible={true}
         onCollapseChange={setIsCourseSidebarCollapsed}
-        data={courseData}
+        data={courseStructureData}
       />
 
       <main
@@ -355,10 +350,9 @@ const CourseReview = () => {
         <div className="p-6 max-w-4xl mx-auto w-full">
           {renderCourseInfoSection()}
           {renderAuthorSection()}
-          {
-            // TODO: Додати відгуки і шкалу з зірочками тут
-          }
-
+          {renderReviewsSection()}
+          {renderStarSection()}
+          {renderFooterSection()}
           <div className="mt-6">
             <h1 className="text-2xl font-bold mb-4">
               Вміст footer з кнопками і перенаправлення на сторінки уроків

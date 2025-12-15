@@ -2,7 +2,6 @@ import logging
 from typing import Union
 
 from asgiref.sync import sync_to_async
-from bson import ObjectId
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.translation import gettext
@@ -13,6 +12,7 @@ from courses.choices import SORTING_DICT
 from courses.models import Course, CourseMeta, Module
 from courses.services.builder_json import build_course_json_success
 from users.models import CustomUser
+from .get_course_owner_data import get_course_owner_data
 
 logger = logging.getLogger(__name__)
 
@@ -118,15 +118,10 @@ async def get_course_by_id(course_id) -> dict:
         uuid_obj = validate_uuid(course_id)
         course = await sync_to_async(lambda: Course.objects.select_related('details', 'owner').get(pk=uuid_obj))()
 
-        structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", str(course.structure_ids))
-        structure = _convert_object_id_to_str(structure)
+        structure = await _get_cs_from_db(course.structure_ids)
+        owner_data = await get_course_owner_data(course.owner.id)
 
-        if structure and "structure" in structure:
-            for item in structure["structure"]:
-                await _fill_module_structure(item)
-
-        course_data = build_course_json_success(course, course.details, course.owner, structure)
-
+        course_data = build_course_json_success(course, course.details, owner_data, structure, full_owner=True)
         return course_data
 
     except ValidationError as e:
@@ -141,32 +136,17 @@ async def get_course_by_id(course_id) -> dict:
         )
 
 
-def _convert_object_id_to_str(doc):
-    if not doc:
-        return {}
-    for k, v in doc.items():
-        if isinstance(v, ObjectId):
-            doc[k] = str(v)
-        elif isinstance(v, list):
-            for item in v:
-                _convert_object_id_to_str(item) if isinstance(item, dict) else None
-        elif isinstance(v, dict):
-            _convert_object_id_to_str(v)
-    return doc
+async def _get_cs_from_db(course_structure_ids) -> dict:
+    structureResponse = {}
 
+    course_structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", course_structure_ids)
+    structureResponse["courseStructure"] = course_structure.get('structure', [])
 
-async def _fill_module_structure(item: dict):
-    """Підвантажує тести всередині модуля (module_id з PostgreSQL)"""
-    if item.get("type") != "module" or "module_id" not in item:
-        return
+    for structure in course_structure.get('structure', []):
+        if structure.get('type') == 'module':
+            module = await sync_to_async(Module.objects.only("structure_ids").get)(pk=structure.get('module_id'))
+            module_structure = await sync_to_async(mongo_repo.get_document_by_id)("module_structures",
+                                                                                  module.structure_ids)
+            structureResponse[f"moduleStructure_order_{structure.get("order")}"] = module_structure.get('structure', [])
 
-    structure_module_ids = await sync_to_async(Module.objects.only("structure_ids").get)(pk=item["module_id"])
-
-    module_doc = await sync_to_async(mongo_repo.get_document_by_id)(
-        collection_name="module_structures",
-        doc_id=structure_module_ids.structure_ids
-    )
-
-    module_doc = _convert_object_id_to_str(module_doc)
-
-    item["structure"] = module_doc.get("structure", [])
+    return structureResponse

@@ -1,17 +1,22 @@
-def build_course_json_success(course, course_details, course_owner, structure=None):
+def build_course_json_success(course, course_details, course_owner, structure=None, full_owner: bool = False):
+    if full_owner:
+        owner = course_owner,
+    else:
+        owner = {
+            "id": getattr(course_owner, "id", None),
+            "name": getattr(course_owner, "name", ""),
+            "surname": getattr(course_owner, "surname", ""),
+            "email": getattr(course_owner, "email", ""),
+            "profile_picture": getattr(course_owner, "profile_picture", None),
+        }
+
     return {
         "course": {
             "id": getattr(course, "id", None),
             "title": getattr(course, "title", ""),
             "description": getattr(course, "description", ""),
             "category": getattr(course, "category", ""),
-            "owner": {
-                "id": getattr(course_owner, "id", None),
-                "name": getattr(course_owner, "name", ""),
-                "surname": getattr(course_owner, "surname", ""),
-                "email": getattr(course_owner, "email", ""),
-                "profile_picture": getattr(course_owner, "profile_picture", None),
-            },
+            "owner": owner,
             "cover_image": getattr(course, "cover_image", ""),
             "is_published": getattr(course, "is_published", False),
             "created_at": getattr(course, "created_at", None),

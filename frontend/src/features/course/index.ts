@@ -14,9 +14,5 @@ export type {
   BackendModuleContentItem,
   CourseStructureResponse,
   NormalizedItem,
+  CourseOwnerProfileResponse,
 } from './course-structure-model/types'
-export { getCourseStructureService } from './get.course.structure.service'
-export {
-  getCourseOwnerProfileService,
-  type CourseOwnerProfileResponse,
-} from './get.course.owner.profile'

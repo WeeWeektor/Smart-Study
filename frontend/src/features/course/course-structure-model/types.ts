@@ -35,3 +35,27 @@ export interface NormalizedItem {
   children?: NormalizedItem[]
   isOpen?: boolean
 }
+
+export interface CourseOwnerProfileResponse {
+  userData: {
+    owner: {
+      id: string
+      name: string
+      surname: string
+      email?: string
+      phone_number?: string | null
+    }
+    profile: {
+      bio?: string | null
+      profile_picture: string | null
+      location?: string | null
+      organization?: string | null
+      specialization?: string | null
+      education_level?: string | null
+    }
+    settings: {
+      show_profile_to_others: boolean
+      show_achievements: boolean
+    }
+  }
+}

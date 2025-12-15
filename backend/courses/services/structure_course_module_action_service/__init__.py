@@ -2,4 +2,3 @@ from .add_data_to_structure import add_data_to_structure
 from .update_data_in_structure import update_data_in_structure
 from .remove_data_from_structure import remove_data_from_structure
 from .save_files_in_supabase import save_files_in_supabase
-from .get_course_structures import get_course_structures
