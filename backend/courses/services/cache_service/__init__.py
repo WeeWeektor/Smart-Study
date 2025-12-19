@@ -2,3 +2,4 @@ from .category_level_all_for_instance_cache import get_instance_cached_all
 from .instance_by_id_cache import get_cached_instance_by_id, invalidate_cached_instance_by_id
 from .instance_cache_by_id_author import get_instance_cached_by_author_id
 from .invalidate_cache import invalidate_instance_cached_all, invalidate_test_cache_by_course_or_module
+from .course_review_cache import invalidate_course_review_cache, get_course_review_cache

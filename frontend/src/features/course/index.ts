@@ -16,3 +16,4 @@ export type {
   NormalizedItem,
   CourseOwnerProfileResponse,
 } from './course-structure-model/types'
+export { courseReviewService } from './course.review.service'

@@ -4,6 +4,17 @@ from django.utils.translation import gettext as _
 from courses.choices import VALID_CATEGORIES_CHOICES, VALID_CATEGORY_LEVELS
 
 
+def validate_course_review_data(data: dict):
+    """Валідатор для даних відгуку про курс"""
+
+    validate_required_fields(data, ["course_id", "rating", "comment"])
+
+    validate_positive_int(data.get("rating"), "rating")
+    rating = data.get("rating")
+    if rating < 1 or rating > 5:
+        raise ValidationError(_("Rating must be between 1 and 5"))
+
+
 def validate_course_data(data: dict):
     """Валідатор для даних курсу"""
 

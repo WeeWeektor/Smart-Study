@@ -13,6 +13,7 @@ async def create_module(data: dict, course_id):
 
     structure_ids = await sync_to_async(mongo_repo.insert_document)("module_structures", {})
 
+    # TODO можливо для зміни модуля зробити як в створенні відгуку про курс в методі create_review_of_course
     module_create = await sync_to_async(Module.objects.create)(
         course_id=uuid_obj,
         title=data["title"].strip(),

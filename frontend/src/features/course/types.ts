@@ -91,3 +91,36 @@ export type LessonElement = {
   title: string
   order: number
 }
+
+export interface ReviewUser {
+  id: string
+  name: string
+  surname: string
+  profile_picture?: string | null
+}
+
+export interface Review {
+  id: string
+  course_id: string
+  user: ReviewUser
+  rating: number
+  comment: string
+  created_at: string
+  is_verified?: boolean
+}
+
+export interface GetReviewsResponse {
+  course_id: string
+  reviews: Review[]
+}
+
+export interface CreateReviewResponse {
+  message: string
+  review: Review
+}
+
+export interface CreateReviewRequest {
+  course_id: string
+  rating: number
+  comment: string
+}

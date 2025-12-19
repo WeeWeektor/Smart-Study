@@ -25,10 +25,13 @@ Meta:
 Строкове представлення:
 - "CourseMeta - {course.title}" (локалізовано).
 """
+import json
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Index, Q, Count, Avg
+from django.db.models import Value, JSONField
+from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
 from .base import BaseModel
@@ -65,7 +68,6 @@ class CourseMeta(BaseModel):
         )
         self.save(update_fields=['total_modules', 'total_lessons', 'total_tests'])
 
-
     def update_counters(self):
         """Метод для автоматичного оновлення лічильників"""
         enrollments = self.course.enrollments.aggregate(
@@ -78,7 +80,6 @@ class CourseMeta(BaseModel):
 
         self.save(update_fields=['number_of_active', 'number_completed'])
 
-
     def update_feedback_count_summary_and_rating(self):
         """Метод для оновлення кількості відгуків, їх зведення та рейтингу курсу"""
         reviews = self.course.reviews.all()
@@ -87,20 +88,30 @@ class CourseMeta(BaseModel):
             avg_rating=Avg('rating'),
             count_reviews=Count('id'),
         )
-        self.rating = stats['avg_rating'] or 0
-        self.feedback_count = stats['count_reviews'] or 0
 
-        summary = {}
-        for r in range(1, 6):
-            summary[str(r)] = reviews.filter(rating=r).count()
-        self.feedback_summary = summary
+        new_rating = float(stats['avg_rating'] or 0)
+        new_feedback_count = stats['count_reviews'] or 0
 
-        self.save(update_fields=['rating', 'feedback_count', 'feedback_summary'])
+        stars_distribution = reviews.values('rating').annotate(cnt=Count('id'))
+        summary = {str(r): 0 for r in range(1, 6)}
 
+        for entry in stars_distribution:
+            rating_val = entry.get('rating')
+            if rating_val:
+                key = str(int(rating_val))
+                if key in summary:
+                    summary[key] = int(entry['cnt'])
+
+        summary_json_str = json.dumps(summary)
+
+        CourseMeta.objects.filter(pk=self.pk).update(
+            rating=new_rating,
+            feedback_count=new_feedback_count,
+            feedback_summary=Cast(Value(summary_json_str), output_field=JSONField())
+        )
 
     def __str__(self):
         return f"{_('CourseMeta')} - {self.course.title}"
-
 
     class Meta:
         db_table = "course_meta"
