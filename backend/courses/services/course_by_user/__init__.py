@@ -1,0 +1,3 @@
+from .get_courses_by_user import get_courses_by_user
+from .add_course_to_wishlist import add_course_to_wishlist
+from .remove_course_from_wishlist import remove_course_from_wishlist

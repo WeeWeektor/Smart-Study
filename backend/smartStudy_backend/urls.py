@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/lesson/', include('courses.urls.lesson_urls', namespace='lesson_urls')),
     path('api/test/', include('courses.urls.test_urls', namespace='test_urls')),
     path('api/course-review/', include('courses.urls.course_review_urls', namespace='course_review')),
+    path('api/wishlist/', include('courses.urls.wishlist_urls', namespace='wishlist_urls')),
     path('api/choices/', include('courses.urls.choices_urls', namespace='choices_urls')),
     path('api/counter/', include('courses.urls.counter_urls', namespace='counter_urls')),
 ]

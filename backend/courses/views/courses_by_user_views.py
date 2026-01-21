@@ -1,0 +1,23 @@
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+from common import LocalizedView
+from common.decorators import login_required_async
+from common.utils import error_response, success_response
+from courses.services.cache_service import courses_by_user_id_cache
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class CoursesByUserView(LocalizedView):
+    @login_required_async
+    async def get(self, request): # TODO pagination, filtering, sorting (do this here after receive from cache or in a new service)
+        user_id = request.user.id
+        if not user_id:
+            return error_response(gettext("user id parameter is required."), status=400)
+
+        courses = await courses_by_user_id_cache(user_id)
+        return success_response({
+            "user_id": user_id,
+            "courses": courses
+        })

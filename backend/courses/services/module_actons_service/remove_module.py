@@ -17,7 +17,7 @@ async def remove_module(module_id):
             if item.get("type") == "test" and "test_id" in item:
                 from courses.services.test_actions_service.remove_test import remove_test
                 await remove_test(item["test_id"], test_type="module")
-            # elif item.get("type") == "lesson" and "lesson_id" in item:
+            # elif item.get("type") == "lesson" and "lesson_id" in item: TODO Дописати видалення уроків при видаленні модуля
                 # from courses.services.lesson_actions_service.remove_lesson import remove_lesson
                 # await remove_lesson(item["lesson_id"])
 
