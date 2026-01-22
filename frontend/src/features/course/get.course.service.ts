@@ -1,6 +1,9 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
-import type { AllCoursesResponse } from '@/features/course/types.ts'
+import type {
+  AllCoursesResponse,
+  MyCourseCatalogResponse,
+} from '@/features/course/types.ts'
 
 export const sorting = (t: (key: string) => string) => [
   { value: 'most_popular', label: t('За Популярністю') },
@@ -179,6 +182,33 @@ class GetCourseService {
       return response.data
     } catch (error) {
       throw new Error(this.t('Не вдалось завантажити курс') + error)
+    }
+  }
+
+  async getMyCourseCatalog(): Promise<MyCourseCatalogResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<MyCourseCatalogResponse>(
+        '/course/get-user-course/',
+        {
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+      return {
+        status: response.data.status,
+        message: response.data.message,
+        in_wishlist: response.data.in_wishlist,
+        is_enrolled: response.data.is_enrolled,
+        is_completed: response.data.is_completed,
+      }
+    } catch (error) {
+      throw new Error(
+        this.t('Не вдалось завантажити мій каталог курсів') + error
+      )
     }
   }
 }

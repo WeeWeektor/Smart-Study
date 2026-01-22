@@ -7,7 +7,6 @@ from courses.utils import generate_course_json_with_details_and_owner
 
 async def get_courses_by_user(user_id):
     # TODO Тут має бути логіка отримання всіх курсів користувача (з вішлиста, тих що він проходить і ті які він вже пройшов)
-    # TODO можливо повертати масив з різними категоріями щоб одразу з кешу отримувати розділені дані і не фільтрувати
 
     try:
         user_id = validate_uuid(user_id)
@@ -17,7 +16,11 @@ async def get_courses_by_user(user_id):
                                      .select_related('owner', 'details'))
 
         wishlist_courses = [course async for course in wishlist_courses_queryset]
+        in_wishlist = await generate_course_json_with_details_and_owner(wishlist_courses)
 
-        return await generate_course_json_with_details_and_owner(wishlist_courses)
+        is_enrolled = []
+        is_completed = []
+
+        return in_wishlist, is_enrolled, is_completed
     except Exception as e:
         return error_response(gettext("Error retrieving courses") + str(e), status=500)

@@ -630,7 +630,7 @@ const CourseReview = () => {
       >
         <CourseHeader
           title={t('Курс') + ' ' + (course?.course.title || t('Назва курсу'))}
-          description={t('Розпочинайти свій шлях навчання вже сьогодні!')}
+          description={t('Розпочніть свій шлях навчання вже сьогодні!')}
         />
         <div className="p-6 max-w-4xl mx-auto w-full">
           {renderCourseInfoSection()}

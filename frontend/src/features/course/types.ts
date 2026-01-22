@@ -14,6 +14,14 @@ export interface CourseWrapper {
   course: Course
 }
 
+export interface MyCourseCatalogResponse {
+  status: string
+  message: string
+  in_wishlist: CourseWrapper[]
+  is_enrolled: CourseWrapper[]
+  is_completed: CourseWrapper[]
+}
+
 export interface Course {
   id: string
   title: string
