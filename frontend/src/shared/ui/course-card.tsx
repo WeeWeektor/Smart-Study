@@ -22,7 +22,7 @@ import {
   Users,
 } from 'lucide-react'
 import { formatLabel, parseISODuration, useI18n } from '@/shared/lib'
-import { Link, useNavigate } from 'react-router-dom'
+import { createSearchParams, Link, useNavigate } from 'react-router-dom'
 import React from 'react'
 import { deleteCourseService } from '@/features/course'
 
@@ -75,6 +75,18 @@ export const CourseCard = ({
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
+  // TODO  Зробити так щоб на 3 сторінках було однакове відображення кнопок типу якщо в вішлісті то де б я не відкрив курс то кнопки мають відображатись однаково і показувати що цей курс у вішлісті ....
+  const getReviewUrl = () => {
+    const params: Record<string, string> = {}
+
+    if (status) params.status = status
+    if (inWishlist) params.inWishlist = 'true'
+    if (progress !== undefined) params.progress = String(progress)
+
+    return `/course-review/${id}?${createSearchParams(params)}`
+  }
+
+  const reviewUrl = getReviewUrl()
 
   const getBadgeLabel = () => {
     if (badgeType === 'published') {
@@ -258,7 +270,7 @@ export const CourseCard = ({
           {status && (
             <div className="flex gap-2">
               {status === 'completed' ? (
-                <Link to={`/course-review/${id}`} className="flex-1">
+                <Link to={reviewUrl} className="flex-1">
                   <Button variant="outline" className="w-full">
                     <Eye className="w-4 h-4 mr-2" />
                     {t('Переглянути')}
@@ -266,7 +278,7 @@ export const CourseCard = ({
                 </Link>
               ) : (
                 <>
-                  <Link to={`/course-review/${id}`} className="flex-1">
+                  <Link to={reviewUrl} className="flex-1">
                     <Button className="w-full bg-brand-600 hover:bg-brand-700">
                       {status === 'not_started' ? (
                         <Rocket className="w-4 h-4 mr-2" />
@@ -307,7 +319,7 @@ export const CourseCard = ({
           {badgeType && badgeType === 'published' && (
             <div className="flex gap-2">
               {badgeStatus ? (
-                <Link to={`/course-review/${id}`} className="flex-1">
+                <Link to={reviewUrl} className="flex-1">
                   <Button variant="outline" className="w-full">
                     <Eye className="w-4 h-4 mr-2" />
                     {t('Переглянути')}
@@ -315,7 +327,7 @@ export const CourseCard = ({
                 </Link>
               ) : (
                 <>
-                  <Link to={`/course-review/${id}`} className="flex-1">
+                  <Link to={reviewUrl} className="flex-1">
                     <Button className="w-full bg-brand-600 hover:bg-brand-700">
                       <UploadCloud className="w-4 h-4 mr-2" />
                       {t('Переглянути та опублікувати')}
@@ -345,7 +357,7 @@ export const CourseCard = ({
 
           {badgeType && badgeType === 'level' && (
             <div className="flex gap-2">
-              <Link to={`/course-review/${id}`} className="flex-1">
+              <Link to={reviewUrl} className="flex-1">
                 <Button className="w-full bg-brand-600 hover:bg-brand-700">
                   <Eye className="w-4 h-4 mr-2" />
                   {t('Переглянути')}

@@ -23,7 +23,7 @@ import {
   getCourseService,
   type Review,
 } from '@/features/course'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   BarChart,
   BookOpen,
@@ -34,21 +34,40 @@ import {
   ChevronUp,
   Clock,
   FileCheck,
+  FileText,
   Globe,
   GraduationCap,
+  Heart,
   Layers,
   Mail,
   MapPin,
   MessageSquare,
   Phone,
   Plus,
+  RefreshCw,
+  Rocket,
   Star,
+  Trash2,
+  UploadCloud,
   User,
 } from 'lucide-react'
 
 const CourseReview = () => {
   const { t } = useI18n()
   const { id } = useParams<{ id: string }>()
+
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const statusParam = searchParams.get('status') as
+    | 'completed'
+    | 'in_progress'
+    | 'not_started'
+    | null
+  const inWishlistParam = searchParams.get('inWishlist') === 'true'
+  const progressParam = searchParams.get('progress')
+    ? Number(searchParams.get('progress'))
+    : 0
+
   const {
     profileData,
     loading: profileLoading,
@@ -153,6 +172,30 @@ const CourseReview = () => {
         return [incomingReview, ...prevReviews]
       }
     })
+  }
+
+  const handleStartCourse = () => {
+    console.log('Start/Continue course', id)
+  }
+
+  const handleAddToWishlist = async () => {
+    console.log('Add to wishlist', id)
+  }
+
+  const handleRemoveFromWishlist = async () => {
+    console.log('Remove from wishlist', id)
+  }
+
+  const handlePublishCourse = async () => {
+    console.log('Course will be publish', id)
+  }
+
+  const handleRemoveCourse = async () => {
+    console.log('Remove course', id)
+  }
+
+  const handleCheckCourseBeforePublish = async () => {
+    console.log('Check data course before publish', id)
   }
 
   if (profileLoading || courseLoading) {
@@ -608,8 +651,140 @@ const CourseReview = () => {
   const renderFooterSection = () => {
     if (!course || !course.course) return null
 
-    // if (!course.course.is_published) {
-    // }
+    if (!course.course.is_published) {
+      return (
+        <Card className="mt-8 border-t-4 border-t-brand-600 shadow-lg bg-slate-50 dark:bg-slate-900/50">
+          <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <UploadCloud className="w-6 h-6 text-brand-600" />
+                {t('Цей курс ще не опублікований')}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                {t(
+                  'Наразі курс знаходиться в режимі чернетки. Перевірте наповнення та опублікуйте його для студентів.'
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end min-w-[200px]">
+              <Button
+                onClick={handleCheckCourseBeforePublish}
+                variant="outline"
+                size="lg"
+                className="min-w-[140px] w-60"
+              >
+                <FileText className="w-5 h-5 mr-2" />
+                {t('Перевірити')}
+              </Button>
+
+              <Button
+                onClick={handlePublishCourse}
+                size="lg"
+                className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[160px] shadow-md shadow-brand-600/20"
+              >
+                <UploadCloud className="w-5 h-5 mr-2" />
+                {t('Опублікувати')}
+              </Button>
+              {/*// TODO при видалені курсу зробити редірект і відкривати модальне вікно підтвердження*/}
+
+              <Button
+                onClick={handleRemoveCourse}
+                variant="outline"
+                size="lg"
+                className="w-60 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20"
+              >
+                <Trash2 className="w-5 h-5 mr-2" />
+                {t('Видалити')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <Card className="mt-8 border-t-4 border-t-brand-600 shadow-lg bg-slate-50 dark:bg-slate-900/50">
+        <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              {statusParam === 'completed'
+                ? t('Ви успішно завершили цей курс!')
+                : statusParam === 'in_progress'
+                  ? t('Продовжуйте навчання')
+                  : t('Готові розпочати навчання?')}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400">
+              {statusParam === 'completed'
+                ? t('Ви можете переглянути матеріали курсу в будь-який час.')
+                : t(
+                    'Отримайте повний доступ до всіх матеріалів та сертифікат по завершенню.'
+                  )}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end min-w-[200px]">
+            {statusParam === 'completed' && (
+              <Button
+                onClick={handleStartCourse}
+                size="lg"
+                variant="outline"
+                className="min-w-[160px] w-60"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                {t('Переглянути знову')}
+              </Button>
+            )}
+
+            {statusParam === 'in_progress' && (
+              <Button
+                onClick={handleStartCourse}
+                size="lg"
+                className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[160px] shadow-md shadow-brand-600/20"
+              >
+                <RefreshCw className="w-5 h-5 mr-2" />
+                {t('Продовжити навчання')}
+              </Button>
+            )}
+
+            {(!statusParam || statusParam === 'not_started') && (
+              <>
+                {inWishlistParam ? (
+                  <Button
+                    onClick={handleRemoveFromWishlist}
+                    variant="outline"
+                    size="lg"
+                    className="w-60 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    {t('Прибрати з вішліста')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleAddToWishlist}
+                    variant="outline"
+                    size="lg"
+                    className="w-60 min-w-[180px]"
+                  >
+                    <Heart className="w-5 h-5 mr-2" />
+                    {t('У вішліст')}
+                  </Button>
+                )}
+
+                <Button
+                  onClick={handleStartCourse}
+                  size="lg"
+                  className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[180px] shadow-lg shadow-brand-600/20 animate-pulse-slow"
+                >
+                  <Rocket className="w-5 h-5 mr-2" />
+                  {t('Розпочати курс')}
+                </Button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

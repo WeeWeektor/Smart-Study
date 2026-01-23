@@ -27,7 +27,7 @@ type CourseWithStatus = CourseWrapper & {
   sourceType: 'wishlist' | 'enrolled' | 'completed'
 }
 
-const ITEMS_PER_PAGE = 3
+const ITEMS_PER_PAGE = 24
 
 const MyCourseCatalog = () => {
   const { t } = useI18n()

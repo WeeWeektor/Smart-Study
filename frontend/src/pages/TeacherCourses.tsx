@@ -108,7 +108,7 @@ const TeacherCourses = () => {
         page: page,
         sort_keys: sortingFilter,
         status:
-          statusesFilter === t('Всі рівні')
+          statusesFilter === t('Всі статуси')
             ? isOwner
               ? 'all'
               : ''
@@ -244,11 +244,11 @@ const TeacherCourses = () => {
             {isOwner && (
               <Select value={statusesFilter} onValueChange={setStatusesFilter}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder={t('Рівень')} />
+                  <SelectValue placeholder={t('Статус')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem key={''} value={t('Всі рівні')}>
-                    {t('Всі рівні')}
+                  <SelectItem key={''} value={t('Всі статуси')}>
+                    {t('Всі статуси')}
                   </SelectItem>
                   {statuses.map(status => (
                     <SelectItem key={status.value} value={status.value}>
