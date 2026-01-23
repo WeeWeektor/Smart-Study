@@ -46,6 +46,7 @@ interface CourseCardProps {
   countLesson?: number
   countTests?: number
   feedback_count?: number
+  inWishlist?: boolean
 }
 
 export const CourseCard = ({
@@ -68,6 +69,7 @@ export const CourseCard = ({
   countLesson,
   countTests,
   feedback_count,
+  inWishlist,
 }: CourseCardProps) => {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -100,10 +102,33 @@ export const CourseCard = ({
     }
   }
 
+  const handleDeleteFromWishlist = async () => {
+    try {
+      const response = await deleteCourseService.deleteCourseFromWishlist({
+        courseId: id,
+      })
+      navigate(
+        `/my-courses-subscriptions/?Message=${encodeURIComponent(
+          response.message
+        )}&Status=${response.status}&Action=delete`
+      )
+    } catch (error) {
+      navigate(
+        `/my-courses-subscriptions/?Message=${encodeURIComponent(
+          error instanceof Error
+            ? error.message
+            : t('Не вдалось видалити курс з вішліста')
+        )}&Status=0&Action=delete`
+      )
+    } finally {
+      setIsConfirmDelOpen(false)
+    }
+  }
+
   return (
     <Card
       key={id}
-      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
+      className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
     >
       <div className="relative w-full overflow-hidden bg-slate-200 dark:bg-slate-700 rounded-lg">
         {coverImage ? (
@@ -130,11 +155,12 @@ export const CourseCard = ({
         </div>
       </div>
 
-      <CardContent className="p-6 text-slate-900 dark:text-slate-100">
-        <h3 className="font-semibold text-slate-900 dark:text-slate-200 line-clamp-2 mb-2">
+      <CardContent className="flex-1 flex flex-col p-6 text-slate-900 dark:text-slate-100">
+        <h3 className="font-semibold text-slate-900 dark:text-slate-200 line-clamp-2 mb-2 h-8 leading-6">
           {title}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2 h-10 leading-5">
+          {' '}
           {description}
         </p>
 
@@ -228,79 +254,106 @@ export const CourseCard = ({
           </div>
         )}
 
-        {status && (
-          <div className="flex gap-2">
-            {status === 'completed' ? (
-              <Link to={`/course-review/${id}`} className="flex-1">
-                <Button variant="outline" className="w-full">
-                  <Eye className="w-4 h-4 mr-2" />
-                  {t('Переглянути')}
-                </Button>
-              </Link>
-            ) : (
-              <Link to={`/course-review/${id}`} className="flex-1">
-                <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                  {status === 'not_started' ? (
-                    <Rocket className="w-4 h-4 mr-2" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                  )}
-                  {status === 'not_started' ? t('Розпочати') : t('Продовжити')}
-                </Button>
-              </Link>
-            )}
-          </div>
-        )}
-
-        {badgeType && badgeType === 'published' && (
-          <div className="flex gap-2">
-            {badgeStatus ? (
-              <Link to={`/course-review/${id}`} className="flex-1">
-                <Button variant="outline" className="w-full">
-                  <Eye className="w-4 h-4 mr-2" />
-                  {t('Переглянути')}
-                </Button>
-              </Link>
-            ) : (
-              <>
+        <div className="mt-auto pt-2">
+          {status && (
+            <div className="flex gap-2">
+              {status === 'completed' ? (
                 <Link to={`/course-review/${id}`} className="flex-1">
-                  <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                    <UploadCloud className="w-4 h-4 mr-2" />
-                    {t('Переглянути та опублікувати')}
+                  <Button variant="outline" className="w-full">
+                    <Eye className="w-4 h-4 mr-2" />
+                    {t('Переглянути')}
                   </Button>
                 </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                  onClick={() => setIsConfirmDelOpen(true)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-                <ConfirmModal
-                  isOpen={isConfirmDelOpen}
-                  onClose={() => setIsConfirmDelOpen(false)}
-                  onConfirm={handleDelete}
-                  title={t('Видалення курсу')}
-                  description={t(
-                    'Ви впевнені, що хочете видалити цей курс? Цю дію неможливо скасувати.'
+              ) : (
+                <>
+                  <Link to={`/course-review/${id}`} className="flex-1">
+                    <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                      {status === 'not_started' ? (
+                        <Rocket className="w-4 h-4 mr-2" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                      )}
+                      {status === 'not_started'
+                        ? t('Розпочати')
+                        : t('Продовжити')}
+                    </Button>
+                  </Link>
+                  {status === 'not_started' && inWishlist && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                        onClick={() => setIsConfirmDelOpen(true)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                      <ConfirmModal
+                        isOpen={isConfirmDelOpen}
+                        onClose={() => setIsConfirmDelOpen(false)}
+                        onConfirm={handleDeleteFromWishlist}
+                        title={t('Видалення курсу')}
+                        description={t(
+                          'Ви впевнені, що хочете видалити цей курс з вішліста?'
+                        )}
+                      />
+                    </>
                   )}
-                />
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+            </div>
+          )}
 
-        {badgeType && badgeType === 'level' && (
-          <div className="flex gap-2">
-            <Link to={`/course-review/${id}`} className="flex-1">
-              <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                <Eye className="w-4 h-4 mr-2" />
-                {t('Переглянути')}
-              </Button>
-            </Link>
-          </div>
-        )}
+          {badgeType && badgeType === 'published' && (
+            <div className="flex gap-2">
+              {badgeStatus ? (
+                <Link to={`/course-review/${id}`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    <Eye className="w-4 h-4 mr-2" />
+                    {t('Переглянути')}
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to={`/course-review/${id}`} className="flex-1">
+                    <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                      <UploadCloud className="w-4 h-4 mr-2" />
+                      {t('Переглянути та опублікувати')}
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                    onClick={() => setIsConfirmDelOpen(true)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <ConfirmModal
+                    isOpen={isConfirmDelOpen}
+                    onClose={() => setIsConfirmDelOpen(false)}
+                    onConfirm={handleDelete}
+                    title={t('Видалення курсу')}
+                    description={t(
+                      'Ви впевнені, що хочете видалити цей курс? Цю дію неможливо скасувати.'
+                    )}
+                  />
+                </>
+              )}
+            </div>
+          )}
+
+          {badgeType && badgeType === 'level' && (
+            <div className="flex gap-2">
+              <Link to={`/course-review/${id}`} className="flex-1">
+                <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                  <Eye className="w-4 h-4 mr-2" />
+                  {t('Переглянути')}
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

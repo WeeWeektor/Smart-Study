@@ -11,9 +11,8 @@ from courses.services.course_by_user import add_course_to_wishlist, remove_cours
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class UserWishlistView(LocalizedView):
-    async def _handle_wishlist_action(self, request, service_function, success_message, error_message, result_key):
-        user_id = request.GET.get("user_id")
-        course_id = request.GET.get("course_id")
+    async def _handle_wishlist_action(self, request, course_id, service_function, success_message, error_message, result_key):
+        user_id = request.user.id
 
         if not user_id or not course_id:
             return error_response(gettext("user id and course id parameters are required."), status=400)
@@ -31,9 +30,10 @@ class UserWishlistView(LocalizedView):
             return error_response(f"{error_message} {str(e)}", status=500)
 
     @login_required_async
-    async def post(self, request):
+    async def post(self, request, course_id):
         return await self._handle_wishlist_action(
             request,
+            course_id,
             service_function=add_course_to_wishlist,
             success_message=gettext("Course added to wishlist successfully."),
             error_message=gettext("Error add course to wishlist of users:"),
@@ -41,9 +41,10 @@ class UserWishlistView(LocalizedView):
         )
 
     @login_required_async
-    async def delete(self, request):
+    async def delete(self, request, course_id):
         return await self._handle_wishlist_action(
             request,
+            course_id,
             service_function=remove_course_from_wishlist,
             success_message=gettext("Course removed from wishlist successfully."),
             error_message=gettext("Error remove course from wishlist of users:"),

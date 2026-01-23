@@ -8,12 +8,18 @@ import {
   EmptyCourses,
   ErrorProfile,
   LoadingProfile,
+  Pagination,
   StatCard,
 } from '@/shared/ui'
 import { useProfileData } from '@/shared/hooks/useProfileData'
 import { AlertCircle, BookOpen, CheckCircle, Heart, Layers } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
-import { type CourseWrapper, getCourseService } from '@/features/course'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  CourseNotification,
+  type CourseWrapper,
+  getCourseService,
+} from '@/features/course'
+import { useSearchParams } from 'react-router-dom'
 
 type FilterType = 'all' | 'active' | 'completed' | 'wishlist'
 
@@ -21,13 +27,22 @@ type CourseWithStatus = CourseWrapper & {
   sourceType: 'wishlist' | 'enrolled' | 'completed'
 }
 
+const ITEMS_PER_PAGE = 3
+
 const MyCourseCatalog = () => {
   const { t } = useI18n()
   const { profileData, loading, error, refreshProfile } = useProfileData()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const message = searchParams.get('Message')
+  const status = searchParams.get('Status')
+  const action = searchParams.get('Action')
   const [courseError, setCourseError] = useState<string>('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const [courseLoading, setCourseLoading] = useState(true)
   const [allCourses, setAllCourses] = useState<CourseWithStatus[]>([])
+  const [page, setPage] = useState<number>(1)
+
+  const listTopRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (courseError) {
@@ -35,6 +50,19 @@ const MyCourseCatalog = () => {
       return () => clearTimeout(timer)
     }
   }, [courseError])
+
+  useEffect(() => {
+    setPage(1)
+  }, [activeFilter])
+
+  useEffect(() => {
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }, [page, searchParams])
 
   const fetchCourses = async () => {
     setCourseLoading(true)
@@ -83,6 +111,14 @@ const MyCourseCatalog = () => {
         return allCourses
     }
   }, [allCourses, activeFilter])
+
+  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE)
+
+  const paginatedCourses = useMemo(() => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    return filteredCourses.slice(startIndex, endIndex)
+  }, [filteredCourses, page])
 
   const getCardStatus = (sourceType: CourseWithStatus['sourceType']) => {
     switch (sourceType) {
@@ -239,88 +275,75 @@ const MyCourseCatalog = () => {
             />
           </div>
 
-          {/*<div className="flex flex-wrap justify-center gap-6">*/}
-          {/*  {allCourses.map(course => (*/}
-          {/*    <div*/}
-          {/*      key={course.course.id}*/}
-          {/*      className="w-full sm:w-[48%] xl:w-[32%]"*/}
-          {/*    >*/}
-          {/*      <CourseCard*/}
-          {/*        id={course.course.id}*/}
-          {/*        title={course.course.title}*/}
-          {/*        description={course.course.description}*/}
-          {/*        coverImage={course.course.cover_image}*/}
-          {/*        instructor={*/}
-          {/*          course.course.owner.name + ' ' + course.course.owner.surname*/}
-          {/*        }*/}
-          {/*        instructorId={course.course.owner.id}*/}
-          {/*        category={course.course.category}*/}
-          {/*        badgeStatus={course.course.details.level}*/}
-          {/*        badgeType={'level'}*/}
-          {/*        rating={course.course.details.rating}*/}
-          {/*        students={*/}
-          {/*          course.course.details.number_completed +*/}
-          {/*          course.course.details.number_of_active*/}
-          {/*        }*/}
-          {/*        duration={course.course.details.time_to_complete}*/}
-          {/*      />*/}
-          {/*    </div>*/}
-          {/*  ))}*/}
-          {/*</div>*/}
+          <div ref={listTopRef} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.length > 0 ? (
-              filteredCourses.map(wrapper => (
-                <CourseCard
+          <div className="flex flex-wrap justify-center gap-6">
+            {paginatedCourses.length > 0 ? (
+              paginatedCourses.map(wrapper => (
+                <div
                   key={wrapper.course.id}
-                  id={wrapper.course.id}
-                  title={wrapper.course.title}
-                  description={wrapper.course.description}
-                  coverImage={wrapper.course.cover_image}
-                  instructor={
-                    wrapper.course.owner.name +
-                    ' ' +
-                    wrapper.course.owner.surname
-                  }
-                  instructorId={wrapper.course.owner.id}
-                  category={wrapper.course.category}
-                  badgeStatus={wrapper.course.details.level}
-                  badgeType="level"
-                  rating={wrapper.course.details.rating}
-                  students={
-                    wrapper.course.details.number_completed +
-                    wrapper.course.details.number_of_active
-                  }
-                  duration={wrapper.course.details.time_to_complete}
-                  // Додаткові пропси для правильного відображення:
-                  status={getCardStatus(wrapper.sourceType)}
-                  // Якщо у wrapper є поле progress (залежить від API), передаємо його, інакше 0
-                  progress={(wrapper as any).progress || 0}
-                  countModule={wrapper.course.details.total_modules}
-                  countLesson={wrapper.course.details.total_lessons}
-                  countTests={wrapper.course.details.total_tests}
-                  feedback_count={wrapper.course.details.feedback_count}
-                />
+                  className="w-full sm:w-[48%] xl:w-[32%]"
+                >
+                  <CourseCard
+                    key={wrapper.course.id}
+                    id={wrapper.course.id}
+                    title={wrapper.course.title}
+                    description={wrapper.course.description}
+                    coverImage={wrapper.course.cover_image}
+                    instructor={
+                      wrapper.course.owner.name +
+                      ' ' +
+                      wrapper.course.owner.surname
+                    }
+                    instructorId={wrapper.course.owner.id}
+                    category={wrapper.course.category}
+                    badgeStatus={wrapper.course.details.level}
+                    badgeType="status"
+                    rating={wrapper.course.details.rating}
+                    students={
+                      wrapper.course.details.number_completed +
+                      wrapper.course.details.number_of_active
+                    }
+                    duration={wrapper.course.details.time_to_complete}
+                    status={getCardStatus(wrapper.sourceType)}
+                    progress={(wrapper as any).progress || 0}
+                    countModule={wrapper.course.details.total_modules}
+                    countLesson={wrapper.course.details.total_lessons}
+                    countTests={wrapper.course.details.total_tests}
+                    feedback_count={wrapper.course.details.feedback_count}
+                    inWishlist={wrapper.sourceType === 'wishlist'}
+                  />
+                </div>
               ))
             ) : (
-              // Empty State тепер показується коректно на всю ширину
               <div className="col-span-full">
                 <EmptyCourses text={t('У цій категорії поки немає курсів.')} />
               </div>
             )}
           </div>
 
-          {/*<div>*/}
-          {/*  {allCourses.length === 0 && (*/}
-          {/*    <EmptyCourses text="У цій категорії поки немає курсів." />*/}
-          {/*  )}*/}
-          {/*</div>*/}
-          {/*<Pagination*/}
-          {/*  page={page}*/}
-          {/*  totalPages={totalPages}*/}
-          {/*  onPageChange={setPage}*/}
-          {/*/>*/}
+          {totalPages > 1 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
         </main>
+        {message && status && action && (
+          <CourseNotification
+            message={message}
+            status={Number(status)}
+            action_type={action}
+            onClose={async () => {
+              searchParams.delete('Message')
+              searchParams.delete('Status')
+              searchParams.delete('Action')
+              setSearchParams(searchParams)
+              await fetchCourses()
+            }}
+          />
+        )}
       </div>
     </div>
   )
