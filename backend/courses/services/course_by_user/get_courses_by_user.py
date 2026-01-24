@@ -26,7 +26,12 @@ async def get_courses_by_user(user_id):
             generate_mock_course("Data Science з нуля3", category="data_science", level="intermediate"),
             generate_mock_course("Data Science з нуля4", category="data_science", level="intermediate"),
         ]
-        is_completed = []
+        is_completed = [
+            generate_mock_course("Data Science з нуля1", category="data_science", level="intermediate"),
+            generate_mock_course("Data Science з нуля2", category="data_science", level="intermediate"),
+            generate_mock_course("Data Science з нуля3", category="data_science", level="intermediate"),
+            generate_mock_course("Data Science з нуля4", category="data_science", level="intermediate"),
+        ]
 
         return in_wishlist, is_enrolled, is_completed
     except Exception as e:

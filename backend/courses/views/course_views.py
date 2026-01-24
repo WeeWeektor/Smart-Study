@@ -16,7 +16,7 @@ from courses.services import parse_multipart_request
 from courses.services.cache_service import get_cached_instance_by_id, get_instance_cached_all, \
     get_instance_cached_by_author_id
 from courses.services.course_actions_service import create_course, remove_course, update_course, \
-    update_published_course_with_structure, count_content_course
+    update_published_course_with_structure, count_content_course, publishing_course
 from courses.utils import categories_level_sort_present, average_rating, certificates_issued, count_announcements, \
     course_structure
 
@@ -142,3 +142,22 @@ class CourseView(LocalizedView):
             return error_response(gettext("Course not found"), status=404)
         except Exception as e:
             return error_response(f"{gettext('Course deletion error:')} {str(e)}", status=500)
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class PublishCourseView(LocalizedView):
+    @owner_course_required
+    async def post(self, request, course_id):
+        try:
+            await publishing_course(course_id)
+
+            return success_response({
+                "message": gettext("Course published successfully"),
+                "course_id": course_id,
+            })
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except Course.DoesNotExist:
+            return error_response(gettext("Course not found"), status=404)
+        except Exception as e:
+            return error_response(f"{gettext('Error publishing course:')} {str(e)}", status=500)

@@ -9,18 +9,22 @@ import {
   Card,
   CardContent,
   CardHeader,
+  ConfirmModal,
   ErrorProfile,
   LoadingProfile,
 } from '@/shared/ui'
 import { useProfileData } from '@/shared/hooks/useProfileData'
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CourseHeader, CourseSidebar } from '@/widgets/course'
 import {
+  addCourseToWishlistService,
   type CourseOwnerProfileResponse,
   type CourseResponse,
   courseReviewService,
   type CourseStructureResponse,
+  deleteCourseService,
   getCourseService,
+  publishCourseService,
   type Review,
 } from '@/features/course'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -57,7 +61,7 @@ const CourseReview = () => {
   const { id } = useParams<{ id: string }>()
 
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const statusParam = searchParams.get('status') as
     | 'completed'
     | 'in_progress'
@@ -92,6 +96,8 @@ const CourseReview = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isCourseSidebarCollapsed, setIsCourseSidebarCollapsed] =
     useState(false)
+  const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
 
   useEffect(() => {
     const fetchCourseAllData = async () => {
@@ -175,26 +181,92 @@ const CourseReview = () => {
   }
 
   const handleStartCourse = () => {
+    // TODO
     console.log('Start/Continue course', id)
   }
 
+  // TODO  реалізувати логіку так щоб якщо курс у вішлісті то це показувалось всюди для цього користувача у любому місці же відкривається цей курс
   const handleAddToWishlist = async () => {
-    console.log('Add to wishlist', id)
+    if (!id) return
+    try {
+      await addCourseToWishlistService.addCourseToWishlist({
+        courseId: id,
+      })
+      const newParams = new URLSearchParams(searchParams)
+      newParams.set('inWishlist', 'true')
+      setSearchParams(newParams)
+    } catch (error) {
+      setCourseError(
+        'Failed to add to wishlist' +
+          (error instanceof Error ? ': ' + error.message : '')
+      )
+    }
   }
 
+  // TODO для користувачів не показувати строку в пошуку дані про вішліст прогрес і статус курсу (приховувати існування цих параметрів)
   const handleRemoveFromWishlist = async () => {
-    console.log('Remove from wishlist', id)
+    if (!id) return
+    try {
+      await deleteCourseService.deleteCourseFromWishlist({
+        courseId: id,
+      })
+      const newParams = new URLSearchParams(searchParams)
+      newParams.set('inWishlist', 'false')
+      setSearchParams(newParams)
+    } catch (error) {
+      setCourseError(
+        'Failed remove corse from wishlist' +
+          (error instanceof Error ? ': ' + error.message : '')
+      )
+    }
   }
 
   const handlePublishCourse = async () => {
-    console.log('Course will be publish', id)
+    if (!id) return
+    try {
+      const response = await publishCourseService.publishCourse({
+        courseId: id,
+      })
+      navigate(
+        `/my-created-courses/?Message=${encodeURIComponent(
+          response.message
+        )}&Status=${response.status}&Action=publish`
+      )
+    } catch (error) {
+      navigate(
+        `/my-created-courses/?Message=${encodeURIComponent(
+          error instanceof Error
+            ? error.message
+            : t('Не вдалось опублікувати курс')
+        )}&Status=0&Action=publish`
+      )
+    } finally {
+      setShowPublishModal(false)
+    }
   }
 
   const handleRemoveCourse = async () => {
-    console.log('Remove course', id)
+    if (!id) return
+    try {
+      const response = await deleteCourseService.deleteCourse({ courseId: id })
+      navigate(
+        `/my-created-courses/?Message=${encodeURIComponent(
+          response.message
+        )}&Status=${response.status}&Action=delete`
+      )
+    } catch (error) {
+      navigate(
+        `/my-created-courses/?Message=${encodeURIComponent(
+          error instanceof Error ? error.message : t('Не вдалось видалити курс')
+        )}&Status=0&Action=delete`
+      )
+    } finally {
+      setIsConfirmDelOpen(false)
+    }
   }
 
   const handleCheckCourseBeforePublish = async () => {
+    // TODO
     console.log('Check data course before publish', id)
   }
 
@@ -679,24 +751,42 @@ const CourseReview = () => {
               </Button>
 
               <Button
-                onClick={handlePublishCourse}
+                onClick={() => setShowPublishModal(true)}
                 size="lg"
                 className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[160px] shadow-md shadow-brand-600/20"
               >
                 <UploadCloud className="w-5 h-5 mr-2" />
                 {t('Опублікувати')}
               </Button>
-              {/*// TODO при видалені курсу зробити редірект і відкривати модальне вікно підтвердження*/}
+              <ConfirmModal
+                isOpen={showPublishModal}
+                onConfirm={handlePublishCourse}
+                onClose={() => setShowPublishModal(false)}
+                title={t('Публікація курсу')}
+                description={t(
+                  'Після публікації курс НЕ можна буде редагувати чи видалити курс'
+                )}
+                buttonText={t('Опублікувати курс')}
+              />
 
               <Button
-                onClick={handleRemoveCourse}
                 variant="outline"
                 size="lg"
                 className="w-60 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20"
+                onClick={() => setIsConfirmDelOpen(true)}
               >
                 <Trash2 className="w-5 h-5 mr-2" />
                 {t('Видалити')}
               </Button>
+              <ConfirmModal
+                isOpen={isConfirmDelOpen}
+                onClose={() => setIsConfirmDelOpen(false)}
+                onConfirm={handleRemoveCourse}
+                title={t('Видалення курсу')}
+                description={t(
+                  'Ви впевнені, що хочете видалити цей курс? Цю дію неможливо скасувати.'
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -813,12 +903,6 @@ const CourseReview = () => {
           {course?.course.is_published && renderReviewsSection()}
           {course?.course.is_published && renderStarSection()}
           {renderFooterSection()}
-          <div className="mt-6">
-            <h1 className="text-2xl font-bold mb-4">
-              Вміст footer з кнопками і перенаправлення на сторінки уроків
-              тестів ...
-            </h1>
-          </div>
         </div>
       </main>
       {id && (
