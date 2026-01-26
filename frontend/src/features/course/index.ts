@@ -8,6 +8,10 @@ export type {
 export { deleteCourseService } from './delete.course.service'
 export { addCourseToWishlistService } from './add.course.to.wishlist.service'
 export { publishCourseService } from './publish.course.service'
+export {
+  elementOfCourseService,
+  type ElementOfCourseResponse,
+} from './get.element.of.course.service'
 export { default as CourseNotification } from './CourseNotification'
 export type { CreateCourseResponse } from './create.course.service'
 export { createCourseService } from './create.course.service'

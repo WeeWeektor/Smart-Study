@@ -38,6 +38,7 @@ import {
   sorting,
   statues,
 } from '@/features/course'
+import { useUserCoursesStatus } from '@/shared/hooks/useUserCoursesStatus'
 
 interface Option {
   value: string
@@ -48,6 +49,7 @@ const TeacherCourses = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { profileData, loading, error, refreshProfile } = useProfileData()
+  const { getItemStatus } = useUserCoursesStatus()
   const { name: teacherName, id: teacherId } = useParams<{
     name: string
     id: string
@@ -337,36 +339,45 @@ const TeacherCourses = () => {
                     countLesson={course.course.details.total_lessons}
                     countTests={course.course.details.total_tests}
                     feedback_count={course.course.details.feedback_count}
+                    {...getItemStatus(course.course.id)}
                   />
                 </div>
               ))) ||
-              courses.map(course => (
-                <div
-                  key={course.course.id}
-                  className="w-full sm:w-[48%] xl:w-[32%]"
-                >
-                  <CourseCard
-                    id={course.course.id}
-                    title={course.course.title}
-                    description={course.course.description}
-                    coverImage={course.course.cover_image}
-                    instructorId={course.course.owner.id}
-                    category={course.course.category}
-                    badgeStatus={course.course.details.level}
-                    badgeType={'level'}
-                    rating={course.course.details.rating}
-                    students={
-                      course.course.details.number_completed +
-                      course.course.details.number_of_active
-                    }
-                    duration={course.course.details.time_to_complete}
-                    countModule={course.course.details.total_modules}
-                    countLesson={course.course.details.total_lessons}
-                    countTests={course.course.details.total_tests}
-                    feedback_count={course.course.details.feedback_count}
-                  />
-                </div>
-              ))}
+              courses.map(course => {
+                const { status, progress, inWishlist } = getItemStatus(
+                  course.course.id
+                )
+                return (
+                  <div
+                    key={course.course.id}
+                    className="w-full sm:w-[48%] xl:w-[32%]"
+                  >
+                    <CourseCard
+                      id={course.course.id}
+                      title={course.course.title}
+                      description={course.course.description}
+                      coverImage={course.course.cover_image}
+                      instructorId={course.course.owner.id}
+                      category={course.course.category}
+                      badgeStatus={course.course.details.level}
+                      badgeType={'level'}
+                      rating={course.course.details.rating}
+                      students={
+                        course.course.details.number_completed +
+                        course.course.details.number_of_active
+                      }
+                      duration={course.course.details.time_to_complete}
+                      countModule={course.course.details.total_modules}
+                      countLesson={course.course.details.total_lessons}
+                      countTests={course.course.details.total_tests}
+                      feedback_count={course.course.details.feedback_count}
+                      status={status}
+                      progress={progress}
+                      inWishlist={inWishlist}
+                    />
+                  </div>
+                )
+              })}
           </div>
           <div>{courses.length === 0 && <EmptyCourses />}</div>
           <Pagination

@@ -35,6 +35,7 @@ import {
   sorting,
 } from '@/features/course'
 import { useChoicesData } from '@/shared/hooks/useChoiceData'
+import { useUserCoursesStatus } from '@/shared/hooks/useUserCoursesStatus'
 
 interface Option {
   value: string
@@ -50,6 +51,7 @@ const CoursesCatalog = () => {
     error: choicesError,
     refreshChoices,
   } = useChoicesData()
+  const { getItemStatus, loading: statusLoading } = useUserCoursesStatus()
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [categoryFilter, setCategoryFilter] = useState<string[]>([])
   const [sortingFilter, setSortingFilter] = useState<string[]>([])
@@ -142,7 +144,7 @@ const CoursesCatalog = () => {
     fetchCourses()
   }, [categoryFilter, levelFilter, sortingFilter, page])
 
-  if (loading && choicesLoading && courseLoading) {
+  if (loading && choicesLoading && courseLoading && statusLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 
@@ -276,32 +278,44 @@ const CoursesCatalog = () => {
             />
           </div>
           <div className="flex flex-wrap justify-center gap-6">
-            {courses.map(course => (
-              <div
-                key={course.course.id}
-                className="w-full sm:w-[48%] xl:w-[32%]"
-              >
-                <CourseCard
-                  id={course.course.id}
-                  title={course.course.title}
-                  description={course.course.description}
-                  coverImage={course.course.cover_image}
-                  instructor={
-                    course.course.owner.name + ' ' + course.course.owner.surname
-                  }
-                  instructorId={course.course.owner.id}
-                  category={course.course.category}
-                  badgeStatus={course.course.details.level}
-                  badgeType={'level'}
-                  rating={course.course.details.rating}
-                  students={
-                    course.course.details.number_completed +
-                    course.course.details.number_of_active
-                  }
-                  duration={course.course.details.time_to_complete}
-                />
-              </div>
-            ))}
+            {courses.map(course => {
+              const { status, progress, inWishlist } = getItemStatus(
+                course.course.id
+              )
+
+              return (
+                <div
+                  key={course.course.id}
+                  className="w-full sm:w-[48%] xl:w-[32%]"
+                >
+                  <CourseCard
+                    id={course.course.id}
+                    title={course.course.title}
+                    description={course.course.description}
+                    coverImage={course.course.cover_image}
+                    instructor={
+                      course.course.owner.name +
+                      ' ' +
+                      course.course.owner.surname
+                    }
+                    instructorId={course.course.owner.id}
+                    category={course.course.category}
+                    badgeStatus={course.course.details.level}
+                    badgeType={'level'}
+                    rating={course.course.details.rating}
+                    students={
+                      course.course.details.number_completed +
+                      course.course.details.number_of_active
+                    }
+                    duration={course.course.details.time_to_complete}
+                    status={status}
+                    progress={progress}
+                    inWishlist={inWishlist}
+                    findCourse={true}
+                  />
+                </div>
+              )
+            })}
           </div>
           <div>{courses.length === 0 && <EmptyCourses />}</div>
           <Pagination

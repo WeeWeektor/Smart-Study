@@ -115,7 +115,7 @@ async def get_test_by_id(
                 lambda t, q: build_course_test_json(t, t.course, q),
             ),
             "module": (
-                lambda: Test.objects.select_related("module").get(pk=uuid_obj),
+                lambda: Test.objects.select_related("module__course").get(pk=uuid_obj),
                 lambda t, q: build_module_test_json(t, t.module, q),
             ),
         }

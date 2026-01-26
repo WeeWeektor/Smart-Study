@@ -23,11 +23,13 @@ import {
   courseReviewService,
   type CourseStructureResponse,
   deleteCourseService,
+  type ElementOfCourseResponse,
+  elementOfCourseService,
   getCourseService,
   publishCourseService,
   type Review,
 } from '@/features/course'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   BarChart,
   BookOpen,
@@ -55,22 +57,20 @@ import {
   UploadCloud,
   User,
 } from 'lucide-react'
+import { useUserCoursesStatus } from '@/shared/hooks/useUserCoursesStatus'
 
 const CourseReview = () => {
   const { t } = useI18n()
   const { id } = useParams<{ id: string }>()
 
+  const { getItemStatus, refresh: refreshStatuses } = useUserCoursesStatus()
+  const {
+    status: userStatus,
+    progress: userProgress,
+    inWishlist: inWishlist,
+  } = getItemStatus(id || '')
+
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const statusParam = searchParams.get('status') as
-    | 'completed'
-    | 'in_progress'
-    | 'not_started'
-    | null
-  const inWishlistParam = searchParams.get('inWishlist') === 'true'
-  const progressParam = searchParams.get('progress')
-    ? Number(searchParams.get('progress'))
-    : 0
 
   const {
     profileData,
@@ -98,6 +98,25 @@ const CourseReview = () => {
     useState(false)
   const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+
+  const [activeElement, setActiveElement] =
+    useState<ElementOfCourseResponse | null>(null)
+  const [isElementLoading, setIsElementLoading] = useState(false)
+
+  const isOwner = useMemo(() => {
+    if (!profileData?.user?.id || !course?.course?.owner[0].owner.id) {
+      return false
+    }
+
+    const userId = String(profileData.user.id)
+    const ownerId = String(course.course.owner[0].owner.id)
+
+    return userId === ownerId
+  }, [profileData, course])
+
+  const isUserEnrolled = useMemo(() => {
+    return userStatus === 'in_progress' || userStatus === 'completed' || isOwner
+  }, [userStatus, isOwner])
 
   useEffect(() => {
     const fetchCourseAllData = async () => {
@@ -180,21 +199,45 @@ const CourseReview = () => {
     })
   }
 
+  const handleSidebarItemClick = async (itemId: string, type: string) => {
+    if (!itemId || !type) return
+
+    if (type !== 'lesson' && type !== 'module-test' && type !== 'course-test') {
+      return
+    }
+
+    setIsElementLoading(true)
+    try {
+      const response = await elementOfCourseService.getElementOfCourse({
+        elementId: itemId,
+        elementType: type,
+      })
+
+      setActiveElement(response)
+      console.log('Loaded content:', response)
+    } catch (error) {
+      setCourseError(
+        error instanceof Error
+          ? error.message
+          : t('Не вдалось завантажити матеріали')
+      )
+    } finally {
+      setIsElementLoading(false)
+    }
+  }
+
   const handleStartCourse = () => {
     // TODO
     console.log('Start/Continue course', id)
   }
 
-  // TODO  реалізувати логіку так щоб якщо курс у вішлісті то це показувалось всюди для цього користувача у любому місці же відкривається цей курс
   const handleAddToWishlist = async () => {
     if (!id) return
     try {
       await addCourseToWishlistService.addCourseToWishlist({
         courseId: id,
       })
-      const newParams = new URLSearchParams(searchParams)
-      newParams.set('inWishlist', 'true')
-      setSearchParams(newParams)
+      refreshStatuses()
     } catch (error) {
       setCourseError(
         'Failed to add to wishlist' +
@@ -203,16 +246,13 @@ const CourseReview = () => {
     }
   }
 
-  // TODO для користувачів не показувати строку в пошуку дані про вішліст прогрес і статус курсу (приховувати існування цих параметрів)
   const handleRemoveFromWishlist = async () => {
     if (!id) return
     try {
       await deleteCourseService.deleteCourseFromWishlist({
         courseId: id,
       })
-      const newParams = new URLSearchParams(searchParams)
-      newParams.set('inWishlist', 'false')
-      setSearchParams(newParams)
+      refreshStatuses()
     } catch (error) {
       setCourseError(
         'Failed remove corse from wishlist' +
@@ -798,14 +838,14 @@ const CourseReview = () => {
         <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col gap-2">
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              {statusParam === 'completed'
+              {userStatus === 'completed'
                 ? t('Ви успішно завершили цей курс!')
-                : statusParam === 'in_progress'
+                : userStatus === 'in_progress'
                   ? t('Продовжуйте навчання')
                   : t('Готові розпочати навчання?')}
             </h3>
             <p className="text-slate-600 dark:text-slate-400">
-              {statusParam === 'completed'
+              {userStatus === 'completed'
                 ? t('Ви можете переглянути матеріали курсу в будь-який час.')
                 : t(
                     'Отримайте повний доступ до всіх матеріалів та сертифікат по завершенню.'
@@ -814,7 +854,7 @@ const CourseReview = () => {
           </div>
 
           <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end min-w-[200px]">
-            {statusParam === 'completed' && (
+            {userStatus === 'completed' && (
               <Button
                 onClick={handleStartCourse}
                 size="lg"
@@ -826,7 +866,7 @@ const CourseReview = () => {
               </Button>
             )}
 
-            {statusParam === 'in_progress' && (
+            {userStatus === 'in_progress' && (
               <Button
                 onClick={handleStartCourse}
                 size="lg"
@@ -837,9 +877,9 @@ const CourseReview = () => {
               </Button>
             )}
 
-            {(!statusParam || statusParam === 'not_started') && (
+            {(!userStatus || userStatus === 'not_started') && (
               <>
-                {inWishlistParam ? (
+                {inWishlist ? (
                   <Button
                     onClick={handleRemoveFromWishlist}
                     variant="outline"
@@ -888,6 +928,8 @@ const CourseReview = () => {
         isCollapsible={true}
         onCollapseChange={setIsCourseSidebarCollapsed}
         data={courseStructureData}
+        isEnrolled={isUserEnrolled}
+        onItemClick={handleSidebarItemClick}
       />
 
       <main

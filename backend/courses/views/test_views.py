@@ -63,7 +63,7 @@ class BaseTestView(LocalizedView):
             return await self._get_public_tests(request)
         elif test_id is not None:
             test = await self._get_test_by_id(self.test_type, test_id)
-            return success_response(data={"test": test})
+            return success_response(data=test, message=gettext("Test retrieved successfully"))
         return error_response(gettext("Invalid request"), status=400)
 
     @permission_test_required

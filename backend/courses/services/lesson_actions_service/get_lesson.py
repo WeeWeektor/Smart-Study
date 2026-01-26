@@ -16,10 +16,8 @@ logger = logging.getLogger(__name__)
 async def get_lesson_by_id(lesson_id) -> Union[dict, list]:
     try:
         lesson_id = validate_uuid(lesson_id)
-
-        lesson_data = await sync_to_async(lambda: Lesson.objects.get(id=lesson_id))() # TODO check if this correct work with return in browser
-        print(lesson_data)
-        return build_lesson_json(lesson_data) # TODO build lesson json such as in the test service
+        lesson_data = await sync_to_async(Lesson.objects.get)(id=lesson_id)
+        return build_lesson_json(lesson_data)
     except Lesson.DoesNotExist:
         return error_response(gettext("Lesson not found"), status=404)
     except ValidationError as e:

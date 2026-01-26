@@ -1,5 +1,3 @@
-from django.core.exceptions import ValidationError
-from django.http import JsonResponse
 from django.utils.translation import gettext
 
 from common import LocalizedView
@@ -15,7 +13,7 @@ class LessonView(LocalizedView):
             return error_response(gettext("Invalid request"), status=400)
         else:
             lesson_data = await get_cached_instance_by_id("lesson", "courses_get", lesson_id)
-            return success_response({"lesson_data": lesson_data})
+            return success_response(data=lesson_data, message=gettext("Lesson retrieved successfully"))
 
 
     async def post(self, request):  #  TODO Можливо видалити цей метод і подібні йому якщо курси та структура курсів будуть створюватися тільки через курс сервіс

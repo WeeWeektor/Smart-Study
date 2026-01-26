@@ -22,7 +22,7 @@ import {
   Users,
 } from 'lucide-react'
 import { formatLabel, parseISODuration, useI18n } from '@/shared/lib'
-import { createSearchParams, Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import React from 'react'
 import { deleteCourseService } from '@/features/course'
 
@@ -47,6 +47,7 @@ interface CourseCardProps {
   countTests?: number
   feedback_count?: number
   inWishlist?: boolean
+  findCourse?: boolean
 }
 
 export const CourseCard = ({
@@ -70,23 +71,14 @@ export const CourseCard = ({
   countTests,
   feedback_count,
   inWishlist,
+  findCourse = false,
 }: CourseCardProps) => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isConfirmDelOpen, setIsConfirmDelOpen] = React.useState(false)
-  // TODO  Зробити так щоб на 3 сторінках було однакове відображення кнопок типу якщо в вішлісті то де б я не відкрив курс то кнопки мають відображатись однаково і показувати що цей курс у вішлісті ....
-  const getReviewUrl = () => {
-    const params: Record<string, string> = {}
 
-    if (status) params.status = status
-    if (inWishlist) params.inWishlist = 'true'
-    if (progress !== undefined) params.progress = String(progress)
-
-    return `/course-review/${id}?${createSearchParams(params)}`
-  }
-
-  const reviewUrl = getReviewUrl()
+  const reviewUrl = `/course-review/${id}`
 
   const getBadgeLabel = () => {
     if (badgeType === 'published') {
@@ -267,7 +259,7 @@ export const CourseCard = ({
         )}
 
         <div className="mt-auto pt-2">
-          {status && (
+          {status && instructor && !findCourse && (
             <div className="flex gap-2">
               {status === 'completed' ? (
                 <Link to={reviewUrl} className="flex-1">
@@ -316,46 +308,49 @@ export const CourseCard = ({
             </div>
           )}
 
-          {badgeType && badgeType === 'published' && (
-            <div className="flex gap-2">
-              {badgeStatus ? (
-                <Link to={reviewUrl} className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    <Eye className="w-4 h-4 mr-2" />
-                    {t('Переглянути')}
-                  </Button>
-                </Link>
-              ) : (
-                <>
+          {badgeType &&
+            badgeType === 'published' &&
+            !instructor &&
+            !findCourse && (
+              <div className="flex gap-2">
+                {badgeStatus ? (
                   <Link to={reviewUrl} className="flex-1">
-                    <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                      <UploadCloud className="w-4 h-4 mr-2" />
-                      {t('Переглянути та опублікувати')}
+                    <Button variant="outline" className="w-full">
+                      <Eye className="w-4 h-4 mr-2" />
+                      {t('Переглянути')}
                     </Button>
                   </Link>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                    onClick={() => setIsConfirmDelOpen(true)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                  <ConfirmModal
-                    isOpen={isConfirmDelOpen}
-                    onClose={() => setIsConfirmDelOpen(false)}
-                    onConfirm={handleDelete}
-                    title={t('Видалення курсу')}
-                    description={t(
-                      'Ви впевнені, що хочете видалити цей курс? Цю дію неможливо скасувати.'
-                    )}
-                  />
-                </>
-              )}
-            </div>
-          )}
+                ) : (
+                  <>
+                    <Link to={reviewUrl} className="flex-1">
+                      <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                        <UploadCloud className="w-4 h-4 mr-2" />
+                        {t('Переглянути та опублікувати')}
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                      onClick={() => setIsConfirmDelOpen(true)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <ConfirmModal
+                      isOpen={isConfirmDelOpen}
+                      onClose={() => setIsConfirmDelOpen(false)}
+                      onConfirm={handleDelete}
+                      title={t('Видалення курсу')}
+                      description={t(
+                        'Ви впевнені, що хочете видалити цей курс? Цю дію неможливо скасувати.'
+                      )}
+                    />
+                  </>
+                )}
+              </div>
+            )}
 
-          {badgeType && badgeType === 'level' && (
+          {badgeType && badgeType === 'level' && findCourse && (
             <div className="flex gap-2">
               <Link to={reviewUrl} className="flex-1">
                 <Button className="w-full bg-brand-600 hover:bg-brand-700">

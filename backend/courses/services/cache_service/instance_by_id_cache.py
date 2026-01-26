@@ -65,14 +65,13 @@ def _resolve_cache_timeout(instance_data: dict) -> int | None:
     """Визначає час кешування залежно від типу даних"""
     if instance_data.get("course", {}).get("is_published"):
         return CACHE_TIMEOUT
-    if instance_data.get("test", {}).get("is_public"):
+    if instance_data.get("public-test", {}).get("is_public"):
         return CACHE_TIMEOUT_TEST
-    if instance_data.get("test", {}).get("course", {}).get("is_published"):
+    if instance_data.get("course-test", {}).get("course", {}).get("is_published"):
         return CACHE_TIMEOUT_TEST
-    if instance_data.get("test", {}).get("module", {}).get("is_published"):
+    if instance_data.get("module-test", {}).get("module", {}).get("is_published"):
         return CACHE_TIMEOUT_TEST
     if instance_data.get("lesson", {}):
-        print(instance_data)
         return CACHE_TIMEOUT_LESSON
     return None
 

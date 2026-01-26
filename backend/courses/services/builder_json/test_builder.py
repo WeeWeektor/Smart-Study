@@ -1,6 +1,6 @@
 def build_public_test_json(test, owner, questions_data):
     return {
-        "test": {
+        "public-test": {
             "id": getattr(test, "id", None),
             "title": getattr(test, "title", ""),
             "description": getattr(test, "description", ""),
@@ -27,7 +27,7 @@ def build_public_test_json(test, owner, questions_data):
 
 def build_course_test_json(test, course, questions_data):
     return {
-        "test": {
+        "course-test": {
             "id": getattr(test, "id", None),
             "title": getattr(test, "title", ""),
             "description": getattr(test, "description", ""),
@@ -52,8 +52,10 @@ def build_course_test_json(test, course, questions_data):
 
 
 def build_module_test_json(test, module, questions_data):
+    course = getattr(module, "course", None)
+
     return {
-        "test": {
+        "module-test": {
             "id": getattr(test, "id", None),
             "title": getattr(test, "title", ""),
             "description": getattr(test, "description", ""),
@@ -67,9 +69,9 @@ def build_module_test_json(test, module, questions_data):
             "is_public": getattr(test, "is_public", False),
             "module": {
                 "id": getattr(module, "id", None),
-                "course": getattr(module, "course", ""),
+                "course": getattr(module, "course_id", ""),
                 "title": getattr(module, "title", ""),
-                "is_published": getattr(module.course, "is_published", False),
+                "is_published": getattr(course, "is_published", False) if course else False,
                 "description": getattr(module, "description", None),
             },
             "questions": questions_data["questions"],

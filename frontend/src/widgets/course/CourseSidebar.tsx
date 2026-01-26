@@ -7,6 +7,7 @@ import {
   FileText,
   Folder,
   PlayCircle,
+  Lock,
 } from 'lucide-react'
 import { useI18n } from '@/shared/lib'
 import type { CourseStructureResponse, NormalizedItem } from '@/features/course'
@@ -16,12 +17,17 @@ interface CourseSidebarProps {
   isCollapsible?: boolean
   onCollapseChange?: (isCollapsed: boolean) => void
   data: CourseStructureResponse | null
+
+  isEnrolled?: boolean
+  onItemClick?: (id: string, type: string) => void
 }
 
 export const CourseSidebar = ({
   isCollapsible = false,
   onCollapseChange,
   data,
+  isEnrolled = false,
+  onItemClick,
 }: CourseSidebarProps) => {
   const { t } = useI18n()
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -53,6 +59,16 @@ export const CourseSidebar = ({
     )
   }
 
+  const handleContentClick = (item: NormalizedItem) => {
+    if (isCollapsed) return
+
+    if (!isEnrolled) return
+
+    if (onItemClick) {
+      onItemClick(item.id, item.type)
+    }
+  }
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'lesson':
@@ -65,6 +81,12 @@ export const CourseSidebar = ({
       default:
         return <FileText className="w-4 h-4" />
     }
+  }
+
+  const getItemClasses = (isActive: boolean) => {
+    return isActive
+      ? 'cursor-pointer hover:bg-muted hover:border-border'
+      : 'cursor-default opacity-80'
   }
 
   return (
@@ -106,7 +128,7 @@ export const CourseSidebar = ({
                 <div className="space-y-1">
                   <button
                     onClick={() => toggleModule(item.id)}
-                    className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
                       <span className="text-xs font-bold text-muted-foreground uppercase whitespace-nowrap">
@@ -129,7 +151,8 @@ export const CourseSidebar = ({
                       {item.children.map(child => (
                         <div
                           key={child.id}
-                          className="flex items-center justify-between group p-2 rounded-md hover:bg-muted text-sm cursor-pointer transition-colors border border-transparent hover:border-border"
+                          onClick={() => handleContentClick(child)}
+                          className={`flex items-center justify-between group p-2 rounded-md text-sm transition-colors border border-transparent ${getItemClasses(isEnrolled)}`}
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
                             {getIcon(child.type)}
@@ -140,11 +163,16 @@ export const CourseSidebar = ({
                               {child.title}
                             </span>
                           </div>
-                          {child.meta && (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap ml-2 opacity-70 group-hover:opacity-100">
-                              {child.meta}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {child.meta && (
+                              <span className="text-xs text-muted-foreground whitespace-nowrap opacity-70 group-hover:opacity-100">
+                                {child.meta}
+                              </span>
+                            )}
+                            {!isEnrolled && (
+                              <Lock className="w-3 h-3 text-muted-foreground opacity-50" />
+                            )}
+                          </div>
                         </div>
                       ))}
                       {item.children.length === 0 && (
@@ -156,7 +184,10 @@ export const CourseSidebar = ({
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-between group p-2 rounded-md hover:bg-muted text-sm cursor-pointer transition-colors border border-transparent hover:border-border mt-2">
+                <div
+                  onClick={() => handleContentClick(item)}
+                  className={`flex items-center justify-between group p-2 rounded-md text-sm transition-colors border border-transparent mt-2 ${getItemClasses(isEnrolled)}`}
+                >
                   <div className="flex items-center gap-3 overflow-hidden">
                     {getIcon(item.type)}
                     <span
@@ -166,11 +197,16 @@ export const CourseSidebar = ({
                       {item.title}
                     </span>
                   </div>
-                  {item.meta && (
-                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                      {item.meta}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {item.meta && (
+                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                        {item.meta}
+                      </span>
+                    )}
+                    {!isEnrolled && (
+                      <Lock className="w-3 h-3 text-muted-foreground opacity-50" />
+                    )}
+                  </div>
                 </div>
               )}
             </div>
