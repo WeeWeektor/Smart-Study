@@ -1,0 +1,6 @@
+export { AuthorSection } from './ui/CourseReviewAutorSection'
+export { CourseFooterSection } from './ui/CourseReviewFooterSection'
+export { CourseInfoSection } from './ui/CourseReviewInfoSection'
+export { ReviewsSection } from './ui/CourseReviewReviewsSection'
+export { StarSection } from './ui/CourseReviewStarSection'
+export { ActiveCourseElement } from './ui/ActiveCourseElement'
