@@ -9,18 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  Clock,
   Code,
   FileCheck,
   LayoutGrid,
+  RotateCw,
+  Timer,
+  Trophy,
 } from 'lucide-react'
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  LoadingProfile,
-} from '@/shared/ui'
+import { Button, Card, CardContent, LoadingProfile } from '@/shared/ui'
 import { CodeDisplay } from '@/features/lesson-type-fields/ui'
 import { useI18n } from '@/shared/lib'
 import { type ElementOfCourseResponse } from '@/features/course'
@@ -218,7 +214,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     ),
     blockquote: ({ node: _node, ...props }: MarkdownProps<'blockquote'>) => (
       <blockquote
-        className="border-l-4 border-brand-500 pl-4 py-2 my-4 italic bg-slate-50 dark:bg-slate-800/50 rounded-r"
+        className="border-l-4 border-brand-500 pl-4 pr-4 py-2 my-4 italic bg-slate-50 dark:bg-slate-800/50 rounded-r [&>p]:mb-0"
         {...props}
       />
     ),
@@ -332,14 +328,9 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
   if (isLoading) {
     return (
-      <>
-        <Button variant="ghost" onClick={onBack} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" /> {t('Назад до опису курсу')}
-        </Button>
-        <Card className="min-h-[300px] flex items-center justify-center">
-          <LoadingProfile message={t('Завантаження матеріалу...')} />
-        </Card>
-      </>
+      <Card className="min-h-[300px] flex items-center justify-center">
+        <LoadingProfile message={t('Завантаження матеріалу...')} />
+      </Card>
     )
   }
 
@@ -369,58 +360,98 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     )
   }
 
-  if ('module-test' in activeElement && activeElement['module-test']) {
-    const test = activeElement['module-test']
-    return (
-      <>
-        <Card className="mb-8 shadow-sm border border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <h2 className="text-2xl font-bold">{test.title}</h2>
-            <p className="text-muted-foreground">{test.description}</p>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {t('Ліміт часу:')} {test.time_limit} {t('хв')}
-              </div>
-              <div className="flex items-center gap-1">
-                <FileCheck className="w-4 h-4" />
-                {t('Питань:')} {test.questions.length}
-              </div>
-            </div>
-            <Button className="w-full sm:w-auto">{t('Розпочати тест')}</Button>
-            <NavigationFooter />
-          </CardContent>
-        </Card>
-        {!isFirst ? backButton : null}
-      </>
-    )
-  }
+  let test = null
+  if ('module-test' in activeElement && activeElement['module-test'])
+    test = activeElement['module-test']
+  if ('course-test' in activeElement && activeElement['course-test'])
+    test = activeElement['course-test']
 
-  if ('course-test' in activeElement && activeElement['course-test']) {
-    const test = activeElement['course-test']
+  if (test) {
     return (
       <>
-        <Card className="mb-8 shadow-sm border border-slate-200 dark:border-slate-800">
-          <CardHeader>
-            <h2 className="text-2xl font-bold">{test.title}</h2>
-            <p className="text-muted-foreground">{test.description}</p>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {t('Ліміт часу:')} {test.time_limit} {t('хв')}
+        <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-shadow hover:shadow-md dark:hover:shadow-gray-800/50">
+          <CardContent className="text-slate-700 dark:text-slate-200">
+            <h1 className="text-3xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
+              {test.title}
+            </h1>
+
+            {test.description && (
+              <blockquote className="border-l-4 border-brand-500 pl-4 pr-4 py-2 my-4 italic bg-slate-50 dark:bg-slate-800/50 rounded-r [&>p]:mb-0">
+                {test.description}
+              </blockquote>
+            )}
+
+            <div className="grid md:grid-cols-4 gap-6 gap-x-8 gap-y-6 mb-8 p-5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600">
+                  <Timer className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    {t('Ліміт часу')}
+                  </div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {test.time_limit === 0
+                      ? t('Необмежено')
+                      : `${test.time_limit} ${t('хв')}`}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <FileCheck className="w-4 h-4" />
-                {t('Питань:')} {test.questions.length}
+
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600">
+                  <RotateCw className="w-5 h-5 text-purple-500" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    {t('Спроби')}
+                  </div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {test.count_attempts === 0
+                      ? t('Необмежено')
+                      : `${test.count_attempts} ${t('разів')}`}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    {t('Прохідний бал')}
+                  </div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {test.pass_score} {t('балів')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600">
+                  <FileCheck className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    {t('Всього питань')}
+                  </div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {test.questions.length} {t('завдань')}
+                  </div>
+                </div>
               </div>
             </div>
-            <Button className="w-full sm:w-auto">
-              {t('Розпочати фінальний тест')}
-            </Button>
+
+            <div className="flex justify-center w-full mb-4">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto text-base px-8 bg-brand-600 hover:bg-brand-700 shadow-md "
+              >
+                {t('Розпочати тест')} // TODO
+              </Button>
+            </div>
+
             <NavigationFooter />
           </CardContent>
         </Card>
