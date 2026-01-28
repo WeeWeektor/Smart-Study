@@ -1,6 +1,7 @@
 import React, {
   type ComponentPropsWithoutRef,
   useEffect,
+  useMemo,
   useState,
 } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
@@ -37,6 +38,7 @@ interface ActiveCourseElementProps {
   isLast: boolean
   isOwner: boolean
   onFinish: () => void
+  onComplete?: (id: string) => void
 }
 
 type MarkdownProps<T extends React.ElementType> =
@@ -58,6 +60,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   isLast,
   isOwner,
   onFinish,
+  onComplete,
 }) => {
   const { t } = useI18n()
 
@@ -65,6 +68,70 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
   useEffect(() => {
     setIsTestStarted(false)
+  }, [activeElement])
+
+  useEffect(() => {
+    const lesson =
+      activeElement && 'lesson' in activeElement ? activeElement.lesson : null
+    if (!lesson || !onComplete) return
+
+    const lessonId = lesson.id
+    let timerPassed = false
+    let scrollPassed = false
+
+    const timer = setTimeout(() => {
+      timerPassed = true
+      checkCompletion()
+    }, 10000)
+
+    const handleScroll = () => {
+      const isBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 100
+
+      if (isBottom) {
+        scrollPassed = true
+        checkCompletion()
+      }
+    }
+
+    const checkCompletion = () => {
+      if (timerPassed && scrollPassed) {
+        onComplete(lessonId)
+      }
+    }
+
+    if (document.body.offsetHeight <= window.innerHeight + 50) {
+      scrollPassed = true
+    }
+
+    window.addEventListener('scroll', handleScroll)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [activeElement, onComplete])
+
+  const currentTestInfo = useMemo(() => {
+    if (!activeElement) return null
+
+    if ('module-test' in activeElement && activeElement['module-test']) {
+      return {
+        test: activeElement['module-test'],
+        testType: 'module-test' as const,
+        course_id: activeElement['module-test'].module.course,
+      }
+    }
+
+    if ('course-test' in activeElement && activeElement['course-test']) {
+      return {
+        test: activeElement['course-test'],
+        testType: 'course-test' as const,
+        course_id: activeElement['course-test'].course.id,
+      }
+    }
+
+    return null
   }, [activeElement])
 
   const preprocessMarkdownContent = (rawContent: string) => {
@@ -371,13 +438,9 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     )
   }
 
-  let test = null
-  if ('module-test' in activeElement && activeElement['module-test'])
-    test = activeElement['module-test']
-  if ('course-test' in activeElement && activeElement['course-test'])
-    test = activeElement['course-test']
+  if (currentTestInfo) {
+    const { test, testType, course_id } = currentTestInfo
 
-  if (test) {
     if (isTestStarted) {
       const testDataForPlayer: TestData = {
         id: test.id,
@@ -385,6 +448,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         description: test.description,
         time_limit: test.time_limit,
         pass_score: test.pass_score || 0,
+        test_type: testType,
+        course_id: course_id,
         questions: test.questions.map((q: any) => ({
           id: q.order || q.id || Math.random(),
           questionText: q.questionText,
@@ -392,6 +457,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
           correct_answers: q.correct_answers,
           points: q.points,
           image_url: q.image_url || undefined,
+          explanation: q.explanation || null,
         })),
       }
 
@@ -402,7 +468,14 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
             <TestPlayer
               testData={testDataForPlayer}
               onBack={() => setIsTestStarted(false)}
-              onFinishCourse={onFinish}
+              onFinishCourse={() => {
+                if (test) {
+                  onComplete?.(test.id)
+                }
+
+                if (isLast) onFinish()
+                else onNext()
+              }}
             />
           </CardContent>
         </Card>

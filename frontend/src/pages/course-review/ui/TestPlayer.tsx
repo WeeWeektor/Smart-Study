@@ -32,6 +32,8 @@ export interface TestData {
   time_limit: number
   questions: TestQuestion[]
   pass_score: number
+  test_type?: 'course-test' | 'module-test'
+  course_id?: string
 }
 
 interface TestPlayerProps {
@@ -225,9 +227,17 @@ export const TestPlayer = ({
     const qId = String(currentQuestion.id || currentQuestion.questionText)
     const currentSelected = answers[qId] || []
 
+    let IMAGE_URL = import.meta.env.VITE_COURSE_QUESTION_IMAGE_PATH
+    if (
+      testData.test_type === 'module-test' ||
+      testData.test_type === 'course-test'
+    ) {
+      IMAGE_URL = `${IMAGE_URL}course-cover-pictures/${testData.course_id}/${testData.test_type}/${currentQuestion.image_url}`
+    }
+
     return (
-      <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 max-w-3xl mx-auto">
-        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+      <div className="my-6 space-y-6 animate-in slide-in-from-right-8 duration-300 max-w-3xl mx-auto">
+        <div className="mt-6 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
           <div
             className={`flex items-center gap-2 font-mono font-bold text-lg ${timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-brand-600 dark:text-brand-400'}`}
           >
@@ -258,21 +268,46 @@ export const TestPlayer = ({
           {currentQuestion.image_url && (
             <div className="mb-6 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
               <img
-                src={currentQuestion.image_url}
+                src={`${IMAGE_URL}`}
                 alt="Question illustration"
                 className="w-full h-auto max-h-[300px] object-contain mx-auto"
+                onError={e => {
+                  e.currentTarget.style.display = 'none'
+                }}
               />
             </div>
           )}
 
-          <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground bg-slate-50 dark:bg-slate-800/50 w-fit px-3 py-1.5 rounded-lg">
-            <HelpCircle className="w-4 h-4" />
-            {questionType === 'single'
-              ? t('Оберіть одну правильну відповідь')
-              : t('Оберіть всі правильні відповіді')}
-            <span className="ml-2 px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs font-bold text-slate-700 dark:text-slate-300">
-              {currentQuestion.points} {t('балів')}
-            </span>
+          <div className="flex flex-col gap-3 mb-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700 p-4 w-full md:w-fit md:min-w-[400px]">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <HelpCircle className="w-4 h-4 text-slate-400" />
+                <span className="font-medium">
+                  {questionType === 'single'
+                    ? t('Оберіть одну правильну відповідь')
+                    : t('Оберіть всі правильні відповіді')}
+                </span>
+              </div>
+
+              <span className="px-2.5 py-1 bg-white dark:bg-slate-700 rounded-md border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm whitespace-nowrap">
+                {currentQuestion.points} {t('балів')}
+              </span>
+            </div>
+
+            {currentQuestion.explanation && (
+              <div className="flex gap-3 pt-3 mt-1 border-t border-slate-200 dark:border-slate-700">
+                <div className="mt-0.5 shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                      i
+                    </span>
+                  </div>
+                </div>
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {currentQuestion.explanation}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -319,7 +354,7 @@ export const TestPlayer = ({
           </div>
         </div>
 
-        <div className="flex justify-between pt-8 mt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="mb-6 flex justify-between pt-8 mt-4 border-t border-slate-100 dark:border-slate-800">
           <Button
             variant="ghost"
             onClick={handlePrev}
@@ -333,6 +368,7 @@ export const TestPlayer = ({
             onClick={handleNext}
             size="lg"
             className="bg-brand-600 hover:bg-brand-700 px-8 shadow-md hover:shadow-lg transition-all"
+            disabled={currentSelected.length === 0}
           >
             {currentQuestionIndex === testData.questions.length - 1 ? (
               <>
@@ -366,6 +402,7 @@ export const TestPlayer = ({
         </span>{' '}
         {t('питань')}. {t('У вас буде')}
         <span className="font-bold text-slate-900 dark:text-white">
+          {' '}
           {testData.time_limit} {t('хвилин')}
         </span>
         , {t('щоб відповісти на них. Після початку таймер не можна зупинити.')}

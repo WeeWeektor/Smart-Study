@@ -74,6 +74,8 @@ const CourseReview = () => {
     useState<ElementOfCourseResponse | null>(null)
   const [isElementLoading, setIsElementLoading] = useState(false)
 
+  const [completedElements, setCompletedElements] = useState<string[]>([])
+
   const isOwner = useMemo(() => {
     if (!profileData?.user?.id || !course?.course?.owner[0].owner.id) {
       return false
@@ -292,12 +294,33 @@ const CourseReview = () => {
   }
 
   const handleStartCourse = () => {
-    // TODO
+    if (!id) return
+
+    // TODO запит на бекенд для зміни статусу
+    // await startCourseService(id)
+
     console.log('Start/Continue course', id)
+
+    refreshStatuses()
 
     if (flatCourseElements.length > 0) {
       const firstElement = flatCourseElements[0]
       handleSidebarItemClick(firstElement.id, firstElement.type)
+    }
+    // Якщо користувч тільки почав проходження курсу
+  }
+
+  const handleElementCompleted = async (elementId: string) => {
+    if (completedElements.includes(elementId)) return
+
+    try {
+      // TODO: API запит на бекенд, що урок/тест пройдено
+      // await progressService.markAsComplete(courseId, elementId)
+      console.log('Element completed:', elementId)
+
+      setCompletedElements(prev => [...prev, elementId])
+    } catch (e) {
+      console.error('Failed to save progress', e)
     }
   }
 
@@ -418,6 +441,7 @@ const CourseReview = () => {
         isEnrolled={isUserEnrolled}
         onItemClick={handleSidebarItemClick}
         activeItemId={activeElementId}
+        completedItemIds={completedElements}
       />
 
       <main
@@ -442,6 +466,7 @@ const CourseReview = () => {
               isLast={currentElementIndex === flatCourseElements.length - 1}
               isOwner={isOwner}
               onFinish={handleFinishCourse}
+              onComplete={handleElementCompleted}
             />
           ) : (
             <>

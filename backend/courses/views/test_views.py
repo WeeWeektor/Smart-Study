@@ -18,6 +18,7 @@ from courses.services.cache_service import get_instance_cached_all, get_instance
 from courses.services.test_actions_service import create_test, remove_test, validate_test_editable, update_test
 from courses.utils import categories_level_sort_present
 
+# TODO image_url додати логіку збереження оновлення і видалення зображення для questions (Через create_course_with_structure зберігається в монго лише назва файлу)
 
 class BaseTestView(LocalizedView):
     """Базовий View для тестування"""
