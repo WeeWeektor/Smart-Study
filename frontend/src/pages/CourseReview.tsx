@@ -403,6 +403,7 @@ const CourseReview = () => {
     role: profileData.user.role,
   }
 
+  // TODO Відображати користувачу що урок пройдений в CourseSidebar
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Sidebar

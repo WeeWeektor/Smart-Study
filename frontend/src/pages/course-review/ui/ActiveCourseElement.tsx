@@ -1,4 +1,8 @@
-import React, { type ComponentPropsWithoutRef } from 'react'
+import React, {
+  type ComponentPropsWithoutRef,
+  useEffect,
+  useState,
+} from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -21,6 +25,7 @@ import { CodeDisplay } from '@/features/lesson-type-fields/ui'
 import { useI18n } from '@/shared/lib'
 import { type ElementOfCourseResponse } from '@/features/course'
 import type { Lesson } from '@/features/course/get.element.of.course.service.ts'
+import { type TestData, TestPlayer } from '@/pages/course-review'
 
 interface ActiveCourseElementProps {
   activeElement: ElementOfCourseResponse | null
@@ -55,6 +60,12 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   onFinish,
 }) => {
   const { t } = useI18n()
+
+  const [isTestStarted, setIsTestStarted] = useState(false)
+
+  useEffect(() => {
+    setIsTestStarted(false)
+  }, [activeElement])
 
   const preprocessMarkdownContent = (rawContent: string) => {
     if (!rawContent) return ''
@@ -367,6 +378,37 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     test = activeElement['course-test']
 
   if (test) {
+    if (isTestStarted) {
+      const testDataForPlayer: TestData = {
+        id: test.id,
+        title: test.title,
+        description: test.description,
+        time_limit: test.time_limit,
+        pass_score: test.pass_score || 0,
+        questions: test.questions.map((q: any) => ({
+          id: q.order || q.id || Math.random(),
+          questionText: q.questionText,
+          choices: q.choices,
+          correct_answers: q.correct_answers,
+          points: q.points,
+          image_url: q.image_url || undefined,
+        })),
+      }
+
+      return (
+        <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <CardContent className="p-0 sm:p-0">
+            {' '}
+            <TestPlayer
+              testData={testDataForPlayer}
+              onBack={() => setIsTestStarted(false)}
+              onFinishCourse={onFinish}
+            />
+          </CardContent>
+        </Card>
+      )
+    }
+
     return (
       <>
         <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-shadow hover:shadow-md dark:hover:shadow-gray-800/50">
@@ -447,8 +489,9 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
               <Button
                 size="lg"
                 className="w-full sm:w-auto text-base px-8 bg-brand-600 hover:bg-brand-700 shadow-md "
+                onClick={() => setIsTestStarted(true)}
               >
-                {t('Розпочати тест')} // TODO
+                {t('Розпочати тест')}
               </Button>
             </div>
 
