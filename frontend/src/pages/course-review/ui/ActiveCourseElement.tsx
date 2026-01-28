@@ -2,7 +2,18 @@ import React, { type ComponentPropsWithoutRef } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
-import { ArrowLeft, ClipboardList, Clock, Code, FileCheck } from 'lucide-react'
+import {
+  ArrowLeft,
+  Award,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Code,
+  FileCheck,
+  LayoutGrid,
+} from 'lucide-react'
 import {
   Button,
   Card,
@@ -19,6 +30,12 @@ interface ActiveCourseElementProps {
   activeElement: ElementOfCourseResponse | null
   isLoading: boolean
   onBack: () => void
+  onNext: () => void
+  onPrev: () => void
+  isFirst: boolean
+  isLast: boolean
+  isOwner: boolean
+  onFinish: () => void
 }
 
 type MarkdownProps<T extends React.ElementType> =
@@ -34,6 +51,12 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   activeElement,
   isLoading,
   onBack,
+  onNext,
+  onPrev,
+  isFirst,
+  isLast,
+  isOwner,
+  onFinish,
 }) => {
   const { t } = useI18n()
 
@@ -258,6 +281,55 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     }
   }
 
+  const NavigationFooter = () => (
+    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <Button
+        variant="outline"
+        onClick={isFirst ? onBack : onPrev}
+        className="w-full sm:w-auto min-w-[160px] flex items-center gap-2 group"
+      >
+        {isFirst ? (
+          <>
+            <BookOpen className="w-4 h-4 text-slate-500 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-white" />
+            <span>{t('До опису курсу')}</span>
+          </>
+        ) : (
+          <>
+            <ChevronLeft className="w-4 h-4" />
+            <span>{t('Попередній крок')}</span>
+          </>
+        )}
+      </Button>
+
+      <Button
+        onClick={isLast ? onFinish : onNext}
+        className={`w-full sm:w-auto min-w-[160px] flex items-center gap-2 shadow-sm
+          ${isLast ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-brand-600 hover:bg-brand-700'}`}
+      >
+        {isLast ? (
+          <>
+            {isOwner ? (
+              <>
+                <LayoutGrid className="w-4 h-4" />
+                <span>{t('До моїх курсів')}</span>
+              </>
+            ) : (
+              <>
+                <Award className="w-4 h-4" />
+                <span>{t('Отримати сертифікат')}</span>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <span>{t('Наступний крок')}</span>
+            <ChevronRight className="w-4 h-4" />
+          </>
+        )}
+      </Button>
+    </div>
+  )
+
   if (isLoading) {
     return (
       <>
@@ -289,9 +361,10 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-shadow hover:shadow-md dark:hover:shadow-gray-800/50">
           <CardContent className="text-slate-700 dark:text-slate-200">
             {renderLessonContent(lesson)}
+            <NavigationFooter />
           </CardContent>
         </Card>
-        {backButton}
+        {!isFirst ? backButton : null}
       </>
     )
   }
@@ -317,9 +390,10 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
               </div>
             </div>
             <Button className="w-full sm:w-auto">{t('Розпочати тест')}</Button>
+            <NavigationFooter />
           </CardContent>
         </Card>
-        {backButton}
+        {!isFirst ? backButton : null}
       </>
     )
   }
@@ -347,14 +421,13 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
             <Button className="w-full sm:w-auto">
               {t('Розпочати фінальний тест')}
             </Button>
+            <NavigationFooter />
           </CardContent>
         </Card>
-        {backButton}
+        {!isFirst ? backButton : null}
       </>
     )
   }
-
-  // TODO add button next and previoue element
 
   return null
 }

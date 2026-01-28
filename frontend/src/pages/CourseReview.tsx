@@ -6,6 +6,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { CourseHeader, CourseSidebar } from '@/widgets/course'
 import {
   addCourseToWishlistService,
+  type BackendCourseItem,
+  type BackendModuleContentItem,
   type CourseOwnerProfileResponse,
   type CourseResponse,
   courseReviewService,
@@ -150,6 +152,98 @@ const CourseReview = () => {
     return { averageRating, distribution }
   }, [reviews])
 
+  const flatCourseElements = useMemo(() => {
+    if (!courseStructureData) return []
+
+    const elements: { id: string; type: string; title: string }[] = []
+
+    const data = courseStructureData
+
+    if (data.courseStructure && Array.isArray(data.courseStructure)) {
+      const sortedStructure = [...data.courseStructure].sort(
+        (a: BackendCourseItem, b: BackendCourseItem) => a.order - b.order
+      )
+
+      sortedStructure.forEach((element: BackendCourseItem) => {
+        if (element.type === 'module') {
+          const moduleKey = `moduleStructure_order_${element.order}`
+          const moduleItems = data[moduleKey] as
+            | BackendModuleContentItem[]
+            | undefined
+
+          if (moduleItems && Array.isArray(moduleItems)) {
+            const sortedModuleItems = [...moduleItems].sort(
+              (a: BackendModuleContentItem, b: BackendModuleContentItem) =>
+                a.order - b.order
+            )
+
+            sortedModuleItems.forEach(
+              (modElement: BackendModuleContentItem) => {
+                if (modElement.type === 'lesson' && modElement.lesson_id) {
+                  elements.push({
+                    id: modElement.lesson_id,
+                    type: 'lesson',
+                    title: modElement.title,
+                  })
+                } else if (modElement.type === 'test' && modElement.test_id) {
+                  elements.push({
+                    id: modElement.test_id,
+                    type: 'module-test',
+                    title: modElement.title,
+                  })
+                }
+              }
+            )
+          }
+        } else if (element.type === 'test' && element.test_id) {
+          elements.push({
+            id: element.test_id,
+            type: 'course-test',
+            title: element.title,
+          })
+        }
+      })
+    }
+
+    return elements
+  }, [courseStructureData])
+
+  const activeElementId = useMemo(() => {
+    if (!activeElement) return null
+
+    if ('lesson' in activeElement && activeElement.lesson)
+      return activeElement.lesson.id
+    if ('module-test' in activeElement && activeElement['module-test'])
+      return activeElement['module-test'].id
+    if ('course-test' in activeElement && activeElement['course-test'])
+      return activeElement['course-test'].id
+    return null
+  }, [activeElement])
+
+  const currentElementIndex = useMemo(() => {
+    if (!activeElementId) return -1
+    return flatCourseElements.findIndex(e => e.id === activeElementId)
+  }, [activeElementId, flatCourseElements])
+
+  const handleNavigate = (direction: 'next' | 'prev') => {
+    const newIndex =
+      direction === 'next' ? currentElementIndex + 1 : currentElementIndex - 1
+
+    if (newIndex >= 0 && newIndex < flatCourseElements.length) {
+      const target = flatCourseElements[newIndex]
+      handleSidebarItemClick(target.id, target.type)
+    }
+  }
+
+  const handleFinishCourse = () => {
+    if (isOwner) {
+      navigate('/my-created-courses')
+    } else {
+      console.log('Course finished, get certificate') // TODO
+      setActiveElement(null)
+    }
+  }
+
   const { averageRating, distribution } = reviewStats
 
   const handleReviewAdded = (incomingReview: Review) => {
@@ -200,6 +294,11 @@ const CourseReview = () => {
   const handleStartCourse = () => {
     // TODO
     console.log('Start/Continue course', id)
+
+    if (flatCourseElements.length > 0) {
+      const firstElement = flatCourseElements[0]
+      handleSidebarItemClick(firstElement.id, firstElement.type)
+    }
   }
 
   const handleAddToWishlist = async () => {
@@ -317,6 +416,7 @@ const CourseReview = () => {
         data={courseStructureData}
         isEnrolled={isUserEnrolled}
         onItemClick={handleSidebarItemClick}
+        activeItemId={activeElementId}
       />
 
       <main
@@ -331,7 +431,16 @@ const CourseReview = () => {
             <ActiveCourseElement
               activeElement={activeElement}
               isLoading={isElementLoading}
-              onBack={() => setActiveElement(null)}
+              onBack={() => {
+                setActiveElement(null)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+              onNext={() => handleNavigate('next')}
+              onPrev={() => handleNavigate('prev')}
+              isFirst={currentElementIndex === 0}
+              isLast={currentElementIndex === flatCourseElements.length - 1}
+              isOwner={isOwner}
+              onFinish={handleFinishCourse}
             />
           ) : (
             <>
@@ -360,7 +469,7 @@ const CourseReview = () => {
 
               <CourseFooterSection
                 course={course}
-                userStatus={userStatus}
+                userStatus={userStatus || null}
                 inWishlist={inWishlist}
                 onStartCourse={handleStartCourse}
                 onAddToWishlist={handleAddToWishlist}
