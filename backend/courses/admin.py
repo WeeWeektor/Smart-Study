@@ -149,9 +149,9 @@ class LessonProgressAdmin(admin.ModelAdmin):
 
 @admin.register(TestAttempt)
 class TestAttemptAdmin(admin.ModelAdmin):
-    list_display = ("test", "user", "score", "passed", "started_at")
-    search_fields = ("test__title", "user__email")
-    raw_id_fields = ("test", "user")
+    list_display = ("test", "enrollment", "score", "passed", "started_at", "completed_at")
+    search_fields = ("test__title", "enrollment__user__email")
+    raw_id_fields = ("test", "enrollment")
     list_filter = ("passed",)
 
 

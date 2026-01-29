@@ -310,13 +310,17 @@ const CourseReview = () => {
     // Якщо користувч тільки почав проходження курсу
   }
 
-  const handleElementCompleted = async (elementId: string) => {
+  const handleElementCompleted = async (
+    elementId: string,
+    elementType: string
+  ) => {
     if (completedElements.includes(elementId)) return
 
     try {
       // TODO: API запит на бекенд, що урок/тест пройдено
-      // await progressService.markAsComplete(courseId, elementId)
-      console.log('Element completed:', elementId)
+      // TODO на беці розділення для уроків і тестів
+      // await progressService.markAsComplete(courseId, elementId, elementType)
+      console.log('Element completed:', elementId, elementType)
 
       setCompletedElements(prev => [...prev, elementId])
     } catch (e) {
@@ -426,7 +430,6 @@ const CourseReview = () => {
     role: profileData.user.role,
   }
 
-  // TODO Відображати користувачу що урок пройдений в CourseSidebar
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Sidebar

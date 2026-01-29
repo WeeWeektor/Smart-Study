@@ -26,11 +26,11 @@ from .base import BaseModel
 
 
 class TestAttempt(BaseModel):
-    user = models.ForeignKey(
-        'users.CustomUser',
+    enrollment = models.ForeignKey(
+        'UserCourseEnrollment',
         on_delete=models.CASCADE,
         related_name='test_attempts',
-        verbose_name=_("User"),
+        verbose_name=_("Enrollment"),
     )
     test = models.ForeignKey(
         'Test',
@@ -42,8 +42,28 @@ class TestAttempt(BaseModel):
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Completed at"))
     score = models.FloatField(default=0.0, verbose_name=_("Score"))
     passed = models.BooleanField(default=False, verbose_name=_("Passed"))
-    answers_data = models.JSONField(default=dict, verbose_name=_("Answers Data"))
     attempt_number = models.PositiveIntegerField(verbose_name=_("Attempt Number"))
+    # Структура:
+    # [
+    #   {
+    #     "order": 1,
+    #     "question_text": "True of false",
+    #     "selected_choices": ["yes"],
+    #     "is_correct": true,
+    #     "points_awarded": 2,
+    #     "max_points": 2
+    #   },
+    #   {
+    #     "order": 3,
+    #     "question_text": "false or true",
+    #     "selected_choices": ["true"],
+    #     "is_correct": false,
+    #     "points_awarded": 0,
+    #     "max_points": 2
+    #   },
+    #   ...
+    # ]
+    attempt_details = models.JSONField(default=list, blank=True, verbose_name=_("Attempt Details"))
 
     class Meta:
         db_table = "test_attempts"
@@ -51,9 +71,9 @@ class TestAttempt(BaseModel):
         verbose_name_plural = _("Test Attempts")
         ordering = ['-started_at']
         indexes = [
-            models.Index(fields=['user', 'test'], name="ix_attempt_user_test"),
+            models.Index(fields=['enrollment', 'test'], name="ix_attempt_enrollment_test"),
             models.Index(fields=['test', '-started_at'], name="ix_attempt_test_started"),
         ]
 
     def __str__(self):
-        return f"{self.test.title} - {self.user.email} (спроба {self.attempt_number})"
+        return f"{self.test.title} (Attempt {self.attempt_number})"

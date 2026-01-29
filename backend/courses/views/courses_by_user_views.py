@@ -16,9 +16,12 @@ class CoursesByUserView(LocalizedView):
         if not user_id:
             return error_response(gettext("user id parameter is required."), status=400)
 
-        courses = await courses_by_user_id_cache(user_id)
-        return success_response({
-            "in_wishlist": courses[0],
-            "is_enrolled": courses[1],
-            "is_completed": courses[2],
-        })
+        try:
+            courses = await courses_by_user_id_cache(user_id)
+            return success_response({
+                "in_wishlist": courses[0],
+                "is_enrolled": courses[1],
+                "is_completed": courses[2],
+            })
+        except Exception as e:
+            return error_response(gettext("Error retrieving courses") + str(e), status=500)

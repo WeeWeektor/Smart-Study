@@ -140,3 +140,14 @@ class CourseTestView(BaseTestView):
 class PublicTestView(BaseTestView):
     """View для публічних тестів"""
     test_type = "public"
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch") # TODO
+class TestAttemptView(LocalizedView):
+    @login_required_async
+    async def get(self, request, test_id):
+        pass
+
+    @login_required_async
+    async def post(self, request, test_id):
+        pass

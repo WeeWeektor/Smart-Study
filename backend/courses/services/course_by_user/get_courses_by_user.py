@@ -1,80 +1,55 @@
-import uuid
-
-from django.utils.translation import gettext
-
-from common.utils import validate_uuid, error_response
-from courses.models import Course
+from common.utils import validate_uuid
+from courses.models import Course, UserCourseEnrollment
 from courses.utils import generate_course_json_with_details_and_owner
 
 
 async def get_courses_by_user(user_id):
-    # TODO Тут має бути логіка отримання всіх курсів користувача (з вішлиста, тих що він проходить і ті які він вже пройшов)
+    user_id = validate_uuid(user_id)
 
-    try:
-        user_id = validate_uuid(user_id)
+    wishlist_courses_queryset = (Course.objects
+                                 .filter(wishlisted_by__user_id=user_id))
 
-        wishlist_courses_queryset = (Course.objects
-                                     .filter(wishlisted_by__user_id=user_id)
-                                     .select_related('owner', 'details'))
+    course_enrolled_queryset = (UserCourseEnrollment.objects
+                                .filter(user_id=user_id, completed=False)
+                                .select_related('course'))
 
-        wishlist_courses = [course async for course in wishlist_courses_queryset]
-        in_wishlist = await generate_course_json_with_details_and_owner(wishlist_courses)
+    course_completed_queryset = (UserCourseEnrollment.objects
+                                 .filter(user_id=user_id, completed=True)
+                                 .select_related('course'))
 
-        is_enrolled = [
-            generate_mock_course("Data Science з нуля1", category="data_science", level="intermediate"),
-            generate_mock_course("Data Science з нуля2", category="data_science", level="intermediate"),
-            generate_mock_course("Data Science з нуля3", category="data_science", level="intermediate"),
-            generate_mock_course("Data Science з нуля4", category="data_science", level="intermediate"),
-        ]
-        is_completed = [
-            generate_mock_course("Data Science з нуля1", category="data_science", level="intermediate"),
-            generate_mock_course("Data Science з нуля2", category="data_science", level="intermediate"),
-            generate_mock_course("Data Science з нуля3", category="data_science", level="intermediate"),
-            generate_mock_course("Data Science з нуля4", category="data_science", level="intermediate"),
-        ]
+    wishlist_courses = [course async for course in wishlist_courses_queryset]
+    in_wishlist = await generate_course_json_with_details_and_owner(wishlist_courses)
 
-        return in_wishlist, is_enrolled, is_completed
-    except Exception as e:
-        return error_response(gettext("Error retrieving courses") + str(e), status=500)
+    enrolled_enrollments = [e async for e in course_enrolled_queryset]
+    enrolled_courses = [e.course for e in enrolled_enrollments]
+    is_enrolled_base = await generate_course_json_with_details_and_owner(enrolled_courses)
+    is_enrolled = _inject_enrollment_data(is_enrolled_base, enrolled_enrollments)
+
+    completed_enrollments = [e async for e in course_completed_queryset]
+    completed_courses = [e.course for e in completed_enrollments]
+    is_completed_base = await generate_course_json_with_details_and_owner(completed_courses)
+    is_completed = _inject_enrollment_data(is_completed_base, completed_enrollments)
+
+    return in_wishlist, is_enrolled, is_completed
 
 
-def generate_mock_course(title, category="programming", level="beginner"):
-    course_id = str(uuid.uuid4())
-    owner_id = str(uuid.uuid4())
+def _inject_enrollment_data(courses_json: list, enrollments: list) -> list:
+    enrollment_map = {str(e.course.id): e for e in enrollments}
 
-    return {
-        "course": {
-            "id": course_id,
-            "title": title,
-            "description": f"Це опис для курсу '{title}'. Тут ви дізнаєтесь багато цікавого про {category}.",
-            "category": category,
-            "owner": {
-                "id": owner_id,
-                "name": "Іван",
-                "surname": "Петренко",
-                "email": "ivan@example.com",
-                "profile_picture": None
-            },
-            "cover_image": "https://placehold.co/600x400/2563eb/ffffff?text=Course",
-            "is_published": True,
-            "created_at": "2023-10-10T10:00:00Z",
-            "published_at": "2023-10-12T10:00:00Z",
-            "updated_at": None,
-            "version": 1,
-            "structure_ids": str(uuid.uuid4()),
-            "structure": {"_id": str(uuid.uuid4())},
-            "details": {
-                "total_modules": 5,
-                "total_lessons": 12,
-                "total_tests": 3,
-                "time_to_complete": "PT15H",
-                "course_language": "ua",
-                "rating": 4.8,
-                "level": level,
-                "number_completed": 120,
-                "number_of_active": 45,
-                "feedback_count": 15,
-                "feedback_summary": {"5": 10, "4": 5}
+    for item in courses_json:
+        course_data = item.get('course')
+        if not course_data:
+            continue
+
+        course_id = str(course_data.get('id'))
+        enrollment = enrollment_map.get(course_id)
+
+        if enrollment:
+            course_data['user_status'] = {
+                'progress': float(enrollment.progress),
+                'is_completed': enrollment.completed,
+                'enrolled_at': enrollment.enrolled_at,
+                'completed_at': enrollment.completed_at,
             }
-        }
-    }
+
+    return courses_json

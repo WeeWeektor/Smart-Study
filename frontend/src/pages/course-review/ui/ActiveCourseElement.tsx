@@ -38,7 +38,7 @@ interface ActiveCourseElementProps {
   isLast: boolean
   isOwner: boolean
   onFinish: () => void
-  onComplete?: (id: string) => void
+  onComplete?: (id: string, type: string) => void
 }
 
 type MarkdownProps<T extends React.ElementType> =
@@ -96,7 +96,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
     const checkCompletion = () => {
       if (timerPassed && scrollPassed) {
-        onComplete(lessonId)
+        onComplete(lessonId, 'lesson')
       }
     }
 
@@ -470,7 +470,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
               onBack={() => setIsTestStarted(false)}
               onFinishCourse={() => {
                 if (test) {
-                  onComplete?.(test.id)
+                  onComplete?.(test.id, 'test')
                 }
 
                 if (isLast) onFinish()

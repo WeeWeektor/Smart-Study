@@ -51,8 +51,6 @@ class UserCourseEnrollment(BaseModel):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         verbose_name=_('Progress'),
     )
-    module_progress = models.JSONField(default=dict, blank=True, verbose_name=_('Module progress'))
-    lesson_progress = models.JSONField(default=dict, blank=True, verbose_name=_('Lesson progress'))
     completed = models.BooleanField(default=False, db_index=True, verbose_name=_('Completed'))
     completed_at = models.DateTimeField(blank=True, null=True, verbose_name=_('Completed at'))
     time_spent = models.DurationField(default=timedelta(0), verbose_name=_('Time spent'))
@@ -67,12 +65,21 @@ class UserCourseEnrollment(BaseModel):
 
     def calculate_progress(self):
         """Метод для обчислення прогресу користувача по курсу"""
-        total_lessons = self.course.details.total_lessons
-        if total_lessons == 0:
+        total_lessons = getattr(self.course.details, 'total_lessons', 0)
+        total_tests = getattr(self.course.details, 'total_tests', 0)
+        total_items = total_lessons + total_tests
+
+        if total_items == 0:
             self.progress = 0
         else:
-            completed_lessons = sum(1 for status in self.lesson_progress.values() if status.get('completed'))
-            self.progress = (completed_lessons / total_lessons) * 100
+            completed_lessons_count = self.lesson_progresses.filter(
+                completed_at__isnull=False
+            ).count()
+            passed_tests_count = self.test_attempts.filter(
+                passed=True
+            ).values('test').distinct().count()
+
+            self.progress = ((completed_lessons_count + passed_tests_count) / total_items) * 100
 
         if self.progress >= 100 and not self.completed:
             self.completed = True

@@ -9,7 +9,7 @@ from django.utils.translation import gettext
 from common.services import mongo_repo
 from common.utils import validate_uuid, error_response
 from courses.choices import SORTING_DICT
-from courses.models import Course, CourseMeta, Module
+from courses.models import Course, Module
 from courses.services.builder_json import build_course_json_success
 from users.models import CustomUser
 from .get_course_owner_data import get_course_owner_data
@@ -70,7 +70,7 @@ async def get_courses(cate: Union[list, None], level: Union[str, None], sort_key
                       search_query: Union[str, None] = None
                       ) -> Union[dict, list]:
     try:
-        qs = Course.objects.select_related("details", "owner").filter(is_published=True)
+        qs = Course.objects.filter(is_published=True)
 
         if cate:
             qs = qs.filter(category__in=cate)
