@@ -1,7 +1,7 @@
 import json
 
 from asgiref.sync import sync_to_async
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
@@ -15,7 +15,8 @@ from courses.models import Test, Course, Module
 from courses.services import parse_multipart_request
 from courses.services.cache_service import get_instance_cached_all, get_instance_cached_by_author_id, \
     get_cached_instance_by_id
-from courses.services.test_actions_service import create_test, remove_test, validate_test_editable, update_test
+from courses.services.test_actions_service import create_test, remove_test, validate_test_editable, update_test, \
+    submit_test_attempt, history_and_config
 from courses.utils import categories_level_sort_present
 
 # TODO image_url додати логіку збереження оновлення і видалення зображення для questions (Через create_course_with_structure зберігається в монго лише назва файлу)
@@ -142,12 +143,49 @@ class PublicTestView(BaseTestView):
     test_type = "public"
 
 
-@method_decorator(ensure_csrf_cookie, name="dispatch") # TODO
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class TestAttemptView(LocalizedView):
     @login_required_async
     async def get(self, request, test_id):
-        pass
+        """Повертає:
+        1. Історію спроб.
+        2. Конфігурацію (чи можна проходити ще, чи показувати відповіді)."""
+        user = request.user
+        test_type = request.GET.get("test_type")
+
+        if not test_type or test_type not in ["public", "course-test", "module-test"]:
+            return error_response("Invalid or missing test type", status=400)
+
+        return await history_and_config(test_id, user, test_type)
 
     @login_required_async
     async def post(self, request, test_id):
-        pass
+        """Спроба користувача пройти тест"""
+        user_id = request.user.id
+
+        try:
+            body = json.loads(request.body)
+            test_type = body.get('test_type')
+            answers = body.get("answers")
+
+            if not test_type or test_type not in ["public", "course-test", "module-test"]:
+                return error_response("Invalid or missing test type", status=400)
+
+            if not answers or not isinstance(answers, list):
+                return error_response("Answers list are required", status=400)
+
+            submit_test = await submit_test_attempt(user_id, test_id, test_type, answers)
+
+            return success_response({
+                "message": "Test submitted successfully",
+                "result": submit_test
+            })
+
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except ObjectDoesNotExist:
+            return error_response("Test or Enrollment not found", status=404)
+        except json.JSONDecodeError:
+            return error_response("Invalid JSON", status=400)
+        except Exception as e:
+            return error_response(f"Error submitting test: {str(e)}", status=500)

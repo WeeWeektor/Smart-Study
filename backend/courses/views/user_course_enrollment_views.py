@@ -22,9 +22,6 @@ class UserCourseEnrollmentView(LocalizedView):
     async def get(self, request, course_id):
         user_id = request.user.id
 
-        if not user_id:
-            return error_response("User not authenticated", status=401)
-
         course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
         if isinstance(course_data, JsonResponse):
             return course_data
@@ -36,10 +33,6 @@ class UserCourseEnrollmentView(LocalizedView):
     @login_required_async
     async def post(self, request, course_id):
         user_id = request.user.id
-
-        if not user_id:
-            return error_response("User not authenticated", status=401)
-
         try:
             enrollment, created = await create_course_enrollment(course_id, user_id)
 
@@ -64,10 +57,6 @@ class UserCourseEnrollmentView(LocalizedView):
     @login_required_async
     async def patch(self, request, course_id):
         user_id = request.user.id
-
-        if not user_id:
-            return error_response("User not authenticated", status=401)
-
         try:
             body = json.loads(request.body)
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from courses.views import CourseTestView, ModuleTestView, PublicTestView
+from courses.views import CourseTestView, ModuleTestView, PublicTestView, TestAttemptView
 
 app_name = 'test'
 urlpatterns = [
@@ -22,4 +22,8 @@ urlpatterns = [
     path('create-module-test/', ModuleTestView.as_view(), name='create-module-test'),
     path('delete-module-test/<uuid:test_id>/', ModuleTestView.as_view(), name='delete-module-test'),
     path('change-module-test/<uuid:test_id>/', ModuleTestView.as_view(), name='change-module-test'),
+
+    # URL for test attempts
+    path('get-history-test-attempts/<uuid:test_id>/', TestAttemptView.as_view(), name='get-history-test-attempts'),
+    path('start-test-attempt/<uuid:test_id>/', TestAttemptView.as_view(), name='start-test-attempt'),
 ]

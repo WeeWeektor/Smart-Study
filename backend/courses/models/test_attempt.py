@@ -31,6 +31,14 @@ class TestAttempt(BaseModel):
         on_delete=models.CASCADE,
         related_name='test_attempts',
         verbose_name=_("Enrollment"),
+        null=True, blank=True,  # Для публічних тестів може бути null
+    )
+    user = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='test_attempts',
+        verbose_name=_("User"),
+        null=True, blank=True,  # Для публічних тестів може бути null
     )
     test = models.ForeignKey(
         'Test',
@@ -43,26 +51,6 @@ class TestAttempt(BaseModel):
     score = models.FloatField(default=0.0, verbose_name=_("Score"))
     passed = models.BooleanField(default=False, verbose_name=_("Passed"))
     attempt_number = models.PositiveIntegerField(verbose_name=_("Attempt Number"))
-    # Структура:
-    # [
-    #   {
-    #     "order": 1,
-    #     "question_text": "True of false",
-    #     "selected_choices": ["yes"],
-    #     "is_correct": true,
-    #     "points_awarded": 2,
-    #     "max_points": 2
-    #   },
-    #   {
-    #     "order": 3,
-    #     "question_text": "false or true",
-    #     "selected_choices": ["true"],
-    #     "is_correct": false,
-    #     "points_awarded": 0,
-    #     "max_points": 2
-    #   },
-    #   ...
-    # ]
     attempt_details = models.JSONField(default=list, blank=True, verbose_name=_("Attempt Details"))
 
     class Meta:
