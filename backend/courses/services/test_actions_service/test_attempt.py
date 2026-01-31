@@ -2,7 +2,7 @@ from asgiref.sync import sync_to_async
 from django.utils import timezone
 
 from common.services import mongo_repo
-from common.utils import validate_uuid, sanitize_input, error_response
+from common.utils import validate_uuid
 from courses.models import Test, UserCourseEnrollment, TestAttempt
 
 
@@ -10,21 +10,15 @@ async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: li
     try:
         user_id = validate_uuid(user_id)
         test_id = validate_uuid(test_id)
-        user_answers = sanitize_input(user_answers)
     except ValueError as e:
-        return error_response(str(e), status=400)
+        raise ValueError(str(e))
 
-    try:
-        test, enrollment = await _get_test_and_enrollment(user_id, test_id, test_type)
-    except (Test.DoesNotExist, UserCourseEnrollment.DoesNotExist):
-        return error_response("Test or Enrollment not found", status=404)
-    except ValueError as e:
-        return error_response(str(e), status=400)
+    test, enrollment = await _get_test_and_enrollment(user_id, test_id, test_type)
 
     mongo_document = await sync_to_async(mongo_repo.get_document_by_id)("questions_data_for_test", test.test_data_ids)
 
     if not mongo_document:
-        return error_response("Test data not found", status=404)
+        raise ValueError("Test data not found in database")
 
     questions_list = mongo_document.get('questions', [])
     calculation_result = _calculate_score_and_details(test, questions_list, user_answers)

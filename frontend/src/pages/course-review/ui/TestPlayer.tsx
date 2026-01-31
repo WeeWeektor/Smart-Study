@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Clock,
   HelpCircle,
+  Loader2,
   RotateCw,
   Trophy,
   XCircle,
@@ -19,10 +20,10 @@ export interface TestQuestion {
   questionText: string
   type?: 'single' | 'multiple'
   choices: string[]
-  correct_answers: string[]
   points: number
   image_url?: string
   explanation?: string | null
+  order?: number
 }
 
 export interface TestData {
@@ -36,25 +37,37 @@ export interface TestData {
   course_id?: string
 }
 
+export interface TestResult {
+  score: number
+  max_score: number
+  passed: boolean
+  percent: number
+}
+
 interface TestPlayerProps {
   testData: TestData
   onBack: () => void
   onFinishCourse?: () => void
+  onSubmit: (answers: any[]) => Promise<TestResult>
 }
 
 export const TestPlayer = ({
   testData,
   onBack,
   onFinishCourse,
+  onSubmit,
 }: TestPlayerProps) => {
   const { t } = useI18n()
 
-  const [status, setStatus] = useState<'intro' | 'active' | 'finished'>('intro')
+  const [status, setStatus] = useState<
+    'intro' | 'active' | 'submitting' | 'finished'
+  >('intro')
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
 
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
   const [timeLeft, setTimeLeft] = useState(testData.time_limit * 60)
-  const [score, setScore] = useState(0)
+
+  const [serverResult, setServerResult] = useState<TestResult | null>(null)
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -113,41 +126,53 @@ export const TestPlayer = ({
     }
   }
 
-  const handleFinishTest = () => {
-    let totalScore = 0
+  // TODO додати перевірку show_correct_answers
+  // TODO Перевірити з проходженням тест ( progress) і нормально відмальвувати на курс картах
+  // TODO що робити як закінчились спроби
 
-    testData.questions.forEach(q => {
-      const qId = String(q.id || q.questionText)
-      const userAnswers = answers[qId] || []
-      const correctAnswers = q.correct_answers || []
+  const handleFinishTest = async () => {
+    setStatus('submitting')
 
-      const isCorrect =
-        userAnswers.length === correctAnswers.length &&
-        userAnswers.every(ans => correctAnswers.includes(ans))
+    const payload = testData.questions.map(q => ({
+      order: q.order || q.id,
+      selected_options: answers[String(q.id)] || [],
+    }))
 
-      if (isCorrect) totalScore += q.points
-    })
-
-    setScore(totalScore)
-    setStatus('finished')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    try {
+      const result = await onSubmit(payload)
+      setServerResult(result)
+      setStatus('finished')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (error) {
+      console.error('Submission error', error)
+      setStatus('active') // Повертаємо, щоб спробувати ще раз
+      // TODO Тут бажано показати notification error
+    }
   }
 
-  if (status === 'finished') {
-    const isPassed = score >= testData.pass_score
-    const maxScore =
-      testData.questions.reduce((acc, q) => acc + q.points, 0) || 1
-    const percentage = Math.round((score / maxScore) * 100)
+  if (status === 'submitting') {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 animate-in fade-in">
+        <Loader2 className="w-16 h-16 text-brand-600 animate-spin mb-4" />
+        <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
+          {t('Перевіряємо ваші відповіді...')}
+        </h3>
+      </div>
+    )
+  }
+
+  if (status === 'finished' && serverResult) {
+    const { passed, score, max_score, percent } = serverResult
 
     return (
       <div className="animate-in fade-in duration-500 py-8">
         <div
-          className={`p-8 rounded-xl border-2 ${isPassed ? 'bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-900' : 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900'} text-center max-w-2xl mx-auto`}
+          className={`p-8 rounded-xl border-2 ${passed ? 'bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-900' : 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900'} text-center max-w-2xl mx-auto`}
         >
           <div
-            className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-sm ${isPassed ? 'bg-white text-green-600 dark:bg-green-900 dark:text-green-300' : 'bg-white text-red-600 dark:bg-red-900 dark:text-red-300'}`}
+            className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-sm ${passed ? 'bg-white text-green-600 dark:bg-green-900 dark:text-green-300' : 'bg-white text-red-600 dark:bg-red-900 dark:text-red-300'}`}
           >
-            {isPassed ? (
+            {passed ? (
               <Trophy className="w-12 h-12" />
             ) : (
               <XCircle className="w-12 h-12" />
@@ -155,10 +180,10 @@ export const TestPlayer = ({
           </div>
 
           <h2 className="text-3xl font-bold mb-3 text-slate-900 dark:text-slate-100">
-            {isPassed ? t('Тест успішно складено!') : t('Тест не складено')}
+            {passed ? t('Тест успішно складено!') : t('Тест не складено')}
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
-            {isPassed
+            {passed
               ? t('Вітаємо! Ви продемонстрували відмінні знання.')
               : t(
                   'На жаль, набраних балів недостатньо. Спробуйте ще раз, щоб закріпити матеріал.'
@@ -173,7 +198,7 @@ export const TestPlayer = ({
               <div className="text-2xl font-bold text-slate-900 dark:text-white">
                 {score}{' '}
                 <span className="text-sm font-normal text-muted-foreground">
-                  / {maxScore}
+                  / {max_score}
                 </span>
               </div>
             </div>
@@ -182,9 +207,9 @@ export const TestPlayer = ({
                 {t('Ефективність')}
               </div>
               <div
-                className={`text-2xl font-bold ${isPassed ? 'text-green-600' : 'text-red-600'}`}
+                className={`text-2xl font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}
               >
-                {percentage}%
+                {percent}%
               </div>
             </div>
           </div>
@@ -194,7 +219,7 @@ export const TestPlayer = ({
               variant="outline"
               onClick={() => {
                 setAnswers({})
-                setScore(0)
+                setServerResult(null)
                 setTimeLeft(testData.time_limit * 60)
                 setCurrentQuestionIndex(0)
                 setStatus('intro')
@@ -203,7 +228,8 @@ export const TestPlayer = ({
               <RotateCw className="w-4 h-4 mr-2" />
               {t('Пройти знову')}
             </Button>
-            {isPassed && onFinishCourse && (
+            {/*TODO Якщо це останній елемент курсу і тест успішно пройдений відмальовувати кнопку Отримати сертифікат */}
+            {passed && onFinishCourse && (
               <Button
                 onClick={onFinishCourse}
                 className="bg-brand-600 hover:bg-brand-700"
@@ -219,8 +245,7 @@ export const TestPlayer = ({
 
   if (status === 'active') {
     const currentQuestion = testData.questions[currentQuestionIndex]
-    const questionType =
-      currentQuestion.correct_answers.length > 1 ? 'multiple' : 'single'
+    const questionType = currentQuestion.type || 'single'
 
     const progress =
       ((currentQuestionIndex + 1) / testData.questions.length) * 100

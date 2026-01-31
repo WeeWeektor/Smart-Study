@@ -2,7 +2,6 @@ import json
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -11,7 +10,6 @@ from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import error_response, success_response
 from courses.models import Course
-from courses.services.cache_service import get_cached_instance_by_id
 from courses.services.course_by_user import get_course_with_details_enrollment, create_course_enrollment, \
     update_enrollment_progress_sync
 
@@ -22,13 +20,24 @@ class UserCourseEnrollmentView(LocalizedView):
     async def get(self, request, course_id):
         user_id = request.user.id
 
-        course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
-        if isinstance(course_data, JsonResponse):
-            return course_data
+        try:
+            data_container = await get_course_with_details_enrollment(course_id, user_id, {})
+            user_status = data_container.get('user_status')
 
-        course_data_with_enrollment = await get_course_with_details_enrollment(course_id, user_id, course_data)
+            if not user_status:
+                return error_response("Enrollment not found", status=404)
 
-        return course_data_with_enrollment
+            response_data = {
+                "course_id": str(course_id),
+                "user_id": str(user_id),
+                **user_status
+            }
+
+            return success_response(response_data)
+
+        except Exception as e:
+            return error_response(f"Error retrieving enrollment: {str(e)}", status=500)
+
 
     @login_required_async
     async def post(self, request, course_id):

@@ -27,6 +27,7 @@ import { useI18n } from '@/shared/lib'
 import { type ElementOfCourseResponse } from '@/features/course'
 import type { Lesson } from '@/features/course/get.element.of.course.service.ts'
 import { type TestData, TestPlayer } from '@/pages/course-review'
+import { testAttemptService } from '@/features/test'
 
 interface ActiveCourseElementProps {
   activeElement: ElementOfCourseResponse | null
@@ -133,6 +134,31 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
     return null
   }, [activeElement])
+
+  const handleSubmitTest = async (testId: string, answers: any[]) => {
+    try {
+      const testType =
+        'module-test' in activeElement!
+          ? 'module_test'
+          : 'course-test' in activeElement!
+            ? 'course_test'
+            : 'public'
+
+      const response = await testAttemptService.submitAttempt({
+        testId,
+        test_type: testType,
+        answers: answers,
+      })
+
+      if (response.result.passed && onComplete) {
+        onComplete(testId, 'test')
+      }
+      return response.result
+    } catch (error) {
+      console.log('Помилка при надсиланні тесту:', error)
+      throw error
+    }
+  }
 
   const preprocessMarkdownContent = (rawContent: string) => {
     if (!rawContent) return ''
@@ -454,10 +480,11 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
           id: q.order || q.id || Math.random(),
           questionText: q.questionText,
           choices: q.choices,
-          correct_answers: q.correct_answers,
           points: q.points,
           image_url: q.image_url || undefined,
           explanation: q.explanation || null,
+          type: q.type || 'single',
+          order: q.order,
         })),
       }
 
@@ -476,6 +503,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
                 if (isLast) onFinish()
                 else onNext()
               }}
+              onSubmit={answers => handleSubmitTest(test.id, answers)}
             />
           </CardContent>
         </Card>

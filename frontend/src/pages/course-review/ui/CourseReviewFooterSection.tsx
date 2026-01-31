@@ -3,6 +3,7 @@ import { Button, Card, CardContent, ConfirmModal } from '@/shared/ui'
 import {
   FileText,
   Heart,
+  Loader2,
   RefreshCw,
   Rocket,
   Trash2,
@@ -25,6 +26,7 @@ interface CourseFooterSectionProps {
   setShowPublishModal: (open: boolean) => void
   isConfirmDelOpen: boolean
   setIsConfirmDelOpen: (open: boolean) => void
+  isEnrolling?: boolean
 }
 
 export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
@@ -41,6 +43,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
   setShowPublishModal,
   isConfirmDelOpen,
   setIsConfirmDelOpen,
+  isEnrolling = false,
 }) => {
   const { t } = useI18n()
 
@@ -143,8 +146,13 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
               size="lg"
               variant="outline"
               className="min-w-[160px] w-60"
+              disabled={isEnrolling}
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              {isEnrolling ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
               {t('Переглянути знову')}
             </Button>
           )}
@@ -154,8 +162,13 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
               onClick={onStartCourse}
               size="lg"
               className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[160px] shadow-md shadow-brand-600/20"
+              disabled={isEnrolling}
             >
-              <RefreshCw className="w-5 h-5 mr-2" />
+              {isEnrolling ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-5 h-5 mr-2" />
+              )}{' '}
               {t('Продовжити навчання')}
             </Button>
           )}
@@ -168,6 +181,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
                   variant="outline"
                   size="lg"
                   className="w-60 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20"
+                  disabled={isEnrolling}
                 >
                   <Trash2 className="w-5 h-5 mr-2" />
                   {t('Прибрати з вішліста')}
@@ -178,6 +192,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
                   variant="outline"
                   size="lg"
                   className="w-60 min-w-[180px]"
+                  disabled={isEnrolling}
                 >
                   <Heart className="w-5 h-5 mr-2" />
                   {t('У вішліст')}
@@ -188,8 +203,13 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
                 onClick={onStartCourse}
                 size="lg"
                 className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[180px] shadow-lg shadow-brand-600/20 animate-pulse-slow"
+                disabled={isEnrolling}
               >
-                <Rocket className="w-5 h-5 mr-2" />
+                {isEnrolling ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <Rocket className="w-5 h-5 mr-2" />
+                )}{' '}
                 {t('Розпочати курс')}
               </Button>
             </>

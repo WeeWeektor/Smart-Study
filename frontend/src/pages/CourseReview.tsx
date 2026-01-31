@@ -15,9 +15,11 @@ import {
   deleteCourseService,
   type ElementOfCourseResponse,
   elementOfCourseService,
+  type EnrollmentDetailResponse,
   getCourseService,
   publishCourseService,
   type Review,
+  userCourseEnrollmentService,
 } from '@/features/course'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useUserCoursesStatus } from '@/shared/hooks/useUserCoursesStatus'
@@ -35,11 +37,7 @@ const CourseReview = () => {
   const { id } = useParams<{ id: string }>()
 
   const { getItemStatus, refresh: refreshStatuses } = useUserCoursesStatus()
-  const {
-    status: userStatus,
-    progress: userProgress,
-    inWishlist: inWishlist,
-  } = getItemStatus(id || '')
+  const { status: userStatus, inWishlist: inWishlist } = getItemStatus(id || '')
 
   const navigate = useNavigate()
 
@@ -56,6 +54,10 @@ const CourseReview = () => {
     null
   )
   const [course, setCourse] = useState<CourseResponse | null>(null)
+
+  const [isEnrolling, setIsEnrolling] = useState(false)
+  const [enrollmentData, setEnrollmentData] =
+    useState<EnrollmentDetailResponse | null>(null)
 
   const [reviews, setReviews] = useState<Review[]>([])
   const [isReviewsExpanded, setIsReviewsExpanded] = useState(false)
@@ -120,6 +122,34 @@ const CourseReview = () => {
 
     fetchCourseAllData()
   }, [id])
+
+  useEffect(() => {
+    const fetchEnrollment = async () => {
+      if (!id || !isUserEnrolled || isOwner) return
+
+      try {
+        const data = await userCourseEnrollmentService.getEnrollment(
+          id as string
+        )
+        setEnrollmentData(data)
+
+        if (data.completed_elements) {
+          setCompletedElements(data.completed_elements)
+        }
+
+        if (data.last_visited_element_id && !activeElement) {
+          handleSidebarItemClick(
+            data.last_visited_element_id,
+            data.last_visited_element_type
+          )
+        }
+      } catch (error) {
+        console.error('Failed to load enrollment data:', error)
+      }
+    }
+
+    fetchEnrollment()
+  }, [id, isUserEnrolled, isOwner])
 
   const reviewStats = useMemo(() => {
     const totalReviews = reviews.length
@@ -237,12 +267,29 @@ const CourseReview = () => {
     }
   }
 
-  const handleFinishCourse = () => {
-    if (isOwner) {
-      navigate('/my-created-courses')
-    } else {
-      console.log('Course finished, get certificate') // TODO
-      setActiveElement(null)
+  const handleFinishCourse = async () => {
+    if (!id) return
+
+    try {
+      await userCourseEnrollmentService.updateProgress({
+        courseId: id,
+        finishedCourse: true,
+        isCompleted: true,
+      })
+
+      refreshStatuses()
+
+      if (isOwner) {
+        navigate('/my-created-courses')
+      } else {
+        setActiveElement(null)
+        // TODO Тут показати модалку з вітанням і отриманням сертифікату
+        // TODO Як тільки пройшов курс провести інвалідацію кешу курсів користувача
+      }
+    } catch (e) {
+      setCourseError(
+        e instanceof Error ? e.message : t('Помилка збереження прогресу')
+      )
     }
   }
 
@@ -293,38 +340,54 @@ const CourseReview = () => {
     }
   }
 
-  const handleStartCourse = () => {
+  const handleStartCourse = async () => {
     if (!id) return
 
-    // TODO запит на бекенд для зміни статусу
-    // await startCourseService(id)
+    setIsEnrolling(true)
 
-    console.log('Start/Continue course', id)
+    try {
+      await userCourseEnrollmentService.startCourse(id)
 
-    refreshStatuses()
-
-    if (flatCourseElements.length > 0) {
-      const firstElement = flatCourseElements[0]
-      handleSidebarItemClick(firstElement.id, firstElement.type)
+      refreshStatuses()
+      if (flatCourseElements.length > 0) {
+        const firstElement = flatCourseElements[0]
+        handleSidebarItemClick(firstElement.id, firstElement.type)
+      }
+    } catch (error) {
+      console.error(error)
+      setCourseError(
+        error instanceof Error ? error.message : t('Не вдалось розпочати курс')
+      )
+    } finally {
+      setIsEnrolling(false)
     }
-    // Якщо користувч тільки почав проходження курсу
   }
 
   const handleElementCompleted = async (
     elementId: string,
-    elementType: string
+    elementType: string,
+    timeSpentSeconds: number = 0
   ) => {
     if (completedElements.includes(elementId)) return
+    if (!id) return
 
     try {
-      // TODO: API запит на бекенд, що урок/тест пройдено
-      // TODO на беці розділення для уроків і тестів
-      // await progressService.markAsComplete(courseId, elementId, elementType)
-      console.log('Element completed:', elementId, elementType)
+      const backendType = elementType.includes('test') ? 'test' : 'lesson'
 
+      await userCourseEnrollmentService.updateProgress({
+        courseId: id,
+        elementId: elementId,
+        elementType: backendType as 'lesson' | 'test',
+        isCompleted: true,
+        timeSpent: timeSpentSeconds,
+        finishedCourse: false,
+      })
       setCompletedElements(prev => [...prev, elementId])
+      refreshStatuses()
     } catch (e) {
-      console.error('Failed to save progress', e)
+      setCourseError(
+        e instanceof Error ? e.message : t('Помилка збереження прогресу')
+      )
     }
   }
 
@@ -469,7 +532,9 @@ const CourseReview = () => {
               isLast={currentElementIndex === flatCourseElements.length - 1}
               isOwner={isOwner}
               onFinish={handleFinishCourse}
-              onComplete={handleElementCompleted}
+              onComplete={(elemId, elemType) => {
+                handleElementCompleted(elemId, elemType)
+              }}
             />
           ) : (
             <>
@@ -510,6 +575,7 @@ const CourseReview = () => {
                 setShowPublishModal={setShowPublishModal}
                 isConfirmDelOpen={isConfirmDelOpen}
                 setIsConfirmDelOpen={setIsConfirmDelOpen}
+                isEnrolling={isEnrolling}
               />
             </>
           )}

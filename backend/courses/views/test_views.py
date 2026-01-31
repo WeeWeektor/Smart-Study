@@ -153,7 +153,7 @@ class TestAttemptView(LocalizedView):
         user = request.user
         test_type = request.GET.get("test_type")
 
-        if not test_type or test_type not in ["public", "course-test", "module-test"]:
+        if not test_type or test_type not in ["public", "course_test", "module_test"]:
             return error_response("Invalid or missing test type", status=400)
 
         return await history_and_config(test_id, user, test_type)
@@ -168,7 +168,7 @@ class TestAttemptView(LocalizedView):
             test_type = body.get('test_type')
             answers = body.get("answers")
 
-            if not test_type or test_type not in ["public", "course-test", "module-test"]:
+            if not test_type or test_type not in ["public", "course_test", "module_test"]:
                 return error_response("Invalid or missing test type", status=400)
 
             if not answers or not isinstance(answers, list):
@@ -183,9 +183,9 @@ class TestAttemptView(LocalizedView):
 
         except ValidationError as e:
             return error_response(str(e), status=400)
+        except ValueError as e:
+            return error_response(str(e), status=400)
         except ObjectDoesNotExist:
             return error_response("Test or Enrollment not found", status=404)
-        except json.JSONDecodeError:
-            return error_response("Invalid JSON", status=400)
         except Exception as e:
             return error_response(f"Error submitting test: {str(e)}", status=500)

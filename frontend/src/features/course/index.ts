@@ -23,3 +23,7 @@ export type {
   CourseOwnerProfileResponse,
 } from './course-structure-model/types'
 export { courseReviewService } from './course.review.service'
+export {
+  userCourseEnrollmentService,
+  type EnrollmentDetailResponse,
+} from './course-enrollment/user.course.enrollment.service'
