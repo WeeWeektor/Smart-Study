@@ -15,7 +15,6 @@ import {
   deleteCourseService,
   type ElementOfCourseResponse,
   elementOfCourseService,
-  type EnrollmentDetailResponse,
   getCourseService,
   publishCourseService,
   type Review,
@@ -56,8 +55,6 @@ const CourseReview = () => {
   const [course, setCourse] = useState<CourseResponse | null>(null)
 
   const [isEnrolling, setIsEnrolling] = useState(false)
-  const [enrollmentData, setEnrollmentData] =
-    useState<EnrollmentDetailResponse | null>(null)
 
   const [reviews, setReviews] = useState<Review[]>([])
   const [isReviewsExpanded, setIsReviewsExpanded] = useState(false)
@@ -131,7 +128,6 @@ const CourseReview = () => {
         const data = await userCourseEnrollmentService.getEnrollment(
           id as string
         )
-        setEnrollmentData(data)
 
         if (data.completed_elements) {
           setCompletedElements(data.completed_elements)
@@ -144,7 +140,7 @@ const CourseReview = () => {
           )
         }
       } catch (error) {
-        console.error('Failed to load enrollment data:', error)
+        console.error('Failed to load enrollment data:', error) // TODO
       }
     }
 

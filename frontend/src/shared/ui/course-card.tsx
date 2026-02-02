@@ -129,6 +129,10 @@ export const CourseCard = ({
     }
   }
 
+  const showProgress =
+    (status === 'in_progress' && progress !== undefined) ||
+    (progress !== undefined && progress > 0)
+
   return (
     <Card
       key={id}
@@ -240,14 +244,14 @@ export const CourseCard = ({
           </div>
         </div>
 
-        {progress !== undefined && progress > 0 && (
+        {showProgress && (
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-slate-600">{t('Прогрес')}</span>
               <span className="font-medium">{progress}%</span>
             </div>
             <Progress
-              value={progress}
+              value={progress || 0}
               className="h-2 bg-slate-200 dark:bg-slate-700"
             />
             {nextLesson && (
@@ -259,54 +263,56 @@ export const CourseCard = ({
         )}
 
         <div className="mt-auto pt-2">
-          {status && instructor && !findCourse && (
-            <div className="flex gap-2">
-              {status === 'completed' ? (
-                <Link to={reviewUrl} className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    <Eye className="w-4 h-4 mr-2" />
-                    {t('Переглянути')}
-                  </Button>
-                </Link>
-              ) : (
-                <>
+          {status &&
+            instructor &&
+            (!findCourse || status === 'in_progress') && (
+              <div className="flex gap-2">
+                {status === 'completed' ? (
                   <Link to={reviewUrl} className="flex-1">
-                    <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                      {status === 'not_started' ? (
-                        <Rocket className="w-4 h-4 mr-2" />
-                      ) : (
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                      )}
-                      {status === 'not_started'
-                        ? t('Розпочати')
-                        : t('Продовжити')}
+                    <Button variant="outline" className="w-full">
+                      <Eye className="w-4 h-4 mr-2" />
+                      {t('Переглянути')}
                     </Button>
                   </Link>
-                  {status === 'not_started' && inWishlist && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                        onClick={() => setIsConfirmDelOpen(true)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                      <ConfirmModal
-                        isOpen={isConfirmDelOpen}
-                        onClose={() => setIsConfirmDelOpen(false)}
-                        onConfirm={handleDeleteFromWishlist}
-                        title={t('Видалення курсу')}
-                        description={t(
-                          'Ви впевнені, що хочете видалити цей курс з вішліста?'
+                ) : (
+                  <>
+                    <Link to={reviewUrl} className="flex-1">
+                      <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                        {status === 'not_started' ? (
+                          <Rocket className="w-4 h-4 mr-2" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4 mr-2" />
                         )}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                        {status === 'not_started'
+                          ? t('Розпочати')
+                          : t('Продовжити')}
+                      </Button>
+                    </Link>
+                    {status === 'not_started' && inWishlist && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                          onClick={() => setIsConfirmDelOpen(true)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <ConfirmModal
+                          isOpen={isConfirmDelOpen}
+                          onClose={() => setIsConfirmDelOpen(false)}
+                          onConfirm={handleDeleteFromWishlist}
+                          title={t('Видалення курсу')}
+                          description={t(
+                            'Ви впевнені, що хочете видалити цей курс з вішліста?'
+                          )}
+                        />
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
           {badgeType &&
             badgeType === 'published' &&
@@ -350,16 +356,19 @@ export const CourseCard = ({
               </div>
             )}
 
-          {badgeType && badgeType === 'level' && findCourse && (
-            <div className="flex gap-2">
-              <Link to={reviewUrl} className="flex-1">
-                <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                  <Eye className="w-4 h-4 mr-2" />
-                  {t('Переглянути')}
-                </Button>
-              </Link>
-            </div>
-          )}
+          {badgeType &&
+            badgeType === 'level' &&
+            findCourse &&
+            status !== 'in_progress' && (
+              <div className="flex gap-2">
+                <Link to={reviewUrl} className="flex-1">
+                  <Button className="w-full bg-brand-600 hover:bg-brand-700">
+                    <Eye className="w-4 h-4 mr-2" />
+                    {t('Переглянути')}
+                  </Button>
+                </Link>
+              </div>
+            )}
         </div>
       </CardContent>
     </Card>

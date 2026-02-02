@@ -14,7 +14,7 @@ import {
   Trophy,
   XCircle,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export interface TestQuestion {
   id: string | number
@@ -38,6 +38,7 @@ export interface TestData {
   course_id?: string
   can_attempt?: boolean
   max_attempts?: number | string
+  randomize_questions?: boolean
 }
 
 export interface QuestionResult {
@@ -67,6 +68,15 @@ interface TestPlayerProps {
   isCourseCompleted: boolean
 }
 
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const newArray = [...array]
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+  }
+  return newArray
+}
+
 export const TestPlayer = ({
   testData,
   onBack,
@@ -86,6 +96,24 @@ export const TestPlayer = ({
   const [timeLeft, setTimeLeft] = useState(testData.time_limit * 60)
 
   const [serverResult, setServerResult] = useState<TestResult | null>(null)
+
+  const processedQuestions = useMemo(() => {
+    let questions = [...testData.questions]
+
+    if (testData.randomize_questions) {
+      questions = shuffleArray(questions)
+
+      questions = questions.map(q => ({
+        ...q,
+        choices: shuffleArray(q.choices),
+      }))
+    }
+
+    return questions
+  }, [testData.questions, testData.randomize_questions])
+
+  // TODO перевірити чи правильно працює randomize_questions?: boolean
+  // TODO якщо є дві правильні відповіді не працює коректнео (можна вибрати тільки одну правильну а потрібно щоб можна було вибрати безліч правильних відповідей  а якщо є тільки одна првильна відповідь то щоб можна було вибрати тільки одну відповідь)
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -143,9 +171,7 @@ export const TestPlayer = ({
       setCurrentQuestionIndex(prev => prev - 1)
     }
   }
-
-  // TODO Перевірити з проходженням тест ( progress) і нормально відмальвувати на курс картах
-
+  // TODO Перемішувати питання та варіанти відповідей
   const handleFinishTest = async () => {
     setStatus('submitting')
 
@@ -338,7 +364,7 @@ export const TestPlayer = ({
   }
 
   if (status === 'active') {
-    const currentQuestion = testData.questions[currentQuestionIndex]
+    const currentQuestion = processedQuestions[currentQuestionIndex]
     const questionType = currentQuestion.type || 'single'
 
     const progress =

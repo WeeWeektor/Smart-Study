@@ -100,3 +100,4 @@ class UserCourseEnrollmentView(LocalizedView):
 
 # TODO  в таблиці enrollments оновлювати час time_spent
 # TODO Якщо курс не містить жодних елементів його не публікувати
+# TODO Перевірити роботу оновлення людей на курсі

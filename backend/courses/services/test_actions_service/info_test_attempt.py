@@ -27,6 +27,7 @@ async def history_and_config(test_id, user, test_type):
 
         max_attempts = getattr(test, 'count_attempts', 0)
         show_correct_answers = getattr(test, 'show_correct_answers', False)
+        randomize_questions = getattr(test, 'randomize_questions', False)
 
         attempts_used = len(attempts)
         is_unlimited = not max_attempts
@@ -55,6 +56,7 @@ async def history_and_config(test_id, user, test_type):
             "config": {
                 "can_attempt": can_attempt,
                 "show_correct_answers": show_correct_answers,
+                "randomize_questions": randomize_questions,
                 "attempts_used": attempts_used,
                 "max_attempts": max_attempts if not is_unlimited else "unlimited",
                 "remaining_attempts": remaining_attempts if not is_unlimited else "unlimited"

@@ -160,7 +160,7 @@ const TeacherCourses = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [page, searchParams])
 
-  if (loading && courseLoading) {
+  if (loading || courseLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 
@@ -185,10 +185,13 @@ const TeacherCourses = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <Sidebar userInfo={userInfo} />
 
-      <div className="ml-64">
+      <div
+        className="ml-64 flex-1 h-full overflow-y-auto"
+        style={{ colorScheme: 'dark' }}
+      >
         <CourseHeader
           title={
             isOwner
@@ -339,7 +342,6 @@ const TeacherCourses = () => {
                     countLesson={course.course.details.total_lessons}
                     countTests={course.course.details.total_tests}
                     feedback_count={course.course.details.feedback_count}
-                    {...getItemStatus(course.course.id)}
                   />
                 </div>
               ))) ||
@@ -358,6 +360,11 @@ const TeacherCourses = () => {
                       description={course.course.description}
                       coverImage={course.course.cover_image}
                       instructorId={course.course.owner.id}
+                      instructor={
+                        course.course.owner.name +
+                        ' ' +
+                        course.course.owner.surname
+                      }
                       category={course.course.category}
                       badgeStatus={course.course.details.level}
                       badgeType={'level'}
@@ -374,6 +381,7 @@ const TeacherCourses = () => {
                       status={status}
                       progress={progress}
                       inWishlist={inWishlist}
+                      findCourse={true}
                     />
                   </div>
                 )

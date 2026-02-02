@@ -144,7 +144,7 @@ const CoursesCatalog = () => {
     fetchCourses()
   }, [categoryFilter, levelFilter, sortingFilter, page])
 
-  if (loading && choicesLoading && courseLoading && statusLoading) {
+  if (loading || choicesLoading || courseLoading || statusLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 

@@ -24,7 +24,10 @@ export const useUserCoursesStatus = () => {
       cachedData = {
         wishlist: new Set(response.in_wishlist.map(i => i.course.id)),
         enrolled: new Map(
-          response.is_enrolled.map(i => [i.course.id, (i as any).progress || 0])
+          response.is_enrolled.map(i => {
+            const progress = (i.course as any).user_status?.progress || 0
+            return [i.course.id, progress]
+          })
         ),
         completed: new Set(response.is_completed.map(i => i.course.id)),
       }
@@ -43,6 +46,7 @@ export const useUserCoursesStatus = () => {
 
     if (!cachedData) {
       fetchData()
+      if (isFetching) setLoading(true)
     }
 
     return () => {
@@ -75,7 +79,7 @@ export const useUserCoursesStatus = () => {
   }, [])
 
   return {
-    loading: loading && !cachedData,
+    loading: loading || (!cachedData && isFetching),
     refresh: () => fetchData(true),
     getItemStatus,
   }

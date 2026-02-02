@@ -7,6 +7,7 @@ export interface TestHistoryResponse {
   config: {
     can_attempt: boolean
     show_correct_answers: boolean
+    randomize_questions: boolean
     attempts_used: number
     max_attempts: number | 'unlimited'
     remaining_attempts: number | 'unlimited'

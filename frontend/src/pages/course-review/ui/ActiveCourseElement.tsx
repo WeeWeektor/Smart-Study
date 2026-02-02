@@ -439,7 +439,6 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         )}
       </Button>
 
-      {/*TODO Кнопка має працювати не тільки якщо останній елемент це тест а й для уроку і має бути дізеблет якщо курс не пройдений повністю */}
       <Button
         onClick={isLast ? onFinish : onNext}
         disabled={isLast && !isCourseCompleted && !isOwner}
@@ -523,10 +522,16 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         description: test.description,
         time_limit: test.time_limit,
         pass_score: test.pass_score || 0,
-        test_type: testType,
+        test_type:
+          testType === 'module_test'
+            ? 'module-test'
+            : testType === 'course_test'
+              ? 'course-test'
+              : undefined,
         course_id: course_id,
         max_attempts: testConfig?.max_attempts ?? 0,
         can_attempt: canAttempt,
+        randomize_questions: testConfig?.randomize_questions,
         questions: test.questions.map((q: any) => ({
           id: q.order || q.id || Math.random(),
           questionText: q.questionText,

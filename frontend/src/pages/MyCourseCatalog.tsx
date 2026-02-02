@@ -170,7 +170,7 @@ const MyCourseCatalog = () => {
     wishlist: allCourses.filter(c => c.sourceType === 'wishlist').length,
   }
 
-  if (loading && courseLoading) {
+  if (loading || courseLoading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 
@@ -306,7 +306,9 @@ const MyCourseCatalog = () => {
                     }
                     duration={wrapper.course.details.time_to_complete}
                     status={getCardStatus(wrapper.sourceType)}
-                    progress={(wrapper as any).progress || 0}
+                    progress={
+                      (wrapper.course as any).user_status?.progress || 0
+                    }
                     countModule={wrapper.course.details.total_modules}
                     countLesson={wrapper.course.details.total_lessons}
                     countTests={wrapper.course.details.total_tests}
