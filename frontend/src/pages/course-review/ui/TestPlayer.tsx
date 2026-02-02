@@ -3,6 +3,7 @@ import { Button } from '@/shared/ui'
 import {
   AlertCircle,
   ArrowRight,
+  Award,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -35,6 +36,18 @@ export interface TestData {
   pass_score: number
   test_type?: 'course-test' | 'module-test'
   course_id?: string
+  can_attempt?: boolean
+  max_attempts?: number | string
+}
+
+export interface QuestionResult {
+  order: number
+  is_correct: boolean
+  points_awarded: number
+  max_points: number
+  selected_choices: string[]
+  correct_choices?: string[]
+  explanation?: string | null
 }
 
 export interface TestResult {
@@ -42,13 +55,16 @@ export interface TestResult {
   max_score: number
   passed: boolean
   percent: number
+  questions_result?: QuestionResult[]
 }
 
 interface TestPlayerProps {
   testData: TestData
   onBack: () => void
   onFinishCourse?: () => void
+  isLast: boolean
   onSubmit: (answers: any[]) => Promise<TestResult>
+  isCourseCompleted: boolean
 }
 
 export const TestPlayer = ({
@@ -56,6 +72,8 @@ export const TestPlayer = ({
   onBack,
   onFinishCourse,
   onSubmit,
+  isLast,
+  isCourseCompleted,
 }: TestPlayerProps) => {
   const { t } = useI18n()
 
@@ -126,9 +144,7 @@ export const TestPlayer = ({
     }
   }
 
-  // TODO додати перевірку show_correct_answers
   // TODO Перевірити з проходженням тест ( progress) і нормально відмальвувати на курс картах
-  // TODO що робити як закінчились спроби
 
   const handleFinishTest = async () => {
     setStatus('submitting')
@@ -162,10 +178,12 @@ export const TestPlayer = ({
   }
 
   if (status === 'finished' && serverResult) {
-    const { passed, score, max_score, percent } = serverResult
+    const { passed, score, max_score, percent, questions_result } = serverResult
+
+    const canTryAgain = testData.can_attempt !== false
 
     return (
-      <div className="animate-in fade-in duration-500 py-8">
+      <div className="animate-in fade-in duration-500 py-8 text-left">
         <div
           className={`p-8 rounded-xl border-2 ${passed ? 'bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-900' : 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900'} text-center max-w-2xl mx-auto`}
         >
@@ -214,27 +232,103 @@ export const TestPlayer = ({
             </div>
           </div>
 
-          <div className="flex justify-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setAnswers({})
-                setServerResult(null)
-                setTimeLeft(testData.time_limit * 60)
-                setCurrentQuestionIndex(0)
-                setStatus('intro')
-              }}
-            >
-              <RotateCw className="w-4 h-4 mr-2" />
-              {t('Пройти знову')}
-            </Button>
-            {/*TODO Якщо це останній елемент курсу і тест успішно пройдений відмальовувати кнопку Отримати сертифікат */}
+          {questions_result && questions_result.length > 0 && (
+            <div className="mt-8 space-y-4 text-left">
+              <h3 className="font-bold text-lg mb-4 text-center">
+                {t('Детальний розбір')}
+              </h3>
+              {questions_result.map((qResult, idx) => {
+                const questionData = testData.questions.find(
+                  q => (q.order || q.id) === qResult.order
+                )
+                return (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-lg border ${
+                      qResult.is_correct
+                        ? 'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-900/10'
+                        : 'border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-900/10'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {qResult.is_correct ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 shrink-0" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-600 mt-1 shrink-0" />
+                      )}
+                      <div className="w-full">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 mb-2">
+                          {questionData?.questionText ||
+                            `Question ${qResult.order}`}
+                        </p>
+
+                        <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                          <span className="font-semibold">
+                            {t('Ваша відповідь:')}{' '}
+                          </span>
+                          {qResult.selected_choices.join(', ') || t('Немає')}
+                        </div>
+
+                        {qResult.correct_choices && (
+                          <div className="text-sm text-green-700 dark:text-green-400 mb-2">
+                            <span className="font-semibold">
+                              {t('Правильна відповідь:')}{' '}
+                            </span>
+                            {qResult.correct_choices.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="flex justify-center gap-4 mt-8">
+            {!passed && canTryAgain && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAnswers({})
+                  setServerResult(null)
+                  setTimeLeft(testData.time_limit * 60)
+                  setCurrentQuestionIndex(0)
+                  setStatus('intro')
+                }}
+              >
+                <RotateCw className="w-4 h-4 mr-2" />
+                {t('Пройти знову')}
+              </Button>
+            )}
+
+            {!passed && !canTryAgain && (
+              <div className="text-red-500 font-medium py-2 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                {t('Спроби вичерпано. Ви не можете перездати цей тест.')}
+              </div>
+            )}
+
             {passed && onFinishCourse && (
               <Button
                 onClick={onFinishCourse}
                 className="bg-brand-600 hover:bg-brand-700"
               >
-                {t('Продовжити')} <ArrowRight className="w-4 h-4 ml-2" />
+                {isLast ? (
+                  <>
+                    <span>
+                      {isCourseCompleted
+                        ? t('Отримати сертифікат')
+                        : t('Завершіть усі завдання')}
+                    </span>
+                    <Award className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    {t('Продовжити')}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             )}
           </div>
@@ -411,6 +505,8 @@ export const TestPlayer = ({
     )
   }
 
+  const canStart = testData.can_attempt !== false
+
   return (
     <div className="py-12 text-center animate-in zoom-in-95 duration-300">
       <div className="w-24 h-24 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
@@ -418,20 +514,28 @@ export const TestPlayer = ({
       </div>
 
       <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-        {t('Ви готові розпочати?')}
+        {canStart ? t('Ви готові розпочати?') : t('Спроби вичерпано')}
       </h2>
-      <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-10 text-lg leading-relaxed">
-        {t('Тест містить')}{' '}
-        <span className="font-bold text-slate-900 dark:text-white">
-          {testData.questions.length}
-        </span>{' '}
-        {t('питань')}. {t('У вас буде')}
-        <span className="font-bold text-slate-900 dark:text-white">
-          {' '}
-          {testData.time_limit} {t('хвилин')}
-        </span>
-        , {t('щоб відповісти на них. Після початку таймер не можна зупинити.')}
-      </p>
+
+      {canStart ? (
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-10 text-lg leading-relaxed">
+          {t('Тест містить')}{' '}
+          <span className="font-bold text-slate-900 dark:text-white">
+            {testData.questions.length}
+          </span>{' '}
+          {t('питань')}. {t('У вас буде')}
+          <span className="font-bold text-slate-900 dark:text-white">
+            {' '}
+            {testData.time_limit} {t('хвилин')}
+          </span>
+          ,{' '}
+          {t('щоб відповісти на них. Після початку таймер не можна зупинити.')}
+        </p>
+      ) : (
+        <p className="text-red-500 font-medium mb-10 text-lg">
+          {t('На жаль, ви використали всі доступні спроби для цього тесту.')}
+        </p>
+      )}
 
       <div className="flex justify-center gap-4">
         <Button
@@ -442,13 +546,15 @@ export const TestPlayer = ({
         >
           {t('Скасувати')}
         </Button>
-        <Button
-          size="lg"
-          onClick={() => setStatus('active')}
-          className="bg-brand-600 hover:bg-brand-700 min-w-[200px] shadow-lg hover:shadow-xl transition-all"
-        >
-          {t('Розпочати тестування')}
-        </Button>
+        {canStart && (
+          <Button
+            size="lg"
+            onClick={() => setStatus('active')}
+            className="bg-brand-600 hover:bg-brand-700 min-w-[200px] shadow-lg hover:shadow-xl transition-all"
+          >
+            {t('Розпочати тестування')}
+          </Button>
+        )}
       </div>
     </div>
   )

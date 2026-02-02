@@ -168,3 +168,6 @@ async def _update_course_progress(user_id, test_id, enrollment, is_passed):
         is_completed=is_passed,
         finished_course=False,
     )
+
+    from courses.services.cache_service import invalidate_courses_by_user_id_cache
+    await invalidate_courses_by_user_id_cache(user_id)

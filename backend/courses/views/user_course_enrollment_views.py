@@ -85,6 +85,9 @@ class UserCourseEnrollmentView(LocalizedView):
                 finished_course=finished_course
             )
 
+            from courses.services.cache_service import invalidate_courses_by_user_id_cache
+            await invalidate_courses_by_user_id_cache(user_id)
+
             return success_response({
                 "message": "Progress updated successfully",
                 "data": result
@@ -94,3 +97,6 @@ class UserCourseEnrollmentView(LocalizedView):
             return error_response("Invalid JSON", status=400)
         except Exception as e:
             return error_response(f"Error updating progress: {str(e)}", status=500)
+
+# TODO  в таблиці enrollments оновлювати час time_spent
+# TODO Якщо курс не містить жодних елементів його не публікувати

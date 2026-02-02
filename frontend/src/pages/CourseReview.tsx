@@ -240,6 +240,14 @@ const CourseReview = () => {
     return elements
   }, [courseStructureData])
 
+  const isCourseCompleted = useMemo(() => {
+    if (flatCourseElements.length === 0) return false
+
+    return flatCourseElements.every(element =>
+      completedElements.includes(element.id)
+    )
+  }, [flatCourseElements, completedElements])
+
   const activeElementId = useMemo(() => {
     if (!activeElement) return null
 
@@ -270,6 +278,15 @@ const CourseReview = () => {
   const handleFinishCourse = async () => {
     if (!id) return
 
+    if (!isCourseCompleted) {
+      if (isOwner) {
+        navigate('/my-created-courses')
+      } else {
+        setActiveElement(null)
+      }
+      return
+    }
+
     try {
       await userCourseEnrollmentService.updateProgress({
         courseId: id,
@@ -284,7 +301,6 @@ const CourseReview = () => {
       } else {
         setActiveElement(null)
         // TODO Тут показати модалку з вітанням і отриманням сертифікату
-        // TODO Як тільки пройшов курс провести інвалідацію кешу курсів користувача
       }
     } catch (e) {
       setCourseError(
@@ -535,6 +551,7 @@ const CourseReview = () => {
               onComplete={(elemId, elemType) => {
                 handleElementCompleted(elemId, elemType)
               }}
+              isCourseCompleted={isCourseCompleted}
             />
           ) : (
             <>

@@ -17,6 +17,7 @@ import {
   Code,
   FileCheck,
   LayoutGrid,
+  Loader2,
   RotateCw,
   Timer,
   Trophy,
@@ -27,7 +28,7 @@ import { useI18n } from '@/shared/lib'
 import { type ElementOfCourseResponse } from '@/features/course'
 import type { Lesson } from '@/features/course/get.element.of.course.service.ts'
 import { type TestData, TestPlayer } from '@/pages/course-review'
-import { testAttemptService } from '@/features/test'
+import { testAttemptService, type TestHistoryResponse } from '@/features/test'
 
 interface ActiveCourseElementProps {
   activeElement: ElementOfCourseResponse | null
@@ -40,6 +41,7 @@ interface ActiveCourseElementProps {
   isOwner: boolean
   onFinish: () => void
   onComplete?: (id: string, type: string) => void
+  isCourseCompleted: boolean
 }
 
 type MarkdownProps<T extends React.ElementType> =
@@ -62,13 +64,19 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   isOwner,
   onFinish,
   onComplete,
+  isCourseCompleted,
 }) => {
   const { t } = useI18n()
 
   const [isTestStarted, setIsTestStarted] = useState(false)
+  const [testConfig, setTestConfig] = useState<
+    TestHistoryResponse['config'] | null
+  >(null)
+  const [isConfigLoading, setIsConfigLoading] = useState(false)
 
   useEffect(() => {
     setIsTestStarted(false)
+    setTestConfig(null)
   }, [activeElement])
 
   useEffect(() => {
@@ -119,7 +127,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     if ('module-test' in activeElement && activeElement['module-test']) {
       return {
         test: activeElement['module-test'],
-        testType: 'module-test' as const,
+        testType: 'module_test' as const,
         course_id: activeElement['module-test'].module.course,
       }
     }
@@ -127,13 +135,34 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     if ('course-test' in activeElement && activeElement['course-test']) {
       return {
         test: activeElement['course-test'],
-        testType: 'course-test' as const,
+        testType: 'course_test' as const,
         course_id: activeElement['course-test'].course.id,
       }
     }
 
     return null
   }, [activeElement])
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      if (!currentTestInfo) return
+
+      setIsConfigLoading(true)
+      try {
+        const data = await testAttemptService.getTestHistory(
+          currentTestInfo.test.id,
+          currentTestInfo.testType
+        )
+        setTestConfig(data.config)
+      } catch (error) {
+        console.error('Failed to load test config', error) // TODO
+      } finally {
+        setIsConfigLoading(false)
+      }
+    }
+
+    fetchConfig()
+  }, [currentTestInfo])
 
   const handleSubmitTest = async (testId: string, answers: any[]) => {
     try {
@@ -153,6 +182,15 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
       if (response.result.passed && onComplete) {
         onComplete(testId, 'test')
       }
+
+      if (currentTestInfo) {
+        const data = await testAttemptService.getTestHistory(
+          currentTestInfo.test.id,
+          currentTestInfo.testType
+        )
+        setTestConfig(data.config)
+      }
+
       return response.result
     } catch (error) {
       console.log('Помилка при надсиланні тесту:', error)
@@ -401,8 +439,10 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         )}
       </Button>
 
+      {/*TODO Кнопка має працювати не тільки якщо останній елемент це тест а й для уроку і має бути дізеблет якщо курс не пройдений повністю */}
       <Button
         onClick={isLast ? onFinish : onNext}
+        disabled={isLast && !isCourseCompleted && !isOwner}
         className={`w-full sm:w-auto min-w-[160px] flex items-center gap-2 shadow-sm
           ${isLast ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-brand-600 hover:bg-brand-700'}`}
       >
@@ -416,7 +456,11 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
             ) : (
               <>
                 <Award className="w-4 h-4" />
-                <span>{t('Отримати сертифікат')}</span>
+                <span>
+                  {isCourseCompleted
+                    ? t('Отримати сертифікат')
+                    : t('Завершіть усі завдання')}
+                </span>
               </>
             )}
           </>
@@ -467,6 +511,11 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   if (currentTestInfo) {
     const { test, testType, course_id } = currentTestInfo
 
+    const canAttempt = testConfig?.can_attempt ?? false
+    const attemptsInfo = testConfig
+      ? `${testConfig.attempts_used} / ${testConfig.max_attempts === 'unlimited' ? '∞' : testConfig.max_attempts}`
+      : '...'
+
     if (isTestStarted) {
       const testDataForPlayer: TestData = {
         id: test.id,
@@ -476,6 +525,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         pass_score: test.pass_score || 0,
         test_type: testType,
         course_id: course_id,
+        max_attempts: testConfig?.max_attempts ?? 0,
+        can_attempt: canAttempt,
         questions: test.questions.map((q: any) => ({
           id: q.order || q.id || Math.random(),
           questionText: q.questionText,
@@ -503,7 +554,9 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
                 if (isLast) onFinish()
                 else onNext()
               }}
+              isLast={isLast}
               onSubmit={answers => handleSubmitTest(test.id, answers)}
+              isCourseCompleted={isCourseCompleted}
             />
           </CardContent>
         </Card>
@@ -549,10 +602,12 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                     {t('Спроби')}
                   </div>
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">
-                    {test.count_attempts === 0
-                      ? t('Необмежено')
-                      : `${test.count_attempts} ${t('разів')}`}
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    {isConfigLoading ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      attemptsInfo
+                    )}
                   </div>
                 </div>
               </div>
@@ -591,8 +646,13 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
                 size="lg"
                 className="w-full sm:w-auto text-base px-8 bg-brand-600 hover:bg-brand-700 shadow-md "
                 onClick={() => setIsTestStarted(true)}
+                disabled={isConfigLoading || !canAttempt}
               >
-                {t('Розпочати тест')}
+                {isConfigLoading
+                  ? t('Перевірка...')
+                  : !canAttempt
+                    ? t('Спроби вичерпано')
+                    : t('Розпочати тест')}
               </Button>
             </div>
 

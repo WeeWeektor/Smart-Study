@@ -1,1 +1,4 @@
-export { testAttemptService } from './test.attempt.service'
+export {
+  testAttemptService,
+  type TestHistoryResponse,
+} from './test.attempt.service'

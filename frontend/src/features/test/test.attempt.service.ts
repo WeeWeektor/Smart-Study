@@ -2,6 +2,17 @@ import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
 import axios from 'axios'
 
+export interface TestHistoryResponse {
+  history: any[]
+  config: {
+    can_attempt: boolean
+    show_correct_answers: boolean
+    attempts_used: number
+    max_attempts: number | 'unlimited'
+    remaining_attempts: number | 'unlimited'
+  }
+}
+
 export interface TestAnswerPayload {
   order: number
   selected_options: string[]
@@ -39,6 +50,47 @@ export interface SubmitTestResponse {
 
 class TestAttemptService {
   private t = ClassTranslator.translate
+
+  async getTestHistory(
+    testId: string,
+    test_type: string
+  ): Promise<TestHistoryResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<TestHistoryResponse>(
+        `/test/get-history-test-attempts/${testId}/`,
+        {
+          params: { test_type: test_type },
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+
+      return response.data
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        let serverMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          this.t('Помилка з’єднання з сервером')
+
+        if (typeof serverMessage === 'string') {
+          const match = serverMessage.match(/\['(.+)'\]/)
+          if (match && match[1]) {
+            serverMessage = match[1]
+          }
+        }
+
+        throw new Error(
+          this.t('Не вдалось отримати історію тестувань. ') + serverMessage
+        )
+      }
+      throw new Error(this.t('Невідома помилка при отриманні історії тестів.'))
+    }
+  }
 
   async submitAttempt({
     testId,
