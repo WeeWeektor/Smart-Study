@@ -186,6 +186,12 @@ const CreateCourse = () => {
         return
       }
 
+      if (courseStructure.courseStructure.length === 0 && publish) {
+        setCreateCourseError(t('Структура курсу не може бути порожньою.'))
+        setIsSaving(false)
+        return
+      }
+
       const hasEmptyModuleTitle = courseStructure.courseStructure.some(
         item =>
           item.type === 'module' && (!item.title || item.title.trim() === '')

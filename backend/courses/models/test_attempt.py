@@ -18,8 +18,10 @@ Meta:
 Строкове представлення:
 - "{test.title} - {user.email} (спроба {attempt_number})"
 """
+from datetime import timedelta
 
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .base import BaseModel
@@ -46,8 +48,9 @@ class TestAttempt(BaseModel):
         related_name='attempts',
         verbose_name=_("Test"),
     )
-    started_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Started at"))
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Completed at"))
+    started_at = models.DateTimeField(verbose_name=_("Started at"))
+    completed_at = models.DateTimeField(default=timezone.now, verbose_name=_("Completed at"))
+    time_spent = models.DurationField(default=timedelta(0), verbose_name=_("Time spent"))
     score = models.FloatField(default=0.0, verbose_name=_("Score"))
     passed = models.BooleanField(default=False, verbose_name=_("Passed"))
     attempt_number = models.PositiveIntegerField(verbose_name=_("Attempt Number"))

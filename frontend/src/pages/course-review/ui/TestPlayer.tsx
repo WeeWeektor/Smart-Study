@@ -62,9 +62,9 @@ export interface TestResult {
 interface TestPlayerProps {
   testData: TestData
   onBack: () => void
-  onFinishCourse?: () => void
+  onFinishCourse?: (timeSpent: number) => void
   isLast: boolean
-  onSubmit: (answers: any[]) => Promise<TestResult>
+  onSubmit: (answers: any[], timeSpent: number) => Promise<TestResult>
   isCourseCompleted: boolean
 }
 
@@ -95,6 +95,8 @@ export const TestPlayer = ({
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
   const [timeLeft, setTimeLeft] = useState(testData.time_limit * 60)
 
+  const [timeSpentOnAttempt, setTimeSpentOnAttempt] = useState(0)
+
   const [serverResult, setServerResult] = useState<TestResult | null>(null)
 
   const processedQuestions = useMemo(() => {
@@ -112,7 +114,6 @@ export const TestPlayer = ({
     return questions
   }, [testData.questions, testData.randomize_questions])
 
-  // TODO перевірити чи правильно працює randomize_questions?: boolean
   // TODO якщо є дві правильні відповіді не працює коректнео (можна вибрати тільки одну правильну а потрібно щоб можна було вибрати безліч правильних відповідей  а якщо є тільки одна првильна відповідь то щоб можна було вибрати тільки одну відповідь)
 
   useEffect(() => {
@@ -159,7 +160,7 @@ export const TestPlayer = ({
   }
 
   const handleNext = () => {
-    if (currentQuestionIndex < testData.questions.length - 1) {
+    if (currentQuestionIndex < processedQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
     } else {
       handleFinishTest()
@@ -171,17 +172,20 @@ export const TestPlayer = ({
       setCurrentQuestionIndex(prev => prev - 1)
     }
   }
-  // TODO Перемішувати питання та варіанти відповідей
+
   const handleFinishTest = async () => {
     setStatus('submitting')
 
-    const payload = testData.questions.map(q => ({
+    const calculatedTimeSpent = testData.time_limit * 60 - timeLeft
+    setTimeSpentOnAttempt(calculatedTimeSpent)
+
+    const payload = processedQuestions.map(q => ({
       order: q.order || q.id,
       selected_options: answers[String(q.id)] || [],
     }))
 
     try {
-      const result = await onSubmit(payload)
+      const result = await onSubmit(payload, calculatedTimeSpent)
       setServerResult(result)
       setStatus('finished')
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -337,7 +341,7 @@ export const TestPlayer = ({
 
             {passed && onFinishCourse && (
               <Button
-                onClick={onFinishCourse}
+                onClick={() => onFinishCourse(timeSpentOnAttempt)}
                 className="bg-brand-600 hover:bg-brand-700"
               >
                 {isLast ? (
@@ -368,7 +372,7 @@ export const TestPlayer = ({
     const questionType = currentQuestion.type || 'single'
 
     const progress =
-      ((currentQuestionIndex + 1) / testData.questions.length) * 100
+      ((currentQuestionIndex + 1) / processedQuestions.length) * 100
     const qId = String(currentQuestion.id || currentQuestion.questionText)
     const currentSelected = answers[qId] || []
 
@@ -394,7 +398,7 @@ export const TestPlayer = ({
             <span className="text-slate-900 dark:text-slate-200 font-bold">
               {currentQuestionIndex + 1}
             </span>{' '}
-            / {testData.questions.length}
+            / {processedQuestions.length}
           </div>
         </div>
 
@@ -515,7 +519,7 @@ export const TestPlayer = ({
             className="bg-brand-600 hover:bg-brand-700 px-8 shadow-md hover:shadow-lg transition-all"
             disabled={currentSelected.length === 0}
           >
-            {currentQuestionIndex === testData.questions.length - 1 ? (
+            {currentQuestionIndex === processedQuestions.length - 1 ? (
               <>
                 {t('Завершити тест')} <CheckCircle2 className="w-4 h-4 ml-2" />
               </>

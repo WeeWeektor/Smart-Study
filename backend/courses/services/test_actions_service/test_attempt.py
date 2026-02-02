@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 
@@ -6,7 +8,7 @@ from common.utils import validate_uuid
 from courses.models import Test, UserCourseEnrollment, TestAttempt
 
 
-async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: list):
+async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: list, time_spent: int):
     try:
         user_id = validate_uuid(user_id)
         test_id = validate_uuid(test_id)
@@ -24,11 +26,11 @@ async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: li
     calculation_result = _calculate_score_and_details(test, questions_list, user_answers)
 
     attempt = await _create_attempt_entry(
-        user_id, test, enrollment, test_type, calculation_result
+        user_id, test, enrollment, test_type, calculation_result, time_spent
     )
 
     if test_type in ["course_test", "module_test"] and enrollment:
-        await _update_course_progress(user_id, test_id, enrollment, calculation_result['passed'])
+        await _update_course_progress(user_id, test_id, enrollment, calculation_result['passed'], time_spent)
 
     return {
         "id": str(attempt.id),
@@ -126,7 +128,7 @@ def _calculate_score_and_details(test, questions_list: list, user_answers: list)
     }
 
 
-async def _create_attempt_entry(user_id, test, enrollment, test_type, result: dict):
+async def _create_attempt_entry(user_id, test, enrollment, test_type, result: dict, time_spent_seconds: int = 0):
     """
     Створення запису про спробу в БД.
     """
@@ -141,6 +143,10 @@ async def _create_attempt_entry(user_id, test, enrollment, test_type, result: di
 
     attempt_number = prev_attempts_count + 1
 
+    completed_at = timezone.now()
+    time_spent_delta = timedelta(seconds=int(time_spent_seconds))
+    started_at = completed_at - time_spent_delta
+
     attempt = await TestAttempt.objects.acreate(
         enrollment=enrollment,
         user_id=user_id if test_type == "public" else None,
@@ -149,12 +155,14 @@ async def _create_attempt_entry(user_id, test, enrollment, test_type, result: di
         passed=result['passed'],
         attempt_number=attempt_number,
         attempt_details=result['processed_details'],
-        completed_at=timezone.now()
+        started_at=started_at,
+        completed_at=completed_at,
+        time_spent=time_spent_delta
     )
     return attempt
 
 
-async def _update_course_progress(user_id, test_id, enrollment, is_passed):
+async def _update_course_progress(user_id, test_id, enrollment, is_passed, time_spent):
     """
     Оновлення прогресу користувача на курсі.
     """
@@ -163,7 +171,7 @@ async def _update_course_progress(user_id, test_id, enrollment, is_passed):
         user_id=user_id,
         course_id=str(enrollment.course_id),
         element_id=str(test_id),
-        time_spent_seconds=0,
+        time_spent_seconds=time_spent,
         element_type="test",
         is_completed=is_passed,
         finished_course=False,

@@ -97,7 +97,3 @@ class UserCourseEnrollmentView(LocalizedView):
             return error_response("Invalid JSON", status=400)
         except Exception as e:
             return error_response(f"Error updating progress: {str(e)}", status=500)
-
-# TODO  в таблиці enrollments оновлювати час time_spent
-# TODO Якщо курс не містить жодних елементів його не публікувати
-# TODO Перевірити роботу оновлення людей на курсі

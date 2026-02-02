@@ -123,7 +123,7 @@ class UserCourseEnrollmentService {
     elementId,
     elementType,
     isCompleted = false,
-    timeSpent = 0,
+    timeSpent,
     finishedCourse = false,
   }: UpdateProgressRequest): Promise<UpdateProgressResponse> {
     try {

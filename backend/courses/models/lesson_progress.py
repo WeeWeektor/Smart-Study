@@ -39,7 +39,7 @@ class LessonProgress(BaseModel):
         related_name='progresses',
         verbose_name=_("Lesson"),
     )
-    started_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Started at"))
+    started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Started at"))
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Completed at"))
     time_spent = models.DurationField(default=timedelta(0), verbose_name=_("Time spent"))
     completion_percentage = models.PositiveIntegerField(default=0, verbose_name=_("Completion percentage"))

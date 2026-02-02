@@ -167,6 +167,7 @@ class TestAttemptView(LocalizedView):
             body = json.loads(request.body)
             test_type = body.get('test_type')
             answers = body.get("answers")
+            time_spent = body.get("time_spent")
 
             if not test_type or test_type not in ["public", "course_test", "module_test"]:
                 return error_response("Invalid or missing test type", status=400)
@@ -174,7 +175,7 @@ class TestAttemptView(LocalizedView):
             if not answers or not isinstance(answers, list):
                 return error_response("Answers list are required", status=400)
 
-            submit_test = await submit_test_attempt(user_id, test_id, test_type, answers)
+            submit_test = await submit_test_attempt(user_id, test_id, test_type, answers, time_spent)
 
             return success_response({
                 "message": "Test submitted successfully",

@@ -15,7 +15,7 @@ async def create_test(test_type: str, user, data: dict):
         "time_limit": data.get("time_limit", 0),
         "count_attempts": data.get("count_attempts", 0),
         "pass_score": data.get("pass_score", 0),
-        "randomize_questions": data.get("randomize_questions", False),
+        "randomize_questions": data.get("random_questions", False),
         "show_correct_answers": data.get("show_correct_answers", True),
     }
 

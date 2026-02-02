@@ -23,6 +23,7 @@ export interface SubmitTestRequest {
   testId: string
   test_type: 'course_test' | 'module_test' | 'public'
   answers: TestAnswerPayload[]
+  timeSpent?: number
 }
 
 export interface QuestionResult {
@@ -97,6 +98,7 @@ class TestAttemptService {
     testId,
     test_type,
     answers,
+    timeSpent,
   }: SubmitTestRequest): Promise<SubmitTestResponse> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
@@ -106,6 +108,7 @@ class TestAttemptService {
         {
           test_type,
           answers,
+          time_spent: timeSpent,
         },
         {
           headers: {

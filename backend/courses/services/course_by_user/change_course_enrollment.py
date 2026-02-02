@@ -1,10 +1,11 @@
 from datetime import timedelta
 
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from common.utils import validate_uuid
 from courses.models import UserCourseEnrollment, LessonProgress
-from django.shortcuts import get_object_or_404
+
 
 def update_enrollment_progress_sync(user_id,
                                     course_id,
@@ -26,13 +27,22 @@ def update_enrollment_progress_sync(user_id,
         enrollment.save(update_fields=['time_spent'])
 
     if element_id and element_type == 'lesson':
-        lesson_progress, _ = LessonProgress.objects.get_or_create(enrollment=enrollment, lesson_id=element_id)
+        now = timezone.now()
 
-        if time_delta > timedelta(0):
+        lesson_progress, created = LessonProgress.objects.get_or_create(
+            enrollment=enrollment,
+            lesson_id=element_id,
+            defaults={
+                'started_at': now - time_delta,
+                'time_spent': time_delta
+            }
+        )
+
+        if not created and time_delta > timedelta(0):
             lesson_progress.time_spent += time_delta
 
         if is_completed and not lesson_progress.completed_at:
-            lesson_progress.completed_at = timezone.now()
+            lesson_progress.completed_at = now
             lesson_progress.completion_percentage = 100
 
         lesson_progress.save()

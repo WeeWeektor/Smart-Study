@@ -2,6 +2,7 @@ import React, {
   type ComponentPropsWithoutRef,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
@@ -40,7 +41,7 @@ interface ActiveCourseElementProps {
   isLast: boolean
   isOwner: boolean
   onFinish: () => void
-  onComplete?: (id: string, type: string) => void
+  onComplete?: (id: string, type: string, timeSpent: number) => void
   isCourseCompleted: boolean
 }
 
@@ -74,9 +75,12 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   >(null)
   const [isConfigLoading, setIsConfigLoading] = useState(false)
 
+  const lessonStartTimeRef = useRef<number>(Date.now())
+
   useEffect(() => {
     setIsTestStarted(false)
     setTestConfig(null)
+    lessonStartTimeRef.current = Date.now()
   }, [activeElement])
 
   useEffect(() => {
@@ -87,6 +91,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     const lessonId = lesson.id
     let timerPassed = false
     let scrollPassed = false
+
+    lessonStartTimeRef.current = Date.now()
 
     const timer = setTimeout(() => {
       timerPassed = true
@@ -105,7 +111,10 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
     const checkCompletion = () => {
       if (timerPassed && scrollPassed) {
-        onComplete(lessonId, 'lesson')
+        const timeSpent = Math.floor(
+          (Date.now() - lessonStartTimeRef.current) / 1000
+        )
+        onComplete(lessonId, 'lesson', timeSpent)
       }
     }
 
@@ -164,7 +173,11 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     fetchConfig()
   }, [currentTestInfo])
 
-  const handleSubmitTest = async (testId: string, answers: any[]) => {
+  const handleSubmitTest = async (
+    testId: string,
+    answers: any[],
+    timeSpent: number
+  ) => {
     try {
       const testType =
         'module-test' in activeElement!
@@ -177,11 +190,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         testId,
         test_type: testType,
         answers: answers,
+        timeSpent: timeSpent,
       })
-
-      if (response.result.passed && onComplete) {
-        onComplete(testId, 'test')
-      }
 
       if (currentTestInfo) {
         const data = await testAttemptService.getTestHistory(
@@ -551,16 +561,18 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
             <TestPlayer
               testData={testDataForPlayer}
               onBack={() => setIsTestStarted(false)}
-              onFinishCourse={() => {
+              onFinishCourse={timeSpent => {
                 if (test) {
-                  onComplete?.(test.id, 'test')
+                  onComplete?.(test.id, 'test', timeSpent)
                 }
 
                 if (isLast) onFinish()
                 else onNext()
               }}
               isLast={isLast}
-              onSubmit={answers => handleSubmitTest(test.id, answers)}
+              onSubmit={(answers, timeSpent) =>
+                handleSubmitTest(test.id, answers, timeSpent)
+              }
               isCourseCompleted={isCourseCompleted}
             />
           </CardContent>

@@ -84,6 +84,8 @@ class CourseView(LocalizedView):
 
             if 'courseStructure' in data:
                 await course_structure(data['courseStructure'], request.user, course_id, files)
+            if not data.get('courseStructure'):
+                data["is_published"] = False
 
             await count_content_course(data, course)
 

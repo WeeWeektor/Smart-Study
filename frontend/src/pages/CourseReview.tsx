@@ -544,8 +544,8 @@ const CourseReview = () => {
               isLast={currentElementIndex === flatCourseElements.length - 1}
               isOwner={isOwner}
               onFinish={handleFinishCourse}
-              onComplete={(elemId, elemType) => {
-                handleElementCompleted(elemId, elemType)
+              onComplete={(elemId, elemType, timeSpent) => {
+                handleElementCompleted(elemId, elemType, timeSpent)
               }}
               isCourseCompleted={isCourseCompleted}
             />

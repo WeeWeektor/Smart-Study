@@ -23,7 +23,12 @@ async def count_content(course):
 async def publishing_course(course_id):
     course_id = validate_uuid(course_id)
 
-    course = await sync_to_async(Course.objects.get)(pk=course_id)
+    course = await sync_to_async(Course.objects.select_related("details").get)(pk=course_id)
+    await sync_to_async(course.details.before_publish)()
+    details = course.details
+
+    if details.total_tests == 0 and details.total_lessons == 0:
+        raise ValidationError(_('Cannot publish a course without content.'))
 
     from courses.services.course_actions_service import count_content_course
     await count_content_course({"is_published": True}, course)

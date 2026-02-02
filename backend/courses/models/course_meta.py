@@ -61,11 +61,16 @@ class CourseMeta(BaseModel):
     def before_publish(self):
         """Метод який перед публікацією курсу з підраховує кількість модулів, уроків і тестів"""
         self.total_modules = self.course.modules.count()
-        self.total_lessons = sum(module.lessons.count() for module in self.course.modules.all())
-        self.total_tests = (
-                sum(module.module_tests.count() for module in self.course.modules.all()) +
-                self.course.course_tests.count()
-        )
+
+        self.total_lessons = self.course.modules.aggregate(
+            total=Count('lessons')
+        )['total'] or 0
+
+        module_tests_count = self.course.modules.aggregate(
+            total=Count('module_tests')
+        )['total'] or 0
+        self.total_tests = module_tests_count + self.course.course_tests.count()
+
         self.save(update_fields=['total_modules', 'total_lessons', 'total_tests'])
 
     def update_counters(self):
