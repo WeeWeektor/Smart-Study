@@ -114,8 +114,6 @@ export const TestPlayer = ({
     return questions
   }, [testData.questions, testData.randomize_questions])
 
-  // TODO якщо є дві правильні відповіді не працює коректнео (можна вибрати тільки одну правильну а потрібно щоб можна було вибрати безліч правильних відповідей  а якщо є тільки одна првильна відповідь то щоб можна було вибрати тільки одну відповідь)
-
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (status === 'active' && timeLeft > 0) {

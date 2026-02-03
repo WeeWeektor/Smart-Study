@@ -344,7 +344,11 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
 
                     {!isCollapsed && (
                       <div className="p-4">
-                        <p className="mb-3">{q.questionText}</p>
+                        <p className="mb-3">
+                          {q.questionText.length > 100
+                            ? q.questionText.slice(0, 100) + '...'
+                            : q.questionText}
+                        </p>
                         <div className="grid grid-cols-2 gap-2">
                           {q.choices.map((choice, i) => {
                             const isCorrect = q.correctAnswers.includes(choice)
@@ -357,7 +361,10 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
                                     : 'bg-gray-100 dark:bg-gray-700 border-gray-300'
                                 }`}
                               >
-                                {String.fromCharCode(65 + i)}. {choice}
+                                {String.fromCharCode(65 + i)}.{' '}
+                                {choice.length > 50
+                                  ? choice.slice(0, 50) + '...'
+                                  : choice}
                               </div>
                             )
                           })}

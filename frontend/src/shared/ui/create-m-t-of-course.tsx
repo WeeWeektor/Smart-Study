@@ -286,7 +286,9 @@ export const CreateMTOfCourse = ({
       <div className="flex flex-col gap-3 text-sm">
         <div className="flex items-center font-semibold text-lg text-slate-800 dark:text-slate-100">
           <FileCheck className="w-5 h-5 mr-2 text-brand-600 dark:text-brand-400" />
-          {test.title || t('Тест')}
+          {(test.title.length > 150
+            ? test.title.slice(0, 150) + '...'
+            : test.title) || t('Тест')}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
@@ -357,7 +359,9 @@ export const CreateMTOfCourse = ({
       <div className="flex flex-col gap-3 text-sm">
         <div className="flex items-center font-semibold text-lg text-slate-800 dark:text-slate-100">
           <FileText className="w-5 h-5 mr-2 text-brand-600 dark:text-brand-400" />
-          {lesson.title}
+          {lesson.title.length > 150
+            ? lesson.title.slice(0, 150) + '...'
+            : lesson.title}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">

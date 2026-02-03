@@ -64,7 +64,7 @@ export const AuthorSection: React.FC<AuthorSectionProps> = ({ ownerData }) => {
       {isPublic && (
         <CardContent className="space-y-4 border-t border-slate-100 dark:border-slate-800 mt-4 pt-4">
           {profile.bio && (
-            <div className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md italic">
+            <div className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md italic line-clamp-2 break-words overflow-hidden">
               "{profile.bio}"
             </div>
           )}
@@ -76,7 +76,11 @@ export const AuthorSection: React.FC<AuthorSectionProps> = ({ ownerData }) => {
                 <span className="font-semibold text-slate-500 dark:text-slate-400">
                   {t('Спеціалізація')}:
                 </span>
-                <span>{profile.specialization}</span>
+                <span>
+                  {profile.specialization.length > 50
+                    ? profile.specialization.slice(0, 50) + '...'
+                    : profile.specialization}
+                </span>
               </div>
             )}
 
@@ -86,7 +90,11 @@ export const AuthorSection: React.FC<AuthorSectionProps> = ({ ownerData }) => {
                 <span className="font-semibold text-slate-500 dark:text-slate-400">
                   {t('Організація')}:
                 </span>
-                <span>{profile.organization}</span>
+                <span>
+                  {profile.organization.length > 50
+                    ? profile.organization.slice(0, 50) + '...'
+                    : profile.organization}
+                </span>
               </div>
             )}
 
@@ -96,7 +104,11 @@ export const AuthorSection: React.FC<AuthorSectionProps> = ({ ownerData }) => {
                 <span className="font-semibold text-slate-500 dark:text-slate-400">
                   {t('Освіта')}:
                 </span>
-                <span className="capitalize">{profile.education_level}</span>
+                <span className="capitalize">
+                  {profile.education_level.length > 50
+                    ? profile.education_level.slice(0, 50) + '...'
+                    : profile.education_level}
+                </span>
               </div>
             )}
 
@@ -106,7 +118,11 @@ export const AuthorSection: React.FC<AuthorSectionProps> = ({ ownerData }) => {
                 <span className="font-semibold text-slate-500 dark:text-slate-400">
                   {t('Локація')}:
                 </span>
-                <span>{profile.location}</span>
+                <span>
+                  {profile.location.length > 50
+                    ? profile.location.slice(0, 50) + '...'
+                    : profile.location}
+                </span>
               </div>
             )}
           </div>

@@ -49,6 +49,8 @@ async def prepare_questions_data(questions: list[dict]) -> list[dict]:
     """Валідує та форматує список питань для збереження у mongodb"""
     questions_data = []
     for qd in questions:
+        question_type = 'single' if len(qd.get('correctAnswers', [])) == 1 else 'multiple'
+
         await sync_to_async(validate_test_question_data)(qd)
         questions_data.append({
             "questionText": qd["questionText"].strip(),
@@ -58,6 +60,7 @@ async def prepare_questions_data(questions: list[dict]) -> list[dict]:
             "order": qd.get("order"),
             "explanation": qd.get("explanation", ""),
             "image_url": qd.get("imageFileKey", ""),
+            "type": question_type
         })
 
     return questions_data

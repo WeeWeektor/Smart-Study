@@ -165,9 +165,9 @@ export const CourseCard = ({
 
       <CardContent className="flex-1 flex flex-col p-6 text-slate-900 dark:text-slate-100">
         <h3 className="font-semibold text-slate-900 dark:text-slate-200 line-clamp-2 mb-2 h-8 leading-6">
-          {title}
+          {title.length > 45 ? title.slice(0, 45) + '...' : title}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2 h-10 leading-5">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2 h-10 leading-5 break-words overflow-hidden">
           {' '}
           {description}
         </p>

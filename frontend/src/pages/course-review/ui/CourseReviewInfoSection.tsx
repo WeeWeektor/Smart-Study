@@ -53,7 +53,7 @@ export const CourseInfoSection: React.FC<CourseInfoSectionProps> = ({
               <BookOpen className="w-5 h-5 text-brand-600" />
               {t('Про цей курс')}
             </h3>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap line-clamp-2 break-words overflow-hidden">
               {description || t('Опис відсутній')}
             </p>
           </div>
@@ -75,7 +75,9 @@ export const CourseInfoSection: React.FC<CourseInfoSectionProps> = ({
                 {t('Мова')}
               </div>
               <div className="font-semibold text-slate-700 dark:text-slate-200">
-                {details.course_language || t('Не вказано')}
+                {(details.course_language.length > 20
+                  ? details.course_language.slice(0, 20) + '...'
+                  : details.course_language) || t('Не вказано')}
               </div>
             </div>
 
