@@ -140,7 +140,10 @@ const CourseReview = () => {
           )
         }
       } catch (error) {
-        console.error('Failed to load enrollment data:', error) // TODO
+        setCourseError(
+          'Не вдалося завантажити дані про реєстрацію: ' +
+            (error instanceof Error ? error.message : String(error))
+        )
       }
     }
 
@@ -478,7 +481,8 @@ const CourseReview = () => {
   }
 
   const handleCheckCourseBeforePublish = async () => {
-    // TODO
+    // TODO Implement check course before publish
+    // TODO Show statistics for teacher about course enrollment, completions, reviews, etc.
     console.log('Check data course before publish', id)
   }
 

@@ -94,10 +94,9 @@ export const TestPlayer = ({
 
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
   const [timeLeft, setTimeLeft] = useState(testData.time_limit * 60)
-
   const [timeSpentOnAttempt, setTimeSpentOnAttempt] = useState(0)
-
   const [serverResult, setServerResult] = useState<TestResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const processedQuestions = useMemo(() => {
     let questions = [...testData.questions]
@@ -113,6 +112,13 @@ export const TestPlayer = ({
 
     return questions
   }, [testData.questions, testData.randomize_questions])
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -142,6 +148,9 @@ export const TestPlayer = ({
     type: 'single' | 'multiple'
   ) => {
     const qId = String(questionId)
+
+    if (error) setError(null)
+
     setAnswers(prev => {
       const current = prev[qId] || []
 
@@ -158,6 +167,7 @@ export const TestPlayer = ({
   }
 
   const handleNext = () => {
+    if (error) setError(null)
     if (currentQuestionIndex < processedQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
     } else {
@@ -166,6 +176,7 @@ export const TestPlayer = ({
   }
 
   const handlePrev = () => {
+    if (error) setError(null)
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1)
     }
@@ -173,6 +184,7 @@ export const TestPlayer = ({
 
   const handleFinishTest = async () => {
     setStatus('submitting')
+    setError(null)
 
     const calculatedTimeSpent = testData.time_limit * 60 - timeLeft
     setTimeSpentOnAttempt(calculatedTimeSpent)
@@ -187,10 +199,14 @@ export const TestPlayer = ({
       setServerResult(result)
       setStatus('finished')
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    } catch (error) {
-      console.error('Submission error', error)
-      setStatus('active') // Повертаємо, щоб спробувати ще раз
-      // TODO Тут бажано показати notification error
+    } catch (err: unknown) {
+      setStatus('active')
+
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError(t('Виникла невідома помилка при відправці. Спробуйте ще раз.'))
+      }
     }
   }
 
@@ -408,6 +424,12 @@ export const TestPlayer = ({
         </div>
 
         <div className="py-2">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
+              {error}
+            </div>
+          )}
+
           <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4 leading-tight">
             {currentQuestion.questionText}
           </h3>

@@ -74,14 +74,23 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     TestHistoryResponse['config'] | null
   >(null)
   const [isConfigLoading, setIsConfigLoading] = useState(false)
+  const [configError, setConfigError] = useState<string | null>(null)
 
   const lessonStartTimeRef = useRef<number>(Date.now())
 
   useEffect(() => {
     setIsTestStarted(false)
     setTestConfig(null)
+    setConfigError(null)
     lessonStartTimeRef.current = Date.now()
   }, [activeElement])
+
+  useEffect(() => {
+    if (configError) {
+      const timer = setTimeout(() => setConfigError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [configError])
 
   useEffect(() => {
     const lesson =
@@ -157,6 +166,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
       if (!currentTestInfo) return
 
       setIsConfigLoading(true)
+      setConfigError(null)
       try {
         const data = await testAttemptService.getTestHistory(
           currentTestInfo.test.id,
@@ -164,7 +174,11 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         )
         setTestConfig(data.config)
       } catch (error) {
-        console.error('Failed to load test config', error) // TODO
+        if (error instanceof Error) {
+          setConfigError(error.message)
+        } else {
+          setConfigError(t('Не вдалось завантажити інформацію про тест'))
+        }
       } finally {
         setIsConfigLoading(false)
       }
@@ -192,6 +206,10 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         answers: answers,
         timeSpent: timeSpent,
       })
+
+      if (response.result.passed && onComplete) {
+        onComplete(testId, 'test', timeSpent)
+      }
 
       if (currentTestInfo) {
         const data = await testAttemptService.getTestHistory(
@@ -582,6 +600,33 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
     return (
       <>
+        {configError && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
+            {configError}
+          </div>
+        )}
+        {/* 3. Відображення блоку помилки */}
+        {/*{configError && (*/}
+        {/*  <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 flex items-start gap-3">*/}
+        {/*    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />*/}
+        {/*    <div>*/}
+        {/*      <h4 className="font-bold text-red-700 dark:text-red-400 text-sm mb-1">*/}
+        {/*        {t('Помилка завантаження')}*/}
+        {/*      </h4>*/}
+        {/*      <p className="text-sm text-red-600 dark:text-red-300">*/}
+        {/*        {configError}*/}
+        {/*      </p>*/}
+        {/*      <Button*/}
+        {/*        variant="link"*/}
+        {/*        className="p-0 h-auto text-red-700 dark:text-red-400 mt-2 font-semibold"*/}
+        {/*        onClick={() => window.location.reload()}*/}
+        {/*      >*/}
+        {/*        {t('Спробувати ще раз')}*/}
+        {/*      </Button>*/}
+        {/*    </div>*/}
+        {/*  </div>*/}
+        {/*)}*/}
+
         <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-shadow hover:shadow-md dark:hover:shadow-gray-800/50">
           <CardContent className="text-slate-700 dark:text-slate-200">
             <h1 className="text-3xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
@@ -663,7 +708,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
                 size="lg"
                 className="w-full sm:w-auto text-base px-8 bg-brand-600 hover:bg-brand-700 shadow-md "
                 onClick={() => setIsTestStarted(true)}
-                disabled={isConfigLoading || !canAttempt}
+                disabled={isConfigLoading || !canAttempt || !!configError}
               >
                 {isConfigLoading
                   ? t('Перевірка...')
