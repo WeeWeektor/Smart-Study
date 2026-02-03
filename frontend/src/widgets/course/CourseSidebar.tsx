@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  CheckCheckIcon,
   CheckCircle,
   CheckSquare,
   ChevronDown,
@@ -10,10 +11,13 @@ import {
   Lock,
   PlayCircle,
   PlaySquare,
+  XCircleIcon,
 } from 'lucide-react'
 import { useI18n } from '@/shared/lib'
 import type { CourseStructureResponse, NormalizedItem } from '@/features/course'
 import { normalizeCourseStructure } from '@/shared/lib/course/normalizeStructure.ts'
+import { Button } from '@/shared/ui'
+import { useNavigate } from 'react-router-dom'
 
 interface CourseSidebarProps {
   isCollapsible?: boolean
@@ -24,6 +28,9 @@ interface CourseSidebarProps {
   onItemClick?: (id: string, type: string) => void
   activeItemId?: string | null
   completedItemIds?: string[]
+  courseCompleted: boolean
+  courseCompletedSuccessfully: boolean
+  courseId: string
 }
 
 export const CourseSidebar = ({
@@ -34,11 +41,16 @@ export const CourseSidebar = ({
   onItemClick,
   activeItemId,
   completedItemIds = [],
+  courseCompleted,
+  courseCompletedSuccessfully,
+  courseId: id,
 }: CourseSidebarProps) => {
   const { t } = useI18n()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const [structure, setStructure] = useState<NormalizedItem[]>([])
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (data) {
@@ -138,6 +150,54 @@ export const CourseSidebar = ({
     }
 
     return classes
+  }
+
+  const myCertificateButton = (
+    courseCompleted: boolean,
+    courseCompletedSuccessfully: boolean,
+    isCollapsed: boolean
+  ) => {
+    if (!courseCompleted) return null
+
+    const config = courseCompletedSuccessfully
+      ? {
+          Icon: CheckCheckIcon,
+          colorClass: 'text-green-600 dark:text-green-500',
+          label: t('Мій сертифікат'),
+        }
+      : {
+          Icon: XCircleIcon,
+          colorClass: 'text-red-600 dark:text-red-500',
+          label: t('Курс завершено'),
+        }
+
+    const { Icon, colorClass, label } = config
+
+    return (
+      <Button
+        variant="secondary"
+        size="default"
+        className={`
+          flex items-center justify-center transition-all duration-300 ease-in-out
+          ${isCollapsed ? 'w-10 p-0 pl-1' : 'w-full px-4'}
+        `}
+        onClick={() => {
+          navigate(`/course-completion/${id}`)
+        }}
+        title={isCollapsed ? label : undefined}
+      >
+        <Icon className={`w-6 h-6 shrink-0 ${colorClass}`} />
+
+        <span
+          className={`
+            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
+            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-2'}
+          `}
+        >
+          {label}
+        </span>
+      </Button>
+    )
   }
 
   return (
@@ -291,6 +351,18 @@ export const CourseSidebar = ({
           </div>
         )}
       </div>
+
+      {courseCompleted && (
+        <div className="p-4 border-t border-sidebar-border shrink-0">
+          <div className={'flex items-center justify-center'}>
+            {myCertificateButton(
+              courseCompleted,
+              courseCompletedSuccessfully,
+              isCollapsed
+            )}
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

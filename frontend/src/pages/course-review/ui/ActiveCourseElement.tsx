@@ -19,9 +19,11 @@ import {
   FileCheck,
   LayoutGrid,
   Loader2,
+  PlaySquareIcon,
   RotateCw,
   Timer,
   Trophy,
+  XCircleIcon,
 } from 'lucide-react'
 import { Button, Card, CardContent, LoadingProfile } from '@/shared/ui'
 import { CodeDisplay } from '@/features/lesson-type-fields/ui'
@@ -39,6 +41,7 @@ interface ActiveCourseElementProps {
   onPrev: () => void
   isFirst: boolean
   isLast: boolean
+  completedCourseFailed: boolean | null
   isOwner: boolean
   onFinish: () => void
   onComplete?: (id: string, type: string, timeSpent: number) => void
@@ -62,6 +65,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   onPrev,
   isFirst,
   isLast,
+  completedCourseFailed,
   isOwner,
   onFinish,
   onComplete,
@@ -482,11 +486,19 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
               </>
             ) : (
               <>
-                <Award className="w-4 h-4" />
+                {isCourseCompleted ? (
+                  <Award className="w-4 h-4" />
+                ) : completedCourseFailed == false ? (
+                  <XCircleIcon className="w-4 h-4" />
+                ) : (
+                  <PlaySquareIcon className="w-4 h-4" />
+                )}
                 <span>
                   {isCourseCompleted
                     ? t('Отримати сертифікат')
-                    : t('Завершіть усі завдання')}
+                    : completedCourseFailed == false
+                      ? t('Курс завершено')
+                      : t('Завершіть усі завдання')}
                 </span>
               </>
             )}

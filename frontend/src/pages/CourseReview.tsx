@@ -30,6 +30,8 @@ import {
   ReviewsSection,
   StarSection,
 } from '@/pages/course-review'
+import { runFireworks } from '@/shared/lib/utils/'
+import { testAttemptService } from '@/features/test'
 
 const CourseReview = () => {
   const { t } = useI18n()
@@ -74,6 +76,10 @@ const CourseReview = () => {
   const [isElementLoading, setIsElementLoading] = useState(false)
 
   const [completedElements, setCompletedElements] = useState<string[]>([])
+
+  const [myCerButtInCS, setMyCerButtInCS] = useState<boolean>(false)
+  const [courseCompletedSuccessfully, setCourseCompletedSuccessfully] =
+    useState<boolean | null>(null)
 
   const isOwner = useMemo(() => {
     if (!profileData?.user?.id || !course?.course?.owner[0].owner.id) {
@@ -247,6 +253,91 @@ const CourseReview = () => {
     )
   }, [flatCourseElements, completedElements])
 
+  useEffect(() => {
+    if (courseLoading || !courseStructureData) return
+
+    const checkCompletionStatus = async () => {
+      if (userStatus === 'completed') {
+        setMyCerButtInCS(true)
+        setCourseCompletedSuccessfully(true)
+        return
+      }
+
+      if (userStatus === 'in_progress' && flatCourseElements.length > 0) {
+        const lessons = flatCourseElements.filter(el => el.type === 'lesson')
+        const tests = flatCourseElements.filter(el => el.type.includes('test'))
+
+        const allLessonsCompleted = lessons.every(lesson =>
+          completedElements.includes(lesson.id)
+        )
+
+        if (allLessonsCompleted) {
+          const allTestsPassed = tests.every(test =>
+            completedElements.includes(test.id)
+          )
+
+          if (allTestsPassed) {
+            setMyCerButtInCS(true)
+            setCourseCompletedSuccessfully(true)
+          } else {
+            const unpassedTests = tests.filter(
+              test => !completedElements.includes(test.id)
+            )
+
+            if (unpassedTests.length > 0) {
+              const failedTests = await checkIfTestsFailed(unpassedTests)
+
+              if (failedTests) {
+                setMyCerButtInCS(true)
+                setCourseCompletedSuccessfully(false)
+              } else {
+                setMyCerButtInCS(false)
+                setCourseCompletedSuccessfully(null)
+              }
+            }
+          }
+        } else {
+          setMyCerButtInCS(false)
+          setCourseCompletedSuccessfully(null)
+        }
+      }
+    }
+
+    checkCompletionStatus()
+  }, [
+    userStatus,
+    courseLoading,
+    courseStructureData,
+    flatCourseElements.length,
+    completedElements.length,
+  ])
+
+  const checkIfTestsFailed = async (
+    tests: { id: string; type: string }[]
+  ): Promise<boolean> => {
+    if (tests.length === 0) return false
+    try {
+      for (const test of tests) {
+        const testType =
+          test.type === 'module-test'
+            ? 'module_test'
+            : test.type === 'course-test'
+              ? 'course_test'
+              : 'public'
+        const history = await testAttemptService.getTestHistory(
+          test.id,
+          testType as any
+        )
+        if (!history.config.can_attempt) {
+          return true
+        }
+      }
+      return false
+    } catch {
+      return false
+    }
+  }
+
   const activeElementId = useMemo(() => {
     if (!activeElement) return null
 
@@ -287,6 +378,8 @@ const CourseReview = () => {
     }
 
     try {
+      runFireworks()
+
       await userCourseEnrollmentService.updateProgress({
         courseId: id,
         finishedCourse: true,
@@ -298,8 +391,12 @@ const CourseReview = () => {
       if (isOwner) {
         navigate('/my-created-courses')
       } else {
-        setActiveElement(null)
-        // TODO Тут показати модалку з вітанням і отриманням сертифікату
+        setMyCerButtInCS(true)
+        setCourseCompletedSuccessfully(true)
+
+        setTimeout(() => {
+          navigate(`/course-completion/${id}`)
+        }, 2000)
       }
     } catch (e) {
       setCourseError(
@@ -524,6 +621,13 @@ const CourseReview = () => {
         onItemClick={handleSidebarItemClick}
         activeItemId={activeElementId}
         completedItemIds={completedElements}
+        courseCompleted={myCerButtInCS}
+        courseCompletedSuccessfully={
+          courseCompletedSuccessfully !== null
+            ? courseCompletedSuccessfully
+            : false
+        }
+        courseId={id || ''}
       />
 
       <main
@@ -546,6 +650,7 @@ const CourseReview = () => {
               onPrev={() => handleNavigate('prev')}
               isFirst={currentElementIndex === 0}
               isLast={currentElementIndex === flatCourseElements.length - 1}
+              completedCourseFailed={courseCompletedSuccessfully}
               isOwner={isOwner}
               onFinish={handleFinishCourse}
               onComplete={(elemId, elemType, timeSpent) => {

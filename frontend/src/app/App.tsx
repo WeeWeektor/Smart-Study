@@ -15,6 +15,7 @@ import {
   TermsOfService,
   CreateCourse,
   CourseReview,
+  CourseCompletion,
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
@@ -62,6 +63,7 @@ const App = () => {
             element={<TeacherCourses />}
           />
           <Route path="/course-review/:id" element={<CourseReview />} />
+          <Route path="/course-completion/:id" element={<CourseCompletion />} />
           <Route path="/create-course" element={<CreateCourse />} />
 
           <Route path="*" element={<NotFound />} />
