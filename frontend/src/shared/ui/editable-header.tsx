@@ -28,7 +28,11 @@ export const EditableHeader = ({
                 {icon && <span className="mr-2">{icon}</span>}
                 {title.length > 60 ? `${title.slice(0, 60)}...` : title}
               </h1>
-              <p className="text-muted-foreground">{description}</p>
+              <p className="text-muted-foreground">
+                {description.length > 100
+                  ? `${description.slice(0, 100)}...`
+                  : description}
+              </p>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from courses.views import CourseView, CoursesByUserView, PublishCourseView
+from courses.views import CourseView, CoursesByUserView, PublishCourseView, CertificateView
 
 app_name = 'course'
 urlpatterns = [
@@ -13,4 +13,6 @@ urlpatterns = [
     path('course/<uuid:course_id>/', CourseView.as_view(), name='course-detail'),
 
     path('publish-course/<uuid:course_id>/', PublishCourseView.as_view(), name='publish-course'),
+    
+    path('generate-certificate/<uuid:course_id>/', CertificateView.as_view(), name='generate-certificate'),
 ]

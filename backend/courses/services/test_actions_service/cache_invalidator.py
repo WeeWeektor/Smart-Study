@@ -1,7 +1,5 @@
-from courses.services.cache_service import invalidate_instance_cached_all, invalidate_test_cache_by_course_or_module
-
-
 def cache_invalidators(test_type: str, test, user=None):
+    from courses.services.cache_service import invalidate_instance_cached_all, invalidate_test_cache_by_course_or_module
     invalidators = {
         "public": lambda: invalidate_instance_cached_all(
             instance_type="public test",

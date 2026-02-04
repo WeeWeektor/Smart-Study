@@ -1,6 +1,7 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
 import axios from 'axios'
+import type { CourseTestSummary } from '@/features/test'
 
 export interface StartCourseResponse {
   message: string
@@ -47,6 +48,8 @@ export interface EnrollmentStatusResponse {
   is_fully_completed: boolean
   is_failed: boolean
   certificate_url: string | null
+  course_title: string
+  course_description: string
 }
 
 class UserCourseEnrollmentService {
@@ -222,6 +225,26 @@ class UserCourseEnrollmentService {
         )
       }
       throw new Error(this.t('Невідома помилка при перевірці статусу курсу.'))
+    }
+  }
+
+  async getCourseTestResults(courseId: string): Promise<CourseTestSummary[]> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<{ results: CourseTestSummary[] }>(
+        `/enrollment/get-test-results/${courseId}/`,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+
+      return response.data.results
+    } catch {
+      return []
     }
   }
 }

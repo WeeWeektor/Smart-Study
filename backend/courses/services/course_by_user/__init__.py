@@ -4,3 +4,4 @@ from .remove_course_from_wishlist import remove_course_from_wishlist
 from .get_course_with_details_enrollment import get_course_with_details_enrollment
 from .create_course_enrollment import create_course_enrollment
 from .change_course_enrollment import update_enrollment_progress_sync
+from .get_course_enrollment_status import get_course_enrollment_status

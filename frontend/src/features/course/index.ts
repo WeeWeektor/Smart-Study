@@ -27,3 +27,4 @@ export {
   userCourseEnrollmentService,
   type EnrollmentDetailResponse,
 } from './course-enrollment/user.course.enrollment.service'
+export { userCourseCertificateService } from './course-certificate/user.course.certificate.service'

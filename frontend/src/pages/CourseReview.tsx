@@ -31,7 +31,6 @@ import {
   StarSection,
 } from '@/pages/course-review'
 import { runFireworks } from '@/shared/lib/utils/'
-import { testAttemptService } from '@/features/test'
 
 const CourseReview = () => {
   const { t } = useI18n()
@@ -97,6 +96,13 @@ const CourseReview = () => {
   }, [userStatus, isOwner])
 
   useEffect(() => {
+    if (courseError) {
+      const timer = setTimeout(() => setCourseError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [courseError])
+
+  useEffect(() => {
     const fetchCourseAllData = async () => {
       if (!id) return
 
@@ -142,7 +148,7 @@ const CourseReview = () => {
         if (data.last_visited_element_id && !activeElement) {
           handleSidebarItemClick(
             data.last_visited_element_id,
-            data.last_visited_element_type
+            data.last_visited_element_type as string
           )
         }
       } catch (error) {
@@ -522,9 +528,14 @@ const CourseReview = () => {
     }
   }
 
+  const handleCheckStatisticsCourseForTeacher = async () => {
+    // TODO Show statistics for teacher about course enrollment, completions, reviews, etc.
+    console.log('Check data statistics course', id)
+  }
+
   const handleCheckCourseBeforePublish = async () => {
     // TODO Implement check course before publish
-    // TODO Show statistics for teacher about course enrollment, completions, reviews, etc.
+    // TODO replace this method to change course(add elem to course, edit course, etc.)
     console.log('Check data course before publish', id)
   }
 

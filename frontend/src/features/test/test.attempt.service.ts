@@ -2,6 +2,17 @@ import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient } from '@/shared/api'
 import axios from 'axios'
 
+export interface CourseTestSummary {
+  id: string
+  title: string
+  test_type: 'course_test' | 'module_test'
+  score: number // Найкращий бал користувача
+  pass_score: number // Прохідний бал або 100
+  passed: boolean // Чи зараховано тест
+  attempts_used: number // Скільки разів пробував
+  max_attempts: number // Ліміт (0 = безліміт)
+}
+
 export interface TestHistoryResponse {
   history: any[]
   config: {
