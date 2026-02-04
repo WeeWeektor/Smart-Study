@@ -7,9 +7,10 @@ from courses.views.choices_views import ChoicesView
 from courses.views.counter_views import CountAllPublishedCourses, CountTeacherCourses
 from courses.views.user_wishlist_views import UserWishlistView
 from courses.views.courses_by_user_views import CoursesByUserView
-from courses.views.user_course_enrollment_views import UserCourseEnrollmentView
+from courses.views.user_course_enrollment_views import UserCourseEnrollmentView, UserCourseEnrollmentStatusView
 
 __all__ = [
+    "UserCourseEnrollmentStatusView",
     "CourseView",
     "PublishCourseView",
     "ModuleView",

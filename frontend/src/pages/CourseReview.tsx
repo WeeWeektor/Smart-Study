@@ -254,89 +254,34 @@ const CourseReview = () => {
   }, [flatCourseElements, completedElements])
 
   useEffect(() => {
-    if (courseLoading || !courseStructureData) return
-
-    const checkCompletionStatus = async () => {
-      if (userStatus === 'completed') {
-        setMyCerButtInCS(true)
-        setCourseCompletedSuccessfully(true)
-        return
-      }
-
-      if (userStatus === 'in_progress' && flatCourseElements.length > 0) {
-        const lessons = flatCourseElements.filter(el => el.type === 'lesson')
-        const tests = flatCourseElements.filter(el => el.type.includes('test'))
-
-        const allLessonsCompleted = lessons.every(lesson =>
-          completedElements.includes(lesson.id)
+    const fetchStatus = async () => {
+      try {
+        const response = await userCourseEnrollmentService.getEnrollmentStatus(
+          id as string
         )
+        const { is_failed, certificate_url, is_fully_completed } = response
 
-        if (allLessonsCompleted) {
-          const allTestsPassed = tests.every(test =>
-            completedElements.includes(test.id)
-          )
-
-          if (allTestsPassed) {
-            setMyCerButtInCS(true)
-            setCourseCompletedSuccessfully(true)
-          } else {
-            const unpassedTests = tests.filter(
-              test => !completedElements.includes(test.id)
-            )
-
-            if (unpassedTests.length > 0) {
-              const failedTests = await checkIfTestsFailed(unpassedTests)
-
-              if (failedTests) {
-                setMyCerButtInCS(true)
-                setCourseCompletedSuccessfully(false)
-              } else {
-                setMyCerButtInCS(false)
-                setCourseCompletedSuccessfully(null)
-              }
-            }
-          }
+        if (certificate_url || is_fully_completed) {
+          setMyCerButtInCS(true)
+          setCourseCompletedSuccessfully(true)
+        } else if (is_failed) {
+          setMyCerButtInCS(true)
+          setCourseCompletedSuccessfully(false)
         } else {
           setMyCerButtInCS(false)
           setCourseCompletedSuccessfully(null)
         }
-      }
-    }
-
-    checkCompletionStatus()
-  }, [
-    userStatus,
-    courseLoading,
-    courseStructureData,
-    flatCourseElements.length,
-    completedElements.length,
-  ])
-
-  const checkIfTestsFailed = async (
-    tests: { id: string; type: string }[]
-  ): Promise<boolean> => {
-    if (tests.length === 0) return false
-    try {
-      for (const test of tests) {
-        const testType =
-          test.type === 'module-test'
-            ? 'module_test'
-            : test.type === 'course-test'
-              ? 'course_test'
-              : 'public'
-        const history = await testAttemptService.getTestHistory(
-          test.id,
-          testType as any
+      } catch (e) {
+        setCourseError(
+          e instanceof Error
+            ? e.message
+            : t('Помилка отримання статусу прогресу')
         )
-        if (!history.config.can_attempt) {
-          return true
-        }
       }
-      return false
-    } catch {
-      return false
     }
-  }
+
+    fetchStatus()
+  }, [id])
 
   const activeElementId = useMemo(() => {
     if (!activeElement) return null

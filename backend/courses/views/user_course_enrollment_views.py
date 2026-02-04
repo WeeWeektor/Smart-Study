@@ -8,8 +8,9 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
 from common.decorators import login_required_async
-from common.utils import error_response, success_response
-from courses.models import Course
+from common.utils import error_response, success_response, validate_uuid
+from courses.models import Course, UserCourseEnrollment
+from courses.serializers import UserCourseEnrollmentSerializer
 from courses.services.course_by_user import get_course_with_details_enrollment, create_course_enrollment, \
     update_enrollment_progress_sync
 
@@ -97,3 +98,25 @@ class UserCourseEnrollmentView(LocalizedView):
             return error_response("Invalid JSON", status=400)
         except Exception as e:
             return error_response(f"Error updating progress: {str(e)}", status=500)
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class UserCourseEnrollmentStatusView(LocalizedView):
+    @login_required_async
+    async def get(self, request, course_id):
+        user_id = request.user.id
+        user_id = validate_uuid(user_id)
+        course_id = validate_uuid(course_id)
+
+        try:
+            enrollment = await UserCourseEnrollment.objects.select_related('user', 'course') \
+                .aget(course_id=course_id, user_id=user_id)
+
+            data = await sync_to_async(lambda: UserCourseEnrollmentSerializer(enrollment).data)()
+
+            return success_response(data=data, message="Enrollment status retrieved successfully", status=200)
+
+        except UserCourseEnrollment.DoesNotExist:
+            return error_response("Enrollment not found", status=404)
+        except Exception as e:
+            return error_response(f"Error checking status: {str(e)}", status=500)

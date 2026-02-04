@@ -41,6 +41,14 @@ export interface UpdateProgressResponse {
   }
 }
 
+export interface EnrollmentStatusResponse {
+  id: string
+  progress: number
+  is_fully_completed: boolean
+  is_failed: boolean
+  certificate_url: string | null
+}
+
 class UserCourseEnrollmentService {
   private t = ClassTranslator.translate
 
@@ -164,6 +172,56 @@ class UserCourseEnrollmentService {
         throw new Error(this.t('Не вдалось оновити прогрес. ') + serverMessage)
       }
       throw new Error(this.t('Невідома помилка при збереженні прогресу.'))
+    }
+  }
+
+  async getEnrollmentStatus(
+    courseId: string
+  ): Promise<EnrollmentStatusResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<EnrollmentStatusResponse>(
+        `/enrollment/get-enrollment-status/${courseId}/`,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+
+      return response.data
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          return {
+            id: '',
+            progress: 0,
+            is_fully_completed: false,
+            is_failed: false,
+            certificate_url: null,
+          } as EnrollmentStatusResponse
+        }
+
+        let serverMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          this.t('Помилка з’єднання з сервером')
+
+        if (typeof serverMessage === 'string') {
+          const match = serverMessage.match(/\['(.+)'\]/)
+          if (match && match[1]) {
+            serverMessage = match[1]
+          }
+        }
+
+        throw new Error(
+          this.t('Не вдалось перевірити статус проходження курсу. ') +
+            serverMessage
+        )
+      }
+      throw new Error(this.t('Невідома помилка при перевірці статусу курсу.'))
     }
   }
 }
