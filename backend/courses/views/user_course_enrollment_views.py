@@ -2,18 +2,16 @@ import json
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from common import LocalizedView
 from common.decorators import login_required_async
-from common.utils import error_response, success_response, validate_uuid
-from courses.models import Course, UserCourseEnrollment, Test, TestAttempt
-from courses.serializers import CourseTestSummarySerializer
+from common.utils import error_response, success_response
+from courses.models import Course, UserCourseEnrollment
 from courses.services.course_by_user import get_course_with_details_enrollment, create_course_enrollment, \
-    update_enrollment_progress_sync
+    update_enrollment_progress_sync, get_test_results_data_for_user
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -126,73 +124,14 @@ class CourseTestResultsView(LocalizedView):
         Повертає зведену статистику по всіх тестах курсу для конкретного студента.
         Використовується для сторінки CourseCompletion.
     """
-
-    # TODO Винести логіку в сервіси + перевірити на коректність
-
     @login_required_async
     async def get(self, request, course_id):
-        user = request.user
-
-        course_id = validate_uuid(course_id)
-
         try:
-            enrollment = await UserCourseEnrollment.objects.aget(user=user, course_id=course_id)
+            serializer_data = await get_test_results_data_for_user(course_id, request.user)
 
-            results_data = await sync_to_async(self._get_test_results_data)(enrollment, course_id)
-
-            serializer = CourseTestSummarySerializer(results_data, many=True)
-
-            return success_response({"results": serializer.data})
+            return success_response({"results": serializer_data})
 
         except UserCourseEnrollment.DoesNotExist:
             return error_response(gettext("Enrollment not found"), status=404)
         except Exception as e:
             return error_response(gettext(f"Error fetching test results: {str(e)}"), status=500)
-
-    @staticmethod
-    def _get_test_results_data(enrollment, course_id):
-        tests = Test.objects.filter(
-            Q(course_id=course_id) | Q(module__course_id=course_id)
-        ).values(
-            'id', 'title', 'module_id', 'pass_score', 'count_attempts'
-        ).order_by('module__order', 'order')
-
-        if not tests:
-            return []
-
-        test_ids = [t['id'] for t in tests]
-
-        attempts = TestAttempt.objects.filter(
-            enrollment=enrollment,
-            test__id__in=test_ids
-        ).values('test_id', 'score', 'passed')
-
-        attempts_by_test = {}
-        for attempt in attempts:
-            t_id = attempt['test_id']
-            if t_id not in attempts_by_test:
-                attempts_by_test[t_id] = []
-            attempts_by_test[t_id].append(attempt)
-
-        final_results = []
-        for test in tests:
-            test_attempts = attempts_by_test.get(test['id'], [])
-
-            attempts_used = len(test_attempts)
-
-            is_passed = any(a['passed'] for a in test_attempts)
-
-            best_score = max([a['score'] for a in test_attempts]) if test_attempts else 0.0
-
-            final_results.append({
-                'id': test['id'],
-                'title': test['title'],
-                'module_id': test['module_id'],
-                'score': best_score,
-                'pass_score': test['pass_score'],
-                'passed': is_passed,
-                'attempts_used': attempts_used,
-                'max_attempts': test['count_attempts']
-            })
-
-        return final_results
