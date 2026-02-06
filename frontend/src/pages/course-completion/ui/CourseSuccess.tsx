@@ -1,8 +1,21 @@
-import { Button, Card, CardContent, CardFooter, CardHeader } from '@/shared/ui'
 import {
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui'
+import {
+  ChevronDown,
   Download,
   Eye,
   EyeOff,
+  FileImage,
+  FileText,
   ImagePlusIcon,
   Loader2,
   MessageSquarePlus,
@@ -16,7 +29,7 @@ interface CourseSuccessProps {
   courseId: string
   certificateUrl: string | null
   isGenerating: boolean
-  onDownload: () => void
+  onDownload: (format?: 'pdf' | 'png' | 'view') => void
   onGenerate: () => void
   onLeaveReview: () => void
   returnButtons: () => React.ReactNode
@@ -62,14 +75,14 @@ export const CourseSuccess = ({
 
                 <div
                   className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer"
-                  onClick={onDownload}
+                  onClick={() => onDownload('view')}
                 >
                   <Button
                     variant="secondary"
                     className="gap-2 pointer-events-none"
                   >
-                    <Download className="w-4 h-4" />
-                    {t('Завантажити')}
+                    <Eye className="w-4 h-4" />
+                    {t('Відкрити у новій вкладці')}
                   </Button>
                 </div>
               </div>
@@ -104,14 +117,32 @@ export const CourseSuccess = ({
 
           <CardFooter className="p-0 w-full flex flex-col items-center gap-4">
             {certificateUrl ? (
-              <Button
-                onClick={onDownload}
-                size="lg"
-                className="w-full sm:w-auto min-w-[240px] gap-2 text-base font-medium bg-green-600 hover:bg-green-700 text-white shadow-green-200 dark:shadow-none shadow-lg transition-all hover:scale-105"
-              >
-                <Download className="w-5 h-5" />
-                {t('Завантажити сертифікат')}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto min-w-[240px] gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg transition-all hover:scale-105"
+                  >
+                    <Download className="w-5 h-5" />
+                    {t('Завантажити сертифікат')}
+                    <ChevronDown className="w-4 h-4 ml-1 opacity-70" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-[240px]">
+                  <DropdownMenuItem onClick={() => onDownload('pdf')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    {t('Завантажити як PDF')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDownload('png')}>
+                    <FileImage className="w-4 h-4 mr-2" />
+                    {t('Завантажити як PNG')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDownload('view')}>
+                    <Eye className="w-4 h-4 mr-2" />
+                    {t('Відкрити у новій вкладці')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button
                 onClick={onGenerate}

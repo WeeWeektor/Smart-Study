@@ -22,7 +22,7 @@ class UserCourseCertificateService {
       const csrfToken = await ensureCsrfToken(this.t)
 
       const response = await apiClient.post<GenerateCertificateResponse>(
-        `/course/generate-certificate/${courseId}/`,
+        `/course/create-certificate/${courseId}/`,
         {},
         {
           headers: {
@@ -53,6 +53,47 @@ class UserCourseCertificateService {
       }
       throw new Error(
         this.t('Невідома помилка при спробі генерації сертифікату.')
+      )
+    }
+  }
+
+  async downloadCertificateFile(certificateId: string, format: 'pdf' | 'png') {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<Blob>(
+        `/course/download-certificate/${certificateId}/`,
+        {
+          params: { format },
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+          responseType: 'blob',
+        }
+      )
+
+      return response.data
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        let serverMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          this.t('Помилка з’єднання з сервером')
+
+        if (typeof serverMessage === 'string') {
+          const match = serverMessage.match(/\['(.+)'\]/)
+          if (match && match[1]) {
+            serverMessage = match[1]
+          }
+        }
+
+        throw new Error(
+          this.t('Не вдалось завантажити сертифікат. ') + serverMessage
+        )
+      }
+      throw new Error(
+        this.t('Невідома помилка при спробі завантаження сертифікату.')
       )
     }
   }

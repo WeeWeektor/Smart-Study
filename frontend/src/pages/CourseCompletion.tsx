@@ -24,6 +24,7 @@ import {
 import { updateReviewsList, useReviewStats } from '@/entities/review'
 import { ReviewsSection, StarSection } from './course-review'
 import { LayoutGrid, UserCircle } from 'lucide-react'
+import { downloadBlob } from '@/shared/lib/utils/'
 
 const CourseCompletion = () => {
   const { t } = useI18n()
@@ -55,6 +56,8 @@ const CourseCompletion = () => {
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [isReviewsExpanded, setIsReviewsExpanded] = useState(false)
   const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false)
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (error || errorResavedData) {
@@ -104,6 +107,35 @@ const CourseCompletion = () => {
   }, [id, t])
 
   useEffect(() => {
+    let objectUrl: string | null = null
+
+    const loadPreview = async () => {
+      if (!certificateUrl) return
+
+      try {
+        const blob = await userCourseCertificateService.downloadCertificateFile(
+          certificateUrl,
+          'png'
+        )
+        objectUrl = URL.createObjectURL(blob)
+        setPreviewUrl(objectUrl)
+      } catch (e) {
+        setErrorResavedData(
+          t("Не вдалося завантажити прев'ю сертифікату") +
+            ' ' +
+            (e instanceof Error ? e.message : '')
+        )
+      }
+    }
+
+    loadPreview()
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [certificateUrl, t])
+
+  useEffect(() => {
     const fetchReviews = async () => {
       if (!id) return
       try {
@@ -119,7 +151,7 @@ const CourseCompletion = () => {
       }
     }
     fetchReviews()
-  }, [id])
+  }, [id, t])
 
   const { averageRating, distribution } = useReviewStats(reviews)
 
@@ -127,11 +159,36 @@ const CourseCompletion = () => {
     setReviews(prevReviews => updateReviewsList(prevReviews, incomingReview))
   }
 
-  const handleDownloadCertificate = () => {
-    if (certificateUrl) {
-      // TODO Відкривати в новій вкладці
-      // TODO робим завантаження файлу в pdf і png
-      window.open(certificateUrl, '_blank')
+  const handleDownloadCertificate = async (
+    format: 'pdf' | 'png' | 'view' = 'view'
+  ) => {
+    if (!certificateUrl) return
+
+    try {
+      if (format === 'view') {
+        const blob = await userCourseCertificateService.downloadCertificateFile(
+          certificateUrl,
+          'pdf'
+        )
+        const url = URL.createObjectURL(blob)
+        window.open(url, '_blank')
+
+        return
+      }
+
+      const blob = await userCourseCertificateService.downloadCertificateFile(
+        certificateUrl,
+        format
+      )
+
+      const filename = `Certificate_${courseInfo.title.replace(/\s+/g, '_')}_${format.toUpperCase()}.${format}`
+      downloadBlob(blob, filename)
+    } catch (e) {
+      setErrorResavedData(
+        t('Не вдалося завантажити файл. Спробуйте пізніше.') +
+          ' ' +
+          (e instanceof Error ? e.message : '')
+      )
     }
   }
 
@@ -228,7 +285,7 @@ const CourseCompletion = () => {
       return (
         <CourseSuccess
           courseId={id!}
-          certificateUrl={certificateUrl}
+          certificateUrl={previewUrl}
           isGenerating={generatingLoading}
           onDownload={handleDownloadCertificate}
           onGenerate={handleGenerationCertificate}
