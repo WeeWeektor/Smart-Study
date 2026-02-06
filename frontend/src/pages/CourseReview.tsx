@@ -31,6 +31,7 @@ import {
   StarSection,
 } from '@/pages/course-review'
 import { runFireworks } from '@/shared/lib/utils/'
+import { updateReviewsList, useReviewStats } from '@/entities/review'
 
 const CourseReview = () => {
   const { t } = useI18n()
@@ -162,38 +163,7 @@ const CourseReview = () => {
     fetchEnrollment()
   }, [id, isUserEnrolled, isOwner])
 
-  const reviewStats = useMemo(() => {
-    const totalReviews = reviews.length
-
-    if (totalReviews === 0) {
-      return {
-        averageRating: 0,
-        distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<
-          string,
-          number
-        >,
-      }
-    }
-
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0)
-    const averageRating = sum / totalReviews
-
-    const distribution: Record<string, number> = {
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-      5: 0,
-    }
-    reviews.forEach(review => {
-      const ratingKey = Math.round(review.rating)
-      if (distribution[ratingKey] !== undefined) {
-        distribution[ratingKey] += 1
-      }
-    })
-
-    return { averageRating, distribution }
-  }, [reviews])
+  const { averageRating, distribution } = useReviewStats(reviews)
 
   const flatCourseElements = useMemo(() => {
     if (!courseStructureData) return []
@@ -356,22 +326,8 @@ const CourseReview = () => {
     }
   }
 
-  const { averageRating, distribution } = reviewStats
-
   const handleReviewAdded = (incomingReview: Review) => {
-    setReviews(prevReviews => {
-      const existingIndex = prevReviews.findIndex(
-        r => r.id === incomingReview.id
-      )
-
-      if (existingIndex !== -1) {
-        const updatedList = [...prevReviews]
-        updatedList[existingIndex] = incomingReview
-        return updatedList
-      } else {
-        return [incomingReview, ...prevReviews]
-      }
-    })
+    setReviews(prevReviews => updateReviewsList(prevReviews, incomingReview))
   }
 
   const handleSidebarItemClick = async (itemId: string, type: string) => {
@@ -624,18 +580,18 @@ const CourseReview = () => {
               <AuthorSection ownerData={ownerData} />
 
               {course?.course.is_published && (
+                <StarSection
+                  reviews={reviews}
+                  averageRating={averageRating}
+                  distribution={distribution}
+                />
+              )}
+              {course?.course.is_published && (
                 <ReviewsSection
                   reviews={reviews}
                   isReviewsExpanded={isReviewsExpanded}
                   setIsReviewsExpanded={setIsReviewsExpanded}
                   setIsAddReviewModalOpen={setIsAddReviewModalOpen}
-                />
-              )}
-              {course?.course.is_published && (
-                <StarSection
-                  reviews={reviews}
-                  averageRating={averageRating}
-                  distribution={distribution}
                 />
               )}
 

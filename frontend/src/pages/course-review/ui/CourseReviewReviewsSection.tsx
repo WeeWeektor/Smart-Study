@@ -133,7 +133,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                       ))}
                     </div>
 
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
                       {review.comment}
                     </p>
                   </div>

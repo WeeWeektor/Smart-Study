@@ -10,7 +10,7 @@ export const CourseInProgress = ({ onContinue }: CourseInProgressProps) => {
   const { t } = useI18n()
 
   return (
-    <Card className="w-full max-w-3xl mx-auto overflow-hidden bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-900/50 shadow-md">
+    <Card className="w-full max-w-4xl mx-auto overflow-hidden bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-900/50 shadow-md">
       <div className="flex flex-col items-center text-center p-6 sm:p-10">
         <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
           <BookOpenText className="h-12 w-12 text-blue-600 dark:text-blue-400" />

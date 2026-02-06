@@ -82,6 +82,6 @@ class UserCourseEnrollmentSerializer(serializers.ModelSerializer):
         cert = obj.user.certificates.filter(course=obj.course, is_valid=True).first()
 
         if cert:
-            return f"/certificates/{cert.certificate_id}"
+            return f"/{cert.certificate_id}" # TODO
 
         return None

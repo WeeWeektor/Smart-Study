@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 import {
+  courseReviewService,
+  type Review,
   userCourseCertificateService,
   userCourseEnrollmentService,
 } from '@/features/course'
 import { useI18n } from '@/shared/lib'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ErrorProfile, LoadingProfile } from '@/shared/ui'
+import {
+  AddCourseReviewModal,
+  Button,
+  ErrorProfile,
+  LoadingProfile,
+} from '@/shared/ui'
 import { useProfileData } from '@/shared/hooks'
 import { Sidebar } from '@/widgets'
 import { CourseHeader } from '@/widgets/course'
@@ -14,6 +21,9 @@ import {
   CourseInProgress,
   CourseSuccess,
 } from './course-completion'
+import { updateReviewsList, useReviewStats } from '@/entities/review'
+import { ReviewsSection, StarSection } from './course-review'
+import { LayoutGrid, UserCircle } from 'lucide-react'
 
 const CourseCompletion = () => {
   const { t } = useI18n()
@@ -27,6 +37,7 @@ const CourseCompletion = () => {
   } = useProfileData()
 
   const [error, setError] = useState<string>('')
+  const [errorResavedData, setErrorResavedData] = useState<string>('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const [courseIsFailed, setCourseIsFailed] = useState<boolean>(false)
@@ -40,12 +51,20 @@ const CourseCompletion = () => {
   const [statusLoading, setStatusLoading] = useState(true)
   const [generatingLoading, setGeneratingLoading] = useState(false)
 
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewsLoading, setReviewsLoading] = useState(true)
+  const [isReviewsExpanded, setIsReviewsExpanded] = useState(false)
+  const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false)
+
   useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(''), 15000)
+    if (error || errorResavedData) {
+      const timer = setTimeout(() => {
+        setError('')
+        setErrorResavedData('')
+      }, 15000)
       return () => clearTimeout(timer)
     }
-  }, [error])
+  }, [error, errorResavedData])
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -84,9 +103,34 @@ const CourseCompletion = () => {
     }
   }, [id, t])
 
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return
+      try {
+        setReviewsLoading(true)
+        const reviewsData = await courseReviewService.getReviews(id)
+        setReviews(reviewsData)
+      } catch (e) {
+        setErrorResavedData(
+          e instanceof Error ? e.message : t('Помилка отримання відгуків')
+        )
+      } finally {
+        setReviewsLoading(false)
+      }
+    }
+    fetchReviews()
+  }, [id])
+
+  const { averageRating, distribution } = useReviewStats(reviews)
+
+  const handleReviewAdded = (incomingReview: Review) => {
+    setReviews(prevReviews => updateReviewsList(prevReviews, incomingReview))
+  }
+
   const handleDownloadCertificate = () => {
     if (certificateUrl) {
-      // TODO Відкривати в новій вкладці або робим завантаження
+      // TODO Відкривати в новій вкладці
+      // TODO робим завантаження файлу в pdf і png
       window.open(certificateUrl, '_blank')
     }
   }
@@ -107,7 +151,7 @@ const CourseCompletion = () => {
         setCertificateUrl(response.certificate_id)
       }
     } catch (e) {
-      setError(
+      setErrorResavedData(
         e instanceof Error ? e.message : t('Помилка створення сертифікату')
       )
     } finally {
@@ -138,21 +182,58 @@ const CourseCompletion = () => {
     role: profileData.user.role,
   }
 
+  const renderBackButtons = () => {
+    return (
+      <div className="w-full border-t border-slate-100 dark:border-slate-800 pt-6 mt-2 flex items-center justify-center">
+        <div className="flex-1 flex justify-end px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/my-courses-subscriptions')}
+            className="text-slate-500 hover:text-brand-600 gap-2"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            {t('До каталогу курсів')}
+          </Button>
+        </div>
+
+        <div className="hidden sm:block w-px h-8 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+
+        <div className="flex-1 flex justify-start px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/profile')}
+            className="text-slate-500 hover:text-brand-600 gap-2"
+          >
+            <UserCircle className="w-4 h-4" />
+            {t('Мій профіль')}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   const renderContent = () => {
     if (courseIsFailed) {
       return (
-        <CourseFailed courseId={id as string} onReturn={handleReturnToCourse} />
+        <CourseFailed
+          courseId={id!}
+          onReturn={handleReturnToCourse}
+          onLeaveReview={() => setIsAddReviewModalOpen(true)}
+          returnButtons={renderBackButtons}
+        />
       )
     }
 
     if (isFullyCompleted) {
       return (
         <CourseSuccess
-          courseId={id as string}
+          courseId={id!}
           certificateUrl={certificateUrl}
           isGenerating={generatingLoading}
           onDownload={handleDownloadCertificate}
           onGenerate={handleGenerationCertificate}
+          onLeaveReview={() => setIsAddReviewModalOpen(true)}
+          returnButtons={renderBackButtons}
         />
       )
     }
@@ -162,11 +243,7 @@ const CourseCompletion = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Sidebar
-        userInfo={userInfo}
-        isCollapsible={true}
-        onCollapseChange={setIsSidebarCollapsed}
-      />
+      <Sidebar userInfo={userInfo} onCollapseChange={setIsSidebarCollapsed} />
       <main
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'ml-28' : 'ml-64'}`}
       >
@@ -174,8 +251,41 @@ const CourseCompletion = () => {
           title={`${t('Курс')} - ${courseInfo.title} ${courseIsFailed ? `- ${t('Завершено')}` : isFullyCompleted ? `- ${t('Пройдений')}` : `- ${t('Не завершено')}`}`}
           description={`${courseIsFailed ? t('На жаль, ви не пройшли цей курс. Ви можете переглянути результати проходження.') : isFullyCompleted ? t('Вітаємо! Ви успішно завершили цей курс. Ви можете завантажити свій сертифікат нижче.') : t('Ви ще не завершили цей курс. Продовжуйте навчання, щоб отримати сертифікат.')}`}
         />
-        <div className="p-6 max-w-4xl mx-auto w-full">{renderContent()} </div>
+        <div className="p-6 max-w-4xl mx-auto w-full space-y-8">
+          {errorResavedData && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
+              {errorResavedData}
+            </div>
+          )}
+
+          <section>{renderContent()}</section>
+
+          {(isFullyCompleted || courseIsFailed) && !reviewsLoading && (
+            <div className="space-y-8 animate-in fade-in duration-700">
+              <StarSection
+                reviews={reviews}
+                averageRating={averageRating}
+                distribution={distribution}
+              />
+
+              <ReviewsSection
+                reviews={reviews}
+                isReviewsExpanded={isReviewsExpanded}
+                setIsReviewsExpanded={setIsReviewsExpanded}
+                setIsAddReviewModalOpen={setIsAddReviewModalOpen}
+              />
+            </div>
+          )}
+        </div>
       </main>
+      {id && (
+        <AddCourseReviewModal
+          isOpen={isAddReviewModalOpen}
+          onClose={() => setIsAddReviewModalOpen(false)}
+          courseId={id}
+          onReviewAdded={handleReviewAdded}
+        />
+      )}
     </div>
   )
 }

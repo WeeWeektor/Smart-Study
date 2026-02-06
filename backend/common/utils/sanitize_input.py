@@ -6,7 +6,7 @@ from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 
 
-def sanitize_input(value):
+def sanitize_input(value, multiline=False):
     """Санітизація користувацького вводу"""
     if value is None:
         return None
@@ -17,15 +17,20 @@ def sanitize_input(value):
 
     sanitized = strip_tags(sanitized)
     sanitized = unicodedata.normalize('NFKC', sanitized)
-    sanitized = ''.join(char for char in sanitized if unicodedata.category(char)[0] != 'C')
 
+    allowed_control_chars = ['\n', '\r'] if multiline else []
+    sanitized = ''.join(
+        char for char in sanitized
+        if unicodedata.category(char)[0] != 'C' or char in allowed_control_chars
+    )
+    
     nosql_patterns = [r'\$where', r'\$ne', r'\$gt', r'\$lt', r'\$regex', r'\$or', r'\$and', r'\$exists', r'\$in',
                       r'\$nin']
     for pattern in nosql_patterns:
         if re.search(pattern, sanitized, re.IGNORECASE):
             raise ValidationError(f"{gettext('NoSQL injection pattern detected: ')}{pattern}")
 
-    dangerous_chars = [';', '|', '&', '`', '$', '(', ')', '*', '\\']
+    dangerous_chars = [';', '|', '&', '`', '$', '\\']
     for char in dangerous_chars:
         sanitized = sanitized.replace(char, '')
 
@@ -77,5 +82,11 @@ def sanitize_input(value):
         sanitized = re.sub(pattern, '', sanitized, flags=re.IGNORECASE | re.DOTALL)
 
     sanitized = html.escape(sanitized)
-    sanitized = re.sub(r'\s+', ' ', sanitized).strip()
-    return sanitized if sanitized else ''
+
+    if multiline:
+        sanitized = re.sub(r'[ \t]+', ' ', sanitized)
+        sanitized = re.sub(r'(\n\s*){3,}', '\n\n', sanitized)
+    else:
+        sanitized = re.sub(r'\s+', ' ', sanitized)
+
+    return sanitized.strip() if sanitized else ''

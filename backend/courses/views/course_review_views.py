@@ -2,6 +2,7 @@ import json
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -23,6 +24,9 @@ class CourseReviewView(LocalizedView):
             return error_response(gettext("course_id parameter is required."), status=400)
 
         course_reviews = await get_course_review_cache(course_id)
+        if isinstance(course_reviews, JsonResponse):
+            return course_reviews
+
         return success_response({
             "course_id": course_id,
             "reviews": course_reviews
@@ -34,7 +38,16 @@ class CourseReviewView(LocalizedView):
             raw_data = json.loads(request.body)
         except json.JSONDecodeError:
             raw_data = json.loads(request.POST.get('data', '{}'))
-        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in raw_data.items()}
+
+        data = {}
+        for k, v in raw_data.items():
+            if isinstance(v, str):
+                is_multiline_field = k in ['comment', 'description', 'content']
+                data[k] = sanitize_input(v, multiline=is_multiline_field)
+            else:
+                data[k] = v
+
+        print(data)
 
         try:
             review = await create_review_of_course(data, request.user)

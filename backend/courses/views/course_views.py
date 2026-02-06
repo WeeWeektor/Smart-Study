@@ -29,6 +29,7 @@ class CourseView(LocalizedView):
     async def get(self, request, course_id=None, search_query=None):
         """Отримання всіх курсів або одного курсу за id"""
         if course_id:
+            course_id = validate_uuid(course_id)
             course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
             if isinstance(course_data, JsonResponse):
                 return course_data
@@ -79,6 +80,7 @@ class CourseView(LocalizedView):
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in data.items()}
 
         try:
+            # TODO В create course використовувати get_or_create для унікальності курсу по назві для одного викладача
             course = await create_course(request.user, data, cover_file)
             course_id = str(course.id)
 
