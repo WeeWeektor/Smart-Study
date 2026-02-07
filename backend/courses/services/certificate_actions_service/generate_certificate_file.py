@@ -6,15 +6,25 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.utils import simpleSplit
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
+
+HAS_QRCODE = False
+try:
+    import qrcode
+
+    if hasattr(qrcode, 'QRCode'):
+        HAS_QRCODE = True
+except ImportError:
+    pass
 
 ASSETS_DIR = os.path.join(settings.BASE_DIR, 'assets')
 FONTS_DIR = os.path.join(ASSETS_DIR, 'fonts')
 BG_IMAGE_PATH = os.path.join(ASSETS_DIR, 'img', 'certificate_bg.png')
 
-COLOR_GOLD_HEX = "#B48E3D"
+COLOR_GOLD_HEX = "#D4AF37"
 COLOR_DARK_HEX = "#1A237E"
 COLOR_GREY_HEX = "#555555"
 
@@ -30,8 +40,7 @@ def register_pdf_fonts():
         pdfmetrics.registerFont(TTFont('Montserrat', os.path.join(FONTS_DIR, 'Montserrat-Regular.ttf')))
         pdfmetrics.registerFont(TTFont('Montserrat-Bold', os.path.join(FONTS_DIR, 'Montserrat-Bold.ttf')))
         return True
-    except Exception as e:
-        print(f"Font loading error: {e}")
+    except:
         return False
 
 
@@ -40,7 +49,7 @@ def get_pil_font(font_name, size):
     font_path = os.path.join(FONTS_DIR, f"{font_name}.ttf")
     try:
         return ImageFont.truetype(font_path, size)
-    except IOError:
+    except:
         return ImageFont.load_default()
 
 
@@ -53,6 +62,86 @@ def ensure_assets_exist():
             os.makedirs(os.path.dirname(BG_IMAGE_PATH), exist_ok=True)
 
 
+def draw_decorative_border(c, width, height):
+    margin = 30
+    c.setStrokeColor(COLOR_GOLD)
+    c.setLineWidth(3)
+    c.rect(margin, margin, width - 2 * margin, height - 2 * margin)
+
+    inner_margin = margin + 10
+    c.setStrokeColor(COLOR_DARK)
+    c.setLineWidth(1)
+    c.rect(inner_margin, inner_margin, width - 2 * inner_margin, height - 2 * inner_margin)
+
+    corner_size = 40
+    corners = [(margin, height - margin), (width - margin, height - margin),
+               (margin, margin), (width - margin, margin)]
+
+    c.setStrokeColor(COLOR_GOLD)
+    c.setLineWidth(2)
+    for x, y in corners:
+        if x < width / 2 and y > height / 2:
+            c.line(x, y, x + corner_size, y)
+            c.line(x, y, x, y - corner_size)
+        elif x > width / 2 and y > height / 2:
+            c.line(x, y, x - corner_size, y)
+            c.line(x, y, x, y - corner_size)
+        elif x < width / 2 and y < height / 2:
+            c.line(x, y, x + corner_size, y)
+            c.line(x, y, x, y + corner_size)
+        else:
+            c.line(x, y, x - corner_size, y)
+            c.line(x, y, x, y + corner_size)
+
+
+def draw_decorative_border_png(draw, width, height):
+    margin = 100
+    draw.rectangle([margin, margin, width - margin, height - margin], outline=COLOR_GOLD_HEX, width=12)
+    inner_margin = margin + 40
+    draw.rectangle([inner_margin, inner_margin, width - inner_margin, height - inner_margin],
+                   outline=COLOR_DARK_HEX, width=4)
+
+    corner_size = 150
+    corners = [(margin, margin), (width - margin, margin),
+               (margin, height - margin), (width - margin, height - margin)]
+
+    for x, y in corners:
+        if x < width / 2 and y < height / 2:
+            draw.line([(x, y), (x + corner_size, y)], fill=COLOR_GOLD_HEX, width=8)
+            draw.line([(x, y), (x, y + corner_size)], fill=COLOR_GOLD_HEX, width=8)
+        elif x > width / 2 and y < height / 2:
+            draw.line([(x, y), (x - corner_size, y)], fill=COLOR_GOLD_HEX, width=8)
+            draw.line([(x, y), (x, y + corner_size)], fill=COLOR_GOLD_HEX, width=8)
+        elif x < width / 2 and y > height / 2:
+            draw.line([(x, y), (x + corner_size, y)], fill=COLOR_GOLD_HEX, width=8)
+            draw.line([(x, y), (x, y - corner_size)], fill=COLOR_GOLD_HEX, width=8)
+        else:
+            draw.line([(x, y), (x - corner_size, y)], fill=COLOR_GOLD_HEX, width=8)
+            draw.line([(x, y), (x, y - corner_size)], fill=COLOR_GOLD_HEX, width=8)
+
+
+def add_logo_to_pdf_svg(c, logo_path, cx, y, max_width, max_height):
+    """Додає SVG логотип до PDF"""
+    try:
+        from svglib.svglib import svg2rlg
+        from reportlab.graphics import renderPDF
+
+        drawing = svg2rlg(logo_path)
+        if drawing:
+            scale_x = max_width / drawing.width
+            scale_y = max_height / drawing.height
+            scale = min(scale_x, scale_y)
+
+            drawing.width = drawing.width * scale
+            drawing.height = drawing.height * scale
+            drawing.scale(scale, scale)
+
+            x = cx - (drawing.width / 2)
+            renderPDF.draw(drawing, c, x, y)
+    except:
+        pass
+
+
 def _generate_pdf_sync(certificate):
     ensure_assets_exist()
     has_custom_fonts = register_pdf_fonts()
@@ -63,81 +152,84 @@ def _generate_pdf_sync(certificate):
 
     try:
         c.drawImage(BG_IMAGE_PATH, 0, 0, width=width, height=height)
-    except Exception:
-        c.setStrokeColor(COLOR_GOLD)
-        c.setLineWidth(20)
-        c.rect(0, 0, width, height)
-        c.setStrokeColor(COLOR_DARK)
-        c.setLineWidth(5)
-        c.rect(20, 20, width - 40, height - 40)
+    except:
+        c.setFillColor(colors.white)
+        c.rect(0, 0, width, height, fill=True, stroke=False)
+        draw_decorative_border(c, width, height)
 
     cx = width / 2
     cy = height / 2
 
-    if has_custom_fonts:
-        c.setFont("Montserrat-Bold", 42)
-    else:
-        c.setFont("Helvetica-Bold", 42)
+    logo_path = os.path.join(ASSETS_DIR, 'img', 'logo.svg')
+    if os.path.exists(logo_path):
+        add_logo_to_pdf_svg(c, logo_path, cx, height - 90, 80, 40)
+
+    if HAS_QRCODE:
+        try:
+            import qrcode
+            from reportlab.lib.utils import ImageReader
+            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=2)
+            qr.add_data(f"https://smartstudy.com/verify/{certificate.certificate_id}")  # TODO реалізувати перевірку сертифікату по QR коду
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_buffer = io.BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            c.drawImage(ImageReader(qr_buffer), width - 90, height - 90, width=50, height=50, mask='auto')
+        except:
+            pass
+
+    c.setFont("Montserrat-Bold" if has_custom_fonts else "Helvetica-Bold", 48)
     c.setFillColor(COLOR_DARK)
-    c.drawCentredString(cx, height - 130, "CERTIFICATE")
+    c.drawCentredString(cx, height - 150, "CERTIFICATE")
 
-    if has_custom_fonts:
-        c.setFont("Montserrat", 16)
-    else:
-        c.setFont("Helvetica", 16)
+    c.setFont("Montserrat" if has_custom_fonts else "Helvetica", 18)
     c.setFillColor(COLOR_GOLD)
-    c.drawCentredString(cx, height - 160, "OF COMPLETION")
+    c.drawCentredString(cx, height - 180, "OF COMPLETION")
 
-    if has_custom_fonts:
-        c.setFont("GreatVibes", 20)
-    else:
-        c.setFont("Helvetica-Oblique", 14)
+    c.setStrokeColor(COLOR_GOLD)
+    c.setLineWidth(2)
+    c.line(cx - 100, height - 195, cx + 100, height - 195)
+
+    c.setFont("Montserrat" if has_custom_fonts else "Helvetica", 13)
     c.setFillColor(COLOR_GREY)
-    c.drawCentredString(cx, height - 210, "This is to certify that")
+    c.drawCentredString(cx, cy + 70, "This is to certify that")
 
     student_name = f"{certificate.user.name} {certificate.user.surname}"
-    if has_custom_fonts:
-        c.setFont("GreatVibes", 60)
-    else:
-        c.setFont("Helvetica-BoldOblique", 40)
+    c.setFont("GreatVibes" if has_custom_fonts else "Helvetica-BoldOblique", 60 if has_custom_fonts else 44)
     c.setFillColor(COLOR_DARK)
-    c.drawCentredString(cx, cy + 15, student_name)
+    c.drawCentredString(cx, cy + 5, student_name)
 
     c.setStrokeColor(COLOR_GOLD)
     c.setLineWidth(1.5)
-    c.line(cx - 150, cy - 5, cx + 150, cy - 5)
+    c.line(cx - 180, cy - 15, cx + 180, cy - 15)
 
-    if has_custom_fonts:
-        c.setFont("Montserrat", 12)
-    else:
-        c.setFont("Helvetica", 12)
+    c.setFont("Montserrat" if has_custom_fonts else "Helvetica", 14)
     c.setFillColor(COLOR_GREY)
-    c.drawCentredString(cx, cy - 40, "Has successfully completed the course")
+    c.drawCentredString(cx, cy - 60, "has successfully completed the course:")
 
     course_title = certificate.course.title
-    if has_custom_fonts:
-        c.setFont("Montserrat-Bold", 24)
-    else:
-        c.setFont("Helvetica-Bold", 20)
-    c.setFillColor(colors.black)
-    c.drawCentredString(cx, cy - 80, course_title)
+    c.setFont("Montserrat-Bold" if has_custom_fonts else "Helvetica-Bold", 24)
+    c.setFillColor(COLOR_DARK)
+    lines = simpleSplit(course_title, "Montserrat-Bold" if has_custom_fonts else "Helvetica-Bold", 24, width - 160)
+    text_y = cy - 110
+    for line in lines:
+        c.drawCentredString(cx, text_y, line)
+        text_y -= 110
 
     c.setStrokeColor(COLOR_DARK)
-    c.setLineWidth(1)
-    c.line(cx - 70, 80, cx + 70, 80)
+    c.setLineWidth(1.5)
+    c.line(cx - 100, 80, cx + 100, 80)
 
-    if has_custom_fonts:
-        c.setFont("Montserrat", 9)
-    else:
-        c.setFont("Helvetica", 9)
+    c.setFont("Montserrat" if has_custom_fonts else "Helvetica", 11)
     c.setFillColor(COLOR_DARK)
-    c.drawCentredString(cx, 65, "SmartStudy Instructor")
+    c.drawCentredString(cx, 60, "SmartStudy Instructor")
 
+    c.setFont("Montserrat-Bold" if has_custom_fonts else "Helvetica-Bold", 9)
     c.setFillColor(COLOR_GREY)
     date_str = certificate.issued_at.strftime('%B %d, %Y')
-
-    c.drawString(60, 65, f"Date: {date_str}")
-    c.drawRightString(width - 60, 65, f"ID: {certificate.certificate_id}")
+    c.drawString(50, 60, f"Date: {date_str}")
+    c.drawRightString(width - 50, 60, f"Certificate ID: {certificate.certificate_id}")
 
     c.showPage()
     c.save()
@@ -145,70 +237,141 @@ def _generate_pdf_sync(certificate):
     return buffer
 
 
+def wrap_text_intelligently(text, font, draw, max_width):
+    words = text.split()
+    lines = []
+    current_line = []
+
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        bbox = draw.textbbox((0, 0), test_line, font=font)
+        width = bbox[2] - bbox[0]
+
+        if width <= max_width:
+            current_line.append(word)
+        else:
+            if current_line:
+                lines.append(' '.join(current_line))
+                current_line = [word]
+            else:
+                lines.append(word)
+
+    if current_line:
+        lines.append(' '.join(current_line))
+
+    return lines
+
+
 def _generate_png_sync(certificate):
     ensure_assets_exist()
 
+    target_size = (3508, 2480)
+
     try:
         image = Image.open(BG_IMAGE_PATH).convert('RGB')
-        target_size = (3508, 2480)
         if image.size != target_size:
-            image = image.resize(target_size)
-    except Exception:
-        image = Image.new('RGB', (3508, 2480), color='white')
+            image = image.resize(target_size, Image.Resampling.LANCZOS)
+    except:
+        image = Image.new('RGB', target_size, color='white')
         draw_temp = ImageDraw.Draw(image)
-        draw_temp.rectangle([80, 80, 3428, 2400], outline=COLOR_DARK_HEX, width=20)
+        draw_decorative_border_png(draw_temp, target_size[0], target_size[1])
+
+    width, height = image.size
+    cx = width / 2
+    cy = height / 2
+
+    scale = width / 842
+
+    logo_path = os.path.join(ASSETS_DIR, 'img', 'logo.svg')
+    if os.path.exists(logo_path):
+        try:
+            import cairosvg
+
+            png_data = cairosvg.svg2png(url=logo_path, output_width=int(80 * scale), output_height=int(40 * scale))
+
+            logo = Image.open(io.BytesIO(png_data)).convert('RGBA')
+            logo_w, logo_h = logo.size
+            image.paste(logo, (int(cx - logo_w / 2), 150), logo)
+        except:
+            pass
+
+    if HAS_QRCODE:
+        try:
+            import qrcode
+            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=2)
+            qr.add_data(f"https://smartstudy.com/verify/{certificate.certificate_id}")  # TODO реалізувати перевірку сертифікату по QR коду
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            qr_img = qr_img.resize((200, 200), Image.Resampling.LANCZOS)
+            image.paste(qr_img, (width - 350, 150))
+        except:
+            pass
 
     draw = ImageDraw.Draw(image)
-    width, _ = image.size
 
     FILL_DARK = COLOR_DARK_HEX
     FILL_GOLD = COLOR_GOLD_HEX
     FILL_GREY = COLOR_GREY_HEX
-    FILL_BLACK = "#000000"
 
-    font_main_title = get_pil_font("Montserrat-Bold", 170)
-    font_subtitle = get_pil_font("Montserrat-Regular", 65)
-    font_certify = get_pil_font("GreatVibes-Regular", 90)
-    font_name = get_pil_font("GreatVibes-Regular", 250)
-    font_desc = get_pil_font("Montserrat-Regular", 50)
-    font_course = get_pil_font("Montserrat-Bold", 100)
-    font_footer = get_pil_font("Montserrat-Regular", 40)
+    font_main_title = get_pil_font("Montserrat-Bold", int(48 * scale))
+    font_subtitle = get_pil_font("Montserrat-Regular", int(18 * scale))
+    font_certify = get_pil_font("Montserrat-Regular", int(13 * scale))
+    font_name = get_pil_font("GreatVibes-Regular", int(60 * scale))
+    font_desc = get_pil_font("Montserrat-Regular", int(14 * scale))
+    font_course = get_pil_font("Montserrat-Bold", int(24 * scale))
+    font_footer = get_pil_font("Montserrat-Regular", int(11 * scale))
+    font_footer_bold = get_pil_font("Montserrat-Bold", int(9 * scale))
 
     def draw_centered(y, text, font, fill):
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         draw.text(((width - text_width) / 2, y), text, font=font, fill=fill)
 
-    draw_centered(550, "CERTIFICATE", font_main_title, FILL_DARK)
+    draw_centered(int(100 * scale), "CERTIFICATE", font_main_title, FILL_DARK)
 
-    draw_centered(750, "OF COMPLETION", font_subtitle, FILL_GOLD)
+    draw_centered(int(170 * scale), "OF COMPLETION", font_subtitle, FILL_GOLD)
 
-    draw_centered(950, "This is to certify that", font_certify, FILL_GREY)
+    line_y = int(200 * scale)
+    draw.line([(cx - 100 * scale, line_y), (cx + 100 * scale, line_y)], fill=FILL_GOLD, width=int(2 * scale))
+
+    draw_centered(cy - int(70 * scale), "This is to certify that", font_certify, FILL_GREY)
 
     student_name = f"{certificate.user.name} {certificate.user.surname}"
-    draw_centered(1200, student_name, font_name, FILL_DARK)
+    draw_centered(cy - int(50 * scale), student_name, font_name, FILL_DARK)
 
-    line_y = 1500
-    draw.line([(width / 2 - 600, line_y), (width / 2 + 600, line_y)], fill=FILL_GOLD, width=6)
+    name_line_y = cy + int(15 * scale)
+    draw.line([(cx - 180 * scale, name_line_y), (cx + 180 * scale, name_line_y)],
+              fill=FILL_GOLD, width=int(1.5 * scale))
 
-    draw_centered(1600, "Has successfully completed the course", font_desc, FILL_GREY)
-    draw_centered(1750, certificate.course.title, font_course, FILL_BLACK)
+    draw_centered(cy + int(50 * scale), "has successfully completed the course:", font_desc, FILL_GREY)
 
-    sig_y = 2150
-    draw.line([(width / 2 - 300, sig_y), (width / 2 + 300, sig_y)], fill=FILL_DARK, width=4)
-    draw_centered(2170, "SmartStudy Instructor", font_footer, FILL_DARK)
+    course_title = certificate.course.title
+    max_text_width = width - int(160 * scale)
+    course_lines = wrap_text_intelligently(course_title, font_course, draw, max_text_width)
+
+    text_y = cy + int(90 * scale)
+    for line in course_lines:
+        draw_centered(text_y, line, font_course, FILL_DARK)
+        text_y += int(30 * scale)
+
+    footer_y = height - int(70 * scale)
+
+    sig_line_y = height - int(80 * scale)
+    draw.line([(cx - 100 * scale, sig_line_y), (cx + 100 * scale, sig_line_y)],
+              fill=FILL_DARK, width=int(1.5 * scale))
+
+    draw_centered(footer_y, "SmartStudy Instructor", font_footer, FILL_DARK)
 
     date_str = certificate.issued_at.strftime('%B %d, %Y')
+    draw.text((int(50 * scale), footer_y), f"Date: {date_str}", font=font_footer_bold, fill=FILL_GREY)
 
-    draw.text((250, 2170), f"Date: {date_str}", font=font_footer, fill=FILL_GREY)
-
-    id_text = f"ID: {certificate.certificate_id}"
-    bbox_id = draw.textbbox((0, 0), id_text, font=font_footer)
+    id_text = f"Certificate ID: {certificate.certificate_id}"
+    bbox_id = draw.textbbox((0, 0), id_text, font=font_footer_bold)
     id_w = bbox_id[2] - bbox_id[0]
-    draw.text((width - 250 - id_w, 2170), id_text, font=font_footer, fill=FILL_GREY)
+    draw.text((width - int(50 * scale) - id_w, footer_y), id_text, font=font_footer_bold, fill=FILL_GREY)
 
     buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
+    image.save(buffer, format="PNG", quality=95, optimize=True)
     buffer.seek(0)
     return buffer
 

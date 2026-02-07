@@ -1,2 +1,2 @@
 from .create_certificate import create_certificate
-from .generate_certificate_file import generate_certificate_file
+from .get_certificate_download_data import get_certificate_download_data

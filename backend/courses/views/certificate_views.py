@@ -1,6 +1,7 @@
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, PermissionDenied
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
+from django.utils.http import http_date
 from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -8,7 +9,7 @@ from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import error_response, success_response
 from courses.models import Certificate
-from courses.services.certificate_actions_service import create_certificate, generate_certificate_file
+from courses.services.certificate_actions_service import create_certificate, get_certificate_download_data
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -43,35 +44,26 @@ class CertificateView(LocalizedView):
 class DownloadCertificateView(LocalizedView):
     @login_required_async
     async def get(self, request, certificate_id):
+        fmt = request.GET.get('format', 'pdf').lower()
+
         try:
-            certificate = await Certificate.objects.select_related('user', 'course').aget(certificate_id=certificate_id)
-
-            if certificate.user_id != request.user.id:
-                return error_response(gettext("You do not have permission to download this certificate."), status=403)
-
-            fmt = request.GET.get('format', 'pdf').lower()
-
-            if fmt not in ['pdf', 'png']:
-                return error_response(gettext("Invalid format. Supported formats are 'pdf' and 'png'."), status=400)
-
-            file_buffer = await generate_certificate_file(certificate, fmt)
-
-            if not file_buffer:
-                return error_response(gettext("Error generating file."), status=500)
-
-            if fmt == 'pdf':
-                content_type = 'application/pdf'
-                filename = f"Certificate_{certificate.certificate_id}.pdf"
-            else:
-                content_type = 'image/png'
-                filename = f"Certificate_{certificate.certificate_id}.png"
+            file_buffer, filename, content_type, certificate = await (
+                get_certificate_download_data(fmt, certificate_id, request.user)
+            )
 
             response = HttpResponse(file_buffer, content_type=content_type)
-
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            last_modified = getattr(certificate, 'issued_at')
+            response['Last-Modified'] = http_date(last_modified.timestamp())
+            response['Cache-Control'] = 'private, max-age=3600'
 
             return response
 
+        except ValidationError as e:
+            return error_response(str(e), status=400)
+        except PermissionDenied as e:
+            return error_response(str(e), status=403)
         except Certificate.DoesNotExist:
             return error_response(gettext("Certificate not found."), status=404)
         except Exception as e:
