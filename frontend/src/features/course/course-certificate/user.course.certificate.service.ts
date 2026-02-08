@@ -67,6 +67,8 @@ class UserCourseCertificateService {
           params: { format },
           headers: {
             'X-CSRFToken': csrfToken || '',
+            'Cache-Control': 'public',
+            Pragma: 'cache',
           },
           withCredentials: true,
           responseType: 'blob',

@@ -282,18 +282,38 @@ def _generate_png_sync(certificate):
 
     scale = width / 842
 
-    logo_path = os.path.join(ASSETS_DIR, 'img', 'logo.svg')
-    if os.path.exists(logo_path):
+    logo_path_png = os.path.join(ASSETS_DIR, 'img', 'logo.png')
+    logo_path_svg = os.path.join(ASSETS_DIR, 'img', 'logo.svg')
+
+    logo = None
+
+    if os.path.exists(logo_path_png):
+        try:
+            logo = Image.open(logo_path_png).convert('RGBA')
+        except Exception as e:
+            print(f"Error adding PNG logo: {e}")
+
+    elif os.path.exists(logo_path_svg):
         try:
             import cairosvg
-
-            png_data = cairosvg.svg2png(url=logo_path, output_width=int(80 * scale), output_height=int(40 * scale))
-
+            png_data = cairosvg.svg2png(url=logo_path_svg, output_width=int(150 * scale),
+                                        output_height=int(150 * scale))
             logo = Image.open(io.BytesIO(png_data)).convert('RGBA')
+        except Exception as e:
+            print(f"Error adding SVG logo: {e}")
+
+    if logo:
+        try:
+            target_w = int(40 * scale)
+            aspect = logo.height / logo.width
+            target_h = int(target_w * aspect)
+
+            logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
+
             logo_w, logo_h = logo.size
-            image.paste(logo, (int(cx - logo_w / 2), 150), logo)
-        except:
-            pass
+            image.paste(logo, (int(cx - logo_w / 2), 190), logo)
+        except Exception as e:
+            print(f"Error pasting logo: {e}")
 
     if HAS_QRCODE:
         try:

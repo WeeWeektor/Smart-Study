@@ -73,12 +73,27 @@ MIDDLEWARE = [
     'common.middleware.SecurityHeadersMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://127.0.0.1:5173",
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'content-disposition',
+    'etag',
+    'last-modified',
+]
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'if-none-match',
+    'if-modified-since',
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -255,13 +270,6 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'public_profile']
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_NAME = 'csrftoken'
-CORS_ALLOW_CREDENTIALS = True
-CSRF_USE_SESSIONS = False
-
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-]
 
 BASE_URL = 'https://127.0.0.1:8000'
 DEFAULT_FROM_EMAIL = 'noreply@smartstudy.com'
