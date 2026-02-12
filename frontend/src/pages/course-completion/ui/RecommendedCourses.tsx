@@ -78,7 +78,16 @@ export const RecommendedCourses = ({
 
   return (
     <div className="w-full mt-6 animate-in fade-in duration-700">
-      <div className="w-full h-px bg-slate-200 dark:bg-slate-800 mb-6" />
+      <div className="relative py-4 mb-0">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-slate-700 opacity-70"></div>
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-3 text-brand-500 shadow-sm rounded-full border border-slate-100 dark:border-slate-800 py-1">
+            <Sparkles className="h-5 w-5" />
+          </span>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between mb-6 px-24 max-w-[1600px] mx-auto">
         <div className="flex items-center gap-2">
@@ -95,10 +104,10 @@ export const RecommendedCourses = ({
           variant="ghost"
           size="sm"
           onClick={() => navigate('/find-new-courses')}
-          className="text-muted-foreground hover:text-brand-600 gap-1 hidden sm:flex w-52"
+          className="text-muted-foreground hover:text-brand-600 gap-2 hidden sm:flex w-auto px-4 group"
         >
           {t('До каталогу')}
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
 
