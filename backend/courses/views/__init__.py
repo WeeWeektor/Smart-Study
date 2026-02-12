@@ -1,4 +1,4 @@
-from courses.views.certificate_views import CertificateView, DownloadCertificateView
+from courses.views.certificate_views import CertificateView, DownloadCertificateView, VerifyCertificateView
 from courses.views.choices_views import ChoicesView
 from courses.views.counter_views import CountAllPublishedCourses, CountTeacherCourses
 from courses.views.course_recommendations_views import CourseRecommendationsView
@@ -16,6 +16,7 @@ __all__ = [
     "UserCourseEnrollmentStatusView",
     "CertificateView",
     "DownloadCertificateView",
+    "VerifyCertificateView",
     "CourseTestResultsView",
     "CourseView",
     "CourseRecommendationsView",

@@ -257,7 +257,7 @@ const CourseReview = () => {
     }
 
     fetchStatus()
-  }, [id])
+  }, [id, t])
 
   const activeElementId = useMemo(() => {
     if (!activeElement) return null
@@ -434,7 +434,7 @@ const CourseReview = () => {
       refreshStatuses()
     } catch (error) {
       setCourseError(
-        'Failed remove corse from wishlist' +
+        t('Не вдалося видалити курс зі списку бажань') +
           (error instanceof Error ? ': ' + error.message : '')
       )
     }
@@ -490,9 +490,11 @@ const CourseReview = () => {
   }
 
   const handleCheckCourseBeforePublish = async () => {
-    // TODO Змінити логіку і не видавати викладачам своїх створених курсів сертифікати. і додати логіку за якою не буде додаватись проходження курсу (коли викладач проходить свій курс) в базу даних, щоб не було можливості отримати сертифікат викладачу за проходження свого курсу.
+    // TODO Приховайте кнопку "Залишити відгук" (для викладача і створеного ним курсу) Викладач не повинен ставити сам собі 5 зірок. Це накрутка рейтингу.
+    // TODO Не блокуйте отримання сертифікату.
+    // TODO Чи потрібні кнопки додати у вішліст (для викладача і створеного ним курсу)
 
-    // TODO Implement check course before publish
+    // TODO Implement check course before publish (це типу є +-)
     // TODO replace this method to change course(add elem to course, edit course, etc.)
     console.log('Check data course before publish', id)
   }

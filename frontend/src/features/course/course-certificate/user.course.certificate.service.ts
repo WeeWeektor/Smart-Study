@@ -12,6 +12,14 @@ export interface GenerateCertificateResponse {
   status: number
 }
 
+export interface CertificateVerificationResponse {
+  certificate_id: string
+  student_name: string
+  course_title: string
+  issued_at: string
+  is_valid: boolean
+}
+
 class UserCourseCertificateService {
   private t = ClassTranslator.translate
 
@@ -98,6 +106,13 @@ class UserCourseCertificateService {
         this.t('Невідома помилка при спробі завантаження сертифікату.')
       )
     }
+  }
+
+  async verifyCertificate(certificateId: string) {
+    const response = await apiClient.get<CertificateVerificationResponse>(
+      `/course/certificates/verify/${certificateId}/`
+    )
+    return response.data
   }
 }
 

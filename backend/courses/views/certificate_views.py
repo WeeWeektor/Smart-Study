@@ -1,5 +1,7 @@
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, PermissionDenied
 from django.http import HttpResponse, HttpResponseNotModified
+from django.shortcuts import aget_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -8,6 +10,7 @@ from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import error_response, success_response
 from courses.models import Certificate
+from courses.serializers import CertificateVerificationSerializer
 from courses.services.certificate_actions_service import create_certificate, generate_certificate_response_data, \
     get_validated_certificate, calculate_certificate_etag
 
@@ -75,3 +78,16 @@ class DownloadCertificateView(LocalizedView):
             return error_response(gettext("Certificate not found."), status=404)
         except Exception as e:
             return error_response(gettext(f"Server error: {str(e)}"), status=500)
+
+
+class VerifyCertificateView(LocalizedView):
+    @staticmethod
+    async def get(request, certificate_id):
+        certificate = await aget_object_or_404(Certificate, certificate_id=certificate_id)
+
+        serializer_data = await sync_to_async(lambda: CertificateVerificationSerializer(certificate).data)()
+
+        return success_response({
+            "message": gettext("Certificate verification successful."),
+            "certificate": serializer_data
+        })

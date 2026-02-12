@@ -169,7 +169,7 @@ def _generate_pdf_sync(certificate):
             import qrcode
             from reportlab.lib.utils import ImageReader
             qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=2)
-            qr.add_data(f"https://smartstudy.com/verify/{certificate.certificate_id}")  # TODO реалізувати перевірку сертифікату по QR коду
+            qr.add_data(f"{settings.CORS_ALLOWED_ORIGINS[1]}/verify/{certificate.certificate_id}")
             qr.make(fit=True)
             qr_img = qr.make_image(fill_color="black", back_color="white")
             qr_buffer = io.BytesIO()
@@ -319,7 +319,7 @@ def _generate_png_sync(certificate):
         try:
             import qrcode
             qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=2)
-            qr.add_data(f"https://smartstudy.com/verify/{certificate.certificate_id}")  # TODO реалізувати перевірку сертифікату по QR коду
+            qr.add_data(f"{settings.CORS_ALLOWED_ORIGINS[1]}/verify/{certificate.certificate_id}")
             qr.make(fit=True)
             qr_img = qr.make_image(fill_color="black", back_color="white")
             qr_img = qr_img.resize((200, 200), Image.Resampling.LANCZOS)
