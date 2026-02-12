@@ -107,3 +107,14 @@ __pycache__/
 /backend/docker-compose.test.yml
 
 /docs/
+
+# Celery beat schedule file
+celerybeat-schedule
+celerybeat.pid
+
+# ML models data
+*.pkl
+backend/ml_model/recommender/data/course_matrix.pkl
+
+# Python compiled files
+*.py[cod]

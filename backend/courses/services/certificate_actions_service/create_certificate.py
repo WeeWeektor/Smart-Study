@@ -13,6 +13,6 @@ async def create_certificate(course_id, user_id):
 
     if created:
         from courses.services.cache_service import invalidate_course_enrollment_status_cache
-        await invalidate_course_enrollment_status_cache(course_id)
+        await invalidate_course_enrollment_status_cache(course_id, user_id)
 
     return certificate, created

@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 
+from celery.schedules import crontab
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
@@ -225,6 +226,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://127.0.0.1:8000',
 ]
 
+CELERY_BEAT_SCHEDULE = {
+    'train-ml-model-every-night': {
+        'task': 'courses.tasks.train_course_recommendations',
+        'schedule': crontab(hour=3, minute=0),
+    },
+}
+
 # Static Files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -308,3 +316,11 @@ if TESTING:
             }
         }
     }
+
+# CELERY SETTINGS
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Kiev'

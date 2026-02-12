@@ -89,7 +89,7 @@ class UserCourseEnrollmentView(LocalizedView):
             await invalidate_courses_by_user_id_cache(user_id)
 
             if finished_course:
-                await invalidate_course_enrollment_status_cache(course_id)
+                await invalidate_course_enrollment_status_cache(course_id, user_id)
 
             return success_response({
                 "message": gettext("Progress updated successfully"),
@@ -108,14 +108,24 @@ class UserCourseEnrollmentStatusView(LocalizedView):
     async def get(self, request, course_id):
         user_id = request.user.id
 
-        from courses.services.cache_service import get_course_enrollment_status_cache
-        data = await get_course_enrollment_status_cache(course_id, user_id)
+        try:
+            from courses.services.cache_service import get_course_enrollment_status_cache
+            data = await get_course_enrollment_status_cache(course_id, user_id)
 
-        if isinstance(data, dict):
-            return success_response(data=data, message=gettext("Enrollment status retrieved successfully"), status=200)
+            if data is None or "error" in data:
+                return error_response(gettext("Error retrieving enrollment status"), status=500)
 
-        return error_response(data.get("message", gettext("Error retrieving enrollment status")),
-                              status=data.get("status", 500))
+            if isinstance(data, dict):
+                return success_response(
+                    data=data,
+                    message=gettext("Enrollment status retrieved successfully"),
+                    status=200
+                )
+
+            return error_response(gettext("Unknown error"), status=500)
+
+        except Exception as e:
+            return error_response(gettext(f'Error retrieve course enrollment status: {str(e)}'), status=500)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -124,6 +134,7 @@ class CourseTestResultsView(LocalizedView):
         Повертає зведену статистику по всіх тестах курсу для конкретного студента.
         Використовується для сторінки CourseCompletion.
     """
+
     @login_required_async
     async def get(self, request, course_id):
         try:
