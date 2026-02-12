@@ -26,5 +26,6 @@ def trigger_ml_training_on_course_update(sender, instance, created, **kwargs):
     1. Створено новий опублікований курс.
     2. Існуючий курс змінив статус на 'is_published=True'.
     """
-    if instance.is_published:
+    if created and instance.is_published:
         train_course_recommendations.delay()
+        return

@@ -1,6 +1,7 @@
 from .category_level_all_for_instance_cache import get_instance_cached_all
 from .course_enrollment_status_cache import get_course_enrollment_status_cache, \
     invalidate_course_enrollment_status_cache
+from .course_recommendations_cache import get_course_recommendations_cache, invalidate_all_course_recommendations_cache
 from .course_review_cache import invalidate_course_review_cache, get_course_review_cache
 from .courses_by_user_id_cache import courses_by_user_id_cache, invalidate_courses_by_user_id_cache
 from .instance_by_id_cache import get_cached_instance_by_id, invalidate_cached_instance_by_id

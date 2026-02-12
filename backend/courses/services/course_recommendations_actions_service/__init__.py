@@ -1,0 +1,1 @@
+from .get_course_recommendations import get_course_recommendations
