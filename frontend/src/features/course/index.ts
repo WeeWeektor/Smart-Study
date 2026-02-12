@@ -28,3 +28,4 @@ export {
   type EnrollmentDetailResponse,
 } from './course-enrollment/user.course.enrollment.service'
 export { userCourseCertificateService } from './course-certificate/user.course.certificate.service'
+export { courseRecommendationsService } from './course-recommendation/course.recommendatin.service'

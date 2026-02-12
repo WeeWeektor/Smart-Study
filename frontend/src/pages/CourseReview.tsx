@@ -490,6 +490,8 @@ const CourseReview = () => {
   }
 
   const handleCheckCourseBeforePublish = async () => {
+    // TODO Змінити логіку і не видавати викладачам своїх створених курсів сертифікати. і додати логіку за якою не буде додаватись проходження курсу (коли викладач проходить свій курс) в базу даних, щоб не було можливості отримати сертифікат викладачу за проходження свого курсу.
+
     // TODO Implement check course before publish
     // TODO replace this method to change course(add elem to course, edit course, etc.)
     console.log('Check data course before publish', id)

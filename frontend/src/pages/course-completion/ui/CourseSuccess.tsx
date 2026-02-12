@@ -23,7 +23,8 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/shared/lib'
 import { CourseResults } from '@/pages/course-completion'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { userCourseEnrollmentService } from '@/features/course'
 
 interface CourseSuccessProps {
   courseId: string
@@ -47,6 +48,45 @@ export const CourseSuccess = ({
   const { t } = useI18n()
   const [showResults, setShowResults] = useState<boolean>(false)
   const [isImgLoaded, setIsImgLoaded] = useState(false)
+
+  const [canShowResults, setCanShowResults] = useState(false)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const checkResults = async () => {
+      if (!courseId) return
+
+      setChecking(true)
+      setCanShowResults(false)
+      setShowResults(false)
+
+      try {
+        const data =
+          await userCourseEnrollmentService.getCourseTestResults(courseId)
+
+        if (isMounted) {
+          if (Array.isArray(data) && data.length > 0) {
+            setCanShowResults(true)
+          } else {
+            setCanShowResults(false)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to check results:', e)
+        if (isMounted) setCanShowResults(false)
+      } finally {
+        if (isMounted) setChecking(false)
+      }
+    }
+
+    checkResults()
+
+    return () => {
+      isMounted = false
+    }
+  }, [courseId])
 
   const toggleResults = () => {
     setShowResults(prev => !prev)
@@ -165,6 +205,12 @@ export const CourseSuccess = ({
                 onClick={toggleResults}
                 variant="outline"
                 className="text-muted-foreground hover:text-foreground gap-2 mt-2 w-64"
+                disabled={checking || !canShowResults}
+                title={
+                  !checking && !canShowResults
+                    ? t('У цьому курсі немає тестів')
+                    : ''
+                }
               >
                 {showResults ? (
                   <>
@@ -174,7 +220,9 @@ export const CourseSuccess = ({
                 ) : (
                   <>
                     <Eye className="w-4 h-4" />
-                    {t('Переглянути бали за тести')}
+                    {checking
+                      ? t('Перевірка...')
+                      : t('Переглянути бали за тести')}
                   </>
                 )}
               </Button>
@@ -195,7 +243,7 @@ export const CourseSuccess = ({
         <div className="h-1.5 w-full bg-gradient-to-r from-green-400 to-emerald-500" />
       </Card>
 
-      {showResults && (
+      {showResults && !checking && canShowResults && (
         <div className="animate-in slide-in-from-top-4 fade-in duration-300 w-full max-w-4xl mx-auto">
           <CourseResults courseId={courseId} />
         </div>

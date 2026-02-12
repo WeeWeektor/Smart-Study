@@ -111,6 +111,9 @@ __pycache__/
 # Celery beat schedule file
 celerybeat-schedule
 celerybeat.pid
+celerybeat-schedule.db
+celerybeat-schedule-wal
+celerybeat-schedule-shm
 
 # ML models data
 *.pkl

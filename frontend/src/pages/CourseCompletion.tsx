@@ -20,6 +20,7 @@ import {
   CourseFailed,
   CourseInProgress,
   CourseSuccess,
+  RecommendedCourses,
 } from './course-completion'
 import { updateReviewsList, useReviewStats } from '@/entities/review'
 import { ReviewsSection, StarSection } from './course-review'
@@ -39,7 +40,6 @@ const CourseCompletion = () => {
 
   const [error, setError] = useState<string>('')
   const [errorResavedData, setErrorResavedData] = useState<string>('')
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const [courseIsFailed, setCourseIsFailed] = useState<boolean>(false)
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null)
@@ -249,7 +249,7 @@ const CourseCompletion = () => {
             className="text-slate-500 hover:text-brand-600 gap-2"
           >
             <LayoutGrid className="w-4 h-4" />
-            {t('До каталогу курсів')}
+            {t('До моїх курсів')}
           </Button>
         </div>
 
@@ -299,10 +299,13 @@ const CourseCompletion = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Sidebar userInfo={userInfo} onCollapseChange={setIsSidebarCollapsed} />
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <Sidebar userInfo={userInfo} />
       <main
-        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'ml-28' : 'ml-64'}`}
+        className={
+          'ml-64 flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-y-auto h-full'
+        }
+        style={{ colorScheme: 'dark' }}
       >
         <CourseHeader
           title={`${t('Курс')} - ${courseInfo.title} ${courseIsFailed ? `- ${t('Завершено')}` : isFullyCompleted ? `- ${t('Пройдений')}` : `- ${t('Не завершено')}`}`}
@@ -334,6 +337,13 @@ const CourseCompletion = () => {
             </div>
           )}
         </div>
+        {(isFullyCompleted || courseIsFailed) && id && (
+          <RecommendedCourses
+            courseId={id}
+            status={courseIsFailed ? 'failed' : 'passed'}
+            limit={12}
+          />
+        )}
       </main>
       {id && (
         <AddCourseReviewModal
