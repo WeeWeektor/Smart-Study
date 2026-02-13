@@ -13,6 +13,12 @@ export interface GenerateCertificateResponse {
 }
 
 export interface CertificateVerificationResponse {
+  message: string
+  status: number
+  certificate: CertificateData
+}
+
+export interface CertificateData {
   certificate_id: string
   student_name: string
   course_title: string
@@ -112,7 +118,7 @@ class UserCourseCertificateService {
     const response = await apiClient.get<CertificateVerificationResponse>(
       `/course/certificates/verify/${certificateId}/`
     )
-    return response.data
+    return response.data.certificate
   }
 }
 
