@@ -14,6 +14,7 @@ class UserCourseEnrollmentSerializer(serializers.ModelSerializer):
 
     course_title = serializers.CharField(source='course.title', read_only=True)
     course_description = serializers.CharField(source='course.description', read_only=True)
+    course_owner_id = serializers.CharField(source='course.owner_id', read_only=True)
 
     class Meta:
         model = UserCourseEnrollment
@@ -25,6 +26,7 @@ class UserCourseEnrollmentSerializer(serializers.ModelSerializer):
             'certificate_url',
             'course_title',
             'course_description',
+            'course_owner_id',
         ]
 
     @staticmethod

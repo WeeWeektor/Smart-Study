@@ -47,7 +47,8 @@ const CourseCompletion = () => {
   const [courseInfo, setCourseInfo] = useState<{
     title: string
     description: string
-  }>({ title: '', description: '' })
+    ownerId: string
+  }>({ title: '', description: '', ownerId: '' })
 
   const [statusLoading, setStatusLoading] = useState(true)
   const [generatingLoading, setGeneratingLoading] = useState(false)
@@ -81,6 +82,7 @@ const CourseCompletion = () => {
           is_fully_completed,
           course_title,
           course_description,
+          course_owner_id,
         } = response
 
         setCourseIsFailed(is_failed)
@@ -89,6 +91,7 @@ const CourseCompletion = () => {
         setCourseInfo({
           title: course_title || t('Курс'),
           description: course_description || t(''),
+          ownerId: course_owner_id,
         })
       } catch (e) {
         setError(
@@ -351,6 +354,9 @@ const CourseCompletion = () => {
           onClose={() => setIsAddReviewModalOpen(false)}
           courseId={id}
           onReviewAdded={handleReviewAdded}
+          isCourseOwner={
+            String(profileData?.user.id) === String(courseInfo.ownerId)
+          }
         />
       )}
     </div>

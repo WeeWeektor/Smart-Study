@@ -484,16 +484,12 @@ const CourseReview = () => {
     }
   }
 
-  const handleCheckStatisticsCourseForTeacher = async () => {
+  const handleChowStatisticsCourseForTeacher = async () => {
     // TODO Show statistics for teacher about course enrollment, completions, reviews, etc.
     console.log('Check data statistics course', id)
   }
 
   const handleCheckCourseBeforePublish = async () => {
-    // TODO Приховайте кнопку "Залишити відгук" (для викладача і створеного ним курсу) Викладач не повинен ставити сам собі 5 зірок. Це накрутка рейтингу.
-    // TODO Не блокуйте отримання сертифікату.
-    // TODO Чи потрібні кнопки додати у вішліст (для викладача і створеного ним курсу)
-
     // TODO Implement check course before publish (це типу є +-)
     // TODO replace this method to change course(add elem to course, edit course, etc.)
     console.log('Check data course before publish', id)
@@ -609,11 +605,13 @@ const CourseReview = () => {
                 onPublishCourse={handlePublishCourse}
                 onRemoveCourse={handleRemoveCourse}
                 onCheckCourse={handleCheckCourseBeforePublish}
+                onShowStatistics={handleChowStatisticsCourseForTeacher}
                 showPublishModal={showPublishModal}
                 setShowPublishModal={setShowPublishModal}
                 isConfirmDelOpen={isConfirmDelOpen}
                 setIsConfirmDelOpen={setIsConfirmDelOpen}
                 isEnrolling={isEnrolling}
+                isCourseOwner={isOwner}
               />
             </>
           )}
@@ -625,6 +623,7 @@ const CourseReview = () => {
           onClose={() => setIsAddReviewModalOpen(false)}
           courseId={id}
           onReviewAdded={handleReviewAdded}
+          isCourseOwner={isOwner}
         />
       )}
     </div>

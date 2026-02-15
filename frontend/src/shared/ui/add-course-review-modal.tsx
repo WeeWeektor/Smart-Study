@@ -1,22 +1,23 @@
 import React, { type FC, useEffect, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import {
+  Alert,
+  AlertDescription,
   Button,
   Card,
   ConfirmModal,
   Label,
   Textarea,
-  Alert,
-  AlertDescription,
 } from '@/shared/ui'
 import {
   AlertTriangle,
   Loader2,
+  MessageSquare,
   Save,
   Star,
   Undo,
+  UserCheck,
   X,
-  MessageSquare,
 } from 'lucide-react'
 import { disablePageScroll, enablePageScroll } from '@/shared/scroll'
 import { courseReviewService, type Review } from '@/features/course'
@@ -26,6 +27,7 @@ interface AddCourseReviewModalProps {
   onClose: () => void
   courseId: string
   onReviewAdded: (review: Review) => void
+  isCourseOwner?: boolean
 }
 
 export const AddCourseReviewModal: FC<AddCourseReviewModalProps> = ({
@@ -33,6 +35,7 @@ export const AddCourseReviewModal: FC<AddCourseReviewModalProps> = ({
   onClose,
   courseId,
   onReviewAdded,
+  isCourseOwner = false,
 }) => {
   const { t } = useI18n()
 
@@ -56,6 +59,11 @@ export const AddCourseReviewModal: FC<AddCourseReviewModalProps> = ({
   if (!isOpen) return null
 
   const handleSubmit = async () => {
+    if (isCourseOwner) {
+      setError(t('Викладач не може залишати відгуки на власний курс.'))
+      return
+    }
+
     if (rating === 0) {
       setError(t('Будь ласка, поставте оцінку.'))
       return
@@ -96,6 +104,11 @@ export const AddCourseReviewModal: FC<AddCourseReviewModalProps> = ({
   }
 
   const handleCloseAttempt = () => {
+    if (isCourseOwner) {
+      onClose()
+      return
+    }
+
     const hasData = rating > 0 || comment.trim().length > 0
     if (hasData) {
       setShowCancelModal(true)
@@ -125,11 +138,13 @@ export const AddCourseReviewModal: FC<AddCourseReviewModalProps> = ({
         <div className="flex flex-col items-center justify-center mb-6 relative">
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <MessageSquare className="w-6 h-6 text-brand-600" />
-            {t('Залишити відгук')}
+            {isCourseOwner ? t('Інформація') : t('Залишити відгук')}
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 text-center">
-            {t('Поділіться своїми враженнями про цей курс')}
-          </p>
+          {!isCourseOwner && (
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 text-center">
+              {t('Поділіться своїми враженнями про цей курс')}
+            </p>
+          )}
 
           <button
             onClick={handleCloseAttempt}
@@ -139,113 +154,136 @@ export const AddCourseReviewModal: FC<AddCourseReviewModalProps> = ({
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-6">
-          <Card className="p-4 bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700">
-            <div className="flex flex-col items-center gap-3">
-              <Label className="text-base font-medium">
-                {t('Ваша оцінка')}
-              </Label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <button
-                    key={star}
-                    type="button"
-                    className="focus:outline-none transition-transform hover:scale-110 p-1"
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => setHoverRating(star)}
-                    onMouseLeave={() => setHoverRating(0)}
-                  >
-                    <Star
-                      className={`w-8 h-8 transition-all duration-200 ${
-                        star <= (hoverRating || rating)
-                          ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm'
-                          : 'text-slate-300 dark:text-slate-600'
-                      }`}
-                    />
-                  </button>
-                ))}
-              </div>
-              <span className="text-sm font-medium text-brand-600 min-h-[20px] transition-all">
-                {rating > 0 || hoverRating > 0
-                  ? t(
-                      [
-                        'Дуже погано',
-                        'Погано',
-                        'Нормально',
-                        'Добре',
-                        'Чудово!',
-                      ][(hoverRating || rating) - 1]
-                    )
-                  : ''}
-              </span>
+        {isCourseOwner ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-6">
+            <div className="bg-brand-50 dark:bg-brand-900/20 p-6 rounded-full">
+              <UserCheck className="w-16 h-16 text-brand-600 dark:text-brand-400" />
             </div>
-          </Card>
-
-          <div>
-            <Label htmlFor="reviewComment" className="mb-2 block">
-              {t('Ваш коментар *')}
-            </Label>
-            <Textarea
-              id="reviewComment"
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder={t(
-                'Що вам сподобалось, а що можна покращити? (мінімум 10 символів)'
-              )}
-              className="min-h-[140px] resize-none focus:ring-brand-500"
-            />
-          </div>
-
-          <Alert
-            variant="destructive"
-            className="bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800"
-          >
-            <AlertTriangle className="h-4 w-4 stroke-orange-600 dark:stroke-orange-400" />
-            <AlertDescription className="text-xs font-medium ml-2 leading-relaxed">
-              {t(
-                'Увага: Після публікації ви НЕ зможете редагувати або видалити цей відгук. Будь ласка, перевірте написане перед відправкою.'
-              )}
-            </AlertDescription>
-          </Alert>
-
-          <div className="my-4 flex-grow h-px bg-gray-200 dark:bg-gray-700" />
-
-          <div className="flex justify-center space-x-4 mt-6">
-            <Button
-              className="w-40 hover:bg-gray-100 dark:hover:bg-gray-700 border-slate-200 dark:border-slate-600"
-              variant="outline"
-              onClick={handleCloseAttempt}
-              disabled={isSubmitting}
-            >
-              <Undo className="w-4 h-4 mr-2" />
-              {t('Скасувати')}
-            </Button>
-
-            <Button
-              className="w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white shadow-md hover:shadow-lg transition-all"
-              onClick={handleSubmit}
-              disabled={isSubmitting || rating === 0}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('Публікація...')}
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  {t('Опублікувати')}
-                </>
-              )}
+            <div className="text-center space-y-2 max-w-xs">
+              <h3 className="font-semibold text-lg">
+                {t('Ви є автором цього курсу')}
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400">
+                {t(
+                  'Автори не можуть оцінювати власні курси. Ви можете переглядати відгуки студентів у секції відгуків.'
+                )}
+              </p>
+            </div>
+            <Button onClick={onClose} className="w-full max-w-[200px]">
+              {t('Зрозуміло')}
             </Button>
           </div>
-        </div>
+        ) : (
+          <>
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-6">
+              <Card className="p-4 bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700">
+                <div className="flex flex-col items-center gap-3">
+                  <Label className="text-base font-medium">
+                    {t('Ваша оцінка')}
+                  </Label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        type="button"
+                        className="focus:outline-none transition-transform hover:scale-110 p-1"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                      >
+                        <Star
+                          className={`w-8 h-8 transition-all duration-200 ${
+                            star <= (hoverRating || rating)
+                              ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm'
+                              : 'text-slate-300 dark:text-slate-600'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-brand-600 min-h-[20px] transition-all">
+                    {rating > 0 || hoverRating > 0
+                      ? t(
+                          [
+                            'Дуже погано',
+                            'Погано',
+                            'Нормально',
+                            'Добре',
+                            'Чудово!',
+                          ][(hoverRating || rating) - 1]
+                        )
+                      : ''}
+                  </span>
+                </div>
+              </Card>
+
+              <div>
+                <Label htmlFor="reviewComment" className="mb-2 block">
+                  {t('Ваш коментар *')}
+                </Label>
+                <Textarea
+                  id="reviewComment"
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  placeholder={t(
+                    'Що вам сподобалось, а що можна покращити? (мінімум 10 символів)'
+                  )}
+                  className="min-h-[140px] resize-none focus:ring-brand-500"
+                />
+              </div>
+
+              <Alert
+                variant="destructive"
+                className="bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800"
+              >
+                <AlertTriangle className="h-4 w-4 stroke-orange-600 dark:stroke-orange-400" />
+                <AlertDescription className="text-xs font-medium ml-2 leading-relaxed">
+                  {t(
+                    'Увага: Після публікації ви НЕ зможете редагувати або видалити цей відгук. Будь ласка, перевірте написане перед відправкою.'
+                  )}
+                </AlertDescription>
+              </Alert>
+
+              <div className="my-4 flex-grow h-px bg-gray-200 dark:bg-gray-700" />
+
+              <div className="flex justify-center space-x-4 mt-6">
+                <Button
+                  className="w-40 hover:bg-gray-100 dark:hover:bg-gray-700 border-slate-200 dark:border-slate-600"
+                  variant="outline"
+                  onClick={handleCloseAttempt}
+                  disabled={isSubmitting}
+                >
+                  <Undo className="w-4 h-4 mr-2" />
+                  {t('Скасувати')}
+                </Button>
+
+                <Button
+                  className="w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white shadow-md hover:shadow-lg transition-all"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || rating === 0}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {t('Публікація...')}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      {t('Опублікувати')}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {showCancelModal && (

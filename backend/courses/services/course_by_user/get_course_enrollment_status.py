@@ -25,6 +25,7 @@ async def get_course_enrollment_status(course_id, user_id):
             "certificate_url": None,
             "course_title": None,
             "course_description": None,
+            "course_owner_id": None,
             "status": "not_started"
         }
     except Exception:

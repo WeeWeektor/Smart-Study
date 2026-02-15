@@ -50,6 +50,7 @@ export interface EnrollmentStatusResponse {
   certificate_url: string | null
   course_title: string
   course_description: string
+  course_owner_id: string
 }
 
 class UserCourseEnrollmentService {
@@ -61,6 +62,7 @@ class UserCourseEnrollmentService {
 
       const response = await apiClient.post<StartCourseResponse>(
         `/enrollment/start-course-enrollment/${courseId}/`,
+        {},
         {
           headers: {
             'X-CSRFToken': csrfToken || '',
@@ -204,6 +206,9 @@ class UserCourseEnrollmentService {
             is_fully_completed: false,
             is_failed: false,
             certificate_url: null,
+            course_title: '',
+            course_description: '',
+            course_owner_id: '',
           } as EnrollmentStatusResponse
         }
 

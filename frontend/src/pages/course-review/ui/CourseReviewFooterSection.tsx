@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button, Card, CardContent, ConfirmModal } from '@/shared/ui'
 import {
+  BarChart,
   FileText,
   Heart,
   Loader2,
@@ -22,11 +23,13 @@ interface CourseFooterSectionProps {
   onPublishCourse: () => void
   onRemoveCourse: () => void
   onCheckCourse: () => void
+  onShowStatistics?: () => void
   showPublishModal: boolean
   setShowPublishModal: (open: boolean) => void
   isConfirmDelOpen: boolean
   setIsConfirmDelOpen: (open: boolean) => void
   isEnrolling?: boolean
+  isCourseOwner: boolean
 }
 
 export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
@@ -39,11 +42,13 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
   onPublishCourse,
   onRemoveCourse,
   onCheckCourse,
+  onShowStatistics,
   showPublishModal,
   setShowPublishModal,
   isConfirmDelOpen,
   setIsConfirmDelOpen,
   isEnrolling = false,
+  isCourseOwner,
 }) => {
   const { t } = useI18n()
 
@@ -124,18 +129,24 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
       <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col gap-2">
           <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            {userStatus === 'completed'
-              ? t('Ви успішно завершили цей курс!')
-              : userStatus === 'in_progress'
-                ? t('Продовжуйте навчання')
-                : t('Готові розпочати навчання?')}
+            {isCourseOwner
+              ? t('Управління курсом')
+              : userStatus === 'completed'
+                ? t('Ви успішно завершили цей курс!')
+                : userStatus === 'in_progress'
+                  ? t('Продовжуйте навчання')
+                  : t('Готові розпочати навчання?')}
           </h3>
           <p className="text-slate-600 dark:text-slate-400">
-            {userStatus === 'completed'
-              ? t('Ви можете переглянути матеріали курсу в будь-який час.')
-              : t(
-                  'Отримайте повний доступ до всіх матеріалів та сертифікат по завершенню.'
-                )}
+            {isCourseOwner
+              ? t(
+                  'Ви можете переглядати статистику або пройти курс для перевірки.'
+                )
+              : userStatus === 'completed'
+                ? t('Ви можете переглянути матеріали курсу в будь-який час.')
+                : t(
+                    'Отримайте повний доступ до всіх матеріалів та сертифікат по завершенню.'
+                  )}
           </p>
         </div>
 
@@ -175,7 +186,18 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
 
           {(!userStatus || userStatus === 'not_started') && (
             <>
-              {inWishlist ? (
+              {isCourseOwner ? (
+                <Button
+                  onClick={onShowStatistics}
+                  variant="outline"
+                  size="lg"
+                  className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 hover:text-brand-800 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
+                  disabled={isEnrolling}
+                >
+                  <BarChart className="w-5 h-5 mr-2" />
+                  {t('Статистика курсу')}
+                </Button>
+              ) : inWishlist ? (
                 <Button
                   onClick={onRemoveFromWishlist}
                   variant="outline"
@@ -210,7 +232,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
                 ) : (
                   <Rocket className="w-5 h-5 mr-2" />
                 )}{' '}
-                {t('Розпочати курс')}
+                {isCourseOwner ? t('Переглянути курс') : t('Розпочати курс')}
               </Button>
             </>
           )}
