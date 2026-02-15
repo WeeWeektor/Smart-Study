@@ -484,9 +484,8 @@ const CourseReview = () => {
     }
   }
 
-  const handleChowStatisticsCourseForTeacher = async () => {
-    // TODO Show statistics for teacher about course enrollment, completions, reviews, etc.
-    console.log('Check data statistics course', id)
+  const handleShowStatisticsCourseForTeacher = async () => {
+    navigate(`/course-statistics/${id}`)
   }
 
   const handleCheckCourseBeforePublish = async () => {
@@ -605,7 +604,7 @@ const CourseReview = () => {
                 onPublishCourse={handlePublishCourse}
                 onRemoveCourse={handleRemoveCourse}
                 onCheckCourse={handleCheckCourseBeforePublish}
-                onShowStatistics={handleChowStatisticsCourseForTeacher}
+                onShowStatistics={handleShowStatisticsCourseForTeacher}
                 showPublishModal={showPublishModal}
                 setShowPublishModal={setShowPublishModal}
                 isConfirmDelOpen={isConfirmDelOpen}
