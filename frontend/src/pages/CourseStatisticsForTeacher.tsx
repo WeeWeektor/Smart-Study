@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useI18n } from '@/shared/lib'
 import { Sidebar } from '@/widgets'
@@ -43,6 +43,8 @@ const CourseStatisticsForTeacher = () => {
   const [error, setError] = useState<string>('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
+  const [searchQuery, setSearchQuery] = useState('')
+
   const {
     profileData,
     loading: profileLoading,
@@ -70,6 +72,20 @@ const CourseStatisticsForTeacher = () => {
     }
     fetchData()
   }, [id, t])
+
+  const filteredStudents = useMemo(() => {
+    if (!stats?.students) return []
+
+    const query = searchQuery.toLowerCase().trim()
+
+    if (!query) return stats.students
+
+    return stats.students.filter(
+      student =>
+        student.name.toLowerCase().includes(query) ||
+        student.email.toLowerCase().includes(query)
+    )
+  }, [stats?.students, searchQuery])
 
   if (profileLoading || loading)
     return <LoadingProfile message={t('Завантаження статистики...')} />
@@ -99,7 +115,9 @@ const CourseStatisticsForTeacher = () => {
       />
 
       <main
-        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out bg-slate-50/50 dark:bg-black/20 ${isSidebarCollapsed ? 'ml-28' : 'ml-64'}`}
+        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out bg-slate-50/50 dark:bg-black/20 ${
+          isSidebarCollapsed ? 'ml-28' : 'ml-64'
+        }`}
       >
         <CourseHeader
           title={`${t('Статистика курсу')}: ${course?.course.title}`}
@@ -191,14 +209,21 @@ const CourseStatisticsForTeacher = () => {
           </div>
 
           <Card className="shadow-sm border-slate-200 dark:border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 gap-4">
               <CardTitle className="text-lg font-bold">
                 {t('Список студентів')}
               </CardTitle>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Search className="w-4 h-4" />
-                {t('Пошук')}
-              </Button>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <input
+                  type="text"
+                  placeholder={t('Пошук за іменем або email...')}
+                  className="w-full h-9 pl-9 pr-4 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-brand-400"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -216,48 +241,59 @@ const CourseStatisticsForTeacher = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {stats?.students.map(student => (
-                      <tr
-                        key={student.id}
-                        className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/20 transition-colors"
-                      >
-                        <td className="px-4 py-3 font-medium">
-                          <div className="flex flex-col">
-                            <span className="text-slate-900 dark:text-slate-100 font-semibold">
-                              {student.name}
-                            </span>
-                            <span className="text-xs text-slate-500">
-                              {student.email}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={student.status} t={t} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                              <div
-                                className={`h-2.5 rounded-full ${
-                                  student.status === 'success'
-                                    ? 'bg-green-500'
-                                    : student.status === 'failed'
-                                      ? 'bg-red-500'
-                                      : 'bg-brand-600'
-                                }`}
-                                style={{ width: `${student.progress}%` }}
-                              ></div>
+                    {filteredStudents.length > 0 ? (
+                      filteredStudents.map(student => (
+                        <tr
+                          key={student.id}
+                          className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/20 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium">
+                            <div className="flex flex-col">
+                              <span className="text-slate-900 dark:text-slate-100 font-semibold">
+                                {student.name}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {student.email}
+                              </span>
                             </div>
-                            <span className="text-xs font-bold w-8 text-right">
-                              {student.progress}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-slate-500">
-                          {student.joined_at}
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={student.status} t={t} />
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div
+                                  className={`h-2.5 rounded-full ${
+                                    student.status === 'success'
+                                      ? 'bg-green-500'
+                                      : student.status === 'failed'
+                                        ? 'bg-red-500'
+                                        : 'bg-brand-600'
+                                  }`}
+                                  style={{ width: `${student.progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-xs font-bold w-8 text-right">
+                                {student.progress}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-slate-500">
+                            {student.joined_at}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="text-center py-8 text-slate-500"
+                        >
+                          {t('Студентів не знайдено за вашим запитом.')}
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
