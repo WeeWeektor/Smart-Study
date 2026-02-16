@@ -1,4 +1,3 @@
-from django.db.models import Avg
 from rest_framework import serializers
 
 from courses.models import Course, UserCourseEnrollment
@@ -12,7 +11,7 @@ class StudentCourseStatisticSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source='user.id', read_only=True)
     name = serializers.SerializerMethodField()
     email = serializers.EmailField(source='user.email', read_only=True)
-    progress = serializers.DecimalField(source='progress', max_digits=5, decimal_places=2, read_only=True)
+    progress = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
     status = serializers.SerializerMethodField()
     joined_at = serializers.DateTimeField(source='enrolled_at', format="%d.%m.%Y")
 
@@ -48,13 +47,13 @@ class CourseStatisticForOwnerSerializer(serializers.ModelSerializer):
     призначений для власника курсу.
     """
 
-    total_students = serializers.SerializerMethodField()
-    total_in_progress_course_students = serializers.SerializerMethodField()
-    total_completed_course_students = serializers.SerializerMethodField()
-    total_success_complete = serializers.SerializerMethodField()
-    total_failed_complete = serializers.SerializerMethodField()
+    total_students = serializers.IntegerField(source='stat_total_students', read_only=True)
+    total_in_progress_course_students = serializers.IntegerField(source='stat_in_progress', read_only=True)
+    total_completed_course_students = serializers.IntegerField(source='stat_completed', read_only=True)
+    total_success_complete = serializers.IntegerField(source='stat_success', read_only=True)
+    total_failed_complete = serializers.IntegerField(source='stat_failed', read_only=True)
     average_rating = serializers.SerializerMethodField()
-    total_reviews = serializers.SerializerMethodField()
+    total_reviews = serializers.IntegerField(source='stat_total_reviews', read_only=True)
     students = serializers.SerializerMethodField()
 
     class Meta:
@@ -71,39 +70,11 @@ class CourseStatisticForOwnerSerializer(serializers.ModelSerializer):
         ]
 
     @staticmethod
-    def get_total_students(obj):
-        return obj.enrollments.count()
-
-    @staticmethod
-    def get_total_in_progress_course_students(obj):
-        return obj.enrollments.filter(completed=False).count()
-
-    @staticmethod
-    def get_total_completed_course_students(obj):
-        return obj.enrollments.filter(completed=True).count()
-
-    @staticmethod
-    def get_total_success_complete(obj):
-        return obj.enrollments.filter(completed=True, progress=100).count()
-
-    @staticmethod
-    def get_total_failed_complete(obj):
-        return obj.enrollments.filter(completed=True).exclude(progress=100).count()
-
-    @staticmethod
     def get_average_rating(obj):
-        if hasattr(obj, 'reviews'):
-            avg = obj.reviews.aggregate(Avg('rating'))['rating__avg']
-            return round(avg, 1) if avg else 0
-        return 0
-
-    @staticmethod
-    def get_total_reviews(obj):
-        if hasattr(obj, 'reviews'):
-            return obj.reviews.count()
-        return 0
+        avg = getattr(obj, 'stat_avg_rating', 0)
+        return round(avg, 1) if avg else 0
 
     @staticmethod
     def get_students(obj):
-        enrollments = obj.enrollments.select_related('user').order_by('-enrolled_at')
-        return StudentCourseStatisticSerializer(enrollments, many=True).data
+        students = getattr(obj, 'prefetched_students', [])
+        return StudentCourseStatisticSerializer(students, many=True).data

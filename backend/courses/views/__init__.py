@@ -3,6 +3,7 @@ from courses.views.choices_views import ChoicesView
 from courses.views.counter_views import CountAllPublishedCourses, CountTeacherCourses
 from courses.views.course_recommendations_views import CourseRecommendationsView
 from courses.views.course_review_views import CourseReviewView
+from courses.views.course_statistic_for_owner import CourseStatisticsView
 from courses.views.course_views import CourseView, PublishCourseView
 from courses.views.courses_by_user_views import CoursesByUserView
 from courses.views.lesson_views import LessonView
@@ -18,6 +19,7 @@ __all__ = [
     "DownloadCertificateView",
     "VerifyCertificateView",
     "CourseTestResultsView",
+    "CourseStatisticsView",
     "CourseView",
     "CourseRecommendationsView",
     "PublishCourseView",

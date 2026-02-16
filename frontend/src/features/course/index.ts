@@ -32,3 +32,8 @@ export {
   type CertificateData,
 } from './course-certificate/user.course.certificate.service'
 export { courseRecommendationsService } from './course-recommendation/course.recommendatin.service'
+export {
+  courseStatisticForOwnerService,
+  type CourseStatistics,
+  type StudentStatItem,
+} from './course-statistic-for-owner/statistics.service'
