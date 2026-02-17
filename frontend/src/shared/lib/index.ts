@@ -1,6 +1,6 @@
 export { getInitials, getAchievementColor } from './utils'
 export { achievements, courseProgress, learningStats } from './mock-data'
-export { parseISODuration } from './formatDuration'
+export { parseISODuration, parseDurationFromISO } from './formatDuration'
 export { formatLabel } from './format-label'
 export * from './i18n'
 export * from './cookies'

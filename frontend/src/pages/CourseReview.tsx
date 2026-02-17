@@ -489,8 +489,7 @@ const CourseReview = () => {
   }
 
   const handleChangeCourse = async () => {
-    // TODO edit course
-    console.log('Change course data ', id)
+    navigate(`/create-course/${id}`)
   }
 
   if (profileLoading || courseLoading) {
