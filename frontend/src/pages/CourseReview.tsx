@@ -488,10 +488,9 @@ const CourseReview = () => {
     navigate(`/course-statistics/${id}`)
   }
 
-  const handleCheckCourseBeforePublish = async () => {
-    // TODO Implement check course before publish (це типу є +-)
-    // TODO replace this method to change course(add elem to course, edit course, etc.)
-    console.log('Check data course before publish', id)
+  const handleChangeCourse = async () => {
+    // TODO edit course
+    console.log('Change course data ', id)
   }
 
   if (profileLoading || courseLoading) {
@@ -568,6 +567,7 @@ const CourseReview = () => {
                 handleElementCompleted(elemId, elemType, timeSpent)
               }}
               isCourseCompleted={isCourseCompleted}
+              isCoursePublished={course?.course.is_published || false}
             />
           ) : (
             <>
@@ -603,7 +603,7 @@ const CourseReview = () => {
                 onRemoveFromWishlist={handleRemoveFromWishlist}
                 onPublishCourse={handlePublishCourse}
                 onRemoveCourse={handleRemoveCourse}
-                onCheckCourse={handleCheckCourseBeforePublish}
+                onChangeCourse={handleChangeCourse}
                 onShowStatistics={handleShowStatisticsCourseForTeacher}
                 showPublishModal={showPublishModal}
                 setShowPublishModal={setShowPublishModal}

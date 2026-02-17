@@ -73,19 +73,61 @@ const CourseStatisticsForTeacher = () => {
     fetchData()
   }, [id, t])
 
+  const cleanStats = useMemo(() => {
+    const currentUserId = profileData?.user?.id
+      ? String(profileData.user.id)
+      : null
+
+    if (!stats || !currentUserId) return stats
+
+    const ownerAsStudent = stats.students.find(
+      s => String(s.id) === currentUserId
+    )
+
+    if (!ownerAsStudent) return stats
+
+    return {
+      ...stats,
+      total_students: Math.max(0, stats.total_students - 1),
+
+      total_in_progress_course_students:
+        ownerAsStudent.status === 'in_progress'
+          ? Math.max(0, stats.total_in_progress_course_students - 1)
+          : stats.total_in_progress_course_students,
+
+      total_completed_course_students:
+        ownerAsStudent.status === 'success' ||
+        ownerAsStudent.status === 'failed'
+          ? Math.max(0, stats.total_completed_course_students - 1)
+          : stats.total_completed_course_students,
+
+      total_success_complete:
+        ownerAsStudent.status === 'success'
+          ? Math.max(0, stats.total_success_complete - 1)
+          : stats.total_success_complete,
+
+      total_failed_complete:
+        ownerAsStudent.status === 'failed'
+          ? Math.max(0, stats.total_failed_complete - 1)
+          : stats.total_failed_complete,
+
+      students: stats.students.filter(s => String(s.id) !== currentUserId),
+    }
+  }, [stats, profileData])
+
   const filteredStudents = useMemo(() => {
-    if (!stats?.students) return []
+    if (!cleanStats?.students) return []
 
     const query = searchQuery.toLowerCase().trim()
 
-    if (!query) return stats.students
+    if (!query) return cleanStats.students
 
-    return stats.students.filter(
+    return cleanStats.students.filter(
       student =>
         student.name.toLowerCase().includes(query) ||
         student.email.toLowerCase().includes(query)
     )
-  }, [stats?.students, searchQuery])
+  }, [cleanStats, searchQuery])
 
   if (profileLoading || loading)
     return <LoadingProfile message={t('Завантаження статистики...')} />
@@ -139,30 +181,30 @@ const CourseStatisticsForTeacher = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title={t('Всього студентів')}
-              value={stats?.total_students || 0}
+              value={cleanStats?.total_students || 0}
               icon={<Users className="w-5 h-5 text-blue-600" />}
               description={t('Записаних на курс')}
             />
 
             <StatsCard
               title={t('Рейтинг курсу')}
-              value={stats?.average_rating || 0}
+              value={cleanStats?.average_rating || 0}
               icon={
                 <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
               }
-              description={`${stats?.total_reviews} ${t('відгуків')}`}
+              description={`${cleanStats?.total_reviews} ${t('відгуків')}`}
             />
 
             <StatsCard
               title={t('В процесі навчання')}
-              value={stats?.total_in_progress_course_students || 0}
+              value={cleanStats?.total_in_progress_course_students || 0}
               icon={<Clock className="w-5 h-5 text-brand-600" />}
               description={t('Активні студенти')}
             />
 
             <StatsCard
               title={t('Всього завершили')}
-              value={stats?.total_completed_course_students || 0}
+              value={cleanStats?.total_completed_course_students || 0}
               icon={<BookOpen className="w-5 h-5 text-purple-600" />}
               description={t('Дійшли до фіналу')}
             />
@@ -176,7 +218,7 @@ const CourseStatisticsForTeacher = () => {
                     {t('Успішно завершили')}
                   </p>
                   <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {stats?.total_success_complete}
+                    {cleanStats?.total_success_complete}
                   </h3>
                   <p className="text-xs text-green-600 mt-1 font-medium">
                     {t('Отримали сертифікат')}
@@ -195,7 +237,7 @@ const CourseStatisticsForTeacher = () => {
                     {t('Провалили курс')}
                   </p>
                   <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                    {stats?.total_failed_complete}
+                    {cleanStats?.total_failed_complete}
                   </h3>
                   <p className="text-xs text-red-600 mt-1 font-medium">
                     {t('Не набрали прохідний бал')}

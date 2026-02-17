@@ -8,13 +8,13 @@ import {
   UserModal,
 } from '@/shared/ui'
 import {
+  ArrowRight,
   BookOpen,
   Clock,
   Eye,
   FileCheck,
   Layers,
   MessageSquare,
-  RefreshCw,
   Rocket,
   Star,
   Trash2,
@@ -281,7 +281,7 @@ export const CourseCard = ({
                         {status === 'not_started' ? (
                           <Rocket className="w-4 h-4 mr-2" />
                         ) : (
-                          <RefreshCw className="w-4 h-4 mr-2" />
+                          <ArrowRight className="w-4 h-4 mr-2" />
                         )}
                         {status === 'not_started'
                           ? t('Розпочати')

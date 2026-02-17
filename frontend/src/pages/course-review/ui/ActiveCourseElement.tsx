@@ -46,6 +46,7 @@ interface ActiveCourseElementProps {
   onFinish: () => void
   onComplete?: (id: string, type: string, timeSpent: number) => void
   isCourseCompleted: boolean
+  isCoursePublished?: boolean
 }
 
 type MarkdownProps<T extends React.ElementType> =
@@ -70,6 +71,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   onFinish,
   onComplete,
   isCourseCompleted,
+  isCoursePublished = false,
 }) => {
   const { t } = useI18n()
 
@@ -81,6 +83,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   const [configError, setConfigError] = useState<string | null>(null)
 
   const lessonStartTimeRef = useRef<number>(Date.now())
+
+  const isPreviewMode = isOwner && !isCoursePublished
 
   useEffect(() => {
     setIsTestStarted(false)
@@ -100,6 +104,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     const lesson =
       activeElement && 'lesson' in activeElement ? activeElement.lesson : null
     if (!lesson || !onComplete) return
+
+    if (isPreviewMode) return
 
     const lessonId = lesson.id
     let timerPassed = false
@@ -141,7 +147,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
       clearTimeout(timer)
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [activeElement, onComplete])
+  }, [activeElement, onComplete, isPreviewMode])
 
   const currentTestInfo = useMemo(() => {
     if (!activeElement) return null
@@ -169,6 +175,18 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     const fetchConfig = async () => {
       if (!currentTestInfo) return
 
+      if (isPreviewMode) {
+        setTestConfig({
+          can_attempt: true,
+          attempts_used: 0,
+          max_attempts: 'unlimited',
+          remaining_attempts: 'unlimited',
+          randomize_questions: false,
+          show_correct_answers: true,
+        })
+        return
+      }
+
       setIsConfigLoading(true)
       setConfigError(null)
       try {
@@ -189,13 +207,31 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     }
 
     fetchConfig()
-  }, [currentTestInfo])
+  }, [currentTestInfo, isPreviewMode])
 
   const handleSubmitTest = async (
     testId: string,
     answers: any[],
     timeSpent: number
   ) => {
+    if (isPreviewMode) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      const mockResult = {
+        passed: true,
+        score: 100,
+        max_score: 100,
+        percent: 100,
+        questions_count: answers.length,
+        correct_answers_count: answers.length,
+        started_at: new Date().toISOString(),
+        finished_at: new Date().toISOString(),
+        attempt_id: 'preview-attempt',
+      }
+
+      return mockResult
+    }
+
     try {
       const testType =
         'module-test' in activeElement!
@@ -536,6 +572,12 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
     return (
       <>
+        {isPreviewMode && (
+          <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-200">
+            {t('Режим попереднього перегляду: прогрес не зберігається.')}
+          </div>
+        )}
+
         <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-shadow hover:shadow-md dark:hover:shadow-gray-800/50">
           <CardContent className="text-slate-700 dark:text-slate-200">
             {renderLessonContent(lesson)}
@@ -550,10 +592,12 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   if (currentTestInfo) {
     const { test, testType, course_id } = currentTestInfo
 
-    const canAttempt = testConfig?.can_attempt ?? false
-    const attemptsInfo = testConfig
-      ? `${testConfig.attempts_used} / ${testConfig.max_attempts === 'unlimited' ? '∞' : testConfig.max_attempts}`
-      : '...'
+    const canAttempt = isPreviewMode ? true : (testConfig?.can_attempt ?? false)
+    const attemptsInfo = isPreviewMode
+      ? `0 / ∞`
+      : testConfig
+        ? `${testConfig.attempts_used} / ${testConfig.max_attempts === 'unlimited' ? '∞' : testConfig.max_attempts}`
+        : '...'
 
     if (isTestStarted) {
       const testDataForPlayer: TestData = {
@@ -569,9 +613,13 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
               ? 'course-test'
               : undefined,
         course_id: course_id,
-        max_attempts: testConfig?.max_attempts ?? 0,
+        max_attempts: isPreviewMode
+          ? 'unlimited'
+          : (testConfig?.max_attempts ?? 0),
         can_attempt: canAttempt,
-        randomize_questions: testConfig?.randomize_questions,
+        randomize_questions: isPreviewMode
+          ? false
+          : testConfig?.randomize_questions,
         questions: test.questions.map((q: any) => ({
           id: q.order || q.id || Math.random(),
           questionText: q.questionText,
@@ -593,7 +641,9 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
               onBack={() => setIsTestStarted(false)}
               onFinishCourse={timeSpent => {
                 if (test) {
-                  onComplete?.(test.id, 'test', timeSpent)
+                  if (!isPreviewMode) {
+                    onComplete?.(test.id, 'test', timeSpent)
+                  }
                 }
 
                 if (isLast) onFinish()
@@ -612,32 +662,17 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
     return (
       <>
-        {configError && (
+        {isPreviewMode && (
+          <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-200">
+            {t('Режим попереднього перегляду тесту.')}
+          </div>
+        )}
+
+        {configError && !isPreviewMode && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
             {configError}
           </div>
         )}
-        {/* 3. Відображення блоку помилки */}
-        {/*{configError && (*/}
-        {/*  <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 flex items-start gap-3">*/}
-        {/*    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />*/}
-        {/*    <div>*/}
-        {/*      <h4 className="font-bold text-red-700 dark:text-red-400 text-sm mb-1">*/}
-        {/*        {t('Помилка завантаження')}*/}
-        {/*      </h4>*/}
-        {/*      <p className="text-sm text-red-600 dark:text-red-300">*/}
-        {/*        {configError}*/}
-        {/*      </p>*/}
-        {/*      <Button*/}
-        {/*        variant="link"*/}
-        {/*        className="p-0 h-auto text-red-700 dark:text-red-400 mt-2 font-semibold"*/}
-        {/*        onClick={() => window.location.reload()}*/}
-        {/*      >*/}
-        {/*        {t('Спробувати ще раз')}*/}
-        {/*      </Button>*/}
-        {/*    </div>*/}
-        {/*  </div>*/}
-        {/*)}*/}
 
         <Card className="mb-8 overflow-hidden shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 transition-shadow hover:shadow-md dark:hover:shadow-gray-800/50">
           <CardContent className="text-slate-700 dark:text-slate-200">
@@ -720,7 +755,11 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
                 size="lg"
                 className="w-full sm:w-auto text-base px-8 bg-brand-600 hover:bg-brand-700 shadow-md "
                 onClick={() => setIsTestStarted(true)}
-                disabled={isConfigLoading || !canAttempt || !!configError}
+                disabled={
+                  isConfigLoading ||
+                  !canAttempt ||
+                  (!!configError && !isPreviewMode)
+                }
               >
                 {isConfigLoading
                   ? t('Перевірка...')

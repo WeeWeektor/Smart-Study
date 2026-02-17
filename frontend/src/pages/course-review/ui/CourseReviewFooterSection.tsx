@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button, Card, CardContent, ConfirmModal } from '@/shared/ui'
 import {
+  ArrowRight,
   BarChart,
   FileText,
   Heart,
@@ -22,7 +23,7 @@ interface CourseFooterSectionProps {
   onRemoveFromWishlist: () => void
   onPublishCourse: () => void
   onRemoveCourse: () => void
-  onCheckCourse: () => void
+  onChangeCourse: () => void
   onShowStatistics?: () => void
   showPublishModal: boolean
   setShowPublishModal: (open: boolean) => void
@@ -41,7 +42,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
   onRemoveFromWishlist,
   onPublishCourse,
   onRemoveCourse,
-  onCheckCourse,
+  onChangeCourse,
   onShowStatistics,
   showPublishModal,
   setShowPublishModal,
@@ -72,13 +73,13 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
 
           <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end min-w-[200px]">
             <Button
-              onClick={onCheckCourse}
+              onClick={onChangeCourse}
               variant="outline"
               size="lg"
               className="min-w-[140px] w-60"
             >
               <FileText className="w-5 h-5 mr-2" />
-              {t('Перевірити')}
+              {t('Редагувати курс')}
             </Button>
 
             <Button
@@ -124,6 +125,19 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
     )
   }
 
+  const StatisticsButton = () => (
+    <Button
+      onClick={onShowStatistics}
+      variant="outline"
+      size="lg"
+      className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 hover:text-brand-800 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
+      disabled={isEnrolling}
+    >
+      <BarChart className="w-5 h-5 mr-2" />
+      {t('Статистика курсу')}
+    </Button>
+  )
+
   return (
     <Card className="mt-8 border-t-4 border-t-brand-600 shadow-lg bg-slate-50 dark:bg-slate-900/50">
       <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -140,7 +154,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
           <p className="text-slate-600 dark:text-slate-400">
             {isCourseOwner
               ? t(
-                  'Ви можете переглядати статистику або пройти курс для перевірки.'
+                  'Ви можете переглядати статистику або пройти курс для перевірки (попередній перегляд).'
                 )
               : userStatus === 'completed'
                 ? t('Ви можете переглянути матеріали курсу в будь-який час.')
@@ -151,7 +165,9 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
         </div>
 
         <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end min-w-[200px]">
-          {userStatus === 'completed' && (
+          {isCourseOwner && <StatisticsButton />}
+
+          {userStatus === 'completed' ? (
             <Button
               onClick={onStartCourse}
               size="lg"
@@ -166,9 +182,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
               )}
               {t('Переглянути знову')}
             </Button>
-          )}
-
-          {userStatus === 'in_progress' && (
+          ) : userStatus === 'in_progress' ? (
             <Button
               onClick={onStartCourse}
               size="lg"
@@ -178,48 +192,36 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
               {isEnrolling ? (
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               ) : (
-                <RefreshCw className="w-5 h-5 mr-2" />
+                <ArrowRight className="w-5 h-5 mr-2" />
               )}{' '}
               {t('Продовжити навчання')}
             </Button>
-          )}
-
-          {(!userStatus || userStatus === 'not_started') && (
+          ) : (
             <>
-              {isCourseOwner ? (
-                <Button
-                  onClick={onShowStatistics}
-                  variant="outline"
-                  size="lg"
-                  className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 hover:text-brand-800 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
-                  disabled={isEnrolling}
-                >
-                  <BarChart className="w-5 h-5 mr-2" />
-                  {t('Статистика курсу')}
-                </Button>
-              ) : inWishlist ? (
-                <Button
-                  onClick={onRemoveFromWishlist}
-                  variant="outline"
-                  size="lg"
-                  className="w-60 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20"
-                  disabled={isEnrolling}
-                >
-                  <Trash2 className="w-5 h-5 mr-2" />
-                  {t('Прибрати з вішліста')}
-                </Button>
-              ) : (
-                <Button
-                  onClick={onAddToWishlist}
-                  variant="outline"
-                  size="lg"
-                  className="w-60 min-w-[180px]"
-                  disabled={isEnrolling}
-                >
-                  <Heart className="w-5 h-5 mr-2" />
-                  {t('У вішліст')}
-                </Button>
-              )}
+              {!isCourseOwner &&
+                (inWishlist ? (
+                  <Button
+                    onClick={onRemoveFromWishlist}
+                    variant="outline"
+                    size="lg"
+                    className="w-60 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:hover:bg-red-900/20"
+                    disabled={isEnrolling}
+                  >
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    {t('Прибрати з вішліста')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={onAddToWishlist}
+                    variant="outline"
+                    size="lg"
+                    className="w-60 min-w-[180px]"
+                    disabled={isEnrolling}
+                  >
+                    <Heart className="w-5 h-5 mr-2" />
+                    {t('У вішліст')}
+                  </Button>
+                ))}
 
               <Button
                 onClick={onStartCourse}
