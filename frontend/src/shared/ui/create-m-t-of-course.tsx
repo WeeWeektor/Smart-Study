@@ -338,15 +338,34 @@ export const CreateMTOfCourse = ({
   }
 
   const renderLessonData = ({ lesson }: { lesson: Lesson }) => {
-    const formatDuration = (d: {
-      days: number
-      hours: number
-      minutes: number
-    }) => {
+    const formatDuration = (
+      d: string | { days: number; hours: number; minutes: number }
+    ) => {
+      let days = 0
+      let hours = 0
+      let minutes = 0
+
+      if (typeof d === 'string') {
+        const timeParts = d.split(':').map(Number)
+        if (timeParts.length >= 3) {
+          days = timeParts[0] || 0
+          hours = timeParts[1] || 0
+          minutes = timeParts[2] || 0
+        } else if (timeParts.length === 2) {
+          hours = timeParts[0] || 0
+          minutes = timeParts[1] || 0
+        }
+      } else if (d) {
+        days = d.days || 0
+        hours = d.hours || 0
+        minutes = d.minutes || 0
+      }
+
       const parts = []
-      if (d.days > 0) parts.push(`${d.days} ${t('дн')}`)
-      if (d.hours > 0) parts.push(`${d.hours} ${t('год')}`)
-      if (d.minutes > 0) parts.push(`${d.minutes} ${t('хв')}`)
+      if (days > 0) parts.push(`${days} ${t('дн')}`)
+      if (hours > 0) parts.push(`${hours} ${t('год')}`)
+      if (minutes > 0) parts.push(`${minutes} ${t('хв')}`)
+
       return parts.length > 0 ? parts.join(' ') : t('0 хв')
     }
 

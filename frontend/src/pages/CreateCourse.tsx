@@ -1,4 +1,4 @@
-import { useI18n } from '@/shared/lib'
+import { parseDurationFromISO, useI18n } from '@/shared/lib'
 import {
   Alert,
   AlertDescription,
@@ -33,9 +33,9 @@ import {
 import { useProfileData } from '@/shared/hooks'
 import { useEffect, useState } from 'react'
 import { useChoicesData } from '@/shared/hooks/useChoiceData'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
-import { createCourseService } from '@/features/course'
+import { createCourseService, getCourseService } from '@/features/course'
 
 interface Option {
   value: string
@@ -44,7 +44,11 @@ interface Option {
 
 const CreateCourse = () => {
   const { t } = useI18n()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+
+  const isEditMode = !!id
+
   const { profileData, loading, error, refreshProfile } = useProfileData()
   const {
     choicesData,
@@ -52,11 +56,13 @@ const CreateCourse = () => {
     error: choicesError,
     refreshChoices,
   } = useChoicesData()
+
   const [createCourseError, setCreateCourseError] = useState<string>('')
   const [categories, setCategories] = useState<Option[]>([])
   const [levels, setLevels] = useState<Option[]>([])
   const [categoryLessonType, setCategoryLessonType] = useState<Option[]>([])
   const [isSaving, setIsSaving] = useState(false)
+
   const [courseStateTitle, setCourseStateTitle] = useState<string>('')
   const [courseStateDescription, setCourseStateDescription] =
     useState<string>('')
@@ -72,9 +78,11 @@ const CreateCourse = () => {
     minutes: 0,
   })
   const [courseStateLanguage, setCourseStateLanguage] = useState<string>('')
+
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [showCanselModal, setShowCanselModal] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+
   const [courseStructure, setCourseStructure] = useState<CourseStructure>({
     type: 'course',
     courseStructure: [],
@@ -106,6 +114,109 @@ const CreateCourse = () => {
       setCategoryLessonType(lessonTypesData)
     }
   }, [choicesData])
+
+  useEffect(() => {
+    const fetchCourseForEdit = async () => {
+      if (!id) return
+
+      try {
+        const response = await getCourseService.getCourse({ course_id: id })
+        const courseData = response.course
+
+        console.log('courseData', courseData)
+
+        setCourseStateTitle(courseData.title)
+        setCourseStateDescription(courseData.description)
+        setCourseStateCategory(courseData.category)
+        setCourseStateLevel(courseData.details.level)
+        setCourseStateLanguage(courseData.details.course_language)
+
+        if (courseData.cover_image) {
+          setCourseStateImage(courseData.cover_image)
+          setShowPreview(true)
+        }
+
+        if (courseData.details.time_to_complete) {
+          const duration = parseDurationFromISO(
+            courseData.details.time_to_complete
+          )
+          setCourseStateTimeToComplete(duration)
+        }
+
+        if (courseData.structure) {
+          const backendStructure = courseData.structure
+
+          let rawStructure = []
+          if (Array.isArray(backendStructure.courseStructure)) {
+            rawStructure = backendStructure.courseStructure
+          }
+
+          const hydratedStructure = rawStructure.map((item: any) => {
+            if (item.type === 'module') {
+              let children = []
+
+              if (Array.isArray(item.moduleStructure)) {
+                children = item.moduleStructure
+              } else if (
+                backendStructure[`moduleStructure_order_${item.order}`]
+              ) {
+                children =
+                  backendStructure[`moduleStructure_order_${item.order}`]
+              }
+
+              const mappedChildren = children.map((child: any) => {
+                if (child.type === 'lesson') {
+                  return {
+                    ...child,
+                    typeCategory:
+                      child.content_type || child.typeCategory || 'text',
+                  }
+                }
+                if (child.type === 'module-test' || child.type === 'test') {
+                  return {
+                    ...child,
+                    type: 'module-test',
+                    questions: child.questions || [],
+                  }
+                }
+                return child
+              })
+
+              return {
+                ...item,
+                moduleStructure: mappedChildren,
+              }
+            }
+
+            if (item.type === 'course-test' || item.type === 'test') {
+              console.log('Mapping course test item', item)
+              return {
+                ...item,
+                type: 'course-test',
+                questions: item.questions || [],
+              }
+            }
+
+            return item
+          })
+
+          setCourseStructure({
+            type: 'course',
+            courseStructure: hydratedStructure,
+          })
+        }
+      } catch (err) {
+        setCreateCourseError(
+          t('Не вдалося завантажити дані курсу для редагування')
+        )
+        console.error(err)
+      }
+    }
+
+    if (id && profileData) {
+      fetchCourseForEdit()
+    }
+  }, [id, profileData, t])
 
   useEffect(() => {
     if (createCourseError) {
@@ -205,7 +316,7 @@ const CreateCourse = () => {
         return
       }
 
-      const response = await createCourseService.createCourse({
+      const coursePayload = {
         title: courseStateTitle,
         description: courseStateDescription,
         category: courseStateCategory,
@@ -219,25 +330,37 @@ const CreateCourse = () => {
         ),
         cover_imageFile: courseStateImageFile,
         courseStructure: courseStructure.courseStructure,
-      })
+      }
+
+      let response
+
+      if (isEditMode && id) {
+        console.log('Course payload for update:', coursePayload)
+        // response = await createCourseService.updateCourse({
+        //   courseId: id,
+        //   ...coursePayload,
+        // })
+      } else {
+        response = await createCourseService.createCourse(coursePayload)
+      }
 
       if (response.status === 200 || response.status === 201) {
         handleCancelCreateCourse()
         navigate(
           `/my-created-courses/?Message=${encodeURIComponent(
             response.message
-          )}&Status=${response.status}&Action=create`
+          )}&Status=${response.status}&Action=${isEditMode ? 'update' : 'create'}`
         )
       } else {
         setCreateCourseError(
-          t('Помилка при створенні курсу. ') + response.message
+          t('Помилка при збереженні курсу. ') + response.message
         )
       }
     } catch (error) {
       setCreateCourseError(
         error instanceof Error
           ? error.message
-          : t('Помилка при створенні курсу. ')
+          : t('Помилка при збереженні курсу. ')
       )
     } finally {
       setIsSaving(false)
@@ -259,8 +382,12 @@ const CreateCourse = () => {
 
       <div className="ml-64">
         <CourseHeader
-          title={t('Створення курсу')}
-          description={t('Створюйте новий курс з нами!')}
+          title={isEditMode ? t('Редагування курсу') : t('Створення курсу')}
+          description={
+            isEditMode
+              ? t('Внесіть зміни до вашого курсу')
+              : t('Створюйте новий курс з нами!')
+          }
           createCourse={true}
           actionOnClick={[
             handleCancelCreateCourse,
@@ -486,9 +613,11 @@ const CreateCourse = () => {
                         htmlFor="savecourse"
                         className="text-center md:text-left"
                       >
-                        {t(
-                          'Зберегти поточний стан курсу (курс можна буде редагувати пізніше)'
-                        )}
+                        {isEditMode
+                          ? t('Зберегти зміни курсу')
+                          : t(
+                              'Зберегти поточний стан курсу (курс можна буде редагувати пізніше)'
+                            )}
                       </Label>
                     </div>
                     <div className="flex justify-center">
@@ -518,9 +647,11 @@ const CreateCourse = () => {
                         htmlFor="publishcourse"
                         className="text-center md:text-left"
                       >
-                        {t(
-                          'Зберегти поточний стан курсу і опублікувати (курс НЕ можна буде видалити)'
-                        )}
+                        {isEditMode
+                          ? t(
+                              'Зберегти зміни та опублікувати (якщо курс був у чернетці)'
+                            )
+                          : t('Зберегти поточний стан курсу і опублікувати')}
                       </Label>
                     </div>
                     <div className="flex justify-center">
@@ -555,8 +686,12 @@ const CreateCourse = () => {
           isOpen={showCanselModal}
           onConfirm={handleConfirmCancelCreateCourse}
           onClose={() => setShowCanselModal(false)}
-          title={t('Ви дійсно бажаєте скасувати створення курсу?')}
-          description={t('Всі дані будуть втрачені')}
+          title={
+            isEditMode
+              ? t('Скасувати редагування?')
+              : t('Ви дійсно бажаєте скасувати створення курсу?')
+          }
+          description={t('Всі незбережені зміни будуть втрачені')}
           buttonText={t('Повернутись до курсів')}
         />
       )}
@@ -567,7 +702,7 @@ const CreateCourse = () => {
           onClose={() => setShowPublishModal(false)}
           title={t('Публікація курсу')}
           description={t(
-            'Після публікації курс НЕ можна буде редагувати чи видалити курс'
+            'Після публікації курс стане доступним для студентів.'
           )}
           buttonText={t('Опублікувати курс')}
         />
