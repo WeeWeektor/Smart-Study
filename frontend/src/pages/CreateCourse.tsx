@@ -177,7 +177,7 @@ const CreateCourse = () => {
                   return {
                     ...child,
                     type: 'module-test',
-                    questions: child.questions || [],
+                    questions: child.questions_len || [],
                   }
                 }
                 return child
