@@ -26,7 +26,8 @@ async def get_instance_by_id_cache_key(instance_id: uuid.UUID, instance_type: st
 async def get_cached_instance_by_id(
         instance_type: str,
         instance_type_cache: str,
-        instance_id: uuid.UUID
+        instance_id: uuid.UUID,
+        for_edit: "true" = None
 ):
     instance_cache = caches[f"{instance_type_cache}"]
     cache_key = await get_instance_by_id_cache_key(instance_id, instance_type, instance_type_cache)
@@ -37,7 +38,7 @@ async def get_cached_instance_by_id(
 
     if instance_type == "course":
         from courses.services.course_actions_service import get_course_by_id
-        instance_data = await get_course_by_id(instance_id)
+        instance_data = await get_course_by_id(instance_id, for_edit=for_edit)
     elif " test" in instance_type:
         from courses.services.test_actions_service import get_test_by_id
         if instance_type == "public test":

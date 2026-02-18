@@ -44,6 +44,7 @@ export interface CountTeacherCourseResponse {
 
 export interface CourseRequest {
   course_id: string
+  for_edit?: boolean
 }
 
 export interface CourseResponse {
@@ -166,19 +167,24 @@ class GetCourseService {
     }
   }
 
-  async getCourse({ course_id }: CourseRequest): Promise<CourseResponse> {
+  async getCourse({
+    course_id,
+    for_edit = false,
+  }: CourseRequest): Promise<CourseResponse> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
 
-      const response = await apiClient.get<CourseResponse>(
-        `/course/course/${course_id}/`,
-        {
-          headers: {
-            'X-CSRFToken': csrfToken || '',
-          },
-          withCredentials: true,
-        }
-      )
+      let urls = `/course/course/${course_id}/`
+      if (for_edit) {
+        urls = `/course/course/${course_id}/?edit=${for_edit}`
+      }
+
+      const response = await apiClient.get<CourseResponse>(urls, {
+        headers: {
+          'X-CSRFToken': csrfToken || '',
+        },
+        withCredentials: true,
+      })
       return response.data
     } catch (error) {
       throw new Error(this.t('Не вдалось завантажити курс') + error)

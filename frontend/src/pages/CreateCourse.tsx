@@ -120,10 +120,11 @@ const CreateCourse = () => {
       if (!id) return
 
       try {
-        const response = await getCourseService.getCourse({ course_id: id })
+        const response = await getCourseService.getCourse({
+          course_id: id,
+          for_edit: true,
+        })
         const courseData = response.course
-
-        console.log('courseData', courseData)
 
         setCourseStateTitle(courseData.title)
         setCourseStateDescription(courseData.description)
@@ -189,11 +190,10 @@ const CreateCourse = () => {
             }
 
             if (item.type === 'course-test' || item.type === 'test') {
-              console.log('Mapping course test item', item)
               return {
                 ...item,
                 type: 'course-test',
-                questions: item.questions || [],
+                questions: item.questions_len || [],
               }
             }
 

@@ -50,6 +50,7 @@ export interface BaseTest {
   random_questions: boolean
   show_correct_answers: boolean
   questions: Question[]
+  questions_len?: number
 }
 
 export interface ModuleTest extends BaseTest {
@@ -299,7 +300,10 @@ export const CreateMTOfCourse = ({
 
           <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">
             <FileText className="w-3.5 h-3.5 mr-1.5" />
-            {test.questions.length} {t('питань')}
+            {test.questions.length
+              ? test.questions.length
+              : test.questions_len}{' '}
+            {t('питань')}
           </div>
 
           <div className="flex items-center bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium">

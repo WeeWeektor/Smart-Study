@@ -30,7 +30,9 @@ class CourseView(LocalizedView):
         """Отримання всіх курсів або одного курсу за id"""
         if course_id:
             course_id = validate_uuid(course_id)
-            course_data = await get_cached_instance_by_id("course", "courses_get", course_id)
+            for_edit = request.GET.get("edit", None)
+
+            course_data = await get_cached_instance_by_id("course", "courses_get", course_id, for_edit)
             if isinstance(course_data, JsonResponse):
                 return course_data
             return success_response(course_data)
