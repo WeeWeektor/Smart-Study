@@ -1,6 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
-import axios from 'axios'
-import { apiClient } from '@/shared/api'
+import { apiClient, handleApiError } from '@/shared/api'
 
 export interface ElementOfCourseRequest {
   elementId: string
@@ -131,24 +130,12 @@ class ElementOfCourseService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(
-          this.t('Не вдалось отримати елемент курсу') + serverMessage
-        )
-      }
-      throw new Error(this.t('Невідома помилка при отримані елемента курсу.'))
+      throw handleApiError(
+        error,
+        'Не вдалось отримати елемент курсу: ',
+        this.t,
+        'Невідома помилка при отримані елемента курсу'
+      )
     }
   }
 }

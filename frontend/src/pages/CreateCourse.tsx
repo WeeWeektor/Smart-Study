@@ -1,4 +1,8 @@
-import { parseDurationFromISO, useI18n } from '@/shared/lib'
+import {
+  formatDurationForBackend,
+  parseDurationFromISO,
+  useI18n,
+} from '@/shared/lib'
 import {
   Alert,
   AlertDescription,
@@ -250,15 +254,6 @@ const CreateCourse = () => {
     role: profileData.user.role,
   }
 
-  const padTwoDigits = (num: number): string => num.toString().padStart(2, '0')
-  const formatDuration = (
-    days: number,
-    hours: number,
-    minutes: number
-  ): string => {
-    return `${padTwoDigits(days)}:${padTwoDigits(hours)}:${padTwoDigits(minutes)}`
-  }
-
   const handleBackPage = () => {
     navigate('/my-created-courses')
   }
@@ -323,23 +318,24 @@ const CreateCourse = () => {
         is_published: publish,
         level: courseStateLevel,
         course_language: courseStateLanguage,
-        time_to_complete: formatDuration(
+        time_to_complete: formatDurationForBackend(
           courseStateTimeToComplete.days,
           courseStateTimeToComplete.hours,
           courseStateTimeToComplete.minutes
         ),
         cover_imageFile: courseStateImageFile,
         courseStructure: courseStructure.courseStructure,
+        change_info_course: true,
+        change_structure_course: true,
       }
 
       let response
 
       if (isEditMode && id) {
-        console.log('Course payload for update:', coursePayload)
-        // response = await createCourseService.updateCourse({
-        //   courseId: id,
-        //   ...coursePayload,
-        // })
+        response = await createCourseService.updateCourse({
+          courseId: id,
+          requestData: coursePayload,
+        })
       } else {
         response = await createCourseService.createCourse(coursePayload)
       }

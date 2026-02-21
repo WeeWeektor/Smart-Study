@@ -130,10 +130,14 @@ async def _enrich_test_item(structure_item):
 
         test_obj = await Test.objects.aget(pk=t_id)
 
-        questions_data = await sync_to_async(fetch_questions)("questions_data_for_test", test_obj.test_data_ids)
+        if test_obj.test_data_ids:
+            questions_data = await sync_to_async(fetch_questions)("questions_data_for_test", test_obj.test_data_ids)
+            questions_len = len(questions_data.get('questions', [])) if questions_data else 0
+        else:
+            questions_len = 0
 
         structure_item.update({
-            "questions_len": len(questions_data.get('questions', [])),
+            "questions_len": questions_len,
             "pass_score": test_obj.pass_score,
             "count_attempts": test_obj.count_attempts,
             "random_questions": test_obj.randomize_questions,
@@ -144,21 +148,22 @@ async def _enrich_test_item(structure_item):
         pass
 
 
-async def _process_module(structure_item):
+async def _process_module(structure_item, for_edit):
     """Обробляє один модуль: дістає структуру і збагачує тести всередині."""
     try:
         module = await sync_to_async(Module.objects.only("structure_ids").get)(pk=structure_item.get('module_id'))
         module_structure = await sync_to_async(mongo_repo.get_document_by_id)("module_structures", module.structure_ids)
 
-        items = module_structure.get('structure', [])
+        items = module_structure.get('structure', []) if module_structure else []
 
-        tasks = []
-        for item in items:
-            if item.get('type') == 'test':
-                tasks.append(_enrich_test_item(item))
+        if for_edit == "true":
+            tasks = []
+            for item in items:
+                if item.get('type') in ['test', 'module-test']:
+                    tasks.append(_enrich_test_item(item))
 
-        if tasks:
-            await asyncio.gather(*tasks)
+            if tasks:
+                await asyncio.gather(*tasks)
 
         return structure_item.get("order"), items
     except Module.DoesNotExist:
@@ -180,7 +185,7 @@ async def _get_cs_from_db(course_structure_ids, for_edit) -> dict:
         item_type = item.get('type')
 
         if item_type == 'module':
-            module_tasks.append(_process_module(item))
+            module_tasks.append(_process_module(item, for_edit))
 
         elif item_type == 'test' and for_edit == "true":
             root_test_tasks.append(_enrich_test_item(item))

@@ -1,6 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
-import { apiClient } from '@/shared/api'
-import axios from 'axios'
+import { apiClient, handleApiError } from '@/shared/api'
 
 export interface DeleteCourseRequest {
   courseId: string
@@ -35,22 +34,12 @@ class DeleteCourseService {
         status: response.status,
       }
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(this.t('Курс не вдалось видалити') + serverMessage)
-      }
-      throw new Error(this.t('Невідома помилка при видаленні курсу'))
+      throw handleApiError(
+        error,
+        'Курс не вдалось видалити: ',
+        this.t,
+        'Невідома помилка при видаленні курсу'
+      )
     }
   }
 
@@ -75,24 +64,12 @@ class DeleteCourseService {
         status: response.status,
       }
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(
-          this.t('Курс з вішліста не вдалось видалити') + serverMessage
-        )
-      }
-      throw new Error(this.t('Невідома помилка при видаленні курсу з вішліста'))
+      throw handleApiError(
+        error,
+        'Курс з вішліста не вдалось видалити: ',
+        this.t,
+        'Невідома помилка при видаленні курсу з вішліста'
+      )
     }
   }
 }

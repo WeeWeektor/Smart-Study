@@ -299,7 +299,6 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       comment,
     }
 
-    console.log('--- ЗІБРАНІ ДАНІ УРОКУ ---', lessonData)
     onAddLesson(lessonData as Lesson)
   }
 

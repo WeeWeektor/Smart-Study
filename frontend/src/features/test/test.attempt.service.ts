@@ -1,6 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
-import { apiClient } from '@/shared/api'
-import axios from 'axios'
+import { apiClient, handleApiError } from '@/shared/api'
 
 export interface CourseTestSummary {
   id: string
@@ -84,24 +83,12 @@ class TestAttemptService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(
-          this.t('Не вдалось отримати історію тестувань. ') + serverMessage
-        )
-      }
-      throw new Error(this.t('Невідома помилка при отриманні історії тестів.'))
+      throw handleApiError(
+        error,
+        'Не вдалось отримати історію тестувань: ',
+        this.t,
+        'Невідома помилка при отриманні історії тестів'
+      )
     }
   }
 
@@ -131,24 +118,12 @@ class TestAttemptService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(
-          this.t('Не вдалось відправити відповіді. ') + serverMessage
-        )
-      }
-      throw new Error(this.t('Невідома помилка при проходженні тесту.'))
+      throw handleApiError(
+        error,
+        'Не вдалось відправити відповіді: ',
+        this.t,
+        'Невідома помилка при проходженні тесту'
+      )
     }
   }
 }

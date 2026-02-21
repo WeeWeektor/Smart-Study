@@ -35,6 +35,7 @@ export interface CourseStructure {
 }
 
 interface ModuleStructure {
+  module_id?: string
   type: 'module'
   order: number
   title: string
@@ -42,6 +43,7 @@ interface ModuleStructure {
 }
 
 export interface BaseTest {
+  test_id?: string
   title: string
   description: string
   time_limit: number
@@ -64,6 +66,7 @@ export interface CourseTest extends BaseTest {
 }
 
 export interface Lesson {
+  lesson_id?: string
   type: 'lesson'
   typeCategory: string
   title: string

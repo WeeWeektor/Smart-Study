@@ -1,6 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
-import { apiClient } from '@/shared/api'
-import axios from 'axios'
+import { apiClient, handleApiError } from '@/shared/api'
 
 export interface PublishCourseRequest {
   courseId: string
@@ -37,22 +36,12 @@ class PublishCourseService {
         course_id: response.data.course_id,
       }
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(this.t('Не вдалось опублікувати курс') + serverMessage)
-      }
-      throw new Error(this.t('Невідома помилка при публікації курсу.'))
+      throw handleApiError(
+        error,
+        'Не вдалось опублікувати курс: ',
+        this.t,
+        'Невідома помилка при публікації курсу'
+      )
     }
   }
 }

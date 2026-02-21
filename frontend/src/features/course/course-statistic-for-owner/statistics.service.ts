@@ -1,6 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
-import { apiClient } from '@/shared/api'
-import axios from 'axios'
+import { apiClient, handleApiError } from '@/shared/api'
 
 export interface StudentStatItem {
   id: string
@@ -41,25 +40,11 @@ class CourseStatisticForOwnerService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(
-          this.t('Не вдалось завантажити статистику курсу: ') + serverMessage
-        )
-      }
-      throw new Error(
-        this.t('Невідома помилка при спробі отримання статистики.')
+      throw handleApiError(
+        error,
+        'Не вдалось завантажити статистику курсу: ',
+        this.t,
+        'Невідома помилка при спробі отримання статистики'
       )
     }
   }

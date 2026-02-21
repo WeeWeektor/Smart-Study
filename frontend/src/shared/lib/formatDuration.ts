@@ -17,6 +17,15 @@ export function parseISODuration(
   return parts.length > 0 ? parts.join(' ') : `0 ${t('хв.')}`
 }
 
+export const formatDurationForBackend = (
+  days: number,
+  hours: number,
+  minutes: number
+): string => {
+  const padTwoDigits = (num: number): string => num.toString().padStart(2, '0')
+  return `${padTwoDigits(days)}:${padTwoDigits(hours)}:${padTwoDigits(minutes)}`
+}
+
 export const parseDurationFromISO = (isoDuration: string) => {
   const regex = /P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/
   const matches = isoDuration.match(regex)

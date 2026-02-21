@@ -1,5 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
-import { apiClient } from '@/shared/api'
+import { apiClient, handleApiError } from '@/shared/api'
 import axios from 'axios'
 import type { CourseTestSummary } from '@/features/test'
 
@@ -73,22 +73,12 @@ class UserCourseEnrollmentService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(this.t('Не вдалось розпочати курс. ') + serverMessage)
-      }
-      throw new Error(this.t('Невідома помилка при спробі запису на курс.'))
+      throw handleApiError(
+        error,
+        'Не вдалось розпочати курс: ',
+        this.t,
+        'Невідома помилка при спробі запису на курс'
+      )
     }
   }
 
@@ -108,25 +98,11 @@ class UserCourseEnrollmentService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(
-          this.t('Не вдалось завантажити прогрес курсу. ') + serverMessage
-        )
-      }
-      throw new Error(
-        this.t('Невідома помилка при спробі отримання прогресу курсу.')
+      throw handleApiError(
+        error,
+        'Не вдалось завантажити прогрес курсу: ',
+        this.t,
+        'Невідома помилка при спробі отримання прогресу курсу'
       )
     }
   }
@@ -161,22 +137,12 @@ class UserCourseEnrollmentService {
 
       return response.data
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        let serverMessage =
-          error.response?.data?.message ||
-          error.response?.data ||
-          this.t('Помилка з’єднання з сервером')
-
-        if (typeof serverMessage === 'string') {
-          const match = serverMessage.match(/\['(.+)'\]/)
-          if (match && match[1]) {
-            serverMessage = match[1]
-          }
-        }
-
-        throw new Error(this.t('Не вдалось оновити прогрес. ') + serverMessage)
-      }
-      throw new Error(this.t('Невідома помилка при збереженні прогресу.'))
+      throw handleApiError(
+        error,
+        'Не вдалось оновити прогрес: ',
+        this.t,
+        'Невідома помилка при збереженні прогресу'
+      )
     }
   }
 
