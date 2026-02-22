@@ -1,6 +1,5 @@
 import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
 import { apiClient, handleApiError } from '@/shared/api'
-import { type BlockData, type Lesson, type Question } from '@/shared/ui'
 
 export interface CreateCourseResponse {
   message: string
@@ -29,7 +28,6 @@ class CreateCourseService {
   ): Promise<CreateCourseResponse> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
-
       const formData = new FormData()
 
       const {
@@ -45,11 +43,9 @@ class CreateCourseService {
         formData
       )
 
-      const flatStructure = this.flattenStructure(cleanNestedStructure)
-
       const jsonData = {
         ...data,
-        ...flatStructure,
+        courseStructure: cleanNestedStructure,
       }
       formData.append('data', JSON.stringify(jsonData))
 
@@ -71,6 +67,7 @@ class CreateCourseService {
 
       return { message: response.data.message, status: response.status }
     } catch (error: unknown) {
+      console.error(error)
       throw handleApiError(
         error,
         'Не вдалось створити курс: ',
@@ -104,11 +101,9 @@ class CreateCourseService {
         formData
       )
 
-      const flatStructure = this.flattenStructure(cleanNestedStructure)
-
       const jsonData = {
         ...data,
-        ...flatStructure,
+        courseStructure: cleanNestedStructure,
       }
       formData.append('data', JSON.stringify(jsonData))
 
@@ -134,6 +129,7 @@ class CreateCourseService {
 
       return { message: response.data.message, status: response.status }
     } catch (error: unknown) {
+      console.error(error)
       throw handleApiError(
         error,
         'Не вдалось оновити курс: ',
@@ -143,63 +139,7 @@ class CreateCourseService {
     }
   }
 
-  private flattenStructure(cleanNestedStructure: any[]) {
-    const backendData: any = { courseStructure: [] }
-
-    if (!cleanNestedStructure) return backendData
-
-    cleanNestedStructure.forEach(item => {
-      if (item.type === 'module') {
-        backendData.courseStructure.push({
-          type: 'module',
-          order: item.order,
-          title: item.title,
-          module_id: item.module_id,
-        })
-
-        const contentKey = `moduleStructure_order_${item.order}`
-
-        backendData[contentKey] = item.moduleStructure.map((subItem: any) => {
-          if (subItem.type === 'lesson') {
-            const pad = (n: number) => String(n || 0).padStart(2, '0')
-            const dur = subItem.duration
-            const durationStr = dur
-              ? `${pad(dur.days)}:${pad(dur.hours)}:${pad(dur.minutes)}`
-              : '00:00:00'
-
-            return {
-              ...subItem,
-              content_type: subItem.typeCategory,
-              duration: durationStr,
-              lesson_id: subItem.lesson_id,
-            }
-          }
-          if (subItem.type === 'module-test' || subItem.type === 'test') {
-            return {
-              type: 'test',
-              test_id: subItem.test_id,
-              title: subItem.title,
-              order: subItem.order,
-              time_limit: subItem.time_limit,
-            }
-          }
-          return subItem
-        })
-      } else if (item.type === 'course-test' || item.type === 'test') {
-        backendData.courseStructure.push({
-          type: 'test',
-          test_id: item.test_id,
-          title: item.title,
-          order: item.order,
-          time_limit: item.time_limit,
-        })
-      }
-    })
-
-    return backendData
-  }
-
-  private processStructureAndExtractFiles(
+  public processStructureAndExtractFiles(
     structure: any[] | undefined,
     formData: FormData
   ) {
@@ -207,7 +147,9 @@ class CreateCourseService {
 
     return structure.map(item => {
       if (item.type === 'module') {
-        const cleanModuleStructure = item.moduleStructure.map(
+        const currentModuleStructure = item.moduleStructure || []
+
+        const cleanModuleStructure = currentModuleStructure.map(
           (moduleItem: any) => {
             if (moduleItem.type === 'module-test')
               return this.processTest(moduleItem, formData, `m${item.order}`)
@@ -226,18 +168,20 @@ class CreateCourseService {
     })
   }
 
-  private processLesson(
-    lesson: Lesson,
-    formData: FormData,
-    prefix: string
-  ): Lesson {
+  private processLesson(lesson: any, formData: FormData, prefix: string): any {
     const lessonPrefix = `${prefix}_l${lesson.order}`
 
-    const cleanContentBlocks = lesson.contentBlocks?.map((block, index) => {
-      const fileKey = `lesson_file_${lessonPrefix}_b${index}`
-      const cleanData = this.extractFileFromData(block.data, formData, fileKey)
-      return { ...block, data: cleanData }
-    })
+    const cleanContentBlocks = lesson.contentBlocks?.map(
+      (block: any, index: number) => {
+        const fileKey = `lesson_file_${lessonPrefix}_b${index}`
+        const cleanData = this.extractFileFromData(
+          block.data,
+          formData,
+          fileKey
+        )
+        return { ...block, data: cleanData }
+      }
+    )
 
     const singleFileKey = `lesson_file_${lessonPrefix}_single`
     const cleanSingleData = this.extractFileFromData(
@@ -246,18 +190,22 @@ class CreateCourseService {
       singleFileKey
     )
 
+    const pad = (n: number) => String(n || 0).padStart(2, '0')
+    const dur = lesson.duration
+    const durationStr = dur
+      ? `${pad(dur.days)}:${pad(dur.hours)}:${pad(dur.minutes)}`
+      : '00:00:00'
+
     return {
       ...lesson,
+      content_type: lesson.typeCategory || lesson.content_type,
+      duration: durationStr,
       contentBlocks: cleanContentBlocks || [],
       singleContentData: cleanSingleData,
     }
   }
 
-  private extractFileFromData(
-    data: BlockData,
-    formData: FormData,
-    key: string
-  ): BlockData {
+  private extractFileFromData(data: any, formData: FormData, key: string): any {
     if (
       data &&
       typeof data === 'object' &&
@@ -265,7 +213,7 @@ class CreateCourseService {
       data.file instanceof File
     ) {
       formData.append(key, data.file)
-      return { ...data, file: null, fileKey: key } as any
+      return { ...data, file: null, fileKey: key }
     }
     return data
   }
@@ -273,22 +221,29 @@ class CreateCourseService {
   private processTest<
     T extends {
       order: number
-      questions: Question[]
+      questions?: any
+      type: string
     },
   >(test: T, formData: FormData, prefix: string): T {
-    if (!test.questions) return test
+    let cleanQuestions = test.questions
 
-    const cleanQuestions = test.questions.map(q => {
-      if (q.imageFile && q.imageFile instanceof File) {
-        const fileKey = `question_image_${prefix}_t${test.order}_q${q.order}`
-        formData.append(fileKey, q.imageFile)
-        const { imageFile, image, ...restOfQuestion } = q
-        return { ...restOfQuestion, imageFileKey: fileKey }
-      }
-      return q
-    })
+    if (Array.isArray(test.questions)) {
+      cleanQuestions = test.questions.map(q => {
+        if (q.imageFile && q.imageFile instanceof File) {
+          const fileKey = `question_image_${prefix}_t${test.order}_q${q.order}`
+          formData.append(fileKey, q.imageFile)
+          const { imageFile, image, ...restOfQuestion } = q
+          return { ...restOfQuestion, imageFileKey: fileKey }
+        }
+        return q
+      })
+    }
 
-    return { ...test, questions: cleanQuestions }
+    return {
+      ...test,
+      type: test.type,
+      questions: cleanQuestions,
+    }
   }
 }
 

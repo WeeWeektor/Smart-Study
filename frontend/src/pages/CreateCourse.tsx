@@ -87,6 +87,7 @@ const CreateCourse = () => {
   const [showCanselModal, setShowCanselModal] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
 
+  const [initialDataSnapshot, setInitialDataSnapshot] = useState<string>('')
   const [courseStructure, setCourseStructure] = useState<CourseStructure>({
     type: 'course',
     courseStructure: [],
@@ -208,6 +209,34 @@ const CreateCourse = () => {
             type: 'course',
             courseStructure: hydratedStructure,
           })
+
+          const dummyFormData = new FormData()
+          const initialFormattedStructure =
+            createCourseService.processStructureAndExtractFiles(
+              hydratedStructure,
+              dummyFormData
+            )
+
+          const initialSnapshotObj = {
+            title: courseData.title || '',
+            description: courseData.description || '',
+            category: courseData.category || '',
+            is_published: courseData.is_published || false,
+            level: courseData.details?.level || '',
+            course_language: courseData.details?.course_language || '',
+            time_to_complete: courseData.details?.time_to_complete
+              ? formatDurationForBackend(
+                  parseDurationFromISO(courseData.details.time_to_complete)
+                    .days,
+                  parseDurationFromISO(courseData.details.time_to_complete)
+                    .hours,
+                  parseDurationFromISO(courseData.details.time_to_complete)
+                    .minutes
+                )
+              : '00:00:00',
+            structure: initialFormattedStructure,
+          }
+          setInitialDataSnapshot(JSON.stringify(initialSnapshotObj))
         }
       } catch (err) {
         setCreateCourseError(
@@ -278,6 +307,7 @@ const CreateCourse = () => {
   const handleSaveCourse = async (publish: boolean = false) => {
     try {
       setIsSaving(true)
+
       if (
         courseStateTimeToComplete.days < 0 ||
         courseStateTimeToComplete.hours < 0 ||
@@ -311,7 +341,14 @@ const CreateCourse = () => {
         return
       }
 
-      const coursePayload = {
+      const dummyFormData = new FormData()
+      const currentFormattedStructure =
+        createCourseService.processStructureAndExtractFiles(
+          courseStructure.courseStructure,
+          dummyFormData
+        )
+
+      const currentInfoObj = {
         title: courseStateTitle,
         description: courseStateDescription,
         category: courseStateCategory,
@@ -323,10 +360,50 @@ const CreateCourse = () => {
           courseStateTimeToComplete.hours,
           courseStateTimeToComplete.minutes
         ),
+      }
+
+      let change_info = true
+      let change_structure = true
+
+      if (isEditMode && initialDataSnapshot) {
+        const initialData = JSON.parse(initialDataSnapshot)
+
+        const infoChanged =
+          JSON.stringify(currentInfoObj) !==
+          JSON.stringify({
+            title: initialData.title,
+            description: initialData.description,
+            category: initialData.category,
+            is_published: initialData.is_published,
+            level: initialData.level,
+            course_language: initialData.course_language,
+            time_to_complete: initialData.time_to_complete,
+          })
+        const structureChanged =
+          JSON.stringify(currentFormattedStructure) !==
+          JSON.stringify(initialData.structure)
+        const imageChanged = courseStateImageFile !== null
+
+        if (!infoChanged && !structureChanged && !imageChanged) {
+          handleCancelCreateCourse()
+          navigate(
+            `/my-created-courses/?Message=${encodeURIComponent(
+              t('Змін не виявлено. Курс залишився без змін.')
+            )}&Status=200&Action=update`
+          )
+          return
+        }
+
+        change_info = infoChanged || imageChanged
+        change_structure = structureChanged
+      }
+
+      const coursePayload = {
+        ...currentInfoObj,
         cover_imageFile: courseStateImageFile,
         courseStructure: courseStructure.courseStructure,
-        change_info_course: true,
-        change_structure_course: true,
+        change_info_course: change_info,
+        change_structure_course: change_structure,
       }
 
       let response
