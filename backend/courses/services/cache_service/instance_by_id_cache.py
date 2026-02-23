@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Literal
 
 from asgiref.sync import sync_to_async
 from django.core.cache import caches
@@ -27,7 +28,7 @@ async def get_cached_instance_by_id(
         instance_type: str,
         instance_type_cache: str,
         instance_id: uuid.UUID,
-        for_edit: "true" = None
+        for_edit: Literal["true"] = None
 ):
     instance_cache = caches[f"{instance_type_cache}"]
     cache_key = await get_instance_by_id_cache_key(instance_id, instance_type, instance_type_cache)

@@ -1,4 +1,4 @@
-import { useI18n } from '@/shared/lib'
+import { parseDurationFromISO, useI18n } from '@/shared/lib'
 import {
   Award,
   BookOpen,
@@ -345,35 +345,42 @@ export const CreateMTOfCourse = ({
   }
 
   const renderLessonData = ({ lesson }: { lesson: Lesson }) => {
-    const formatDuration = (
-      d: string | { days: number; hours: number; minutes: number }
-    ) => {
+    const formatDuration = (d: any) => {
       let days = 0
       let hours = 0
       let minutes = 0
 
-      if (typeof d === 'string') {
-        const timeParts = d.split(':').map(Number)
-        if (timeParts.length >= 3) {
-          days = timeParts[0] || 0
-          hours = timeParts[1] || 0
-          minutes = timeParts[2] || 0
-        } else if (timeParts.length === 2) {
-          hours = timeParts[0] || 0
-          minutes = timeParts[1] || 0
-        }
-      } else if (d) {
+      if (d && typeof d === 'object') {
         days = d.days || 0
         hours = d.hours || 0
         minutes = d.minutes || 0
+      } else if (typeof d === 'string') {
+        if (d.startsWith('P')) {
+          const parsed = parseDurationFromISO(d)
+          days = parsed?.days || 0
+          hours = parsed?.hours || 0
+          minutes = parsed?.minutes || 0
+        } else if (d.includes(':')) {
+          const parts = d.split(':').map(Number)
+          if (parts.length === 3) {
+            days = parts[0] || 0
+            hours = parts[1] || 0
+            minutes = parts[2] || 0
+          } else if (parts.length === 2) {
+            hours = parts[0] || 0
+            minutes = parts[1] || 0
+          }
+        } else {
+          minutes = Number(d) || 0
+        }
       }
 
       const parts = []
-      if (days > 0) parts.push(`${days} ${t('дн')}`)
-      if (hours > 0) parts.push(`${hours} ${t('год')}`)
-      if (minutes > 0) parts.push(`${minutes} ${t('хв')}`)
+      if (days > 0) parts.push(`${days} ${t('дн.')}`)
+      if (hours > 0) parts.push(`${hours} ${t('год.')}`)
+      if (minutes > 0) parts.push(`${minutes} ${t('хв.')}`)
 
-      return parts.length > 0 ? parts.join(' ') : t('0 хв')
+      return parts.length > 0 ? parts.join(' ') : `0 ${t('хв.')}`
     }
 
     const getTypeLabel = (category: string) => {

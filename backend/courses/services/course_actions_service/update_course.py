@@ -11,7 +11,7 @@ from courses.services.course_actions_service import upload_course_cover_image
 
 
 async def update_course(course, data: dict, cover_file: object | None) -> dict:
-    """Оновлення курсу власником курсу"""
+    """Оновлення курсу власником курсу (тільки інформація)"""
 
     validate_category_level(data)
 
@@ -28,7 +28,7 @@ async def update_course(course, data: dict, cover_file: object | None) -> dict:
         return success_response({"data": "Course published successfully.",
                                  "course_id": str(course.id)})
     else:
-        return error_response(message=_("No changes detected to update the course."))
+        return error_response(message=_("No changes detected to update the course."), status=400)
 
 
 async def save_course(course,
@@ -38,7 +38,8 @@ async def save_course(course,
                       publish: bool
                       ) -> dict:
     course.updated_at = timezone.now()
-    updated_course_fields.append("updated_at")
+    if "updated_at" not in updated_course_fields:
+        updated_course_fields.append("updated_at")
 
     if updated_course_meta_fields:
         await sync_to_async(course.details.save)(update_fields=updated_course_meta_fields)
@@ -63,6 +64,9 @@ def update_fields(course, data: dict) -> tuple[list, list, bool]:
     to_publish = False
 
     for field, value in data.items():
+        if field == 'courseStructure' or str(field).startswith('moduleStructure_order_'):
+            continue
+
         if hasattr(course, field) and getattr(course, field) != value:
             if field == 'is_published':
                 if str(value).lower() == 'true':
@@ -94,9 +98,10 @@ async def update_course_cover_image(course, cover_file: object | None) -> tuple[
     file_name = getattr(course, "cover_image", None)
     if file_name:
         file_name = file_name.split('.')
-        file_name = f'{file_name[3]}.{file_name[4].replace("?", "")}'
+        if len(file_name) >= 5:
+            file_name = f'{file_name[3]}.{file_name[4].replace("?", "")}'
 
-    if file_name != str(cover_file):
+    if str(file_name) != str(cover_file):
         cover_file = await upload_course_cover_image(course, cover_file)
         course.cover_image = cover_file
         updated_fields.append("cover_image")
@@ -107,19 +112,22 @@ async def update_course_cover_image(course, cover_file: object | None) -> tuple[
 
 
 async def update_published_course_with_structure(course):
-    """Асинхронне оновлення курсу:
-        - створює snapshot (версію)
-        - знімає з публікації
+    """
+    Асинхронне оновлення курсу:
+    - створює snapshot (версію)
+    - знімає з публікації
+    - дублює головний документ структури в Mongo
     """
     await sync_to_async(course.update_version)()
     course.is_published = False
     course.published_at = None
 
     course_structure = await sync_to_async(mongo_repo.get_document_by_id)("course_structures", course.structure_ids)
-    if "_id" in course_structure:
+    if course_structure and "_id" in course_structure:
         course_structure.pop("_id")
-    new_structure = await sync_to_async(mongo_repo.insert_document)("course_structures", course_structure)
-    course.structure_ids = new_structure
+
+    new_structure_id = await sync_to_async(mongo_repo.insert_document)("course_structures", course_structure)
+    course.structure_ids = str(new_structure_id)
 
     await sync_to_async(course.save)(update_fields=['is_published', 'published_at', 'structure_ids'])
-    return success_response({"data": "Create version snapshot and unpublished course"})
+    return success_response({"data": "Created version snapshot and unpublished course"})

@@ -172,6 +172,7 @@ const CreateCourse = () => {
 
               const mappedChildren = children.map((child: any) => {
                 if (child.type === 'lesson') {
+                  console.log('Child content type:', child)
                   return {
                     ...child,
                     typeCategory:
@@ -379,6 +380,9 @@ const CreateCourse = () => {
             course_language: initialData.course_language,
             time_to_complete: initialData.time_to_complete,
           })
+
+        // TODO відправляти тільки змінені кроки а не всю структуру курсу і порівнювати їх окремо
+
         const structureChanged =
           JSON.stringify(currentFormattedStructure) !==
           JSON.stringify(initialData.structure)

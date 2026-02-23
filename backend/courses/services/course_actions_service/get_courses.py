@@ -10,7 +10,7 @@ from django.utils.translation import gettext
 from common.services import mongo_repo
 from common.utils import validate_uuid, error_response
 from courses.choices import SORTING_DICT
-from courses.models import Course, Module, Test
+from courses.models import Course, Module, Test, Lesson
 from courses.services.builder_json import build_course_json_success
 from users.models import CustomUser
 from .get_course_owner_data import get_course_owner_data
@@ -148,6 +148,22 @@ async def _enrich_test_item(structure_item):
         pass
 
 
+async def _enrich_lesson_item(structure_item):
+    """Отримує деталі уроку з SQL (опис, контент тощо), оновлює переданий словник."""
+    try:
+        l_id = structure_item.get('lesson_id')
+        if not l_id:
+            return
+
+        lesson_obj = await Lesson.objects.aget(pk=l_id)
+
+        structure_item.update({
+            "description": lesson_obj.description,
+        })
+    except (Lesson.DoesNotExist, AttributeError):
+        pass
+
+
 async def _process_module(structure_item, for_edit):
     """Обробляє один модуль: дістає структуру і збагачує тести всередині."""
     try:
@@ -161,6 +177,8 @@ async def _process_module(structure_item, for_edit):
             for item in items:
                 if item.get('type') in ['test', 'module-test']:
                     tasks.append(_enrich_test_item(item))
+                elif item.get('type') == 'lesson':
+                    tasks.append(_enrich_lesson_item(item))
 
             if tasks:
                 await asyncio.gather(*tasks)

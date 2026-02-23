@@ -277,19 +277,17 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     setIsAdding(true)
     setError(null)
 
-    const formattedDuration = formatDuration(
-      lessonDuration.days,
-      lessonDuration.hours,
-      lessonDuration.minutes
-    )
-
     const lessonData = {
       order: order,
       moduleOrder: moduleOrder,
       type: 'lesson',
       title,
       typeCategory: lessonStateCategoryType,
-      duration: formattedDuration,
+      duration: {
+        days: lessonDuration.days,
+        hours: lessonDuration.hours,
+        minutes: lessonDuration.minutes,
+      },
       description,
       contentBlocks: customContentBlocks.map(block => ({
         type: block.type,
@@ -299,7 +297,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       comment,
     }
 
-    onAddLesson(lessonData as Lesson)
+    onAddLesson(lessonData as unknown as Lesson)
   }
 
   const resetForm = () => {

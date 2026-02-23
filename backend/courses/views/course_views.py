@@ -18,7 +18,7 @@ from courses.services.cache_service import get_cached_instance_by_id, get_instan
 from courses.services.course_actions_service import create_course, remove_course, update_course, \
     update_published_course_with_structure, count_content_course, publishing_course
 from courses.utils import categories_level_sort_present, average_rating, certificates_issued, count_announcements, \
-    course_structure
+    course_structure_create_or_update
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -86,7 +86,7 @@ class CourseView(LocalizedView):
             course_id = str(course.id)
 
             if 'courseStructure' in data:
-                await course_structure(data['courseStructure'], request.user, course_id, files)
+                await course_structure_create_or_update(data['courseStructure'], request.user, course_id, files)
             if not data.get('courseStructure'):
                 data["is_published"] = False
 
@@ -111,11 +111,12 @@ class CourseView(LocalizedView):
             return parse_error
 
         cover_file = files.get('cover_image') if files else None
-        change_info_course = raw_form.get('change_info_course', 'false').lower()
-        change_structure_course = raw_form.get('change_structure_course', 'false').lower()
 
-        if not parsed_data and not cover_file:
-            return error_response('No data provided for update', status=400)
+        change_info_course = str(raw_form.get('change_info_course', 'false')).lower() == 'true'
+        change_structure_course = str(raw_form.get('change_structure_course', 'false')).lower() == 'true'
+
+        if not change_info_course and not change_structure_course:
+            return error_response('No data to update', status=400)
 
         data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in parsed_data.items()}
 
@@ -123,10 +124,31 @@ class CourseView(LocalizedView):
             uuid_obj = validate_uuid(course_id)
             course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
 
-            if course.is_published and change_structure_course == 'true':
-                return await update_published_course_with_structure(course)
-            elif change_info_course == 'true':
-                return await update_course(course, data, cover_file)
+            structure_was_updated = False
+
+            if change_structure_course:
+                if course.is_published:
+                    await update_published_course_with_structure(course)
+
+                await course_structure_create_or_update(data.get('courseStructure', []), request.user, course_id, files)
+                structure_was_updated = True
+
+            if change_info_course:
+                response = await update_course(course, data, cover_file)
+
+                if response.get('status_code') == 400 and structure_was_updated:
+                    return success_response({
+                        "data": "Course structure updated successfully.",
+                        "course_id": str(course.id)
+                    })
+
+                return response
+
+            return success_response({
+                "data": "Course structure updated successfully.",
+                "course_id": str(course.id)
+            })
+
         except ValidationError as e:
             return error_response(str(e), status=400)
         except Course.DoesNotExist:
