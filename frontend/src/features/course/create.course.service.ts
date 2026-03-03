@@ -229,13 +229,23 @@ class CreateCourseService {
 
     if (Array.isArray(test.questions)) {
       cleanQuestions = test.questions.map(q => {
-        if (q.imageFile && q.imageFile instanceof File) {
+        const backendQuestion = {
+          ...q,
+          correct_answers: q.correctAnswers || q.correct_answers || [],
+        }
+
+        delete backendQuestion.correctAnswers
+
+        if (
+          backendQuestion.imageFile &&
+          backendQuestion.imageFile instanceof File
+        ) {
           const fileKey = `question_image_${prefix}_t${test.order}_q${q.order}`
-          formData.append(fileKey, q.imageFile)
-          const { imageFile, image, ...restOfQuestion } = q
+          formData.append(fileKey, backendQuestion.imageFile)
+          const { imageFile, image, ...restOfQuestion } = backendQuestion
           return { ...restOfQuestion, imageFileKey: fileKey }
         }
-        return q
+        return backendQuestion
       })
     }
 

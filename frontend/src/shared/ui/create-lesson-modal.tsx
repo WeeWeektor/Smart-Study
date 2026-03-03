@@ -45,12 +45,13 @@ interface ContentBlock {
 }
 
 export interface Lesson {
+  lesson_id?: string
   type: 'lesson'
   typeCategory: string
   title: string
   order: number
   moduleOrder: number
-  duration: string
+  duration: { days: number; hours: number; minutes: number }
   description: string
   contentBlocks: { type: string; data: BlockData }[]
   singleContentData: BlockData
@@ -69,6 +70,7 @@ interface DynamicFieldProps {
 interface CreateLessonModalProps {
   order: number
   moduleOrder: number
+  initialData?: Lesson
   onClose: () => void
   lessonContentTypes: { value: string; label: string }[]
   onAddLesson: (lesson: Lesson) => void
@@ -77,6 +79,7 @@ interface CreateLessonModalProps {
 export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   order,
   moduleOrder,
+  initialData,
   onClose,
   lessonContentTypes,
   onAddLesson,
@@ -84,18 +87,25 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState<string>('')
-  const [comment, setComment] = useState<string>('')
   const [showCanselModal, setShowCanselModal] = useState(false)
 
+  const [title, setTitle] = useState(initialData?.title || '')
+  const [description, setDescription] = useState<string>(
+    initialData?.description || ''
+  )
+  const [comment, setComment] = useState<string>(initialData?.comment || '')
   const [lessonStateCategoryType, setLessonStateCategoryType] =
-    useState<string>('custom')
+    useState<string>(initialData?.typeCategory || 'custom')
   const [customTypeContent, setCustomTypeContent] = useState<string>('')
-  const [lessonDuration, setLessonDuration] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
+  const [lessonDuration, setLessonDuration] = useState(() => {
+    if (initialData?.duration && typeof initialData.duration === 'object') {
+      return {
+        days: Number(initialData.duration.days) || 0,
+        hours: Number(initialData.duration.hours) || 0,
+        minutes: Number(initialData.duration.minutes) || 0,
+      }
+    }
+    return { days: 0, hours: 0, minutes: 0 }
   })
   const [blockErrors, setBlockErrors] = useState<Record<string, boolean>>({})
 
@@ -103,22 +113,22 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     lessonStateCategoryType
   ) as React.ComponentType<DynamicFieldProps> | null
 
-  const [extraData, setExtraData] = useState<BlockData>(null)
+  const [extraData, setExtraData] = useState<BlockData>(
+    initialData?.singleContentData || null
+  )
+
   const [customContentBlocks, setCustomContentBlocks] = useState<
     ContentBlock[]
-  >([])
+  >(
+    initialData?.contentBlocks?.map(b => ({
+      id: crypto.randomUUID(),
+      type: b.type,
+      data: b.data,
+    })) || []
+  )
   const [collapsedQuestions, setCollapsedQuestions] = useState<
     Record<number, boolean>
   >({})
-
-  const padTwoDigits = (num: number): string => num.toString().padStart(2, '0')
-  const formatDuration = (
-    days: number,
-    hours: number,
-    minutes: number
-  ): string => {
-    return `${padTwoDigits(days)}:${padTwoDigits(hours)}:${padTwoDigits(minutes)}`
-  }
 
   React.useEffect(() => {
     disablePageScroll()
@@ -165,18 +175,15 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
 
   const handleAddContentToCustomType = () => {
     if (!customTypeContent) return
-
     setCustomContentBlocks(prev => [
       ...prev,
       { id: crypto.randomUUID(), type: customTypeContent, data: null },
     ])
-
     setCustomTypeContent('')
   }
 
   const handleRemoveBlock = (indexToRemove: number) => {
     const blockToRemove = customContentBlocks[indexToRemove]
-
     if (blockToRemove) {
       setBlockErrors(prev => {
         const newState = { ...prev }
@@ -184,11 +191,9 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
         return newState
       })
     }
-
     setCustomContentBlocks(prev =>
       prev.filter((_, index) => index !== indexToRemove)
     )
-
     setCollapsedQuestions(prev => {
       const newState = { ...prev }
       delete newState[indexToRemove]
@@ -265,29 +270,21 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   }
 
   const handleAddLesson = () => {
-    if (hasValidationErrors) {
-      return
-    }
-
+    if (hasValidationErrors) return
     const isValid = checkData()
-    if (!isValid) {
-      return
-    }
+    if (!isValid) return
 
     setIsAdding(true)
     setError(null)
 
-    const lessonData = {
+    const lessonData: Lesson = {
+      lesson_id: initialData?.lesson_id,
       order: order,
       moduleOrder: moduleOrder,
       type: 'lesson',
       title,
       typeCategory: lessonStateCategoryType,
-      duration: {
-        days: lessonDuration.days,
-        hours: lessonDuration.hours,
-        minutes: lessonDuration.minutes,
-      },
+      duration: lessonDuration,
       description,
       contentBlocks: customContentBlocks.map(block => ({
         type: block.type,
@@ -297,22 +294,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       comment,
     }
 
-    onAddLesson(lessonData as unknown as Lesson)
-  }
-
-  const resetForm = () => {
-    setTitle('')
-    setDescription('')
-    setComment('')
-    setLessonStateCategoryType('custom')
-    setCustomTypeContent('')
-    setLessonDuration({ days: 0, hours: 0, minutes: 0 })
-    setBlockErrors({})
-    setExtraData(null)
-    setCustomContentBlocks([])
-    setCollapsedQuestions({})
-    setError(null)
-    setIsAdding(false)
+    onAddLesson(lessonData)
   }
 
   const handleCancelCreateLesson = () => {
@@ -321,15 +303,9 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       description.trim() ||
       customContentBlocks.length > 0 ||
       extraData
-
-    if (hasData) {
+    if (hasData && !initialData) {
       setShowCanselModal(true)
-    } else handleCancelAddLesson()
-  }
-
-  const handleCancelAddLesson = () => {
-    resetForm()
-    onClose()
+    } else onClose()
   }
 
   const buildLessonJson: Record<string, string> = {
@@ -343,17 +319,11 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
   }
 
   const lessonTypesArray = Object.entries(buildLessonJson).map(
-    ([value, label]) => ({
-      value,
-      label,
-    })
+    ([value, label]) => ({ value, label })
   )
 
   const toggleQuestionCollapse = (order: number) => {
-    setCollapsedQuestions(prev => ({
-      ...prev,
-      [order]: !prev[order],
-    }))
+    setCollapsedQuestions(prev => ({ ...prev, [order]: !prev[order] }))
   }
 
   return (
@@ -368,7 +338,10 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
         onClick={handleContentClick}
       >
         <h2 className="flex items-center justify-center text-2xl font-semibold mb-4">
-          {`${t('Урок')} ${order}${title ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}` : ''}`}
+          {initialData ? t('Редагування уроку') : t('Урок')} {order}
+          {title
+            ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}`
+            : ''}
         </h2>
 
         <button
@@ -504,7 +477,12 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                               onChange={(newData: BlockData) => {
                                 setCustomContentBlocks(prev =>
                                   prev.map((b, i) =>
-                                    i === index ? { ...b, data: newData } : b
+                                    i === index
+                                      ? {
+                                          ...b,
+                                          data: newData,
+                                        }
+                                      : b
                                   )
                                 )
                               }}
@@ -593,12 +571,12 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
               {isAdding ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('Збереження уроку...')}
+                  {t('Збереження...')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {t('Зберегти урок')}
+                  {initialData ? t('Оновити урок') : t('Зберегти урок')}
                 </>
               )}
             </Button>
@@ -608,7 +586,7 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       {showCanselModal && (
         <ConfirmModal
           isOpen={showCanselModal}
-          onConfirm={handleCancelAddLesson}
+          onConfirm={() => onClose()}
           onClose={() => setShowCanselModal(false)}
           title={t('Ви дійсно бажаєте скасувати створення уроку?')}
           description={t('Всі внесені дані будуть втрачені')}

@@ -1,6 +1,6 @@
 import { useI18n } from '@/shared/lib'
 import { Loader2, Minus, Plus, Save, Undo } from 'lucide-react'
-import React, { type FC, useState } from 'react'
+import React, { type FC, useEffect, useState } from 'react'
 import {
   Button,
   Input,
@@ -17,44 +17,65 @@ import { disablePageScroll, enablePageScroll } from '@/shared/scroll'
 
 interface CreateQuestionTestProps {
   order: number
+  initialData?: Question
   onClose: () => void
   onAddQuestion: (question: Question) => void
 }
 
 export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
   order,
+  initialData,
   onClose,
   onAddQuestion,
 }) => {
   const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
-  const [questionText, setQuestionText] = useState<string>('')
-  const [points, setPoints] = useState<number>()
-  const [explanation, setExplanation] = useState<string | null>(null)
-  const [correctAnswers, setCorrectAnswers] = useState<string[]>([])
-  const [choices, setChoices] = useState<string[]>([])
-  const [image, setImage] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [typeQuestion, setTypeQuestion] = useState<'choice' | 'yes/no'>(
-    'choice'
-  )
-  const [showPreviewQImage, setShowPreviewQImage] = useState<boolean>(false)
 
-  React.useEffect(() => {
+  const [questionText, setQuestionText] = useState<string>(
+    initialData?.questionText || ''
+  )
+  const [points, setPoints] = useState<number | undefined>(initialData?.points)
+  const [explanation, setExplanation] = useState<string | null>(
+    initialData?.explanation || null
+  )
+  const [correctAnswers, setCorrectAnswers] = useState<string[]>(
+    initialData?.correctAnswers || []
+  )
+  const [choices, setChoices] = useState<string[]>(initialData?.choices || [])
+  const [image, setImage] = useState<string | null>(initialData?.image || null)
+  const [imageFile, setImageFile] = useState<File | null>(
+    initialData?.imageFile || null
+  )
+
+  const initialType =
+    initialData?.choices.includes('yes') &&
+    initialData?.choices.includes('no') &&
+    initialData.choices.length === 2
+      ? 'yes/no'
+      : 'choice'
+  const [typeQuestion, setTypeQuestion] = useState<'choice' | 'yes/no'>(
+    initialType
+  )
+
+  const [showPreviewQImage, setShowPreviewQImage] = useState<boolean>(
+    !!initialData?.image
+  )
+
+  useEffect(() => {
     disablePageScroll()
     return () => enablePageScroll()
   }, [])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeQuestion === 'yes/no') {
       setChoices(['yes', 'no'])
     }
-    if (typeQuestion === 'choice') {
+    if (typeQuestion === 'choice' && !initialData) {
       setChoices([])
       setCorrectAnswers([])
     }
-  }, [typeQuestion])
+  }, [typeQuestion, initialData])
 
   const handleContentClick = (e: React.MouseEvent) => e.stopPropagation()
 
@@ -63,18 +84,15 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     setter: React.Dispatch<React.SetStateAction<number | undefined>>
   ) => {
     const digitsOnly = raw.replace(/\D+/g, '')
-
     if (digitsOnly === '') {
       setter(undefined)
       return
     }
-
     const num = Number(digitsOnly)
     if (Number.isNaN(num)) {
       setter(undefined)
       return
     }
-
     setter(num)
   }
 
@@ -120,17 +138,6 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     onClose()
   }
 
-  const handleCancelAddQuestion = () => {
-    setQuestionText('')
-    setExplanation('')
-    setPoints(0)
-    setImage('')
-    setChoices([])
-    setCorrectAnswers([])
-    setError(null)
-    onClose()
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
       <div
@@ -143,7 +150,7 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
         onClick={handleContentClick}
       >
         <h2 className="flex items-center justify-center text-2xl font-semibold mb-4">
-          {t('Питання')} {order}
+          {initialData ? t('Редагування питання') : t('Питання')} {order}
         </h2>
 
         <button
@@ -393,7 +400,7 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
             <Button
               className="w-60 hover:bg-gray-100 dark:hover:bg-gray-700"
               variant="outline"
-              onClick={handleCancelAddQuestion}
+              onClick={() => onClose()}
               disabled={isAdding}
             >
               <Undo className="w-4 h-4 mr-2" />
@@ -410,12 +417,12 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
               {isAdding ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('Збереження питання...')}
+                  {t('Збереження...')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {t('Зберегти питання')}
+                  {initialData ? t('Оновити питання') : t('Зберегти питання')}
                 </>
               )}
             </Button>

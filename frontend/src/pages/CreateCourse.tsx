@@ -40,6 +40,7 @@ import { useChoicesData } from '@/shared/hooks/useChoiceData'
 import { useNavigate, useParams } from 'react-router-dom'
 import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
 import { createCourseService, getCourseService } from '@/features/course'
+import { parseMarkdownToBlocks } from '@/features/lesson-type-fields'
 
 interface Option {
   value: string
@@ -170,20 +171,72 @@ const CreateCourse = () => {
                   backendStructure[`moduleStructure_order_${item.order}`]
               }
 
+              const normalizeQuestions = (questionsFromBackend: any[]) => {
+                if (!Array.isArray(questionsFromBackend)) return []
+                return questionsFromBackend.map(q => ({
+                  ...q,
+                  correctAnswers: q.correct_answers || q.correctAnswers || [],
+                }))
+              }
+
               const mappedChildren = children.map((child: any) => {
                 if (child.type === 'lesson') {
-                  console.log('Child content type:', child)
+                  const typeCategory =
+                    child.content_type || child.typeCategory || 'text'
+                  let contentBlocks = []
+                  let extractedComment = child.comment || ''
+
+                  if (child.content) {
+                    contentBlocks = parseMarkdownToBlocks(child.content)
+
+                    if (
+                      contentBlocks.length > 0 &&
+                      contentBlocks[0].type === 'title'
+                    )
+                      contentBlocks.shift()
+                    if (
+                      contentBlocks.length > 0 &&
+                      contentBlocks[0].type === 'description'
+                    )
+                      contentBlocks.shift()
+
+                    const commentIndex = contentBlocks.findIndex(
+                      b => b.type === 'comment'
+                    )
+                    if (commentIndex !== -1) {
+                      extractedComment = contentBlocks[commentIndex].data
+                      contentBlocks.splice(commentIndex, 1)
+                    }
+                  } else {
+                    contentBlocks = child.contentBlocks || []
+                  }
+
+                  console.log(contentBlocks)
+
                   return {
                     ...child,
-                    typeCategory:
-                      child.content_type || child.typeCategory || 'text',
+                    typeCategory: typeCategory,
+                    duration: child.duration
+                      ? parseDurationFromISO(child.duration)
+                      : { days: 0, hours: 0, minutes: 0 },
+                    description: child.description || '',
+                    comment: extractedComment || '',
+                    contentBlocks: contentBlocks,
+                    singleContentData: child.singleContentData || null,
                   }
                 }
                 if (child.type === 'module-test' || child.type === 'test') {
                   return {
                     ...child,
                     type: 'module-test',
-                    questions: child.questions_len || [],
+                    questions: normalizeQuestions(child.questions),
+                    questions_len: child.questions_len || 0,
+                    description: child.description || '',
+                    time_limit: child.time_limit || 0,
+                    count_attempts: child.count_attempts || 1,
+                    pass_score: child.pass_score || 50,
+                    random_questions: child.random_questions || false,
+                    show_correct_answers: child.show_correct_answers || false,
                   }
                 }
                 return child
@@ -199,7 +252,20 @@ const CreateCourse = () => {
               return {
                 ...item,
                 type: 'course-test',
-                questions: item.questions_len || [],
+                questions: Array.isArray(item.questions)
+                  ? item.questions.map((q: any) => ({
+                      ...q,
+                      correctAnswers:
+                        q.correct_answers || q.correctAnswers || [],
+                    }))
+                  : [],
+                questions_len: item.questions_len || 0,
+                description: item.description || '',
+                time_limit: item.time_limit || 0,
+                count_attempts: item.count_attempts || 1,
+                pass_score: item.pass_score || 50,
+                random_questions: item.random_questions || false,
+                show_correct_answers: item.show_correct_answers || false,
               }
             }
 
@@ -365,6 +431,7 @@ const CreateCourse = () => {
 
       let change_info = true
       let change_structure = true
+      let finalStructureToSend = courseStructure.courseStructure
 
       if (isEditMode && initialDataSnapshot) {
         const initialData = JSON.parse(initialDataSnapshot)
@@ -381,12 +448,150 @@ const CreateCourse = () => {
             time_to_complete: initialData.time_to_complete,
           })
 
-        // TODO відправляти тільки змінені кроки а не всю структуру курсу і порівнювати їх окремо
-
-        const structureChanged =
-          JSON.stringify(currentFormattedStructure) !==
-          JSON.stringify(initialData.structure)
         const imageChanged = courseStateImageFile !== null
+
+        const changedStructureRaw: any[] = []
+
+        currentFormattedStructure.forEach((currItem: any, index: number) => {
+          const rawItem = courseStructure.courseStructure[index]
+
+          const initItem = initialData.structure.find(
+            (x: any) =>
+              (currItem.type === 'module' &&
+                currItem.module_id &&
+                x.module_id === currItem.module_id) ||
+              ((currItem.type === 'course-test' || currItem.type === 'test') &&
+                currItem.test_id &&
+                x.test_id === currItem.test_id)
+          )
+
+          if (!initItem) {
+            changedStructureRaw.push(rawItem)
+          } else {
+            if (currItem.type === 'course-test' || currItem.type === 'test') {
+              if (JSON.stringify(currItem) !== JSON.stringify(initItem)) {
+                changedStructureRaw.push(rawItem)
+              }
+            } else if (currItem.type === 'module') {
+              const currModMeta = { ...currItem, moduleStructure: [] }
+              const initModMeta = { ...initItem, moduleStructure: [] }
+              const modMetaChanged =
+                JSON.stringify(currModMeta) !== JSON.stringify(initModMeta)
+
+              const changedChildrenRaw: any[] = []
+
+              currItem.moduleStructure.forEach(
+                (currChild: any, childIndex: number) => {
+                  const rawChild = (rawItem as any).moduleStructure[childIndex]
+
+                  const initChild = initItem.moduleStructure?.find(
+                    (x: any) =>
+                      (currChild.type === 'lesson' &&
+                        currChild.lesson_id &&
+                        x.lesson_id === currChild.lesson_id) ||
+                      ((currChild.type === 'module-test' ||
+                        currChild.type === 'test') &&
+                        currChild.test_id &&
+                        x.test_id === currChild.test_id)
+                  )
+
+                  if (
+                    !initChild ||
+                    JSON.stringify(currChild) !== JSON.stringify(initChild)
+                  ) {
+                    changedChildrenRaw.push(rawChild)
+                  }
+                }
+              )
+
+              if (modMetaChanged || changedChildrenRaw.length > 0) {
+                changedStructureRaw.push({
+                  ...rawItem,
+                  moduleStructure: changedChildrenRaw,
+                })
+              }
+            }
+          }
+        })
+
+        initialData.structure.forEach((initItem: any) => {
+          if (initItem.type === 'module') {
+            const stillExistsModule = currentFormattedStructure.find(
+              (x: any) =>
+                x.type === 'module' && x.module_id === initItem.module_id
+            )
+
+            if (!stillExistsModule && initItem.module_id) {
+              changedStructureRaw.push({
+                type: 'module',
+                module_id: initItem.module_id,
+                is_deleted: true,
+              })
+            } else if (stillExistsModule) {
+              const deletedChildrenRaw: any[] = []
+
+              initItem.moduleStructure?.forEach((initChild: any) => {
+                const childStillExists =
+                  stillExistsModule.moduleStructure?.find(
+                    (x: any) =>
+                      (initChild.type === 'lesson' &&
+                        x.lesson_id === initChild.lesson_id) ||
+                      ((initChild.type === 'module-test' ||
+                        initChild.type === 'test') &&
+                        x.test_id === initChild.test_id)
+                  )
+
+                if (!childStillExists) {
+                  deletedChildrenRaw.push({
+                    type: initChild.type,
+                    lesson_id: initChild.lesson_id,
+                    test_id: initChild.test_id,
+                    is_deleted: true,
+                  })
+                }
+              })
+
+              if (deletedChildrenRaw.length > 0) {
+                const existingChangedModuleIndex =
+                  changedStructureRaw.findIndex(
+                    m =>
+                      m.type === 'module' && m.module_id === initItem.module_id
+                  )
+
+                if (existingChangedModuleIndex !== -1) {
+                  changedStructureRaw[
+                    existingChangedModuleIndex
+                  ].moduleStructure.push(...deletedChildrenRaw)
+                } else {
+                  changedStructureRaw.push({
+                    type: 'module',
+                    module_id: initItem.module_id,
+                    moduleStructure: deletedChildrenRaw,
+                  })
+                }
+              }
+            }
+          } else if (
+            initItem.type === 'course-test' ||
+            initItem.type === 'test'
+          ) {
+            const stillExistsTest = currentFormattedStructure.find(
+              (x: any) =>
+                (x.type === 'course-test' || x.type === 'test') &&
+                x.test_id === initItem.test_id
+            )
+
+            if (!stillExistsTest && initItem.test_id) {
+              changedStructureRaw.push({
+                type: initItem.type,
+                test_id: initItem.test_id,
+                is_deleted: true,
+              })
+            }
+          }
+        })
+
+        const structureChanged = changedStructureRaw.length > 0
 
         if (!infoChanged && !structureChanged && !imageChanged) {
           handleCancelCreateCourse()
@@ -400,12 +605,13 @@ const CreateCourse = () => {
 
         change_info = infoChanged || imageChanged
         change_structure = structureChanged
+        finalStructureToSend = changedStructureRaw
       }
 
       const coursePayload = {
         ...currentInfoObj,
         cover_imageFile: courseStateImageFile,
-        courseStructure: courseStructure.courseStructure,
+        courseStructure: finalStructureToSend,
         change_info_course: change_info,
         change_structure_course: change_structure,
       }
@@ -413,10 +619,11 @@ const CreateCourse = () => {
       let response
 
       if (isEditMode && id) {
-        response = await createCourseService.updateCourse({
-          courseId: id,
-          requestData: coursePayload,
-        })
+        console.log('Відправляємо на оновлення з даними:', coursePayload)
+        // response = await createCourseService.updateCourse({
+        //   courseId: id,
+        //   requestData: coursePayload,
+        // })
       } else {
         response = await createCourseService.createCourse(coursePayload)
       }

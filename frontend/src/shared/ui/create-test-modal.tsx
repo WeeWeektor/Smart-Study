@@ -14,6 +14,7 @@ import {
 import {
   ChevronDown,
   ChevronUp,
+  Edit2,
   Loader2,
   PlusCircle,
   Save,
@@ -25,6 +26,7 @@ import { disablePageScroll, enablePageScroll } from '@/shared/scroll'
 interface CreateTestModalProps {
   order: number
   type: 'module-test' | 'course-test'
+  initialData?: CourseTest | ModuleTest
   onClose: () => void
   onAddTest: (test: BaseTest & { type: 'module-test' | 'course-test' }) => void
 }
@@ -43,23 +45,41 @@ export interface Question {
 export const CreateTestModal: FC<CreateTestModalProps> = ({
   order,
   type,
+  initialData,
   onClose,
   onAddTest,
 }) => {
   const { t } = useI18n()
   const [error, setError] = useState<string | null>(null)
-  const [title, setTitle] = useState<string>('')
-  const [description, setDescription] = useState<string>('')
-  const [timeLimit, setTimeLimit] = useState<number>()
-  const [countAttempts, setCountAttempts] = useState<number>()
-  const [passScore, setPassScore] = useState<number>()
-  const [randomQuestions, setRandomQuestions] = useState<boolean>(false)
-  const [showAnswers, setShowAnswers] = useState<boolean>(false)
-  const [questions, setQuestions] = useState<Question[]>([])
+
+  const [title, setTitle] = useState<string>(initialData?.title || '')
+  const [description, setDescription] = useState<string>(
+    initialData?.description || ''
+  )
+  const [timeLimit, setTimeLimit] = useState<number | undefined>(
+    initialData?.time_limit
+  )
+  const [countAttempts, setCountAttempts] = useState<number | undefined>(
+    initialData?.count_attempts
+  )
+  const [passScore, setPassScore] = useState<number | undefined>(
+    initialData?.pass_score
+  )
+  const [randomQuestions, setRandomQuestions] = useState<boolean>(
+    initialData?.random_questions || false
+  )
+  const [showAnswers, setShowAnswers] = useState<boolean>(
+    initialData?.show_correct_answers || false
+  )
+  const [questions, setQuestions] = useState<Question[]>(
+    Array.isArray(initialData?.questions) ? initialData.questions : []
+  )
+
   const [isAdding, setIsAdding] = useState(false)
   const [isCreateQuestionOpen, setIsCreateQuestionOpen] = useState(false)
   const [questionModalData, setQuestionModalData] = useState<{
     order: number
+    initialData?: Question
   } | null>(null)
   const [collapsedQuestions, setCollapsedQuestions] = useState<
     Record<number, boolean>
@@ -116,37 +136,23 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
     }
 
     const newTest: CourseTest | ModuleTest = {
-      ...{
-        type,
-        title,
-        description,
-        time_limit: timeLimit,
-        count_attempts: countAttempts,
-        pass_score: passScore,
-        random_questions: randomQuestions,
-        show_correct_answers: showAnswers,
-        questions,
-      },
+      test_id: initialData?.test_id,
+      type,
+      title,
+      description,
+      time_limit: timeLimit,
+      count_attempts: countAttempts,
+      pass_score: passScore,
+      random_questions: randomQuestions,
+      show_correct_answers: showAnswers,
+      questions,
       order,
-    }
+    } as any
 
     setIsAdding(true)
     await new Promise(resolve => setTimeout(resolve, 500))
     onAddTest(newTest)
     setIsAdding(false)
-    onClose()
-  }
-
-  const handleCancelAddTest = () => {
-    setTitle('')
-    setDescription('')
-    setTimeLimit(undefined)
-    setCountAttempts(undefined)
-    setPassScore(undefined)
-    setRandomQuestions(false)
-    setShowAnswers(false)
-    setQuestions([])
-    setError(null)
     onClose()
   }
 
@@ -169,7 +175,10 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
         onClick={handleContentClick}
       >
         <h2 className="flex items-center justify-center text-2xl font-semibold mb-4">
-          {`${t('Тест')} ${order}${title ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}` : ''}`}
+          {initialData ? t('Редагування тесту') : t('Тест')} {order}
+          {title
+            ? ` - ${title.length > 30 ? title.slice(0, 30) + '...' : title}`
+            : ''}
         </h2>
 
         <button
@@ -282,7 +291,10 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
               className="bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               size="sm"
               onClick={() => {
-                const nextOrder = questions.length + 1
+                const nextOrder =
+                  questions.length > 0
+                    ? Math.max(...questions.map(q => q.order)) + 1
+                    : 1
                 setQuestionModalData({ order: nextOrder })
                 setIsCreateQuestionOpen(true)
               }}
@@ -327,19 +339,36 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
                           {q.points} {t('балів')}
                         </span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                        onClick={e => {
-                          e.stopPropagation()
-                          setQuestions(prev =>
-                            prev.filter(ques => ques.order !== q.order)
-                          )
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                          onClick={e => {
+                            e.stopPropagation()
+                            setQuestionModalData({
+                              order: q.order,
+                              initialData: q,
+                            })
+                            setIsCreateQuestionOpen(true)
+                          }}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                          onClick={e => {
+                            e.stopPropagation()
+                            setQuestions(prev =>
+                              prev.filter(ques => ques.order !== q.order)
+                            )
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {!isCollapsed && (
@@ -350,8 +379,10 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
                             : q.questionText}
                         </p>
                         <div className="grid grid-cols-2 gap-2">
-                          {q.choices.map((choice, i) => {
-                            const isCorrect = q.correctAnswers.includes(choice)
+                          {q.choices?.map((choice, i) => {
+                            const isCorrect = (q.correctAnswers || []).includes(
+                              choice
+                            )
                             return (
                               <div
                                 key={i}
@@ -385,7 +416,7 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
             <Button
               className="w-60 hover:bg-gray-100 dark:hover:bg-gray-700"
               variant="outline"
-              onClick={handleCancelAddTest}
+              onClick={onClose}
               disabled={isAdding}
             >
               <Undo className="w-4 h-4 mr-2" />
@@ -402,23 +433,33 @@ export const CreateTestModal: FC<CreateTestModalProps> = ({
               {isAdding ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('Додавання тесту...')}
+                  {t('Збереження...')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {t('Додати тест')}
+                  {initialData ? t('Оновити тест') : t('Зберегти тест')}
                 </>
               )}
             </Button>
           </div>
         </div>
+
         {isCreateQuestionOpen && questionModalData && (
           <AddQuestionToTestModal
             order={questionModalData.order}
+            initialData={questionModalData.initialData}
             onClose={() => setIsCreateQuestionOpen(false)}
             onAddQuestion={newQuestion => {
-              setQuestions(prev => [...prev, newQuestion as Question])
+              setQuestions(prev => {
+                const exists = prev.some(q => q.order === newQuestion.order)
+                if (exists) {
+                  return prev.map(q =>
+                    q.order === newQuestion.order ? newQuestion : q
+                  )
+                }
+                return [...prev, newQuestion]
+              })
             }}
           />
         )}

@@ -347,7 +347,6 @@ const CourseReview = () => {
       })
 
       setActiveElement(response)
-      console.log('Loaded content:', response)
     } catch (error) {
       setCourseError(
         error instanceof Error

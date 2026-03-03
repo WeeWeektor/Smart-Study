@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Edit2,
   Eye,
   FileCheck,
   FileText,
@@ -104,11 +105,13 @@ export const CreateMTOfCourse = ({
     moduleOrder?: number
     order: number
     type: 'module-test' | 'course-test'
+    initialData?: CourseTest | ModuleTest
   } | null>(null)
   const [isCreateLessonOpen, setIsCreateLessonOpen] = useState(false)
   const [lessonModalData, setLessonModalData] = useState<{
     moduleOrder: number
     order: number
+    initialData?: Lesson
   } | null>(null)
 
   const handleAddModule = () => {
@@ -141,7 +144,11 @@ export const CreateMTOfCourse = ({
       const nextOrder =
         existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1
 
-      setLessonModalData({ moduleOrder, order: nextOrder })
+      setLessonModalData({
+        moduleOrder,
+        order: nextOrder,
+        initialData: undefined,
+      })
       setIsCreateLessonOpen(true)
     }
   }
@@ -235,36 +242,76 @@ export const CreateMTOfCourse = ({
     }
   }
 
-  interface DeleteButtonProps {
+  interface ActionButtonProps {
     parentType: 'course' | 'module'
     parentOrder?: number
     itemOrder: number
     type: 'module' | 'course-test' | 'lesson' | 'module-test'
+    itemData?: any
   }
 
-  const renderDeleteButton = ({
+  const renderActionButtons = ({
     parentType,
     parentOrder,
     itemOrder,
     type,
-  }: DeleteButtonProps) => {
+    itemData,
+  }: ActionButtonProps) => {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-        onClick={() => {
-          setDeleteTarget({
-            parentType,
-            parentOrder: parentType === 'module' ? parentOrder : undefined,
-            itemOrder,
-            type,
-          })
-          setIsConfirmDelOpen(true)
-        }}
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      <div className="flex space-x-1">
+        {type !== 'module' && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+            onClick={e => {
+              e.stopPropagation()
+              if (type === 'lesson') {
+                setLessonModalData({
+                  moduleOrder: parentOrder!,
+                  order: itemOrder,
+                  initialData: itemData,
+                })
+                setIsCreateLessonOpen(true)
+              } else if (type === 'module-test') {
+                setTestModalData({
+                  moduleOrder: parentOrder,
+                  order: itemOrder,
+                  type: 'module-test',
+                  initialData: itemData,
+                })
+                setIsCreateTestOpen(true)
+              } else if (type === 'course-test') {
+                setTestModalData({
+                  order: itemOrder,
+                  type: 'course-test',
+                  initialData: itemData,
+                })
+                setIsCreateTestOpen(true)
+              }
+            }}
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+          onClick={e => {
+            e.stopPropagation()
+            setDeleteTarget({
+              parentType,
+              parentOrder: parentType === 'module' ? parentOrder : undefined,
+              itemOrder,
+              type,
+            })
+            setIsConfirmDelOpen(true)
+          }}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
     )
   }
 
@@ -278,7 +325,10 @@ export const CreateMTOfCourse = ({
         variant="ghost"
         size="icon"
         className="bg-white dark:bg-slate-800 dark:hover:bg-slate-600"
-        onClick={() => toggleCollapse(key)}
+        onClick={e => {
+          e.stopPropagation()
+          toggleCollapse(key)
+        }}
       >
         {collapsedItems[key] ? <ChevronDown /> : <ChevronUp />}
       </Button>
@@ -449,7 +499,7 @@ export const CreateMTOfCourse = ({
                           `- ${item.title.length > 30 ? item.title.slice(0, 30) + '...' : item.title}`}
                       </div>
                       <div className="absolute right-0 mr-6">
-                        {renderDeleteButton({
+                        {renderActionButtons({
                           parentType: 'course',
                           itemOrder: item.order,
                           type: 'module',
@@ -523,7 +573,7 @@ export const CreateMTOfCourse = ({
                                         : `${t('Тест')} ${moduleElem.order} ${moduleElem.title && `- ${moduleElem.title.length > 30 ? moduleElem.title.slice(0, 30) + '...' : moduleElem.title}`}`}
                                     </div>
                                     <div className="absolute right-0 pr-4 mb-1">
-                                      {renderDeleteButton({
+                                      {renderActionButtons({
                                         parentType: 'module',
                                         parentOrder: item.order,
                                         itemOrder: moduleElem.order,
@@ -531,6 +581,7 @@ export const CreateMTOfCourse = ({
                                           moduleElem.type === 'lesson'
                                             ? 'lesson'
                                             : 'module-test',
+                                        itemData: moduleElem,
                                       })}
                                     </div>
                                   </div>
@@ -573,6 +624,7 @@ export const CreateMTOfCourse = ({
                                   moduleOrder: item.order,
                                   order: nextOrder,
                                   type: 'module-test',
+                                  initialData: undefined,
                                 })
                                 setIsCreateTestOpen(true)
                               }}
@@ -608,10 +660,11 @@ export const CreateMTOfCourse = ({
                           `- ${item.title.length > 30 ? item.title.slice(0, 30) + '...' : item.title}`}
                       </div>
                       <div className="absolute right-0 mr-6">
-                        {renderDeleteButton({
+                        {renderActionButtons({
                           parentType: 'course',
                           itemOrder: item.order,
                           type: 'course-test',
+                          itemData: item,
                         })}
                       </div>
                     </div>
@@ -699,7 +752,11 @@ export const CreateMTOfCourse = ({
           <Button
             onClick={() => {
               const nextOrder = courseStructure.courseStructure.length + 1
-              setTestModalData({ order: nextOrder, type: 'course-test' })
+              setTestModalData({
+                order: nextOrder,
+                type: 'course-test',
+                initialData: undefined,
+              })
               setIsCreateTestOpen(true)
             }}
             className="ml-3 w-40 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
@@ -713,16 +770,28 @@ export const CreateMTOfCourse = ({
           <CreateTestModal
             order={testModalData.order}
             type={testModalData.type}
+            initialData={testModalData.initialData}
             onClose={() => setIsCreateTestOpen(false)}
             onAddTest={newTest => {
               if (newTest.type === 'course-test') {
-                setCourseStructure(prev => ({
-                  ...prev,
-                  courseStructure: [
-                    ...prev.courseStructure,
-                    newTest as CourseTest,
-                  ],
-                }))
+                setCourseStructure(prev => {
+                  const exists = prev.courseStructure.some(
+                    item =>
+                      item.type === 'course-test' &&
+                      item.order === newTest.order
+                  )
+                  return {
+                    ...prev,
+                    courseStructure: exists
+                      ? prev.courseStructure.map(item =>
+                          item.type === 'course-test' &&
+                          item.order === newTest.order
+                            ? (newTest as CourseTest)
+                            : item
+                        )
+                      : [...prev.courseStructure, newTest as CourseTest],
+                  }
+                })
               } else if (newTest.type === 'module-test') {
                 setCourseStructure(prev => ({
                   ...prev,
@@ -732,12 +801,21 @@ export const CreateMTOfCourse = ({
                       testModalData.moduleOrder !== undefined &&
                       mod.order === testModalData.moduleOrder
                     ) {
+                      const exists = mod.moduleStructure.some(
+                        item =>
+                          item.type === 'module-test' &&
+                          item.order === newTest.order
+                      )
                       return {
                         ...mod,
-                        moduleStructure: [
-                          ...mod.moduleStructure,
-                          newTest as ModuleTest,
-                        ],
+                        moduleStructure: exists
+                          ? mod.moduleStructure.map(item =>
+                              item.type === 'module-test' &&
+                              item.order === newTest.order
+                                ? (newTest as ModuleTest)
+                                : item
+                            )
+                          : [...mod.moduleStructure, newTest as ModuleTest],
                       }
                     }
                     return mod
@@ -753,6 +831,7 @@ export const CreateMTOfCourse = ({
           <CreateLessonModal
             order={lessonModalData.order}
             moduleOrder={lessonModalData.moduleOrder}
+            initialData={lessonModalData.initialData}
             onClose={() => setIsCreateLessonOpen(false)}
             lessonContentTypes={lessonContentTypes}
             onAddLesson={lesson => {
@@ -764,12 +843,23 @@ export const CreateMTOfCourse = ({
                       mod.type === 'module' &&
                       mod.order === lessonModalData.moduleOrder
                     ) {
+                      const exists = mod.moduleStructure.some(
+                        item =>
+                          item.type === 'lesson' && item.order === lesson.order
+                      )
                       return {
                         ...mod,
-                        moduleStructure: [
-                          ...mod.moduleStructure,
-                          lesson as unknown as Lesson,
-                        ],
+                        moduleStructure: exists
+                          ? mod.moduleStructure.map(item =>
+                              item.type === 'lesson' &&
+                              item.order === lesson.order
+                                ? (lesson as unknown as Lesson)
+                                : item
+                            )
+                          : [
+                              ...mod.moduleStructure,
+                              lesson as unknown as Lesson,
+                            ],
                       }
                     }
                     return mod

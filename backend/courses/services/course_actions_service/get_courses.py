@@ -135,8 +135,10 @@ async def _enrich_test_item(structure_item):
             questions_len = len(questions_data.get('questions', [])) if questions_data else 0
         else:
             questions_len = 0
+            questions_data = None
 
         structure_item.update({
+            "questions": questions_data.get('questions', []) if questions_data else [],
             "questions_len": questions_len,
             "pass_score": test_obj.pass_score,
             "count_attempts": test_obj.count_attempts,
@@ -159,6 +161,7 @@ async def _enrich_lesson_item(structure_item):
 
         structure_item.update({
             "description": lesson_obj.description,
+            "content": lesson_obj.content,
         })
     except (Lesson.DoesNotExist, AttributeError):
         pass
