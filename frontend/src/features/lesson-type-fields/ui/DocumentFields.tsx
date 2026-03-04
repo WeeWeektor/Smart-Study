@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { Input, Label } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
 import {
+  Download,
   Eye,
   File as FileIcon,
   FileSpreadsheet,
   FileText,
   FileType,
   X,
-  Download,
 } from 'lucide-react'
 import { validateFile } from '@/features/lesson-type-fields/helper'
 
@@ -122,48 +122,47 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
     file && (file.type === 'application/pdf' || file.type === 'text/plain')
 
   return (
-    <div className="mt-0 space-y-1">
-      <Label>{t('Документ *')}</Label>
+    <div className="mt-0 space-y-2">
+      <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        {t('Документ *')}
+      </Label>
 
-      {!file && (
+      {!file ? (
         <Input
           type="file"
           accept={INPUT_ACCEPT_ATTRIBUTE}
-          className="mt-1"
+          className="mt-1 block w-full text-sm text-slate-500 cursor-pointer
+            file:mr-4 file:py-2 file:px-4 h-auto
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-brand-50 file:text-brand-700
+            hover:file:bg-brand-100
+            dark:file:bg-brand-900/20 dark:file:text-brand-400"
           onChange={handleFileChange}
         />
-      )}
-
-      {error && (
-        <div className="mb-3 mt-2 p-3 bg-red-100 text-red-700 rounded border border-red-200 text-sm">
-          {error}
-        </div>
-      )}
-
-      {file && !error && (
-        <div className="mt-2 flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#09090b] shadow-sm transition-colors">
+      ) : (
+        <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] shadow-sm transition-all animate-in fade-in duration-200">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="p-2 bg-white dark:bg-[#18181b] rounded-md border border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400">
               {getFileIcon(file.type)}
             </div>
-
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate pr-2">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {file.name}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              </span>
+              <span className="text-sm text-green-600 dark:text-green-500 font-medium">
                 {formatSize(file.size)} •{' '}
                 {file.name.split('.').pop()?.toUpperCase()}
-              </p>
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1">
             {isViewable && (
               <button
                 type="button"
                 onClick={handlePreview}
-                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors"
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                 title={t('Переглянути файл')}
               >
                 <Eye size={18} />
@@ -174,7 +173,7 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
               <a
                 href={previewUrl}
                 download={file.name}
-                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors flex items-center justify-center"
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center"
                 title={t('Завантажити файл')}
               >
                 <Download size={18} />
@@ -184,12 +183,20 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
             <button
               type="button"
               onClick={handleRemove}
-              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 rounded-md transition-colors"
-              title={t('Видалити файл')}
+              className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
             >
-              <X size={18} />
+              <X
+                size={18}
+                className="text-slate-400 group-hover:text-red-500 transition-colors"
+              />
             </button>
           </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-3 mt-3 p-3 bg-red-100 text-red-700 rounded border border-red-200 text-sm">
+          {error}
         </div>
       )}
     </div>

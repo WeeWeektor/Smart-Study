@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Input, Label } from '@/shared/ui'
 import { useI18n } from '@/shared/lib'
-import { EyeOff, ZoomInIcon, ZoomOutIcon } from 'lucide-react'
+import { EyeOff, ImageIcon, X, ZoomInIcon, ZoomOutIcon } from 'lucide-react'
 import { validateFile } from '@/features/lesson-type-fields/helper'
 
 type ImageFieldsProps = {
@@ -14,6 +14,7 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [fileName, setFileName] = useState<string | null>(null)
 
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -54,6 +55,7 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
 
     const url = URL.createObjectURL(file)
     setPreview(url)
+    setFileName(file.name)
     onChange({ file: file, previewUrl: url })
   }
 
@@ -108,19 +110,64 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
   const handleMouseUp = () => setIsDragging(false)
   const handleMouseLeave = () => setIsDragging(false)
 
-  return (
-    <div className="mt-0 space-y-1">
-      <Label>{t('Зображення *')}</Label>
+  const handleRemove = () => {
+    setPreview(null)
+    setFileName(null)
+    onChange(null)
+    setError(null)
+    onError?.(true)
+  }
 
-      <Input
-        type="file"
-        accept="image/*"
-        className="mt-1"
-        onChange={handleFileChange}
-      />
+  return (
+    <div className="mt-0 space-y-2">
+      <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        {t('Зображення *')}
+      </Label>
+
+      {!preview ? (
+        <Input
+          type="file"
+          accept="image/*"
+          className="mt-1 block w-full text-sm text-slate-500 cursor-pointer
+            file:mr-4 file:py-2 file:px-4 h-auto
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-brand-50 file:text-brand-700
+            hover:file:bg-brand-100
+            dark:file:bg-brand-900/20 dark:file:text-brand-400"
+          onChange={handleFileChange}
+        />
+      ) : (
+        <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] shadow-sm transition-all animate-in fade-in duration-200">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400">
+              <ImageIcon size={20} />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                {fileName || t('Зображення')}
+              </span>
+              <span className="text-sm text-green-600 dark:text-green-500 font-medium">
+                {t('Файл готовий')}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
+          >
+            <X
+              size={18}
+              className="text-slate-400 group-hover:text-red-500 transition-colors"
+            />
+          </button>
+        </div>
+      )}
 
       {error && (
-        <div className="mb-3 mt-2 p-3 bg-red-100 text-red-700 rounded border border-red-200 text-sm">
+        <div className="mb-3 mt-3 p-3 bg-red-100 text-red-700 rounded border border-red-200 text-sm">
           {error}
         </div>
       )}
@@ -128,7 +175,7 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
       {preview && !error && (
         <>
           <div
-            className="mt-3 relative border border-gray-200 rounded-lg overflow-hidden h-[200px] w-full bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+            className="mt-4 relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden h-[250px] w-full bg-slate-50 dark:bg-[#09090b] flex items-center justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 transition-all shadow-md group"
             onClick={() => setIsOpen(true)}
           >
             <img
@@ -136,8 +183,8 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
               alt="Preview"
               className="max-w-full max-h-full object-contain"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/10 transition-colors">
-              <span className="bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+              <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
                 {t('Натисніть для перегляду')}
               </span>
             </div>
