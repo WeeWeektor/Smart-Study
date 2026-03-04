@@ -5,16 +5,26 @@ import { EyeOff, ImageIcon, X, ZoomInIcon, ZoomOutIcon } from 'lucide-react'
 import { validateFile } from '@/features/lesson-type-fields/helper'
 
 type ImageFieldsProps = {
-  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onChange: (data: { file?: File; previewUrl: string } | null) => void
   onError?: (hasError: boolean) => void
+  initialUrl?: string
+  initialFileName?: string
 }
 
-export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
+export const ImageFields = ({
+  onChange,
+  onError,
+  initialUrl,
+  initialFileName,
+}: ImageFieldsProps) => {
   const { t } = useI18n()
-  const [preview, setPreview] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(initialUrl || null)
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const [fileName, setFileName] = useState<string | null>(null)
+  const [fileName, setFileName] = useState<string | null>(
+    initialFileName || null
+  )
 
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -23,45 +33,44 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
   const imageRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
-    if (!preview) {
-      onError?.(true)
-    }
-  }, [])
+    const hasContent = !!file || !!initialUrl
+    onError?.(!hasContent)
+  }, [file, initialUrl, onError])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
 
     const validation = validateFile({
-      file,
+      file: selectedFile,
       maxSizeMB: 10,
       acceptedTypes: ['image/*'],
     })
 
-    if (!file) return
-
     if (!validation.isValid) {
       setError(t(validation.errorMessage || 'Помилка файлу'))
-      onError?.(true)
-
+      setFile(null)
       setPreview(null)
+      setFileName(null)
       onChange(null)
-
       e.target.value = ''
       return
     }
 
     setError(null)
-    onError?.(false)
+    setFile(selectedFile)
 
-    const url = URL.createObjectURL(file)
+    const url = URL.createObjectURL(selectedFile)
     setPreview(url)
-    setFileName(file.name)
-    onChange({ file: file, previewUrl: url })
+    setFileName(selectedFile.name)
+    onChange({ file: selectedFile, previewUrl: url })
   }
 
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview)
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview)
+      }
     }
   }, [preview])
 
@@ -111,6 +120,7 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
   const handleMouseLeave = () => setIsDragging(false)
 
   const handleRemove = () => {
+    setFile(null)
     setPreview(null)
     setFileName(null)
     onChange(null)
@@ -147,7 +157,7 @@ export const ImageFields = ({ onChange, onError }: ImageFieldsProps) => {
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {fileName || t('Зображення')}
               </span>
-              <span className="text-sm text-green-600 dark:text-green-500 font-medium">
+              <span className="text-sm text-green-600 dark:text-green-500 font-medium leading-tight">
                 {t('Файл готовий')}
               </span>
             </div>

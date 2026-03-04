@@ -82,6 +82,7 @@ export const parseMarkdownToBlocks = (markdown: string) => {
           const match = trimmedLine.match(patterns.fileLink)
           const icon = match?.[1]
           const url = (match?.[3] || '').replace(/\?$/, '')
+          const fileName = match?.[2] || ''
 
           let type = 'link'
           if (icon === '📊') type = 'presentation'
@@ -91,7 +92,10 @@ export const parseMarkdownToBlocks = (markdown: string) => {
           blocks.push({
             type,
             url: url,
-            data: type === 'link' || type === 'live' ? url : match?.[2] || '',
+            data:
+              type === 'link' || type === 'live'
+                ? url
+                : { previewUrl: url, fileName: fileName, fileKey: null },
           })
         } else {
           blocks.push({ type: 'text', data: trimmedLine })

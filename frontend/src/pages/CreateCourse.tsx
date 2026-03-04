@@ -159,6 +159,30 @@ const CreateCourse = () => {
           }
 
           const hydratedStructure = rawStructure.map((item: any) => {
+            const normalizeQuestions = (
+              questionsFromBackend: any[],
+              testType: 'course-test' | 'module-test'
+            ) => {
+              if (!Array.isArray(questionsFromBackend)) return []
+
+              const BASE_IMAGE_PATH = import.meta.env
+                .VITE_COURSE_QUESTION_IMAGE_PATH
+
+              return questionsFromBackend.map(q => {
+                let finalImageUrl = q.image_url
+
+                if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+                  finalImageUrl = `${BASE_IMAGE_PATH}course-cover-pictures/${courseData.id}/${testType}/${finalImageUrl}`
+                }
+
+                return {
+                  ...q,
+                  correctAnswers: q.correct_answers || q.correctAnswers || [],
+                  image_url: finalImageUrl || null,
+                }
+              })
+            }
+
             if (item.type === 'module') {
               let children = []
 
@@ -169,14 +193,6 @@ const CreateCourse = () => {
               ) {
                 children =
                   backendStructure[`moduleStructure_order_${item.order}`]
-              }
-
-              const normalizeQuestions = (questionsFromBackend: any[]) => {
-                if (!Array.isArray(questionsFromBackend)) return []
-                return questionsFromBackend.map(q => ({
-                  ...q,
-                  correctAnswers: q.correct_answers || q.correctAnswers || [],
-                }))
               }
 
               const mappedChildren = children.map((child: any) => {
@@ -211,7 +227,7 @@ const CreateCourse = () => {
                     contentBlocks = child.contentBlocks || []
                   }
 
-                  console.log(contentBlocks)
+                  // TODO - перевірити  надсилання даних на бек при зміні курсу (нові файли, видалені файли, зміна контенту)
 
                   return {
                     ...child,
@@ -229,7 +245,10 @@ const CreateCourse = () => {
                   return {
                     ...child,
                     type: 'module-test',
-                    questions: normalizeQuestions(child.questions),
+                    questions: normalizeQuestions(
+                      child.questions,
+                      'module-test'
+                    ),
                     questions_len: child.questions_len || 0,
                     description: child.description || '',
                     time_limit: child.time_limit || 0,
@@ -252,13 +271,7 @@ const CreateCourse = () => {
               return {
                 ...item,
                 type: 'course-test',
-                questions: Array.isArray(item.questions)
-                  ? item.questions.map((q: any) => ({
-                      ...q,
-                      correctAnswers:
-                        q.correct_answers || q.correctAnswers || [],
-                    }))
-                  : [],
+                questions: normalizeQuestions(item.questions, 'course-test'),
                 questions_len: item.questions_len || 0,
                 description: item.description || '',
                 time_limit: item.time_limit || 0,

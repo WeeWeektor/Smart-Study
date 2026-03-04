@@ -5,64 +5,80 @@ import { validateFile } from '@/features/lesson-type-fields/helper'
 import { Music, X } from 'lucide-react'
 
 type AudioFieldsProps = {
-  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onChange: (data: { file?: File; previewUrl: string } | null) => void
   onError?: (hasError: boolean) => void
+  initialUrl?: string
+  initialFileName?: string
 }
 
-export const AudioFields = ({ onChange, onError }: AudioFieldsProps) => {
+export const AudioFields = ({
+  onChange,
+  onError,
+  initialUrl,
+  initialFileName,
+}: AudioFieldsProps) => {
   const { t } = useI18n()
-  const [preview, setPreview] = useState<string | null>(null)
-  const [fileName, setFileName] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialUrl || null
+  )
+  const [remoteFileName, setRemoteFileName] = useState<string | null>(
+    initialFileName || null
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!preview) {
-      onError?.(true)
-    }
-  }, [preview, onError])
+    const hasContent = !!file || !!initialUrl
+    onError?.(!hasContent)
+  }, [file, initialUrl, onError])
 
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview)
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
     }
-  }, [preview])
+  }, [previewUrl])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
 
     const validation = validateFile({
-      file,
+      file: selectedFile,
       maxSizeMB: 10,
       acceptedTypes: ['audio/*'],
     })
 
-    if (!file) return
-
     if (!validation.isValid) {
       setError(t(validation.errorMessage || 'Помилка файлу'))
-      onError?.(true)
-      setPreview(null)
-      setFileName(null)
+      setFile(null)
+      setPreviewUrl(null)
+      setRemoteFileName(null)
       onChange(null)
       e.target.value = ''
       return
     }
 
     setError(null)
-    onError?.(false)
+    setFile(selectedFile)
+    setRemoteFileName(null)
 
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    setFileName(file.name)
-    onChange({ file: file, previewUrl: url })
+    const url = URL.createObjectURL(selectedFile)
+    setPreviewUrl(url)
+    onChange({ file: selectedFile, previewUrl: url })
   }
 
   const handleRemove = () => {
-    setPreview(null)
-    setFileName(null)
+    setFile(null)
+    setPreviewUrl(null)
+    setRemoteFileName(null)
     onChange(null)
+    setError(null)
     onError?.(true)
   }
+
+  const displayFileName = file ? file.name : remoteFileName || t('Аудіозапис')
 
   return (
     <div className="mt-0 space-y-2">
@@ -70,7 +86,7 @@ export const AudioFields = ({ onChange, onError }: AudioFieldsProps) => {
         {t('Аудіофайл *')}
       </Label>
 
-      {!preview ? (
+      {!previewUrl ? (
         <Input
           type="file"
           accept="audio/*"
@@ -91,7 +107,7 @@ export const AudioFields = ({ onChange, onError }: AudioFieldsProps) => {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {fileName || t('Аудіозапис')}
+                {displayFileName}
               </span>
               <span className="text-sm text-green-600 dark:text-green-500 font-medium">
                 {t('Файл готовий')}
@@ -118,9 +134,9 @@ export const AudioFields = ({ onChange, onError }: AudioFieldsProps) => {
         </div>
       )}
 
-      {preview && !error && (
+      {previewUrl && !error && (
         <div className="mt-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#09090b]">
-          <audio src={preview} controls className="w-full" />
+          <audio src={previewUrl} controls className="w-full" />
         </div>
       )}
     </div>

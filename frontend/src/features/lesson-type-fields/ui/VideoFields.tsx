@@ -5,73 +5,84 @@ import { validateFile } from '@/features/lesson-type-fields/helper'
 import { FileVideo, X } from 'lucide-react'
 
 type VideoFieldsProps = {
-  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onChange: (data: { file?: File; previewUrl: string } | null) => void
   onError?: (hasError: boolean) => void
+  initialUrl?: string
+  initialFileName?: string
 }
 
-export const VideoFields = ({ onChange, onError }: VideoFieldsProps) => {
+export const VideoFields = ({
+  onChange,
+  onError,
+  initialUrl,
+  initialFileName,
+}: VideoFieldsProps) => {
   const { t } = useI18n()
-  const [preview, setPreview] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialUrl || null
+  )
+  const [remoteFileName, setRemoteFileName] = useState<string | null>(
+    initialFileName || null
+  )
   const [error, setError] = useState<string | null>(null)
-  const [fileName, setFileName] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!preview) {
-      onError?.(true)
-    }
-  }, [preview, onError])
+    const hasContent = !!file || !!initialUrl
+    onError?.(!hasContent)
+  }, [file, initialUrl, onError])
 
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview)
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
     }
-  }, [preview])
+  }, [previewUrl])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
 
     const validation = validateFile({
-      file,
+      file: selectedFile,
       maxSizeMB: 300,
       acceptedTypes: ['video/*'],
     })
 
-    if (!file) return
-
     if (!validation.isValid) {
       setError(t(validation.errorMessage || 'Помилка файлу'))
-      onError?.(true)
-
-      setPreview(null)
-      setFileName(null)
+      setFile(null)
+      setPreviewUrl(null)
+      setRemoteFileName(null)
       onChange(null)
-      e.target.value = ''
       return
     }
 
     setError(null)
-    onError?.(false)
-
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    setFileName(file.name)
-    onChange({ file: file, previewUrl: url })
+    setFile(selectedFile)
+    setRemoteFileName(null)
+    const url = URL.createObjectURL(selectedFile)
+    setPreviewUrl(url)
+    onChange({ file: selectedFile, previewUrl: url })
   }
 
   const handleRemove = () => {
-    setPreview(null)
-    setFileName(null)
+    setFile(null)
+    setPreviewUrl(null)
+    setRemoteFileName(null)
     onChange(null)
     onError?.(true)
   }
+
+  const displayFileName = file ? file.name : remoteFileName || t('Відеофайл')
 
   return (
     <div className="mt-0 space-y-2">
       <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
         {t('Відеофайл *')}
       </Label>
-
-      {!preview ? (
+      {!previewUrl ? (
         <Input
           type="file"
           accept="video/*"
@@ -85,25 +96,24 @@ export const VideoFields = ({ onChange, onError }: VideoFieldsProps) => {
           onChange={handleFileChange}
         />
       ) : (
-        <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] shadow-sm transition-all animate-in fade-in duration-200">
+        <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400">
               <FileVideo size={20} />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {fileName || t('Відеофайл')}
+                {displayFileName}
               </span>
               <span className="text-sm text-green-600 dark:text-green-500 font-medium">
                 {t('Файл готовий')}
               </span>
             </div>
           </div>
-
           <button
             type="button"
             onClick={handleRemove}
-            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
+            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg group"
           >
             <X
               size={18}
@@ -119,10 +129,10 @@ export const VideoFields = ({ onChange, onError }: VideoFieldsProps) => {
         </div>
       )}
 
-      {preview && !error && (
+      {previewUrl && !error && (
         <div className="mt-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-black shadow-lg">
           <video
-            src={preview}
+            src={previewUrl}
             controls
             className="w-full max-h-[350px] object-contain"
           />

@@ -464,13 +464,6 @@ export const CreateMTOfCourse = ({
             {lesson.description}
           </div>
         )}
-
-        {lesson.comment && (
-          <div className="text-xs text-slate-400 mt-1">
-            <span className="font-semibold">{t('Коментар:')}</span>{' '}
-            {lesson.comment}
-          </div>
-        )}
       </div>
     )
   }

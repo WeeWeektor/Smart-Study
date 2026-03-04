@@ -2,7 +2,6 @@ import React, { type FC, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import {
   AddQuestionToTestModal,
-  type BaseTest,
   Button,
   Card,
   Checkbox,
@@ -28,7 +27,7 @@ interface CreateTestModalProps {
   type: 'module-test' | 'course-test'
   initialData?: CourseTest | ModuleTest
   onClose: () => void
-  onAddTest: (test: BaseTest & { type: 'module-test' | 'course-test' }) => void
+  onAddTest: (test: ModuleTest | CourseTest) => void
 }
 
 export interface Question {

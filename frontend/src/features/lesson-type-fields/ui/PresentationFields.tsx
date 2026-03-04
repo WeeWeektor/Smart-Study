@@ -5,8 +5,10 @@ import { Download, Presentation, X } from 'lucide-react'
 import { validateFile } from '@/features/lesson-type-fields/helper'
 
 type PresentationFieldsProps = {
-  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onChange: (data: { file?: File; previewUrl: string } | null) => void
   onError?: (hasError: boolean) => void
+  initialUrl?: string
+  initialFileName?: string
 }
 
 const VALIDATION_MIME_TYPES = [
@@ -22,26 +24,35 @@ const INPUT_ACCEPT_ATTRIBUTE =
 export const PresentationFields = ({
   onChange,
   onError,
+  initialUrl,
+  initialFileName,
 }: PresentationFieldsProps) => {
   const { t } = useI18n()
   const [file, setFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialUrl || null
+  )
+  const [remoteFileName, setRemoteFileName] = useState<string | null>(
+    initialFileName || null
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!file) {
-      onError?.(true)
-    }
-  }, [])
+    const hasContent = !!file || !!initialUrl
+    onError?.(!hasContent)
+  }, [file, initialUrl, onError])
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
     }
   }, [previewUrl])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
 
     const validation = validateFile({
       file: selectedFile,
@@ -49,37 +60,31 @@ export const PresentationFields = ({
       acceptedTypes: VALIDATION_MIME_TYPES,
     })
 
-    if (!selectedFile) return
-
     if (!validation.isValid) {
       setError(t(validation.errorMessage || 'Помилка файлу'))
-      onError?.(true)
-
       setFile(null)
       setPreviewUrl(null)
+      setRemoteFileName(null)
       onChange(null)
-
       e.target.value = ''
       return
     }
 
     setError(null)
-    onError?.(false)
-
     setFile(selectedFile)
+    setRemoteFileName(null)
 
     const url = URL.createObjectURL(selectedFile)
     setPreviewUrl(url)
-
     onChange({ file: selectedFile, previewUrl: url })
   }
 
   const handleRemove = () => {
     setFile(null)
     setPreviewUrl(null)
+    setRemoteFileName(null)
     onChange(null)
     setError(null)
-
     onError?.(true)
   }
 
@@ -91,13 +96,16 @@ export const PresentationFields = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
   }
 
+  const displayFileName = file ? file.name : remoteFileName || t('Презентація')
+  const displayFileSize = file ? formatSize(file.size) : t('Завантажено')
+
   return (
     <div className="mt-0 space-y-2">
       <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
         {t('Презентація *')}
       </Label>
 
-      {!file ? (
+      {!previewUrl ? (
         <Input
           type="file"
           accept={INPUT_ACCEPT_ATTRIBUTE}
@@ -118,11 +126,10 @@ export const PresentationFields = ({
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {file.name}
+                {displayFileName}
               </span>
-              <span className="text-sm text-green-600 dark:text-green-500 font-medium">
-                {formatSize(file.size)} •{' '}
-                {file.name.split('.').pop()?.toUpperCase()}
+              <span className="text-sm text-green-600 dark:text-green-500 font-medium leading-tight">
+                {displayFileSize}
               </span>
             </div>
           </div>
@@ -131,9 +138,11 @@ export const PresentationFields = ({
             {previewUrl && (
               <a
                 href={previewUrl}
-                download={file.name}
+                download={displayFileName}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center"
-                title={t('Завантажити для перевірки')}
+                title={t('Завантажити або переглянути')}
               >
                 <Download size={18} />
               </a>

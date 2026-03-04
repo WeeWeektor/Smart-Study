@@ -68,6 +68,23 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
   }, [])
 
   useEffect(() => {
+    if (initialData) {
+      setQuestionText(initialData.questionText || '')
+      setPoints(initialData.points)
+      setExplanation(initialData.explanation || null)
+      setCorrectAnswers(initialData.correctAnswers || [])
+      setChoices(initialData.choices || [])
+
+      const existingImage =
+        initialData.image || (initialData as any).image_url || null
+
+      setImage(existingImage)
+      setImageFile(initialData.imageFile || null)
+      setShowPreviewQImage(!!existingImage)
+    }
+  }, [initialData])
+
+  useEffect(() => {
     if (typeQuestion === 'yes/no') {
       setChoices(['yes', 'no'])
     }
@@ -95,6 +112,14 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     }
     setter(num)
   }
+
+  useEffect(() => {
+    return () => {
+      if (image && image.startsWith('blob:')) {
+        URL.revokeObjectURL(image)
+      }
+    }
+  }, [image])
 
   const handleAddQuestion = async () => {
     setError(null)

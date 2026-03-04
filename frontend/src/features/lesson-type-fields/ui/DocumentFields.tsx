@@ -13,8 +13,10 @@ import {
 import { validateFile } from '@/features/lesson-type-fields/helper'
 
 type DocumentFieldsProps = {
-  onChange: (data: { file: File; previewUrl: string } | null) => void
+  onChange: (data: { file?: File; previewUrl: string } | null) => void
   onError?: (hasError: boolean) => void
+  initialUrl?: string
+  initialFileName?: string
 }
 
 const ACCEPTED_DOC_TYPES = [
@@ -29,20 +31,38 @@ const ACCEPTED_DOC_TYPES = [
 const INPUT_ACCEPT_ATTRIBUTE =
   '.pdf,.doc,.docx,.txt,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
-export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
+export const DocumentFields = ({
+  onChange,
+  onError,
+  initialUrl,
+  initialFileName,
+}: DocumentFieldsProps) => {
   const { t } = useI18n()
   const [file, setFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialUrl || null
+  )
+  const [remoteFileName, setRemoteFileName] = useState<string | null>(
+    initialFileName || null
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!file) {
-      onError?.(true)
+    const hasContent = !!file || !!initialUrl
+    onError?.(!hasContent)
+  }, [file, initialUrl, onError])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
     }
-  }, [])
+  }, [previewUrl])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
 
     const validation = validateFile({
       file: selectedFile,
@@ -50,46 +70,33 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
       acceptedTypes: ACCEPTED_DOC_TYPES,
     })
 
-    if (!selectedFile) {
-      return
-    }
-
     if (!validation.isValid) {
       setError(t(validation.errorMessage || 'Помилка файлу'))
-      onError?.(true)
-
       setFile(null)
       setPreviewUrl(null)
+      setRemoteFileName(null)
       onChange(null)
-
       e.target.value = ''
       return
     }
 
     setError(null)
-    onError?.(false)
-
     setFile(selectedFile)
+    setRemoteFileName(null)
+
     const url = URL.createObjectURL(selectedFile)
     setPreviewUrl(url)
-
     onChange({ file: selectedFile, previewUrl: url })
   }
 
   const handleRemove = () => {
     setFile(null)
     setPreviewUrl(null)
+    setRemoteFileName(null)
     onChange(null)
     setError(null)
-
     onError?.(true)
   }
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-    }
-  }, [previewUrl])
 
   const handlePreview = () => {
     if (previewUrl) {
@@ -105,21 +112,21 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
   }
 
-  const getFileIcon = (type: string) => {
-    if (type.includes('pdf')) {
-      return <FileType className="text-red-500" />
-    }
-    if (type.includes('word') || type.includes('document')) {
+  const getFileIcon = (fileName: string) => {
+    const lowerName = fileName.toLowerCase()
+    if (lowerName.endsWith('.pdf')) return <FileType className="text-red-500" />
+    if (lowerName.match(/\.(doc|docx)$/))
       return <FileText className="text-blue-500" />
-    }
-    if (type.includes('sheet') || type.includes('excel')) {
+    if (lowerName.match(/\.(xls|xlsx)$/))
       return <FileSpreadsheet className="text-green-500" />
-    }
     return <FileIcon className="text-slate-500" />
   }
 
+  const displayFileName = file ? file.name : remoteFileName || t('Документ')
+
   const isViewable =
-    file && (file.type === 'application/pdf' || file.type === 'text/plain')
+    displayFileName.toLowerCase().endsWith('.pdf') ||
+    displayFileName.toLowerCase().endsWith('.txt')
 
   return (
     <div className="mt-0 space-y-2">
@@ -127,7 +134,7 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
         {t('Документ *')}
       </Label>
 
-      {!file ? (
+      {!previewUrl ? (
         <Input
           type="file"
           accept={INPUT_ACCEPT_ATTRIBUTE}
@@ -144,15 +151,16 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
         <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#09090b] shadow-sm transition-all animate-in fade-in duration-200">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400">
-              {getFileIcon(file.type)}
+              {getFileIcon(displayFileName)}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {file.name}
+                {displayFileName}
               </span>
-              <span className="text-sm text-green-600 dark:text-green-500 font-medium">
-                {formatSize(file.size)} •{' '}
-                {file.name.split('.').pop()?.toUpperCase()}
+              <span className="text-sm text-green-600 dark:text-green-500 font-medium leading-tight">
+                {file ? formatSize(file.size) : t('Завантажено')}
+                {!file &&
+                  ` • ${displayFileName.split('.').pop()?.toUpperCase()}`}
               </span>
             </div>
           </div>
@@ -172,7 +180,9 @@ export const DocumentFields = ({ onChange, onError }: DocumentFieldsProps) => {
             {previewUrl && (
               <a
                 href={previewUrl}
-                download={file.name}
+                download={displayFileName}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center"
                 title={t('Завантажити файл')}
               >

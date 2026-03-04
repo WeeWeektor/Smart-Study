@@ -65,6 +65,8 @@ interface DynamicFieldProps {
   initialValue?: string
   initialCode?: string
   initialLanguage?: string
+  initialUrl?: string
+  initialFileName?: string
 }
 
 interface CreateLessonModalProps {
@@ -113,19 +115,42 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     lessonStateCategoryType
   ) as React.ComponentType<DynamicFieldProps> | null
 
-  const [extraData, setExtraData] = useState<BlockData>(
-    initialData?.singleContentData || null
-  )
+  const getFileNameFromUrl = (url: string): string => {
+    if (!url) return ''
+    const fileName = url.split('/').pop() || ''
+    return fileName.split('?')[0]
+  }
+
+  const [extraData, setExtraData] = useState<BlockData>(() => {
+    if (
+      initialData?.typeCategory !== 'custom' &&
+      initialData?.contentBlocks?.length
+    ) {
+      const firstBlock = initialData.contentBlocks[0]
+      return typeof firstBlock.data === 'object' && firstBlock.data !== null
+        ? (firstBlock.data as any).previewUrl || (firstBlock.data as any).url
+        : firstBlock.data
+    }
+    return null
+  })
 
   const [customContentBlocks, setCustomContentBlocks] = useState<
     ContentBlock[]
-  >(
-    initialData?.contentBlocks?.map(b => ({
-      id: crypto.randomUUID(),
-      type: b.type,
-      data: b.data,
-    })) || []
-  )
+  >(() => {
+    if (initialData?.typeCategory === 'custom') {
+      return initialData.contentBlocks.map(b => {
+        const blockData = b.data
+
+        return {
+          id: crypto.randomUUID(),
+          type: b.type,
+          data: blockData,
+        }
+      })
+    }
+    return []
+  })
+
   const [collapsedQuestions, setCollapsedQuestions] = useState<
     Record<number, boolean>
   >({})
@@ -134,6 +159,35 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
     disablePageScroll()
     return () => enablePageScroll()
   }, [])
+
+  React.useEffect(() => {
+    if (initialData && lessonStateCategoryType !== 'custom') {
+      const firstBlock = initialData.contentBlocks[0]
+
+      if (firstBlock) {
+        const data = firstBlock.data
+
+        if (typeof data === 'object' && data !== null) {
+          const url = (data as any).previewUrl || (data as any).url
+          let name = (data as any).fileName
+          if (!name || name === 'Завантажити презентацію') {
+            name = getFileNameFromUrl(url)
+          }
+
+          setExtraData({
+            previewUrl: url,
+            fileName: name,
+          } as any)
+        } else {
+          setExtraData(data)
+        }
+
+        if (initialData.comment) {
+          setComment(initialData.comment)
+        }
+      }
+    }
+  }, [initialData, lessonStateCategoryType])
 
   const hasValidationErrors = useMemo(() => {
     return Object.values(blockErrors).some(isError => isError)
@@ -426,11 +480,26 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                     ) as React.ComponentType<DynamicFieldProps> | null
                     const isVisible = collapsedQuestions[index] ?? true
 
+                    const blockData = block.data
+                    const isObjectData =
+                      typeof blockData === 'object' && blockData !== null
+
+                    const initialUrl = isObjectData
+                      ? (blockData as any).previewUrl || (blockData as any).url
+                      : typeof blockData === 'string'
+                        ? blockData
+                        : undefined
+
+                    const initialFileName = isObjectData
+                      ? (blockData as any).fileName ||
+                        (initialUrl
+                          ? getFileNameFromUrl(initialUrl)
+                          : undefined)
+                      : undefined
+
                     const codeData =
-                      typeof block.data === 'object' &&
-                      block.data !== null &&
-                      'code' in block.data
-                        ? (block.data as CodeContentData)
+                      isObjectData && 'code' in blockData
+                        ? (blockData as CodeContentData)
                         : null
 
                     return (
@@ -489,6 +558,8 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                               onError={(hasError: boolean) =>
                                 handleBlockError(block.id, hasError)
                               }
+                              initialUrl={initialUrl}
+                              initialFileName={initialFileName}
                               initialValue={
                                 typeof block.data === 'string'
                                   ? block.data
@@ -528,6 +599,21 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                     onChange={setExtraData}
                     onError={hasError =>
                       handleBlockError('single-content', hasError)
+                    }
+                    initialValue={
+                      typeof extraData === 'string' ? extraData : ''
+                    }
+                    initialUrl={
+                      typeof extraData === 'string'
+                        ? extraData
+                        : (extraData as any)?.previewUrl ||
+                          (extraData as any)?.url ||
+                          ''
+                    }
+                    initialFileName={
+                      typeof extraData === 'object'
+                        ? (extraData as any)?.fileName
+                        : undefined
                     }
                   />
                 )}
