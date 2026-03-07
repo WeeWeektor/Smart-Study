@@ -2,7 +2,7 @@ export function parseISODuration(
   duration: string,
   t: (s: string) => string
 ): string {
-  const match = duration.match(/P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?/)
+  const match = duration.match(/T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
 
   if (!match) return duration
 
@@ -35,9 +35,9 @@ export const parseDurationFromISO = (isoDuration: string) => {
 
     if (matches) {
       return {
-        days: matches[1] ? parseInt(matches[1], 10) : 0,
-        hours: matches[2] ? parseInt(matches[2], 10) : 0,
-        minutes: matches[3] ? parseInt(matches[3], 10) : 0,
+        days: matches[2] ? parseInt(matches[2], 10) : 0,
+        hours: matches[3] ? parseInt(matches[3], 10) : 0,
+        minutes: matches[4] ? parseInt(matches[4], 10) : 0,
       }
     }
   }
