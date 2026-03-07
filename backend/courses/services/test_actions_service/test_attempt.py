@@ -91,7 +91,7 @@ def _calculate_score_and_details(test, questions_list: list, user_answers: list)
         if not question_data:
             continue
 
-        correct = question_data.get('correct_answers', [])
+        correct = question_data.get('correctAnswers', [])
         points = float(question_data.get('points', 0))
 
         is_correct = set(selected) == set(correct)

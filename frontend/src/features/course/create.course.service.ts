@@ -231,10 +231,8 @@ class CreateCourseService {
       cleanQuestions = test.questions.map(q => {
         const backendQuestion = {
           ...q,
-          correct_answers: q.correctAnswers || q.correct_answers || [],
+          correctAnswers: q.correctAnswers || q.correct_answers || [],
         }
-
-        delete backendQuestion.correctAnswers
 
         if (
           backendQuestion.imageFile &&

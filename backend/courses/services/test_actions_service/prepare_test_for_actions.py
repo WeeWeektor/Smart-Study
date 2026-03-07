@@ -49,12 +49,12 @@ async def prepare_questions_data(questions: list[dict]) -> list[dict]:
     """Валідує та форматує список питань для збереження у mongodb"""
     questions_data = []
     for qd in questions:
-        question_type = 'single' if len(qd.get('correct_answers', [])) == 1 else 'multiple'
+        question_type = 'single' if len(qd.get('correctAnswers', [])) == 1 else 'multiple'
         await sync_to_async(validate_test_question_data)(qd)
         questions_data.append({
             "questionText": qd["questionText"].strip(),
             "choices": qd.get("choices", []),
-            "correct_answers": qd.get("correct_answers", []),
+            "correctAnswers": qd.get("correctAnswers", []),
             "points": qd.get("points", 1),
             "order": qd.get("order"),
             "explanation": qd.get("explanation", ""),

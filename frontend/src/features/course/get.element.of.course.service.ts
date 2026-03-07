@@ -9,7 +9,7 @@ export interface ElementOfCourseRequest {
 export interface Question {
   questionText: string
   choices: string[]
-  correct_answers: string[]
+  correctAnswers: string[]
   points: number
   order: number
   explanation: string | null
