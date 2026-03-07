@@ -127,9 +127,14 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       initialData?.contentBlocks?.length
     ) {
       const firstBlock = initialData.contentBlocks[0]
-      return typeof firstBlock.data === 'object' && firstBlock.data !== null
-        ? (firstBlock.data as any).previewUrl || (firstBlock.data as any).url
-        : firstBlock.data
+      const data = firstBlock.data
+
+      if (typeof data === 'object' && data !== null) {
+        const url = (data as any).previewUrl || (data as any).url
+        const name = (data as any).fileName || getFileNameFromUrl(url)
+        return { previewUrl: url, fileName: name } as any
+      }
+      return data
     }
     return null
   })
@@ -157,37 +162,50 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
 
   React.useEffect(() => {
     disablePageScroll()
+
+    if (initialData) {
+      setTitle(initialData.title || '')
+      setDescription(initialData.description || '')
+      setLessonStateCategoryType(initialData.typeCategory || 'custom')
+    }
+
     return () => enablePageScroll()
-  }, [])
+  }, [initialData])
 
   React.useEffect(() => {
     if (initialData && lessonStateCategoryType !== 'custom') {
-      const firstBlock = initialData.contentBlocks[0]
+      const firstBlock = initialData.contentBlocks?.[0]
+      const dataFromBackend = firstBlock?.data || initialData.singleContentData
 
-      if (firstBlock) {
-        const data = firstBlock.data
-
-        if (typeof data === 'object' && data !== null) {
-          const url = (data as any).previewUrl || (data as any).url
-          let name = (data as any).fileName
-          if (!name || name === 'Завантажити презентацію') {
-            name = getFileNameFromUrl(url)
+      if (dataFromBackend) {
+        setExtraData(prev => {
+          if (
+            prev &&
+            typeof prev === 'object' &&
+            (prev as any).previewUrl?.startsWith('blob:')
+          ) {
+            return prev
           }
 
-          setExtraData({
-            previewUrl: url,
-            fileName: name,
-          } as any)
-        } else {
-          setExtraData(data)
-        }
+          if (typeof dataFromBackend === 'object' && dataFromBackend !== null) {
+            const url =
+              (dataFromBackend as any).previewUrl ||
+              (dataFromBackend as any).url
+            if (url) {
+              const name =
+                (dataFromBackend as any).fileName || getFileNameFromUrl(url)
+              return { previewUrl: url, fileName: name } as any
+            }
+          }
+          return dataFromBackend
+        })
 
         if (initialData.comment) {
-          setComment(initialData.comment)
+          setComment(prev => prev || initialData.comment)
         }
       }
     }
-  }, [initialData, lessonStateCategoryType])
+  }, [initialData?.lesson_id, lessonStateCategoryType])
 
   const hasValidationErrors = useMemo(() => {
     return Object.values(blockErrors).some(isError => isError)
@@ -340,10 +358,10 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
       typeCategory: lessonStateCategoryType,
       duration: lessonDuration,
       description,
-      contentBlocks: customContentBlocks.map(block => ({
-        type: block.type,
-        data: block.data,
-      })),
+      contentBlocks:
+        lessonStateCategoryType === 'custom'
+          ? customContentBlocks.map(b => ({ type: b.type, data: b.data }))
+          : [{ type: lessonStateCategoryType, data: extraData }],
       singleContentData: extraData,
       comment,
     }
@@ -596,24 +614,27 @@ export const CreateLessonModal: FC<CreateLessonModalProps> = ({
                 {Fields && (
                   <Fields
                     value={extraData}
-                    onChange={setExtraData}
+                    onChange={newData => {
+                      setExtraData(newData)
+                    }}
                     onError={hasError =>
                       handleBlockError('single-content', hasError)
                     }
-                    initialValue={
-                      typeof extraData === 'string' ? extraData : ''
-                    }
                     initialUrl={
-                      typeof extraData === 'string'
-                        ? extraData
-                        : (extraData as any)?.previewUrl ||
-                          (extraData as any)?.url ||
-                          ''
+                      typeof extraData === 'object' && extraData !== null
+                        ? (extraData as any).previewUrl ||
+                          (extraData as any).url
+                        : typeof extraData === 'string'
+                          ? extraData
+                          : undefined
                     }
                     initialFileName={
-                      typeof extraData === 'object'
-                        ? (extraData as any)?.fileName
+                      typeof extraData === 'object' && extraData !== null
+                        ? (extraData as any).fileName
                         : undefined
+                    }
+                    initialValue={
+                      typeof extraData === 'string' ? extraData : ''
                     }
                   />
                 )}

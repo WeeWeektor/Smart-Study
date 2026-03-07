@@ -53,12 +53,16 @@ export const DocumentFields = ({
   }, [file, initialUrl, onError])
 
   useEffect(() => {
-    return () => {
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl)
+    if (initialUrl && !file) {
+      setPreviewUrl(initialUrl)
+      if (initialFileName) {
+        setRemoteFileName(initialFileName)
       }
+    } else if (!file) {
+      setPreviewUrl(null)
+      setRemoteFileName(null)
     }
-  }, [previewUrl])
+  }, [initialUrl, initialFileName, file])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -78,6 +82,10 @@ export const DocumentFields = ({
       onChange(null)
       e.target.value = ''
       return
+    }
+
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl)
     }
 
     setError(null)
@@ -159,8 +167,6 @@ export const DocumentFields = ({
               </span>
               <span className="text-sm text-green-600 dark:text-green-500 font-medium leading-tight">
                 {file ? formatSize(file.size) : t('Завантажено')}
-                {!file &&
-                  ` • ${displayFileName.split('.').pop()?.toUpperCase()}`}
               </span>
             </div>
           </div>

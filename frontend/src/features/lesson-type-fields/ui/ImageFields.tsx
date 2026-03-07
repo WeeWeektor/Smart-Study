@@ -57,6 +57,10 @@ export const ImageFields = ({
       return
     }
 
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview)
+    }
+
     setError(null)
     setFile(selectedFile)
 
@@ -67,12 +71,16 @@ export const ImageFields = ({
   }
 
   useEffect(() => {
-    return () => {
-      if (preview && preview.startsWith('blob:')) {
-        URL.revokeObjectURL(preview)
+    if (initialUrl && !file) {
+      setPreview(initialUrl)
+      if (initialFileName) {
+        setFileName(initialFileName)
       }
+    } else if (!file) {
+      setPreview(null)
+      setFileName(null)
     }
-  }, [preview])
+  }, [initialUrl, initialFileName, file])
 
   useEffect(() => {
     if (isOpen) {

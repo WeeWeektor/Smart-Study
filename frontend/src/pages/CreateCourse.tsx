@@ -227,8 +227,6 @@ const CreateCourse = () => {
                     contentBlocks = child.contentBlocks || []
                   }
 
-                  // TODO - перевірити  надсилання даних на бек при зміні курсу (нові файли, видалені файли, зміна контенту)
-
                   return {
                     ...child,
                     typeCategory: typeCategory,

@@ -1,5 +1,5 @@
 import { useI18n } from '@/shared/lib'
-import { Loader2, Minus, Plus, Save, Undo } from 'lucide-react'
+import { Loader2, Minus, Plus, Save, Trash2, Undo } from 'lucide-react'
 import React, { type FC, useEffect, useState } from 'react'
 import {
   Button,
@@ -75,12 +75,14 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
       setCorrectAnswers(initialData.correctAnswers || [])
       setChoices(initialData.choices || [])
 
-      const existingImage =
-        initialData.image || (initialData as any).image_url || null
+      if (!imageFile) {
+        const existingImage =
+          initialData.image || (initialData as any).image_url || null
 
-      setImage(existingImage)
-      setImageFile(initialData.imageFile || null)
-      setShowPreviewQImage(!!existingImage)
+        setImage(existingImage)
+        setImageFile(initialData.imageFile || null)
+        setShowPreviewQImage(!!existingImage)
+      }
     }
   }, [initialData])
 
@@ -112,14 +114,6 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     }
     setter(num)
   }
-
-  useEffect(() => {
-    return () => {
-      if (image && image.startsWith('blob:')) {
-        URL.revokeObjectURL(image)
-      }
-    }
-  }, [image])
 
   const handleAddQuestion = async () => {
     setError(null)
@@ -161,6 +155,30 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
     onAddQuestion(newQuestion)
     setIsAdding(false)
     onClose()
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+
+      if (image && image.startsWith('blob:')) {
+        URL.revokeObjectURL(image)
+      }
+
+      const newUrl = URL.createObjectURL(file)
+      setImage(newUrl)
+      setImageFile(file)
+      setShowPreviewQImage(true)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    if (image && image.startsWith('blob:')) {
+      URL.revokeObjectURL(image)
+    }
+    setImage(null)
+    setImageFile(null)
+    setShowPreviewQImage(false)
   }
 
   return (
@@ -212,14 +230,7 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
                 accept="image/*"
                 id="question-image-input"
                 className="hidden"
-                onChange={e => {
-                  if (e.target.files && e.target.files[0]) {
-                    const file = e.target.files[0]
-                    setImage(URL.createObjectURL(file))
-                    setImageFile(file)
-                    setShowPreviewQImage(true)
-                  }
-                }}
+                onChange={handleImageChange}
               />
 
               <Button
@@ -236,16 +247,26 @@ export const AddQuestionToTestModal: FC<CreateQuestionTestProps> = ({
               </Button>
 
               {image && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => setShowPreviewQImage(prev => !prev)}
-                >
-                  {showPreviewQImage
-                    ? t('Сховати прев’ю')
-                    : t('Переглянути прев’ю')}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => setShowPreviewQImage(prev => !prev)}
+                  >
+                    {showPreviewQImage
+                      ? t('Сховати прев’ю')
+                      : t('Переглянути прев’ю')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:bg-red-50"
+                    onClick={handleRemoveImage}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               )}
 
               {image && showPreviewQImage && (
