@@ -41,6 +41,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
 import { createCourseService, getCourseService } from '@/features/course'
 import { parseMarkdownToBlocks } from '@/features/lesson-type-fields'
+import { getCourseStructureDiff } from '@/features/course/lib/get-changed-data.ts'
 
 interface Option {
   value: string
@@ -419,14 +420,7 @@ const CreateCourse = () => {
         return
       }
 
-      const dummyFormData = new FormData()
-      const currentFormattedStructure =
-        createCourseService.processStructureAndExtractFiles(
-          courseStructure.courseStructure,
-          dummyFormData
-        )
-
-      const currentInfoObj = {
+      let currentInfoObj = {
         title: courseStateTitle,
         description: courseStateDescription,
         category: courseStateCategory,
@@ -446,165 +440,30 @@ const CreateCourse = () => {
 
       if (isEditMode && initialDataSnapshot) {
         const initialData = JSON.parse(initialDataSnapshot)
+        const changedInfo: any = {}
+        let infoHasChanged = false
 
-        const infoChanged =
-          JSON.stringify(currentInfoObj) !==
-          JSON.stringify({
-            title: initialData.title,
-            description: initialData.description,
-            category: initialData.category,
-            is_published: initialData.is_published,
-            level: initialData.level,
-            course_language: initialData.course_language,
-            time_to_complete: initialData.time_to_complete,
-          })
+        Object.keys(currentInfoObj).forEach(key => {
+          const newVal = (currentInfoObj as any)[key]
+          const oldVal = initialData[key]
+
+          if (newVal !== oldVal) {
+            changedInfo[key] = newVal
+            infoHasChanged = true
+          }
+        })
 
         const imageChanged = courseStateImageFile !== null
+        if (imageChanged) infoHasChanged = true
 
-        const changedStructureRaw: any[] = []
+        const diffStructure = getCourseStructureDiff(
+          courseStructure.courseStructure,
+          initialData.structure
+        )
 
-        currentFormattedStructure.forEach((currItem: any, index: number) => {
-          const rawItem = courseStructure.courseStructure[index]
+        const structureChanged = diffStructure.length > 0
 
-          const initItem = initialData.structure.find(
-            (x: any) =>
-              (currItem.type === 'module' &&
-                currItem.module_id &&
-                x.module_id === currItem.module_id) ||
-              ((currItem.type === 'course-test' || currItem.type === 'test') &&
-                currItem.test_id &&
-                x.test_id === currItem.test_id)
-          )
-
-          if (!initItem) {
-            changedStructureRaw.push(rawItem)
-          } else {
-            if (currItem.type === 'course-test' || currItem.type === 'test') {
-              if (JSON.stringify(currItem) !== JSON.stringify(initItem)) {
-                changedStructureRaw.push(rawItem)
-              }
-            } else if (currItem.type === 'module') {
-              const currModMeta = { ...currItem, moduleStructure: [] }
-              const initModMeta = { ...initItem, moduleStructure: [] }
-              const modMetaChanged =
-                JSON.stringify(currModMeta) !== JSON.stringify(initModMeta)
-
-              const changedChildrenRaw: any[] = []
-
-              currItem.moduleStructure.forEach(
-                (currChild: any, childIndex: number) => {
-                  const rawChild = (rawItem as any).moduleStructure[childIndex]
-
-                  const initChild = initItem.moduleStructure?.find(
-                    (x: any) =>
-                      (currChild.type === 'lesson' &&
-                        currChild.lesson_id &&
-                        x.lesson_id === currChild.lesson_id) ||
-                      ((currChild.type === 'module-test' ||
-                        currChild.type === 'test') &&
-                        currChild.test_id &&
-                        x.test_id === currChild.test_id)
-                  )
-
-                  if (
-                    !initChild ||
-                    JSON.stringify(currChild) !== JSON.stringify(initChild)
-                  ) {
-                    changedChildrenRaw.push(rawChild)
-                  }
-                }
-              )
-
-              if (modMetaChanged || changedChildrenRaw.length > 0) {
-                changedStructureRaw.push({
-                  ...rawItem,
-                  moduleStructure: changedChildrenRaw,
-                })
-              }
-            }
-          }
-        })
-
-        initialData.structure.forEach((initItem: any) => {
-          if (initItem.type === 'module') {
-            const stillExistsModule = currentFormattedStructure.find(
-              (x: any) =>
-                x.type === 'module' && x.module_id === initItem.module_id
-            )
-
-            if (!stillExistsModule && initItem.module_id) {
-              changedStructureRaw.push({
-                type: 'module',
-                module_id: initItem.module_id,
-                is_deleted: true,
-              })
-            } else if (stillExistsModule) {
-              const deletedChildrenRaw: any[] = []
-
-              initItem.moduleStructure?.forEach((initChild: any) => {
-                const childStillExists =
-                  stillExistsModule.moduleStructure?.find(
-                    (x: any) =>
-                      (initChild.type === 'lesson' &&
-                        x.lesson_id === initChild.lesson_id) ||
-                      ((initChild.type === 'module-test' ||
-                        initChild.type === 'test') &&
-                        x.test_id === initChild.test_id)
-                  )
-
-                if (!childStillExists) {
-                  deletedChildrenRaw.push({
-                    type: initChild.type,
-                    lesson_id: initChild.lesson_id,
-                    test_id: initChild.test_id,
-                    is_deleted: true,
-                  })
-                }
-              })
-
-              if (deletedChildrenRaw.length > 0) {
-                const existingChangedModuleIndex =
-                  changedStructureRaw.findIndex(
-                    m =>
-                      m.type === 'module' && m.module_id === initItem.module_id
-                  )
-
-                if (existingChangedModuleIndex !== -1) {
-                  changedStructureRaw[
-                    existingChangedModuleIndex
-                  ].moduleStructure.push(...deletedChildrenRaw)
-                } else {
-                  changedStructureRaw.push({
-                    type: 'module',
-                    module_id: initItem.module_id,
-                    moduleStructure: deletedChildrenRaw,
-                  })
-                }
-              }
-            }
-          } else if (
-            initItem.type === 'course-test' ||
-            initItem.type === 'test'
-          ) {
-            const stillExistsTest = currentFormattedStructure.find(
-              (x: any) =>
-                (x.type === 'course-test' || x.type === 'test') &&
-                x.test_id === initItem.test_id
-            )
-
-            if (!stillExistsTest && initItem.test_id) {
-              changedStructureRaw.push({
-                type: initItem.type,
-                test_id: initItem.test_id,
-                is_deleted: true,
-              })
-            }
-          }
-        })
-
-        const structureChanged = changedStructureRaw.length > 0
-
-        if (!infoChanged && !structureChanged && !imageChanged) {
+        if (!infoHasChanged && !structureChanged) {
           handleCancelCreateCourse()
           navigate(
             `/my-created-courses/?Message=${encodeURIComponent(
@@ -614,9 +473,11 @@ const CreateCourse = () => {
           return
         }
 
-        change_info = infoChanged || imageChanged
+        change_info = infoHasChanged
         change_structure = structureChanged
-        finalStructureToSend = changedStructureRaw
+
+        currentInfoObj = { ...changedInfo }
+        finalStructureToSend = diffStructure
       }
 
       const coursePayload = {
@@ -630,6 +491,7 @@ const CreateCourse = () => {
       let response
 
       if (isEditMode && id) {
+        console.log('initialDataSnapshot:', initialDataSnapshot)
         console.log('Відправляємо на оновлення з даними:', coursePayload)
         // response = await createCourseService.updateCourse({
         //   courseId: id,

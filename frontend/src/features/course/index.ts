@@ -37,3 +37,4 @@ export {
   type CourseStatistics,
   type StudentStatItem,
 } from './course-statistic-for-owner/statistics.service'
+export { getCourseStructureDiff } from './lib/get-changed-data'
