@@ -491,12 +491,11 @@ const CreateCourse = () => {
       let response
 
       if (isEditMode && id) {
-        console.log('initialDataSnapshot:', initialDataSnapshot)
         console.log('Відправляємо на оновлення з даними:', coursePayload)
-        // response = await createCourseService.updateCourse({
-        //   courseId: id,
-        //   requestData: coursePayload,
-        // })
+        response = await createCourseService.updateCourse({
+          courseId: id,
+          requestData: coursePayload,
+        })
       } else {
         response = await createCourseService.createCourse(coursePayload)
       }

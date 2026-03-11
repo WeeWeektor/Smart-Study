@@ -13,7 +13,8 @@ from courses.services.course_actions_service import upload_course_cover_image
 async def update_course(course, data: dict, cover_file: object | None) -> dict:
     """Оновлення курсу власником курсу (тільки інформація)"""
 
-    validate_category_level(data)
+    if data.get('category') and data.get('level'):
+        validate_category_level(data)
 
     updated_course_fields, updated_course_meta_fields, to_publish = update_fields(course, data)
     cover_file, cover_updated_fields = await update_course_cover_image(course, cover_file)
@@ -54,7 +55,7 @@ async def save_course(course,
                              "cover_image": str(cover_file) if cover_file else None,
                              "course_id": str(course.id),
                              "publish": course.is_published
-                             })
+                             }, status=200)
 
 
 def update_fields(course, data: dict) -> tuple[list, list, bool]:

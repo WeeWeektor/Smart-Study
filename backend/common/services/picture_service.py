@@ -80,7 +80,7 @@ async def delete_picture(instance_id, instance_type: str, delete_folder=False):
         folder_prefix = f"{instance_id}/"
 
         if delete_folder:
-            all_objects = await _get_all_objects_recursive(bucket, folder_prefix)
+            all_objects = await get_all_objects_recursive(folder_prefix, bucket)
 
             if all_objects:
                 await sync_to_async(bucket.remove)(all_objects)
@@ -106,7 +106,7 @@ async def delete_picture(instance_id, instance_type: str, delete_folder=False):
         raise ValidationError(f"{gettext('Unable to delete image:')} {str(e)}")
 
 
-async def _get_all_objects_recursive(bucket, prefix: str) -> list[str]:
+async def get_all_objects_recursive(prefix: str, bucket) -> list[str]:
     """
     Рекурсивно збирає список ключів ВСІХ об'єктів (файлів та папок)
     всередині заданого префікса, використовуючи перевірку розширення.

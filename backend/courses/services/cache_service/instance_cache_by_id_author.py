@@ -60,3 +60,28 @@ async def get_instance_cached_by_author_id(instance_type: str,
 
     await sync_to_async(lambda: instance_cache.set(cache_key, instance_data, CACHE_TIMEOUT, version=1))()
     return instance_data
+
+
+async def invalidate_author_cache(author_id: str, instance_type: str, instance_type_cache: str):
+    instance_cache = caches[instance_type_cache]
+
+    all_keys = await sync_to_async(lambda: instance_cache.get('all_cache_keys', set()))()
+
+    if not all_keys:
+        return
+
+    target_prefix = f"{instance_type}_by_author_{author_id}"
+
+    keys_to_delete = {key for key in all_keys if key.startswith(target_prefix)}
+
+    if keys_to_delete:
+        try:
+            for key in keys_to_delete:
+                await sync_to_async(instance_cache.delete)(key)
+
+            remaining_keys = all_keys - keys_to_delete
+            await sync_to_async(lambda: instance_cache.set("all_cache_keys", remaining_keys, 3600 * 12))()
+
+            logger.info(f"Successfully invalidated {len(keys_to_delete)} keys for author {author_id}")
+        except Exception as e:
+            logger.error(f"Error while invalidating author cache: {str(e)}")

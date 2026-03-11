@@ -14,7 +14,7 @@ from courses.decorators import teacher_required, owner_course_required
 from courses.models import Course
 from courses.services import parse_multipart_request
 from courses.services.cache_service import get_cached_instance_by_id, get_instance_cached_all, \
-    get_instance_cached_by_author_id
+    get_instance_cached_by_author_id, invalidate_author_cache
 from courses.services.course_actions_service import create_course, remove_course, update_course, \
     update_published_course_with_structure, count_content_course, publishing_course
 from courses.utils import categories_level_sort_present, average_rating, certificates_issued, count_announcements, \
@@ -126,6 +126,8 @@ class CourseView(LocalizedView):
 
             structure_was_updated = False
 
+            # TODO папри видалені модуля в supabase змінювати назви наступних уроків та тестів, щоб не було пропуску в нумерації
+
             if change_structure_course:
                 if course.is_published:
                     await update_published_course_with_structure(course)
@@ -141,6 +143,13 @@ class CourseView(LocalizedView):
                         "data": "Course structure updated successfully.",
                         "course_id": str(course.id)
                     })
+
+                if response.status_code == 200:
+                    await invalidate_author_cache(
+                        author_id=str(request.user.id),
+                        instance_type="courses",
+                        instance_type_cache="courses_get"
+                    )
 
                 return response
 
