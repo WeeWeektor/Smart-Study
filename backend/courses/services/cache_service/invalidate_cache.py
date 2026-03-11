@@ -62,6 +62,5 @@ def invalidate_test_cache_by_course_or_module(instance_id: str, instance_type: s
 
     instance_cache.delete(key)
     if key in keys:
-        keys -= key
-
-    instance_cache.set("all_cache_keys", keys, 3600*12)
+        keys.discard(key)
+        instance_cache.set("all_cache_keys", keys, 3600 * 12)

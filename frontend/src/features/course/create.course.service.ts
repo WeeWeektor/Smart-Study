@@ -192,17 +192,26 @@ class CreateCourseService {
 
     const pad = (n: number) => String(n || 0).padStart(2, '0')
     const dur = lesson.duration
-    const durationStr = dur
-      ? `${pad(dur.days)}:${pad(dur.hours)}:${pad(dur.minutes)}`
-      : '00:00:00'
 
-    return {
+    let ret_data = {
       ...lesson,
       content_type: lesson.typeCategory || lesson.content_type,
-      duration: durationStr,
       contentBlocks: cleanContentBlocks || [],
       singleContentData: cleanSingleData,
     }
+
+    if (lesson.duration) {
+      const durationStr = dur
+        ? `${pad(dur.days)}:${pad(dur.hours)}:${pad(dur.minutes)}`
+        : '00:00:00'
+
+      ret_data = {
+        ...ret_data,
+        duration: durationStr,
+      }
+    }
+
+    return ret_data
   }
 
   private extractFileFromData(data: any, formData: FormData, key: string): any {

@@ -85,13 +85,14 @@ async def _process_lesson(lesson_data, module_id, course_id, files):
     lesson_payload = {**lesson_data, "module_id": str(module_id)}
 
     content = None
+    # TODO Test all scenarios for convert to markdown
+    # TODO duration приходить '00:00:00' і оновлюється такими даними - перевірити фронт
     if lesson_data.get('contentBlocks') is not None or lesson_data.get('singleContentData') is not None:
         content = await convert_to_markdown(lesson=lesson_data, files=files, courseId=course_id)
 
     if action == 'update' and lesson_id:
-        # from courses.services.lesson_actions_service import update_lesson
-        # await update_lesson(lesson_id, lesson_payload, contentData=content)
-        pass
+        from courses.services.lesson_actions_service import update_lesson
+        await update_lesson(lesson_id, lesson_payload, module_id, contentData=content)
     elif action == 'create' and not lesson_id:
         validate_lesson_data(lesson_payload)
         await create_lesson(lesson_payload, contentData=content)
