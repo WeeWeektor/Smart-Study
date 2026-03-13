@@ -4,9 +4,7 @@ from courses.models import Lesson
 from courses.services.structure_course_module_action_service import update_data_in_structure
 
 
-# TODO видаляти попередні файли якщо є
-# TODO проблеми з назвами файлів в supabase зявляється 'undefined' в назві файлу
-# TODO проблеми з оновленням уроку з типом link та document
+# TODO проблеми з оновленням уроку з типом link та document (перевірити)
 
 async def update_lesson(lesson_id, lesson_payload, module_id, contentData=None):
     lesson = await Lesson.objects.aget(id=lesson_id)

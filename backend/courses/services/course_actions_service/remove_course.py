@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 
 from common.services import delete_picture, mongo_repo
 from common.utils import success_response
-from courses.models import CourseVersion, Lesson, Test, Course
+from courses.models import CourseVersion, Lesson, Test, Course, Module
 from courses.services.cache_service import invalidate_instance_cached_all
 
 
@@ -99,6 +99,12 @@ async def remove_course(course):
         if test_obj and test_obj.test_data_ids:
             await sync_to_async(
                 mongo_repo.delete_document_by_id)("questions_data_for_test", str(test_obj.test_data_ids))
+
+    for mod in modules_to_delete:
+        mod_structure_ids = await sync_to_async(Module.objects.only('structure_ids').get)(pk=mod)
+        if mod_structure_ids and mod_structure_ids.structure_ids:
+            await sync_to_async(mongo_repo.delete_document_by_id)("module_structures",
+                                                                  str(mod_structure_ids.structure_ids))
 
     await sync_to_async(mongo_repo.delete_document_by_id)("course_structures", str(course.structure_ids))
 

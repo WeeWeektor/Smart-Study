@@ -106,6 +106,7 @@ class CourseView(LocalizedView):
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
 
+        # TODO винести логіку в доп
         parsed_data, files, raw_form, parse_error = parse_multipart_request(request)
         if parse_error:
             return parse_error

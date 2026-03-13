@@ -383,6 +383,22 @@ const CreateCourse = () => {
     handleBackPage()
   }
 
+  const enrichWithOrder = (structure: any[]) => {
+    return structure.map((item, index) => {
+      const enrichedItem = { ...item, order: index + 1 }
+
+      if (item.type === 'module' && Array.isArray(item.moduleStructure)) {
+        enrichedItem.moduleStructure = item.moduleStructure.map(
+          (child: any, childIndex: number) => ({
+            ...child,
+            order: childIndex + 1,
+          })
+        )
+      }
+      return enrichedItem
+    })
+  }
+
   const handleSaveCourse = async (publish: boolean = false) => {
     try {
       setIsSaving(true)
@@ -420,6 +436,10 @@ const CreateCourse = () => {
         return
       }
 
+      const fullyOrderedStructure = enrichWithOrder(
+        courseStructure.courseStructure
+      )
+
       let currentInfoObj = {
         title: courseStateTitle,
         description: courseStateDescription,
@@ -436,7 +456,7 @@ const CreateCourse = () => {
 
       let change_info = true
       let change_structure = true
-      let finalStructureToSend = courseStructure.courseStructure
+      let finalStructureToSend = fullyOrderedStructure
 
       if (isEditMode && initialDataSnapshot) {
         const initialData = JSON.parse(initialDataSnapshot)
@@ -457,11 +477,40 @@ const CreateCourse = () => {
         if (imageChanged) infoHasChanged = true
 
         const diffStructure = getCourseStructureDiff(
-          courseStructure.courseStructure,
+          fullyOrderedStructure,
           initialData.structure
         )
 
-        const structureChanged = diffStructure.length > 0
+        const enrichedDiff = diffStructure.map((diffItem: any) => {
+          const sourceItem = fullyOrderedStructure.find(
+            s =>
+              (s.module_id && s.module_id === diffItem.module_id) ||
+              (s.test_id && s.test_id === diffItem.test_id)
+          )
+
+          if (sourceItem) {
+            const result = { ...diffItem, order: sourceItem.order }
+
+            if (sourceItem.type === 'module' && diffItem.moduleStructure) {
+              result.moduleStructure = diffItem.moduleStructure.map(
+                (childDiff: any) => {
+                  const sourceChild = sourceItem.moduleStructure.find(
+                    (c: any) =>
+                      (c.lesson_id && c.lesson_id === childDiff.lesson_id) ||
+                      (c.test_id && c.test_id === childDiff.test_id)
+                  )
+                  return sourceChild
+                    ? { ...childDiff, order: sourceChild.order }
+                    : childDiff
+                }
+              )
+            }
+            return result
+          }
+          return diffItem
+        })
+
+        const structureChanged = enrichedDiff.length > 0
 
         if (!infoHasChanged && !structureChanged) {
           handleCancelCreateCourse()
@@ -477,7 +526,7 @@ const CreateCourse = () => {
         change_structure = structureChanged
 
         currentInfoObj = { ...changedInfo }
-        finalStructureToSend = diffStructure
+        finalStructureToSend = enrichedDiff
       }
 
       const coursePayload = {

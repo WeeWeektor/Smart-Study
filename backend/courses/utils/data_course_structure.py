@@ -9,6 +9,8 @@ from courses.services.structure_course_module_action_service import save_files_i
 from courses.services.test_actions_service import create_test
 
 
+# TODO якщо змінились ордери потрібно ще змінювіати назви файлів в supabase
+
 async def course_structure_create_or_update(courseStructure: list, owner, courseId, files=None):
     """
         Редагування структури курсу:
@@ -21,14 +23,14 @@ async def course_structure_create_or_update(courseStructure: list, owner, course
         reverse=False
     )
 
-    # for item in all_elem_to_delete:
-    #     if item.get('action', '') == 'delete':
-    #         if item.get('type') == 'module':
-    #             from courses.services.module_actons_service import remove_module
-    #             await remove_module(item.get('module_id'))
-    #         elif item.get('type') == 'course-test':
-    #             from courses.services.test_actions_service import remove_test
-    #             await remove_test(item.get('test_id'), test_type="course")
+    for item in all_elem_to_delete:
+        if item.get('action', '') == 'delete':
+            if item.get('type') == 'module':
+                from courses.services.module_actons_service import remove_module
+                await remove_module(item.get('module_id'))
+            elif item.get('type') == 'course-test':
+                from courses.services.test_actions_service import remove_test
+                await remove_test(item.get('test_id'), test_type="course")
 
     for item in elem_to_update_or_create:
         if item.get('type') == 'module':
@@ -50,50 +52,58 @@ async def _process_module(structure, owner, course_id, files):
     elif action == 'create' or not module_id:
         module = await create_module(module_data, course_id)
         module_id = str(module.id)
+        module_order = int(module.order)
         structure['module_id'] = module_id
 
     for child in structure.get('moduleStructure', []):
-        child_action = child.get('action')
-        child_type = child.get('type')
-
-        if child_action == 'delete':
-            if child_type == 'lesson':
-                from courses.services.lesson_actions_service import remove_lesson
-                if module_order is None:
-                    module_order = await (Module.objects
-                                          .filter(id=module_id)
-                                          .values_list("order", flat=True)
-                                          .aget())
-
-                await remove_lesson(child.get('lesson_id'), course_id, module_order, module_data, module_id)
-            elif child_type == 'module-test':
-                from courses.services.test_actions_service import remove_test
-                await remove_test(UUID(child.get('test_id')), test_type="module")
-            continue
-
-        if child_type == 'module-test':
-            await _process_test(child, owner, parent_type="module", parent_id=module_id, course_id=course_id,
-                                files=files)
-        elif child_type == 'lesson':
-            await _process_lesson(child, module_id, course_id, files)
+        await _process_structure_module_child(child, course_id, module_id, module_data, module_order, owner, files)
 
 
-async def _process_lesson(lesson_data, module_id, course_id, files):
+async def _process_structure_module_child(child, course_id, module_id, module_data, module_order, owner, files):
+    child_action = child.get('action')
+    child_type = child.get('type')
+
+    if child_action == 'delete':
+        if child_type == 'lesson':
+            from courses.services.lesson_actions_service import remove_lesson
+            if module_order is None:
+                module_order = await (Module.objects
+                                      .filter(id=module_id)
+                                      .values_list("order", flat=True)
+                                      .aget())
+
+            await remove_lesson(child.get('lesson_id'), course_id, module_order, module_data, module_id)
+        elif child_type == 'module-test':
+            from courses.services.test_actions_service import remove_test
+            await remove_test(UUID(child.get('test_id')), test_type="module")
+
+    if child_type == 'module-test':
+        await _process_test(child, owner, parent_type="module", parent_id=module_id, course_id=course_id,
+                            files=files)
+    elif child_type == 'lesson':
+        await _process_lesson(child, module_id, course_id, files, module_order)
+
+
+async def _process_lesson(lesson_data, module_id, course_id, files, module_order):
     """Обробляє створення або оновлення одного уроку"""
     lesson_id = lesson_data.get('lesson_id')
     action = lesson_data.get('action')
     lesson_payload = {**lesson_data, "module_id": str(module_id)}
 
     content = None
-    # TODO Test all scenarios for convert to markdown
-    # TODO duration приходить '00:00:00' і оновлюється такими даними - перевірити фронт
     if lesson_data.get('contentBlocks') is not None or lesson_data.get('singleContentData') is not None:
-        content = await convert_to_markdown(lesson=lesson_data, files=files, courseId=course_id)
+        content = await convert_to_markdown(
+            lesson=lesson_data,
+            files=files,
+            courseId=course_id,
+            lesson_id=lesson_id,
+            module_order=module_order
+        )
 
     if action == 'update' and lesson_id:
         from courses.services.lesson_actions_service import update_lesson
         await update_lesson(lesson_id, lesson_payload, module_id, contentData=content)
-    elif action == 'create' and not lesson_id:
+    elif action == 'create' or not lesson_id:
         validate_lesson_data(lesson_payload)
         await create_lesson(lesson_payload, contentData=content)
 
@@ -110,7 +120,7 @@ async def _process_test(test_data, owner, parent_type: Literal["module", "course
     if action == 'update' and test_id:
         from courses.services.test_actions_service import update_test
         await update_test(test_payload, test_id, parent_type, all_new_questions_data=False)
-    elif action == 'create' and not test_id:
+    elif action == 'create' or not test_id:
         await create_test(parent_type, owner, test_payload)
 
     if 'questions' in test_data:
