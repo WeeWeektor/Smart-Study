@@ -14,9 +14,11 @@ def success_response_info(test):
     })
 
 
-async def update_test(data: dict, test_id, test_type: str, all_new_questions_data: bool) -> dict:
+async def update_test(data: dict, test_id, test_type: str, all_new_questions_data: bool) -> (dict, list):
     from courses.services.test_actions_service import prepare_test_for_action
     test = await prepare_test_for_action(test_id, test_type, action="edit")
+
+    old_questions_data = await _old_questions_data(test)
 
     updated_fields = update_fields(test, data)
 
@@ -37,7 +39,13 @@ async def update_test(data: dict, test_id, test_type: str, all_new_questions_dat
             identifier_value=str(test.id)
         )
 
-    return success_response_info(test)
+    return success_response_info(test), old_questions_data
+
+async def _old_questions_data(test):
+    questions_data = await sync_to_async(mongo_repo.get_document_by_id)(
+        "questions_data_for_test", str(test.test_data_ids)
+    )
+    return questions_data.get("questions", []) if questions_data else []
 
 
 async def _update_questions(test, questions, replace: bool = False):

@@ -5,7 +5,7 @@ from courses.models import Module
 from courses.services import validate_lesson_data
 from courses.services.lesson_actions_service import convert_to_markdown, create_lesson
 from courses.services.module_actons_service import create_module, update_module
-from courses.services.structure_course_module_action_service import save_files_in_supabase
+from courses.services.structure_course_module_action_service import save_files_in_supabase, delete_files_from_supabase
 from courses.services.test_actions_service import create_test
 
 
@@ -117,29 +117,55 @@ async def _process_test(test_data, owner, parent_type: Literal["module", "course
     action = test_data.get('action')
     test_payload = {**test_data, f"{parent_type}_id": str(parent_id)}
 
+    old_questions_data = []
+
     if action == 'update' and test_id:
         from courses.services.test_actions_service import update_test
-        await update_test(test_payload, test_id, parent_type, all_new_questions_data=False)
+        _, old_questions_data = await update_test(test_payload, test_id, parent_type, all_new_questions_data=False)
     elif action == 'create' or not test_id:
         await create_test(parent_type, owner, test_payload)
 
     if 'questions' in test_data:
         test_type = f"{parent_type}-test"
-        await _question_image_upload(test_data['questions'], files, course_id, test_type)
+        await _question_image_upload(test_data['questions'], files, course_id, test_type, action, old_questions_data)
 
 
-async def _question_image_upload(questionList, files, courseId, type_test):
-    if not files:
-        return
+async def _question_image_upload(questionList, files, courseId, type_test, action, old_questions_data):
+    old_images_map = {
+        q.get('order'): q.get('image_url')
+        for q in old_questions_data
+        if q.get('image_url')
+    }
 
     for question in questionList:
-        questionImageKey = question.get('imageFileKey')
-        if questionImageKey:
-            file = files.get(questionImageKey)
-            if file:
-                await save_files_in_supabase(
-                    courseId=courseId,
-                    file=file,
-                    file_name=questionImageKey,
-                    type_data=type_test
-                )
+        order = question.get('order')
+        question_image_key = question.get('imageFileKey')
+        file = files.get(question_image_key) if question_image_key else None
+        if file:
+            if action == 'update':
+                old_file_name = old_images_map.get(order)
+                if old_file_name:
+                    await _safe_delete_from_sup(courseId, type_test, old_file_name)
+
+            await save_files_in_supabase(
+                courseId=courseId,
+                file=file,
+                file_name=question_image_key,
+                type_data=type_test
+            )
+
+        elif action == 'update' and order in old_images_map:
+            if not question.get('image_url') and not question.get('imageFileKey'):
+                old_file_name = old_images_map.get(order)
+                await _safe_delete_from_sup(courseId, type_test, old_file_name)
+
+
+async def _safe_delete_from_sup(courseId, type_data, file_name):
+    try:
+        await delete_files_from_supabase(
+            courseId=courseId,
+            type_data=type_data,
+            file_names=file_name
+        )
+    except Exception as e:
+        print(f"Delete failed: {e}")
