@@ -3,6 +3,7 @@ from django.utils.translation import gettext as _
 
 from common.services import mongo_repo
 from common.utils import success_response
+from courses.models import Module
 from courses.services.structure_course_module_action_service import remove_data_from_structure, \
     delete_files_from_supabase
 
@@ -11,7 +12,12 @@ async def remove_test(uuid_obj, test_type: str):
     from courses.services.test_actions_service import prepare_test_for_action
     test = await prepare_test_for_action(uuid_obj, test_type, action="delete")
 
-    course_id = str(test.module_id.course_id if test_type == "module" else test.course_id)
+    if test_type == 'module':
+        module = await Module.objects.only("course_id").aget(pk=test.module_id)
+        course_id = str(module.course_id)
+    else:
+        course_id = str(test.course_id)
+
     question_data = await sync_to_async(mongo_repo.get_document_by_id)("questions_data_for_test", str(test.test_data_ids))
 
     files_to_delete = []

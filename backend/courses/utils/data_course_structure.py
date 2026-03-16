@@ -1,15 +1,14 @@
 from typing import Literal
 from uuid import UUID
 
+from common.services import move_supabase_files_batch
 from courses.models import Module
 from courses.services import validate_lesson_data
-from courses.services.lesson_actions_service import convert_to_markdown, create_lesson
+from courses.services.lesson_actions_service import convert_to_markdown, create_lesson, update_path_in_markdown_content
 from courses.services.module_actons_service import create_module, update_module
 from courses.services.structure_course_module_action_service import save_files_in_supabase, delete_files_from_supabase
-from courses.services.test_actions_service import create_test
+from courses.services.test_actions_service import create_test, update_path_in_mongo_questions_data
 
-
-# TODO якщо змінились ордери потрібно ще змінювіати назви файлів в supabase
 
 async def course_structure_create_or_update(courseStructure: list, owner, courseId, files=None):
     """
@@ -23,14 +22,14 @@ async def course_structure_create_or_update(courseStructure: list, owner, course
         reverse=False
     )
 
+    # TODO оновлення в монго шляху для курс тесту
     for item in all_elem_to_delete:
-        if item.get('action', '') == 'delete':
-            if item.get('type') == 'module':
-                from courses.services.module_actons_service import remove_module
-                await remove_module(item.get('module_id'))
-            elif item.get('type') == 'course-test':
-                from courses.services.test_actions_service import remove_test
-                await remove_test(item.get('test_id'), test_type="course")
+        if item.get('type') == 'module':
+            from courses.services.module_actons_service import remove_module
+            await remove_module(item.get('module_id'))
+        elif item.get('type') == 'course-test':
+            from courses.services.test_actions_service import remove_test
+            await remove_test(item.get('test_id'), test_type="course")
 
     for item in elem_to_update_or_create:
         if item.get('type') == 'module':
@@ -44,19 +43,39 @@ async def _process_module(structure, owner, course_id, files):
     """Обробляє створення або оновлення модуля та його вмісту (уроків/тестів)"""
     module_id = structure.get('module_id')
     action = structure.get('action')
-    module_order = structure.get('order', None)
+    new_order = structure.get('order', None)
     module_data = {**structure, "course_id": course_id}
 
     if module_id and action == 'update':
-        await update_module(module_id, module_data)
+        old_order = await update_module(module_id, module_data)
+
+        if old_order != new_order:
+            old_p_l, new_p_l = f"lesson_file_m{old_order}_", f"lesson_file_m{new_order}_"
+            old_p_t, new_p_t = f"question_image_m{old_order}_", f"question_image_m{new_order}_"
+
+            await move_supabase_files_batch(course_id, "lesson", old_p_l, new_p_l)
+            await move_supabase_files_batch(course_id, "module-test", old_p_t, new_p_t)
+
+            await update_path_in_markdown_content(module_id=module_id, old_prefix=old_p_l, new_prefix=new_p_l)
+            await update_path_in_mongo_questions_data(old_prefix=old_p_t, new_prefix=new_p_t, module_id=module_id)
+
     elif action == 'create' or not module_id:
         module = await create_module(module_data, course_id)
         module_id = str(module.id)
-        module_order = int(module.order)
+        new_order = int(module.order)
         structure['module_id'] = module_id
 
-    for child in structure.get('moduleStructure', []):
-        await _process_structure_module_child(child, course_id, module_id, module_data, module_order, owner, files)
+    child_item_to_delete = [item for item in structure.get('moduleStructure', []) if item.get('action') == 'delete']
+    child_item_to_update_or_create = sorted(
+        [item for item in structure.get('moduleStructure', []) if item.get('action') != 'delete'],
+        key=lambda item: int(item.get('order', 0)),
+        reverse=False
+    )
+
+    for child in child_item_to_delete:
+        await _process_structure_module_child(child, course_id, module_id, module_data, new_order, owner, files)
+    for child in child_item_to_update_or_create:
+        await _process_structure_module_child(child, course_id, module_id, module_data, new_order, owner, files)
 
 
 async def _process_structure_module_child(child, course_id, module_id, module_data, module_order, owner, files):
@@ -77,6 +96,34 @@ async def _process_structure_module_child(child, course_id, module_id, module_da
             from courses.services.test_actions_service import remove_test
             await remove_test(UUID(child.get('test_id')), test_type="module")
 
+    # TODO lesson / test дописати
+    # TODO перевірити за blcok в уроках
+    # TODO Test this logic
+    if child.get('type') == 'lesson' and child.get('action') == 'update':
+        l_id = child.get('lesson_id')
+        new_l_order = child.get('order')
+
+        from courses.models import Lesson
+        old_lesson = await Lesson.objects.filter(id=l_id).only('order').aget()
+        old_l_prefix = f"lesson_file_m{module_order}_l{old_lesson.order}_"
+        new_l_prefix = f"lesson_file_m{module_order}_l{new_l_order}_"
+
+        if old_lesson.order != new_l_order:
+            await move_supabase_files_batch(course_id, "lesson", old_l_prefix, new_l_prefix)
+
+    if child.get('type') == 'module-test' and child.get('action') == 'update':
+        t_id = child.get('test_id')
+        new_t_order = child.get('order')
+
+        from courses.models import Test
+        old_test = await Test.objects.filter(id=t_id).only('order').aget()
+        old_t_prefix = f"question_image_m{module_order}_t{old_test.order}_"
+        new_t_prefix = f"question_image_m{module_order}_t{new_t_order}_"
+
+        if old_test.order != new_t_order:
+            await move_supabase_files_batch(course_id, "module-test", old_t_prefix, new_t_prefix)
+            await update_path_in_mongo_questions_data(old_t_prefix, new_t_prefix, module_id)
+
     if child_type == 'module-test':
         await _process_test(child, owner, parent_type="module", parent_id=module_id, course_id=course_id,
                             files=files)
@@ -91,7 +138,7 @@ async def _process_lesson(lesson_data, module_id, course_id, files, module_order
     lesson_payload = {**lesson_data, "module_id": str(module_id)}
 
     content = None
-    if lesson_data.get('contentBlocks') is not None or lesson_data.get('singleContentData') is not None:
+    if len(lesson_data.get('contentBlocks', [])) > 0 or len(lesson_data.get('singleContentData', [])) > 0:
         content = await convert_to_markdown(
             lesson=lesson_data,
             files=files,

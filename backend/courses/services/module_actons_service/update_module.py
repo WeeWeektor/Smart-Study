@@ -11,20 +11,22 @@ async def update_module(module_id, module_data: dict):
     if module_data.get("title") is None and module_data.get("order") is None:
         return
 
-    module = await Module.objects.only('structure_ids', "title", "order").aget(id=module_id)
+    module = await Module.objects.only('course_id', 'structure_ids', "title", "order").aget(id=module_id)
+    course_id = module.course_id
+    old_order = int(module.order) # TODO перевірити який тип ордера приходить з фронту і привести до нього
 
     if (module_data.get("title", module.title) == module.title
-            and module_data.get("order", module.order) == module.order):
+            and module_data.get("order", old_order) == old_order):
         return
 
     updated_mongo_data = {
         "title": module_data.get("title", module.title),
-        "order": module_data.get("order", module.order)
+        "order": module_data.get("order", old_order)
     }
 
     await update_data_in_structure(
         target_type="course",
-        target_id=str(module.course_id),
+        target_id=str(course_id),
         structure_data=updated_mongo_data,
         identifier_field="module_id",
         identifier_value=str(module_id)
@@ -34,3 +36,5 @@ async def update_module(module_id, module_data: dict):
         title=updated_mongo_data["title"],
         order=updated_mongo_data["order"]
     )
+
+    return old_order

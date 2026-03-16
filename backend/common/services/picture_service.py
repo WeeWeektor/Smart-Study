@@ -145,3 +145,23 @@ async def get_all_objects_recursive(prefix: str, bucket) -> list[str]:
     await _walk(initial_walk_prefix)
 
     return list(reversed(objects_to_delete))
+
+
+async def move_supabase_files_batch(course_id, type_data, old_prefix, new_prefix):
+    bucket_name = settings.SUPABASE_COURSES_COVER_PICTURES_BUCKET
+    folder = f"{course_id}/{type_data}"
+    bucket = supabase.storage.from_(bucket_name)
+
+    files = await sync_to_async(bucket.list)(path=folder, options={"search": old_prefix})
+
+    for f in files:
+        if f['name'].startswith(old_prefix):
+            old_path = f"{folder}/{f['name']}"
+            new_name = f['name'].replace(old_prefix, new_prefix)
+            new_path = f"{folder}/{new_name}"
+
+            try:
+                await sync_to_async(bucket.copy)(old_path, new_path)
+                await sync_to_async(bucket.remove)([old_path])
+            except Exception as e:
+                print(f"Error moving file {old_path}: {e}")
