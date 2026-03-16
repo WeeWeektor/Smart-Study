@@ -8,13 +8,21 @@ from smartStudy_backend import settings
 
 async def remove_lesson(lesson_id, course_id, module_order, module_structure, module_id):
     target_lesson = None
-    for item in module_structure.get('structure', []):
+    mod_struct = module_structure.get('moduleStructure', None)
+    if mod_struct is None:
+        mod_struct = module_structure.get('structure', [])
+
+    for item in mod_struct:
         if str(item.get('lesson_id')) == str(lesson_id):
             target_lesson = item
             break
 
     if target_lesson:
         lesson_order = target_lesson.get('order')
+
+        if lesson_order is None:
+            lesson = await Lesson.objects.filter(pk=lesson_id).only("order").aget()
+            lesson_order = int(lesson.order)
 
         await delete_lesson_files_by_prefix(course_id, module_order, lesson_order)
 

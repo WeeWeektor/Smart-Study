@@ -13,11 +13,11 @@ async def update_module(module_id, module_data: dict):
 
     module = await Module.objects.only('course_id', 'structure_ids', "title", "order").aget(id=module_id)
     course_id = module.course_id
-    old_order = int(module.order) # TODO перевірити який тип ордера приходить з фронту і привести до нього
+    old_order = int(module.order)
 
     if (module_data.get("title", module.title) == module.title
             and module_data.get("order", old_order) == old_order):
-        return
+        return old_order
 
     updated_mongo_data = {
         "title": module_data.get("title", module.title),
