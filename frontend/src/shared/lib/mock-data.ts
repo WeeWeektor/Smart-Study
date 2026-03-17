@@ -63,13 +63,3 @@ export const courseProgress = [
     lastActivity: '2 тижні тому',
   },
 ]
-
-export const learningStats = {
-  totalHours: 124,
-  coursesCompleted: 2,
-  coursesInProgress: 2,
-  averageScore: 87,
-  streak: 15,
-  totalTests: 12,
-  certificates: 2,
-}

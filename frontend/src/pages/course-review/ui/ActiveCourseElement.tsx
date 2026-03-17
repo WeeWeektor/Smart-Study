@@ -47,6 +47,7 @@ interface ActiveCourseElementProps {
   onComplete?: (id: string, type: string, timeSpent: number) => void
   isCourseCompleted: boolean
   isCoursePublished?: boolean
+  onStatsRefresh?: () => void
 }
 
 type MarkdownProps<T extends React.ElementType> =
@@ -72,6 +73,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
   onComplete,
   isCourseCompleted,
   isCoursePublished = false,
+  onStatsRefresh,
 }) => {
   const { t } = useI18n()
 
@@ -134,6 +136,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
           (Date.now() - lessonStartTimeRef.current) / 1000
         )
         onComplete(lessonId, 'lesson', timeSpent)
+        onStatsRefresh?.()
       }
     }
 
@@ -249,6 +252,8 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
       if (response.result.passed && onComplete) {
         onComplete(testId, 'test', timeSpent)
+
+        onStatsRefresh?.()
       }
 
       if (currentTestInfo) {
@@ -639,6 +644,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
             <TestPlayer
               testData={testDataForPlayer}
               onBack={() => setIsTestStarted(false)}
+              onStatsRefresh={onStatsRefresh}
               onFinishCourse={timeSpent => {
                 if (test) {
                   if (!isPreviewMode) {

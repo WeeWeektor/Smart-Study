@@ -36,6 +36,7 @@ const CourseCompletion = () => {
     loading: profileLoading,
     error: profileError,
     refreshProfile,
+    refreshStats,
   } = useProfileData()
 
   const [error, setError] = useState<string>('')
@@ -93,6 +94,10 @@ const CourseCompletion = () => {
           description: course_description || t(''),
           ownerId: course_owner_id,
         })
+
+        if (response.is_fully_completed || response.is_failed) {
+          if (refreshStats) refreshStats()
+        }
       } catch (e) {
         setError(
           e instanceof Error
@@ -209,6 +214,8 @@ const CourseCompletion = () => {
 
       if (response && response.certificate_id) {
         setCertificateUrl(response.certificate_id)
+
+        if (refreshStats) refreshStats()
       }
     } catch (e) {
       setErrorResavedData(

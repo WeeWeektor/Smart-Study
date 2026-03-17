@@ -7,6 +7,7 @@ from django.utils.translation import gettext
 from common.utils import validate_uuid
 from smartStudy_backend import settings
 from ..models import UserSettings, CustomUser, UserProfile
+from ..utils import calculate_user_learning_stats
 
 logger = logging.getLogger(__name__)
 
@@ -222,6 +223,23 @@ async def get_cached_user_info(user_id):
     await sync_to_async(cache.set)(cache_key, profile_data, PROFILE_INFO_CACHE_TIMEOUT)
 
     return profile_data
+
+
+async def get_cache_user_learning_stats(user_id):
+    cache_key = f"user_learning_stats_{user_id}"
+    stats = await sync_to_async(cache.get)(cache_key)
+
+    if stats is not None:
+        return stats
+
+    stats = await calculate_user_learning_stats(user_id)
+
+    await sync_to_async(cache.set)(cache_key, stats, 3600)
+    return stats
+
+
+async def invalidate_user_learning_stats(user_id):
+    await sync_to_async(cache.delete)(f"user_learning_stats_{user_id}")
 
 
 async def invalidate_user_existence_cache(email):

@@ -47,6 +47,7 @@ const CourseReview = () => {
     loading: profileLoading,
     error: profileError,
     refreshProfile,
+    refreshStats,
   } = useProfileData()
 
   const [courseStructureData, setCourseStructureData] =
@@ -309,6 +310,8 @@ const CourseReview = () => {
 
       refreshStatuses()
 
+      if (refreshStats) refreshStats()
+
       if (isOwner) {
         navigate('/my-created-courses')
       } else {
@@ -367,6 +370,9 @@ const CourseReview = () => {
       await userCourseEnrollmentService.startCourse(id)
 
       refreshStatuses()
+
+      if (refreshStats) refreshStats()
+
       if (flatCourseElements.length > 0) {
         const firstElement = flatCourseElements[0]
         handleSidebarItemClick(firstElement.id, firstElement.type)
@@ -402,6 +408,8 @@ const CourseReview = () => {
       })
       setCompletedElements(prev => [...prev, elementId])
       refreshStatuses()
+
+      if (refreshStats) refreshStats()
     } catch (e) {
       setCourseError(
         e instanceof Error ? e.message : t('Помилка збереження прогресу')
@@ -549,6 +557,7 @@ const CourseReview = () => {
           {activeElement || isElementLoading ? (
             <ActiveCourseElement
               activeElement={activeElement}
+              onStatsRefresh={refreshStats}
               isLoading={isElementLoading}
               onBack={() => {
                 setActiveElement(null)

@@ -16,7 +16,6 @@ import {
   ProfileInfoCard,
   ProfileTabs,
 } from '@/widgets/profile'
-import { learningStats } from '@/shared/lib/mock-data'
 import { useI18n } from '@/shared/lib'
 import { useProfileData } from '@/shared/hooks/useProfileData'
 
@@ -30,6 +29,7 @@ const Profile = () => {
     error: profileError,
     refreshProfile,
     updateProfile,
+    learningStats,
   } = useProfileData()
 
   const [searchParams] = useSearchParams()

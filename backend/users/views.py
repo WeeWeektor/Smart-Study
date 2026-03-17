@@ -6,7 +6,7 @@ from asgiref.sync import sync_to_async
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.signing import BadSignature, SignatureExpired
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
@@ -19,6 +19,7 @@ from common import LocalizedView, LocalizedAPIView
 from common.decorators import login_required_async
 from common.services import delete_picture, handle_picture
 from common.utils import error_response, success_response, signer
+from common.utils.request_parsing import parse_request_data
 from smartStudy_backend import settings
 from .models import CustomUser, UserSettings, UserProfile
 from .services.oauth_service import handle_oauth_login
@@ -28,11 +29,10 @@ from .services.profile_cache_service import (
     warm_user_cache,
     get_allowed_roles,
     get_user_existence_cache,
-    invalidate_user_existence_cache, invalidate_all_user_caches, get_cached_user_info
+    invalidate_user_existence_cache, invalidate_all_user_caches, get_cached_user_info, get_cache_user_learning_stats
 )
 from .services.profile_update_service import update_user_data, update_user_settings, update_user_profile
 from .user_utils import send_verification_email, send_password_reset_email
-from common.utils.request_parsing import parse_request_data
 from .utils.validators import cached_email_validator, phone_validator
 
 
@@ -513,3 +513,19 @@ class UserInfoView(LocalizedView):
             return error_response(gettext('User not found.'), 404)
         except Exception as e:
             return error_response(f"{gettext('Error retrieving user info:')} {str(e)}", 500)
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class LearningStatsView(LocalizedView):
+    @login_required_async
+    async def get(self, request):
+        try:
+            user_id = request.user.id
+            stats = await get_cache_user_learning_stats(user_id)
+            return success_response(stats)
+        except ValidationError as e:
+            return error_response(str(e), 400)
+        except ObjectDoesNotExist:
+            return error_response(gettext('Object not found.'), 404)
+        except Exception as e:
+            return error_response(f"{gettext('Error retrieving user stats:')} {str(e)}", 500)

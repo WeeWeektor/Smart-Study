@@ -139,6 +139,38 @@ class ProfileService {
       throw new Error(this.t('Не вдалося змінити пароль') + ': ' + error)
     }
   }
+
+  async getLearningStats(): Promise<
+    ApiResponse<{
+      coursesCompleted: number
+      coursesInProgress: number
+      totalTests: number
+      completedTopics: number
+      certificates: number
+    }>
+  > {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get('/user/profile/learning-stats/', {
+        headers: {
+          'X-CSRFToken': csrfToken || '',
+        },
+        withCredentials: true,
+      })
+
+      return {
+        data: response.data,
+        status: 'success',
+        message: this.t('Статистику завантажено успішно'),
+      }
+    } catch (error) {
+      console.error(this.t('Помилка завантаження статистики:'), error)
+      throw new Error(
+        this.t('Не вдалося завантажити статистику навчання') + error
+      )
+    }
+  }
 }
 
 export const profileService = new ProfileService()

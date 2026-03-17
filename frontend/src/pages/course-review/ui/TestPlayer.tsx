@@ -66,6 +66,7 @@ interface TestPlayerProps {
   isLast: boolean
   onSubmit: (answers: any[], timeSpent: number) => Promise<TestResult>
   isCourseCompleted: boolean
+  onStatsRefresh?: () => void
 }
 
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -198,6 +199,11 @@ export const TestPlayer = ({
       const result = await onSubmit(payload, calculatedTimeSpent)
       setServerResult(result)
       setStatus('finished')
+
+      if (onStatsRefresh) {
+        onStatsRefresh()
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err: unknown) {
       setStatus('active')

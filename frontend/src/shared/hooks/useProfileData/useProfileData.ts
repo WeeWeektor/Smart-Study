@@ -8,6 +8,14 @@ class ProfileStore {
   private listeners: Array<() => void> = []
   private hasLoaded = false
   private loadPromise: Promise<void> | null = null
+  private statsLoaded = false
+  private learningStats: {
+    coursesCompleted: number
+    coursesInProgress: number
+    totalTests: number
+    completedTopics: number
+    certificates: number
+  }
 
   subscribe(listener: () => void) {
     this.listeners.push(listener)
@@ -18,6 +26,52 @@ class ProfileStore {
 
   private notify() {
     this.listeners.forEach(listener => listener())
+  }
+
+  private async doLoadProfile() {
+    try {
+      this.loading = true
+      this.error = ''
+      this.notify()
+
+      const response = await profileService.getProfile()
+
+      if (response.status === 'success' && response.data) {
+        this.profileData = response.data
+        this.hasLoaded = true
+
+        await this.loadLearningStats()
+        console.log('Профіль завантажено:', response.data)
+      } else {
+        this.error = 'Не вдалося завантажити профіль'
+      }
+    } catch (error) {
+      console.error('Помилка завантаження профілю:', error)
+      this.error = 'Помилка завантаження профілю'
+    } finally {
+      this.loading = false
+      this.notify()
+    }
+  }
+
+  async loadLearningStats() {
+    if (this.statsLoaded) return
+
+    try {
+      const response = await profileService.getLearningStats()
+
+      if (response.status === 'success' && response.data) {
+        this.learningStats = {
+          ...this.learningStats,
+          ...response.data,
+        }
+        this.statsLoaded = true
+        console.log('Статистику оновлено:', this.learningStats)
+        this.notify()
+      }
+    } catch (error) {
+      console.error('Помилка завантаження статистики:', error)
+    }
   }
 
   async loadProfile() {
@@ -38,30 +92,6 @@ class ProfileStore {
     }
   }
 
-  private async doLoadProfile() {
-    try {
-      this.loading = true
-      this.error = ''
-      this.notify()
-
-      const response = await profileService.getProfile()
-
-      if (response.status === 'success' && response.data) {
-        this.profileData = response.data
-        this.hasLoaded = true
-        console.log('Профіль завантажено:', response.data)
-      } else {
-        this.error = 'Не вдалося завантажити профіль'
-      }
-    } catch (error) {
-      console.error('Помилка завантаження профілю:', error)
-      this.error = 'Помилка завантаження профілю'
-    } finally {
-      this.loading = false
-      this.notify()
-    }
-  }
-
   async refreshProfile() {
     this.hasLoaded = false
     await this.loadProfile()
@@ -78,6 +108,15 @@ class ProfileStore {
     this.loading = false
     this.error = ''
     this.notify()
+  }
+
+  async refreshStats() {
+    this.statsLoaded = false
+    await this.loadLearningStats()
+  }
+
+  getLearningStats() {
+    return this.learningStats
   }
 
   getProfileData() {
@@ -112,8 +151,10 @@ export const useProfileData = () => {
     profileData: profileStore.getProfileData(),
     loading: profileStore.isLoading(),
     error: profileStore.getError(),
+    learningStats: profileStore.getLearningStats(),
     refreshProfile: () => profileStore.refreshProfile(),
     updateProfile: (data: ProfileData) => profileStore.updateProfile(data),
+    refreshStats: () => profileStore.refreshStats(),
     clearProfile: () => profileStore.clearProfile(),
   }
 }
