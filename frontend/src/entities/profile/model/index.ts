@@ -3,3 +3,4 @@ export type {
   UpdateProfileRequest,
   UpdateProfileResponse,
 } from './types'
+export { useAchievements } from './useAchievements'

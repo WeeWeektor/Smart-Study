@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
-  BarChart3,
   BookOpen,
   Calendar,
   ChevronLeft,
@@ -78,7 +77,7 @@ export const Sidebar = ({
           : []),
       ],
     },
-    { to: '/tests', icon: BarChart3, text: t('Тести') },
+    // { to: '/tests', icon: BarChart3, text: t('Тести') },
     { to: '/calendar/student', icon: Calendar, text: t('Календар') },
     { to: '/profile', icon: User, text: t('Профіль') },
   ]

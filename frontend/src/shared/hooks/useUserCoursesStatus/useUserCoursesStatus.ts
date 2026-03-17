@@ -5,6 +5,8 @@ let cachedData: {
   wishlist: Set<string>
   enrolled: Map<string, number>
   completed: Set<string>
+  enrolled_list: any[]
+  completed_list: any[]
 } | null = null
 
 let isFetching = false
@@ -30,6 +32,8 @@ export const useUserCoursesStatus = () => {
           })
         ),
         completed: new Set(response.is_completed.map(i => i.course.id)),
+        enrolled_list: response.is_enrolled,
+        completed_list: response.is_completed,
       }
       listeners.forEach(l => l())
     } catch (e) {
@@ -82,5 +86,6 @@ export const useUserCoursesStatus = () => {
     loading: loading || (!cachedData && isFetching),
     refresh: () => fetchData(true),
     getItemStatus,
+    rawStats: cachedData,
   }
 }

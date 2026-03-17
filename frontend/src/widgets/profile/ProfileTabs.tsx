@@ -1,29 +1,29 @@
 import {
+  Badge,
+  Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  Checkbox,
+  LanguageSwitcher,
+  Progress,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  Badge,
-  Progress,
-  Checkbox,
-  Button,
-  LanguageSwitcher,
 } from '@/shared/ui'
 import { EditProfileForm } from '@/features/edit-profile'
 import { DeleteAccountButton } from '@/features/delete-account'
-import { CheckCircle } from 'lucide-react'
-import { courseProgress, achievements } from '@/shared/lib/mock-data'
+import { CheckCircle, RotateCw } from 'lucide-react'
 import { getAchievementColor } from '@/shared/lib/utils'
-import { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { PasswordField } from '@/shared/ui/password-field'
 import { FormAlert } from '@/shared/ui/form-alert'
 import { profileService } from '@/entities/profile/profile.service'
-import React from 'react'
 import { useI18n } from '@/shared/lib'
+import { useUserCoursesStatus } from '@/shared/hooks/useUserCoursesStatus'
+import { useAchievements } from '@/entities/profile/model'
 
 interface ProfileTabsProps {
   formData: any
@@ -209,12 +209,32 @@ export const ProfileTabs = ({
   onDeleteAccount,
 }: ProfileTabsProps) => {
   const { t } = useI18n()
+  const { refresh, loading, rawStats } = useUserCoursesStatus()
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [isPasswordLoading, setIsPasswordLoading] = useState(false)
+  const achievementsToRender = useAchievements(rawStats)
+
+  const coursesToRender = useMemo(() => {
+    if (!rawStats) return []
+
+    const enrolled = rawStats.enrolled_list || []
+    const completed = rawStats.completed_list || []
+
+    return [...enrolled, ...completed].map(item => ({
+      id: item.course.id,
+      title: item.course.title,
+      progress: Math.round(item.course.user_status?.progress || 0),
+      isCompleted: item.course.user_status?.is_completed || false,
+      enrolledAt: item.course.user_status?.enrolled_at,
+      completedAt: item.course.user_status?.completed_at,
+      totalLessons: item.course.details?.total_lessons || 0,
+      completedLessons: item.course.user_status?.completed_lessons_count || 0,
+    }))
+  }, [rawStats])
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -278,44 +298,59 @@ export const ProfileTabs = ({
       {/* Course Progress */}
       <TabsContent value="progress">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('Прогрес по курсах')}</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refresh}
+              disabled={loading}
+            >
+              <RotateCw
+                className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+              />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {courseProgress.map((course, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium text-foreground">
-                      {course.course}
-                    </h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">
-                        {course.completed}/{course.total} {t('уроків')}
+              {coursesToRender.length > 0 ? (
+                coursesToRender.map(course => (
+                  <div key={course.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-foreground">
+                        {course.title}
+                      </h3>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-muted-foreground">
+                          {course.progress}%
+                        </span>
+                        <Badge
+                          variant={course.isCompleted ? 'default' : 'secondary'}
+                        >
+                          {course.isCompleted ? t('Завершено') : t('В процесі')}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Progress value={course.progress} className="h-2" />
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>
+                        {t('Записано')}:{' '}
+                        {new Date(course.enrolledAt).toLocaleDateString()}
                       </span>
-                      <Badge
-                        variant={
-                          course.progress === 100 ? 'default' : 'secondary'
-                        }
-                      >
-                        {course.progress}%
-                      </Badge>
+                      {course.isCompleted && (
+                        <span className="flex items-center text-green-600 dark:text-green-400 font-medium">
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          {t('Курс пройдено')}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <Progress value={course.progress} />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>
-                      {t('Остання активність')}: {course.lastActivity}
-                    </span>
-                    {course.progress === 100 && (
-                      <span className="flex items-center text-success-text">
-                        <CheckCircle className="w-4 h-4 mr-1 text-success-icon" />
-                        {t('Завершено')}
-                      </span>
-                    )}
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  {t('Ви ще не розпочали жодного курсу')}
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -329,34 +364,46 @@ export const ProfileTabs = ({
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
-              {achievements.map(achievement => (
-                <div
-                  key={achievement.id}
-                  className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
-                >
-                  <div className="text-3xl">{achievement.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground">
-                      {achievement.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {achievement.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-muted-foreground">
-                        {achievement.date}
-                      </span>
-                      <Badge className={getAchievementColor(achievement.type)}>
-                        {achievement.type === 'gold'
-                          ? `${t('Золото')}`
-                          : achievement.type === 'silver'
-                            ? `${t('Срібло')}`
-                            : `${t('Бронза')}`}
-                      </Badge>
+              {achievementsToRender.length > 0 ? (
+                achievementsToRender.map(achievement => (
+                  <div
+                    key={achievement.id}
+                    className="flex items-start space-x-4 p-4 border border-border rounded-lg hover:border-brand-300 dark:hover:border-brand-700 transition-colors bg-card/50"
+                  >
+                    <div className="text-3xl">{achievement.icon}</div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-foreground">
+                        {achievement.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {achievement.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-muted-foreground">
+                          {achievement.date}
+                        </span>
+                        <Badge
+                          className={getAchievementColor(achievement.type)}
+                        >
+                          {achievement.type === 'gold'
+                            ? t('Золото')
+                            : achievement.type === 'silver'
+                              ? t('Срібло')
+                              : t('Бронза')}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-2 py-10 text-center border-2 border-dashed rounded-xl">
+                  <p className="text-muted-foreground">
+                    {t(
+                      'У вас поки немає досягнень. Розпочніть навчання, щоб отримати першу нагороду!'
+                    )}
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>

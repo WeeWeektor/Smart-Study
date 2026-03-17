@@ -1,5 +1,4 @@
 export { getInitials, getAchievementColor } from './utils'
-export { achievements, courseProgress } from './mock-data'
 export {
   parseISODuration,
   parseDurationFromISO,
