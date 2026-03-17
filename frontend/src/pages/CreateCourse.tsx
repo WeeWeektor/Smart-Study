@@ -341,6 +341,14 @@ const CreateCourse = () => {
     return <LoadingProfile message={t('Завантаження...')} />
   }
 
+  if (isSaving) {
+    return (
+      <LoadingProfile
+        message={t('Зберігаємо ваш курс... Зачекайте, будь ласка')}
+      />
+    )
+  }
+
   if (error || choicesError || !profileData) {
     return (
       <ErrorProfile
@@ -499,9 +507,26 @@ const CreateCourse = () => {
                       (c.lesson_id && c.lesson_id === childDiff.lesson_id) ||
                       (c.test_id && c.test_id === childDiff.test_id)
                   )
-                  return sourceChild
-                    ? { ...childDiff, order: sourceChild.order }
-                    : childDiff
+
+                  if (sourceChild) {
+                    if (
+                      sourceChild.type === 'lesson' &&
+                      childDiff.action === 'update'
+                    ) {
+                      return {
+                        ...childDiff,
+                        order: sourceChild.order,
+                        title: sourceChild.title,
+                        description: sourceChild.description,
+                        comment: sourceChild.comment,
+                        contentBlocks: sourceChild.contentBlocks,
+                        typeCategory: sourceChild.typeCategory,
+                        singleContentData: sourceChild.singleContentData,
+                      }
+                    }
+                    return { ...childDiff, order: sourceChild.order }
+                  }
+                  return childDiff
                 }
               )
             }

@@ -10,7 +10,6 @@ from courses.services.structure_course_module_action_service import save_files_i
 from courses.services.test_actions_service import create_test, update_path_in_mongo_questions_data
 
 
-# TODO повиностити логіку  + перевикористання
 async def course_structure_create_or_update(courseStructure: list, owner, courseId, files=None):
     """
         Редагування структури курсу:
@@ -40,15 +39,12 @@ async def course_structure_create_or_update(courseStructure: list, owner, course
                 from courses.models import Test
                 t_id = item.get('test_id')
                 new_t_order = int(item.get('order', 0))
-
                 old_test = await Test.objects.filter(id=t_id).only('order').aget()
 
                 if old_test.order != new_t_order:
                     old_prefix = f"question_image_course_t{old_test.order}_"
                     new_prefix = f"question_image_course_t{new_t_order}_"
-
-                    await move_supabase_files_batch(courseId, "course-test", old_prefix, new_prefix)
-                    await update_path_in_mongo_questions_data(old_prefix, new_prefix, course_id=courseId)
+                    await _sync_test_paths(courseId, None, old_prefix, new_prefix, "course")
 
             await _process_test(item, owner, parent_type="course", parent_id=courseId, course_id=courseId, files=files)
 
@@ -64,14 +60,15 @@ async def _process_module(structure, owner, course_id, files):
         old_module_order = await update_module(module_id, module_data)
 
         if old_module_order is not None and old_module_order != new_order:
-            old_p_l, new_p_l = f"lesson_file_m{old_module_order}_", f"lesson_file_m{new_order}_"
-            old_p_t, new_p_t = f"question_image_m{old_module_order}_", f"question_image_m{new_order}_"
-
-            await move_supabase_files_batch(course_id, "lesson", old_p_l, new_p_l)
-            await move_supabase_files_batch(course_id, "module-test", old_p_t, new_p_t)
-
-            await update_path_in_markdown_content(module_id=module_id, old_prefix=old_p_l, new_prefix=new_p_l)
-            await update_path_in_mongo_questions_data(old_prefix=old_p_t, new_prefix=new_p_t, module_id=module_id)
+            await _sync_lesson_paths(
+                course_id, module_id,
+                f"lesson_file_m{old_module_order}_", f"lesson_file_m{new_order}_"
+            )
+            await _sync_test_paths(
+                course_id, module_id,
+                f"question_image_m{old_module_order}_", f"question_image_m{new_order}_",
+                "module"
+            )
 
     elif action == 'create' or not module_id:
         module = await create_module(module_data, course_id)
@@ -110,8 +107,6 @@ async def _process_structure_module_child(child, course_id, module_id, module_da
             from courses.services.test_actions_service import remove_test
             await remove_test(UUID(child.get('test_id')), test_type="module")
 
-    # TODO lesson / test дописати
-    # TODO перевірити за blcok в уроках
     if child_action == 'update':
         current_m_prefix = f"m{module_order}"
 
@@ -125,9 +120,7 @@ async def _process_structure_module_child(child, course_id, module_id, module_da
             if old_lesson.order != new_l_order:
                 old_l_prefix = f"lesson_file_{current_m_prefix}_l{old_lesson.order}_"
                 new_l_prefix = f"lesson_file_{current_m_prefix}_l{new_l_order}_"
-
-                await move_supabase_files_batch(course_id, "lesson", old_l_prefix, new_l_prefix)
-                await update_path_in_markdown_content(module_id, old_l_prefix, new_l_prefix)
+                await _sync_lesson_paths(course_id, module_id, old_l_prefix, new_l_prefix)
 
         elif child.get('type') == 'module-test':
             t_id = child.get('test_id')
@@ -139,9 +132,7 @@ async def _process_structure_module_child(child, course_id, module_id, module_da
             if old_test.order != new_t_order:
                 old_t_prefix = f"question_image_{current_m_prefix}_t{old_test.order}_"
                 new_t_prefix = f"question_image_{current_m_prefix}_t{new_t_order}_"
-
-                await move_supabase_files_batch(course_id, "module-test", old_t_prefix, new_t_prefix)
-                await update_path_in_mongo_questions_data(old_t_prefix, new_t_prefix, module_id)
+                await _sync_test_paths(course_id, module_id, old_t_prefix, new_t_prefix, "module")
 
     if child_type == 'module-test':
         await _process_test(child, owner, parent_type="module", parent_id=module_id, course_id=course_id,
@@ -194,6 +185,21 @@ async def _process_test(test_data, owner, parent_type: Literal["module", "course
     if 'questions' in test_data:
         test_type = f"{parent_type}-test"
         await _question_image_upload(test_data['questions'], files, course_id, test_type, action, old_questions_data)
+
+
+async def _sync_lesson_paths(course_id, module_id, old_prefix, new_prefix):
+    """Синхронізація файлів уроків у Supabase та посилань у Markdown"""
+    await move_supabase_files_batch(course_id, "lesson", old_prefix, new_prefix)
+    await update_path_in_markdown_content(module_id, old_prefix, new_prefix)
+
+
+async def _sync_test_paths(course_id, module_id, old_prefix, new_prefix, parent_type: Literal["module", "course"]):
+    """Синхронізація файлів тестів у Supabase та посилань у MongoDB"""
+    type_data = "module-test" if parent_type == "module" else "course-test"
+    await move_supabase_files_batch(course_id, type_data, old_prefix, new_prefix)
+
+    mongo_filter = {"module_id": module_id} if parent_type == "module" else {"course_id": course_id}
+    await update_path_in_mongo_questions_data(old_prefix, new_prefix, **mongo_filter)
 
 
 async def _question_image_upload(questionList, files, courseId, type_test, action, old_questions_data):

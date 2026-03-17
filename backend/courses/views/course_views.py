@@ -14,9 +14,9 @@ from courses.decorators import teacher_required, owner_course_required
 from courses.models import Course
 from courses.services import parse_multipart_request
 from courses.services.cache_service import get_cached_instance_by_id, get_instance_cached_all, \
-    get_instance_cached_by_author_id, invalidate_author_cache
-from courses.services.course_actions_service import create_course, remove_course, update_course, \
-    update_published_course_with_structure, count_content_course, publishing_course
+    get_instance_cached_by_author_id
+from courses.services.course_actions_service import create_course, remove_course, count_content_course, \
+    publishing_course, course_patch_service
 from courses.utils import categories_level_sort_present, average_rating, certificates_issued, count_announcements, \
     course_structure_create_or_update
 
@@ -106,59 +106,18 @@ class CourseView(LocalizedView):
     async def patch(self, request, course_id):
         """Редагування курсу за id власником курсу"""
 
-        # TODO винести логіку в доп
         parsed_data, files, raw_form, parse_error = parse_multipart_request(request)
         if parse_error:
             return parse_error
 
-        cover_file = files.get('cover_image') if files else None
-
-        change_info_course = str(raw_form.get('change_info_course', 'false')).lower() == 'true'
-        change_structure_course = str(raw_form.get('change_structure_course', 'false')).lower() == 'true'
-
-        if not change_info_course and not change_structure_course:
-            return error_response('No data to update', status=400)
-
-        data = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in parsed_data.items()}
-
         try:
-            uuid_obj = validate_uuid(course_id)
-            course = await sync_to_async(Course.objects.select_related('details').get)(pk=uuid_obj)
-
-            structure_was_updated = False
-
-            # TODO папри видалені модуля в supabase змінювати назви наступних уроків та тестів, щоб не було пропуску в нумерації
-
-            if change_structure_course:
-                if course.is_published:
-                    await update_published_course_with_structure(course)
-
-                await course_structure_create_or_update(data.get('courseStructure', []), request.user, course_id, files)
-                structure_was_updated = True
-
-            if change_info_course:
-                response = await update_course(course, data, cover_file)
-
-                if response.get('status_code') == 400 and structure_was_updated:
-                    return success_response({
-                        "data": "Course structure updated successfully.",
-                        "course_id": str(course.id)
-                    })
-
-                if response.status_code == 200:
-                    await invalidate_author_cache(
-                        author_id=str(request.user.id),
-                        instance_type="courses",
-                        instance_type_cache="courses_get"
-                    )
-
-                return response
-
-            return success_response({
-                "data": "Course structure updated successfully.",
-                "course_id": str(course.id)
-            })
-
+            return await course_patch_service(
+                course_id=course_id,
+                request_user=request.user,
+                request_data=parsed_data,
+                files=files,
+                raw_form=raw_form
+            )
         except ValidationError as e:
             return error_response(str(e), status=400)
         except Course.DoesNotExist:

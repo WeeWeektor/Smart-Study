@@ -5,3 +5,4 @@ from .remove_course import remove_course
 from .update_course import update_course, update_published_course_with_structure
 from .publish_course import publish_course, count_content, publishing_course
 from .get_course_statistics_data import get_course_statistics_data
+from .course_patch_service import course_patch_service

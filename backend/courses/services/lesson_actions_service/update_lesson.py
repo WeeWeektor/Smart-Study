@@ -4,8 +4,6 @@ from courses.models import Lesson
 from courses.services.structure_course_module_action_service import update_data_in_structure
 
 
-# TODO проблеми з оновленням уроку з типом link та document (перевірити)
-
 async def update_lesson(lesson_id, lesson_payload, module_id, contentData=None):
     lesson = await Lesson.objects.aget(id=lesson_id)
 

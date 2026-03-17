@@ -81,6 +81,9 @@ def _process_link_lesson(lesson) -> str:
 
 async def _process_another_lesson_types(lesson, files, lesson_id_str, courseId, lesson_type_category) -> str:
     single_data = lesson.get('singleContentData', {})
+    if isinstance(single_data, str):
+        raise ValidationError(_(f"Error retrieving single content data for lesson type: {lesson_type_category}"))
+
     file_key = single_data.get('fileKey') or single_data.get('fileName')
     file = files.get(file_key) if file_key else None
 
