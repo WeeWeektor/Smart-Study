@@ -65,7 +65,7 @@ export const Sidebar = ({
   }
 
   const navLinks = [
-    { to: '/dashboard/student', icon: Home, text: t('Головна') },
+    { to: '/', icon: Home, text: t('Головна') },
     {
       icon: BookOpen,
       text: t('Курси'),
@@ -78,7 +78,7 @@ export const Sidebar = ({
       ],
     },
     // { to: '/tests', icon: BarChart3, text: t('Тести') },
-    { to: '/calendar/student', icon: Calendar, text: t('Календар') },
+    { to: '/calendar', icon: Calendar, text: t('Календар') },
     { to: '/profile', icon: User, text: t('Профіль') },
   ]
 

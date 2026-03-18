@@ -18,6 +18,7 @@ import {
   CourseCompletion,
   VerifyPage,
   CourseStatisticsForTeacher,
+  Calendar,
 } from '@/pages'
 import { tokenService } from '@/shared/api'
 import { useEffect } from 'react'
@@ -69,6 +70,8 @@ const App = () => {
 
           <Route path="/create-course" element={<CreateCourse />} />
           <Route path="/create-course/:id" element={<CreateCourse />} />
+
+          <Route path="/calendar" element={<Calendar />} />
 
           <Route
             path="/course-statistics/:id"
