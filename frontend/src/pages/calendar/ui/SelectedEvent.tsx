@@ -11,6 +11,11 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import {
+  getImportanceColor,
+  getImportanceColorBackground,
+  getImportanceColorText,
+} from '../lib/utils'
 
 interface SelectedEventProps {
   course: any
@@ -39,7 +44,18 @@ export const SelectedEvent = ({
   }, [isPersonalEvent, userStatus])
 
   return (
-    <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+    <div
+      className="space-y-6 max-h-[80vh] overflow-y-auto backdrop-blur-sm
+                 dark:scrollbar-slate-800
+                 scrollbar-thin
+                 scrollbar-track-transparent
+                 scrollbar-thumb-gray-300
+                 dark:scrollbar-thumb-slate-700
+                 hover:scrollbar-thumb-gray-400
+                 dark:hover:scrollbar-thumb-slate-500
+                 scrollbar-thumb-rounded-full
+                 transition-colors"
+    >
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
           {error}
@@ -48,10 +64,12 @@ export const SelectedEvent = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
-            className={`p-2 rounded-lg ${isPersonalEvent ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-brand-100 dark:bg-brand-900/30'}`}
+            className={`p-2 rounded-lg ${isPersonalEvent ? getImportanceColorBackground(course.importance, 2) : 'bg-brand-100 dark:bg-brand-900/30'}`}
           >
             {isPersonalEvent ? (
-              <CalendarDays className="w-6 h-6 text-amber-600" />
+              <CalendarDays
+                className={`w-6 h-6 ${getImportanceColorText(course.importance)}`}
+              />
             ) : (
               <GraduationCap className="w-6 h-6 text-brand-600" />
             )}
@@ -70,7 +88,11 @@ export const SelectedEvent = ({
 
         <Badge
           variant={userStatus.is_completed ? 'default' : 'secondary'}
-          className={userStatus.is_completed ? 'bg-green-600' : ''}
+          className={
+            userStatus.is_completed
+              ? 'bg-green-600'
+              : `${getImportanceColor(course.importance)}`
+          }
         >
           {isPersonalEvent
             ? t(course.importance || 'medium')
@@ -97,12 +119,18 @@ export const SelectedEvent = ({
         </div>
 
         {isPersonalEvent ? (
-          <div className="p-3 border rounded-lg bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/50">
-            <p className="text-[10px] uppercase font-bold text-amber-600 mb-1">
+          <div
+            className={`p-3 border rounded-lg ${getImportanceColorBackground(course.importance)}`}
+          >
+            <p
+              className={`text-[10px] uppercase font-bold ${getImportanceColorText(course.importance)} mb-1`}
+            >
               {t('Час')}
             </p>
             <p className="text-sm font-semibold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-600" />
+              <Clock
+                className={`w - 4 h-4 ${getImportanceColorText(course.importance)}`}
+              />
               {new Date(userStatus.date).toLocaleTimeString('uk-UA', {
                 hour: '2-digit',
                 minute: '2-digit',

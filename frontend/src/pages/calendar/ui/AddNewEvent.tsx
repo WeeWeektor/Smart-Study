@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import {
   Button,
@@ -30,7 +30,15 @@ export const AddNewEvent = ({
   onCancel,
 }: AddNewEventProps) => {
   const { t } = useI18n()
+  const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus()
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   // TODO localize time format based on user locale
   const currentTime = new Date().toLocaleTimeString('uk-UA', {
@@ -50,22 +58,53 @@ export const AddNewEvent = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim()) return
 
-    const combinedDate = new Date(formData.date)
-    const [hours, minutes] = formData.time.split(':')
-    combinedDate.setHours(parseInt(hours), parseInt(minutes))
+    if (!formData.title.trim()) {
+      setError(t('Назва обов’язкова'))
+      return
+    }
 
-    onSave({
-      ...formData,
-      date: combinedDate.toISOString(),
-    })
+    try {
+      const finalDate = new Date(formData.date)
+
+      const [hours, minutes] = formData.time.split(':').map(Number)
+
+      finalDate.setHours(hours)
+      finalDate.setMinutes(minutes)
+      finalDate.setSeconds(0)
+      finalDate.setMilliseconds(0)
+
+      if (isNaN(finalDate.getTime())) {
+        throw new Error('Invalid date')
+      }
+
+      const { time, ...dataToSave } = formData
+
+      onSave({
+        ...dataToSave,
+        date: finalDate.toISOString(),
+      })
+    } catch (error) {
+      setError(
+        t('Помилка формування дати') ||
+          (error instanceof Error ? error.message : '')
+      )
+    }
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto"
+      className="space-y-5 p-1 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto backdrop-blur-sm
+                 dark:scrollbar-slate-800
+                 scrollbar-thin
+                 scrollbar-track-transparent
+                 scrollbar-thumb-gray-300
+                 dark:scrollbar-thumb-slate-700
+                 hover:scrollbar-thumb-gray-400
+                 dark:hover:scrollbar-thumb-slate-500
+                 scrollbar-thumb-rounded-full
+                 transition-colors"
     >
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
@@ -76,10 +115,12 @@ export const AddNewEvent = ({
         <Label htmlFor="title">{t('Назва події')} *</Label>
         <Input
           id="title"
+          ref={inputRef}
           value={formData.title}
           onChange={e => setFormData({ ...formData, title: e.target.value })}
           placeholder={t('Наприклад: Підготовка до модульного контролю')}
           required
+          autoFocus
         />
       </div>
 

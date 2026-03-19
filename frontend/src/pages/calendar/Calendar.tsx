@@ -40,6 +40,7 @@ import { CourseHeader } from '@/widgets/course'
 import { Sidebar } from '@/widgets'
 import { useProfileData } from '@/shared/hooks'
 import { AddNewEvent, SelectedEvent } from '@/pages/calendar/ui'
+import { getImportanceColor } from './lib/utils'
 
 const CalendarPage = () => {
   const { t } = useI18n()
@@ -68,19 +69,6 @@ const CalendarPage = () => {
   const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null)
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
   const INITIAL_VISIBLE_COUNT = 3
-
-  const getImportanceColor = (importance: string) => {
-    switch (importance) {
-      case 'high':
-        return 'bg-red-500 text-white'
-      case 'medium':
-        return 'bg-amber-500 text-white'
-      case 'low':
-        return 'bg-green-500 text-white'
-      default:
-        return 'bg-brand-500 text-white'
-    }
-  }
 
   const getImportanceText = (importance: string) => {
     switch (importance) {
@@ -177,15 +165,96 @@ const CalendarPage = () => {
     setIsEventsExpanded(false)
   }
 
+  const fetchPersonalEvents = async () => {
+    try {
+      // const response = await eventService.getAll()
+      // setPersonalEvents(response.data)
+      console.log('--- GET: Отримання всіх подій з БД ---')
+    } catch (err) {
+      console.error('Помилка завантаження:', err)
+    }
+  }
+
+  const patchPersonalEvent = async (
+    eventId: string,
+    updatedData: Partial<any>
+  ) => {
+    try {
+      setPersonalEvents(prev =>
+        prev.map(event =>
+          event.id === eventId ? { ...event, ...updatedData } : event
+        )
+      )
+      console.log(`--- PATCH: Оновлення події ${eventId} ---`, updatedData)
+    } catch (err) {
+      console.error('Помилка оновлення:', err)
+    }
+  }
+
+  const deletePersonalEvent = async (eventId: string) => {
+    try {
+      setPersonalEvents(prev => prev.filter(e => e.id !== eventId))
+      console.log(`--- DELETE: Видалення події ${eventId} з БД ---`)
+    } catch (err) {
+      console.error('Помилка видалення:', err)
+    }
+  }
+
+  const togglePersonalEventStatus = async (eventId: string) => {
+    try {
+      setPersonalEvents(prev =>
+        prev.map(event => {
+          if (event.id === eventId) {
+            const isNowCompleted = !event.is_completed
+            const updated = {
+              ...event,
+              is_completed: isNowCompleted,
+              completed_at: isNowCompleted ? new Date().toISOString() : null,
+            }
+            console.log(
+              `--- PATCH (Status): Подія ${eventId} тепер ${isNowCompleted ? 'Завершена' : 'В процесі'} ---`
+            )
+            return updated
+          }
+          return event
+        })
+      )
+      setIsModalOpen(false)
+      setActiveEvent(null)
+    } catch (err) {
+      console.error('Помилка зміни статусу:', err)
+    }
+  }
+
+  const createPersonalEvent = async (data: any) => {
+    const newEvent = {
+      id: crypto.randomUUID(),
+      ...data,
+      is_completed: false,
+      type: 'personal',
+      isPersonal: true,
+    }
+    console.log('--- POST: Створення нової події ---', newEvent)
+    setPersonalEvents(prev => [...prev, newEvent])
+    setIsModalAddEventOpen(false)
+  }
+
   const handleSaveNewEvent = (data: any) => {
     // виклик сервісу: await eventService.create(data)
     const newEvent = {
-      ...data,
-      id: `personal-${Date.now()}`,
+      id: crypto.randomUUID(),
+      title: data.title,
+      description: data.description,
+      date: data.date,
+      importance: data.importance,
+      link: data.link,
+      is_completed: false,
       type: 'personal',
       isPersonal: true,
-      progress: 0,
     }
+
+    console.log('--- ПІДГОТОВКА ДО ЗБЕРЕЖЕННЯ В БД ---')
+    console.log(JSON.stringify(newEvent, null, 2))
 
     setPersonalEvents(prev => [...prev, newEvent])
     setIsModalAddEventOpen(false)
