@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'core',
     'users',
     'courses',
+    'users_calendar',
 ]
 
 CHANNEL_LAYERS = {
