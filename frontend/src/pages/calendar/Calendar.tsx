@@ -111,6 +111,7 @@ const CalendarPage = () => {
       setPlanCourseData({
         id: location.state.courseId,
         title: location.state.courseTitle,
+        courseStructure: location.state.courseStructure,
       })
       setIsPlanModalOpen(true)
 
@@ -168,7 +169,10 @@ const CalendarPage = () => {
         event_date: data.date,
         link: `${window.location.origin}/course/${planCourseData.id}`,
       }
-      await calendarApiService.createEvent(payload)
+      // await calendarApiService.createEvent(payload)
+
+      console.log('Course plan saved with data:', payload)
+
       fetchPersonalEvents()
       setIsPlanModalOpen(false)
     } catch (err) {
@@ -750,6 +754,7 @@ const CalendarPage = () => {
             <PlaningCompletionOfTheCourse
               courseId={planCourseData.id}
               courseTitle={planCourseData.title}
+              courseStructure={planCourseData.courseStructure}
               onSave={handleSaveCoursePlan}
               onCancel={() => setIsPlanModalOpen(false)}
             />

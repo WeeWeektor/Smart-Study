@@ -170,6 +170,7 @@ const CourseReview = () => {
         openPlanModal: true,
         courseId: id,
         courseTitle: course?.course.title,
+        courseStructure: courseStructureData,
       },
     })
   }
