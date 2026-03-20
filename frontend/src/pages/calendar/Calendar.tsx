@@ -202,9 +202,9 @@ const CalendarPage = () => {
       }
       delete payload.date
 
-      const newEvent = await calendarApiService.createEvent(payload)
+      const updatedFullList = await calendarApiService.createEvent(payload)
 
-      setPersonalEvents(prev => [...prev, newEvent])
+      setPersonalEvents(updatedFullList)
       setIsModalAddEventOpen(false)
     } catch (err: any) {
       const msg =
@@ -229,14 +229,12 @@ const CalendarPage = () => {
         delete payload.date
       }
 
-      const updatedEvent = await calendarApiService.updateEvent(
+      const updatedFullList = await calendarApiService.updateEvent(
         activeEvent.course.id,
         updatedData
       )
 
-      setPersonalEvents(prev =>
-        prev.map(e => (e.id === updatedEvent.id ? updatedEvent : e))
-      )
+      setPersonalEvents(updatedFullList)
 
       setIsEditing(false)
       setIsModalOpen(false)
@@ -273,13 +271,11 @@ const CalendarPage = () => {
       const event = personalEvents.find(e => e.id === eventId)
       if (!event) return
 
-      const updatedEvent = await calendarApiService.updateEvent(eventId, {
+      const updatedFullList = await calendarApiService.updateEvent(eventId, {
         is_completed: !event.is_completed,
       })
 
-      setPersonalEvents(prev =>
-        prev.map(e => (e.id === eventId ? updatedEvent : e))
-      )
+      setPersonalEvents(updatedFullList)
 
       if (isModalOpen) {
         setIsModalOpen(false)

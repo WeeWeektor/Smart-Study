@@ -1,4 +1,4 @@
 export { apiClient } from './api-client'
 export { tokenService } from './token-manager'
 export type { ApiResponse, User } from './api'
-export { handleApiError } from './error-handler'
+export { handleApiError, handleApiCalendarError } from './error-handler'
