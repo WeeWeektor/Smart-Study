@@ -164,9 +164,17 @@ CACHES = {
             "IGNORE_EXCEPTIONS": True,
         }
     },
-    "public_tests_get": {
+    "calendar_events": {
         "BACKEND": os.getenv("BACKEND"),
         "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/3",
+        "OPTIONS": {
+            "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
+            "IGNORE_EXCEPTIONS": True,
+        }
+    },
+    "public_tests_get": {
+        "BACKEND": os.getenv("BACKEND"),
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/4",
         "OPTIONS": {
             "CLIENT_CLASS": os.getenv("CLIENT_CLASS"),
             "IGNORE_EXCEPTIONS": True,

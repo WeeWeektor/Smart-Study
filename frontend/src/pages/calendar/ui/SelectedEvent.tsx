@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react'
 import { useI18n } from '@/shared/lib'
 import { Badge, Button, CollapsibleSection, Progress } from '@/shared/ui'
 import {
@@ -8,6 +7,7 @@ import {
   Clock,
   ExternalLink,
   GraduationCap,
+  PenIcon,
   Trash2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -23,6 +23,7 @@ interface SelectedEventProps {
   isPersonalEvent?: boolean
   onDelete?: (id: string) => void
   onComplete?: (id: string) => void
+  onEdit?: () => void
 }
 
 export const SelectedEvent = ({
@@ -31,17 +32,10 @@ export const SelectedEvent = ({
   isPersonalEvent,
   onDelete,
   onComplete,
+  onEdit,
 }: SelectedEventProps) => {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
-
-  const isFutureEvent = useMemo(() => {
-    const eventDate = new Date(
-      isPersonalEvent ? userStatus.date : userStatus.enrolled_at
-    )
-    return eventDate > new Date()
-  }, [isPersonalEvent, userStatus])
 
   return (
     <div
@@ -56,11 +50,6 @@ export const SelectedEvent = ({
                  scrollbar-thumb-rounded-full
                  transition-colors"
     >
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
-          {error}
-        </div>
-      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
@@ -181,26 +170,40 @@ export const SelectedEvent = ({
           </Button>
         ) : (
           <>
-            {isPersonalEvent && isFutureEvent && (
-              <>
-                <Button
-                  className="w-full text-brand-500 hover:bg-brand-50 bg-brand-700/20 dark:hover:bg-brand-800/20 gap-2 h-12"
-                  onClick={() => onComplete?.(course.id)}
-                >
-                  <CircleCheckIcon className="w-5 h-5" />
-                  {t('Завершити подію')}
-                </Button>
+            <Button
+              className={`w-full gap-2 h-12 ${
+                userStatus.is_completed
+                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200'
+                  : 'bg-brand-600 text-white hover:bg-brand-700'
+              }`}
+              onClick={() => onComplete?.(course.id)}
+            >
+              <CircleCheckIcon className="w-5 h-5" />
+              {userStatus.is_completed
+                ? t('Повернути в роботу')
+                : t('Завершити подію')}
+            </Button>
 
-                <Button
-                  variant="ghost"
-                  className="w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 gap-2 h-12"
-                  onClick={() => onDelete?.(course.id)}
-                >
-                  <Trash2 className="w-5 h-5" />
-                  {t('Видалити подію')}
-                </Button>
-              </>
-            )}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="ghost"
+                className="w-full text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 gap-2 h-12"
+                onClick={onEdit}
+                disabled={userStatus.is_completed}
+              >
+                <PenIcon className="w-5 h-5" />
+                {t('Редагувати')}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 gap-2 h-12"
+                onClick={() => onDelete?.(course.id)}
+              >
+                <Trash2 className="w-5 h-5" />
+                {t('Видалити подію')}
+              </Button>
+            </div>
           </>
         )}
       </div>

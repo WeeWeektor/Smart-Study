@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   addMonths,
   eachDayOfInterval,
@@ -41,6 +41,7 @@ import { Sidebar } from '@/widgets'
 import { useProfileData } from '@/shared/hooks'
 import { AddNewEvent, SelectedEvent } from '@/pages/calendar/ui'
 import { getImportanceColor } from './lib/utils'
+import { calendarApiService } from '@/pages/calendar/api'
 
 const CalendarPage = () => {
   const { t } = useI18n()
@@ -68,7 +69,13 @@ const CalendarPage = () => {
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
   const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null)
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const INITIAL_VISIBLE_COUNT = 3
+
+  const handleEditClick = () => {
+    setIsEditing(true)
+  }
 
   const getImportanceText = (importance: string) => {
     switch (importance) {
@@ -82,6 +89,14 @@ const CalendarPage = () => {
         return t('Середній')
     }
   }
+
+  useEffect(() => {
+    fetchPersonalEvents()
+  }, [])
+
+  // TODO - трабли з часом в модалках
+  // TODO - трабли з кольорами
+  // TODO - аиправити проблеми з наведенням на прапорці
 
   const events = useMemo(() => {
     const courseEvents = rawStats
@@ -104,8 +119,8 @@ const CalendarPage = () => {
 
     const personalMapped = personalEvents.map(e => ({
       ...e,
-      date: new Date(e.date),
-      isPersonal: true,
+      date: new Date(e.event_date),
+      isPersonal: e.is_personal ?? true,
       type: e.is_completed ? 'completed' : 'enrolled',
       title: e.title,
       description: e.description,
@@ -167,98 +182,117 @@ const CalendarPage = () => {
 
   const fetchPersonalEvents = async () => {
     try {
-      // const response = await eventService.getAll()
-      // setPersonalEvents(response.data)
-      console.log('--- GET: Отримання всіх подій з БД ---')
-    } catch (err) {
-      console.error('Помилка завантаження:', err)
+      const data = await calendarApiService.getEvents()
+      setPersonalEvents(data)
+    } catch (err: any) {
+      const msg =
+        typeof err.message === 'object'
+          ? JSON.stringify(err.message)
+          : err.message
+
+      setApiError(msg)
     }
   }
 
-  const patchPersonalEvent = async (
-    eventId: string,
-    updatedData: Partial<any>
-  ) => {
+  const createPersonalEvent = async (data: any) => {
     try {
-      setPersonalEvents(prev =>
-        prev.map(event =>
-          event.id === eventId ? { ...event, ...updatedData } : event
-        )
+      const payload = {
+        ...data,
+        event_date: data.date,
+      }
+      delete payload.date
+
+      const newEvent = await calendarApiService.createEvent(payload)
+
+      setPersonalEvents(prev => [...prev, newEvent])
+      setIsModalAddEventOpen(false)
+    } catch (err: any) {
+      const msg =
+        typeof err.message === 'object'
+          ? JSON.stringify(err.message)
+          : err.message
+
+      setApiError(msg)
+    }
+  }
+
+  const handleUpdateEvent = async (updatedData: any) => {
+    try {
+      const payload = {
+        ...updatedData,
+        description: updatedData.description ?? '',
+        link: updatedData.link ?? '',
+      }
+
+      if (payload.date) {
+        payload.event_date = payload.date
+        delete payload.date
+      }
+
+      const updatedEvent = await calendarApiService.updateEvent(
+        activeEvent.course.id,
+        updatedData
       )
-      console.log(`--- PATCH: Оновлення події ${eventId} ---`, updatedData)
-    } catch (err) {
-      console.error('Помилка оновлення:', err)
+
+      setPersonalEvents(prev =>
+        prev.map(e => (e.id === updatedEvent.id ? updatedEvent : e))
+      )
+
+      setIsEditing(false)
+      setIsModalOpen(false)
+      setActiveEvent(null)
+    } catch (err: any) {
+      const msg =
+        typeof err.message === 'object'
+          ? JSON.stringify(err.message)
+          : err.message
+
+      setApiError(msg)
     }
   }
 
   const deletePersonalEvent = async (eventId: string) => {
     try {
+      await calendarApiService.deleteEvent(eventId)
+
       setPersonalEvents(prev => prev.filter(e => e.id !== eventId))
-      console.log(`--- DELETE: Видалення події ${eventId} з БД ---`)
-    } catch (err) {
-      console.error('Помилка видалення:', err)
+      setIsModalOpen(false)
+      setActiveEvent(null)
+    } catch (err: any) {
+      const msg =
+        typeof err.message === 'object'
+          ? JSON.stringify(err.message)
+          : err.message
+
+      setApiError(msg)
     }
   }
 
   const togglePersonalEventStatus = async (eventId: string) => {
     try {
+      const event = personalEvents.find(e => e.id === eventId)
+      if (!event) return
+
+      const updatedEvent = await calendarApiService.updateEvent(eventId, {
+        is_completed: !event.is_completed,
+      })
+
       setPersonalEvents(prev =>
-        prev.map(event => {
-          if (event.id === eventId) {
-            const isNowCompleted = !event.is_completed
-            const updated = {
-              ...event,
-              is_completed: isNowCompleted,
-              completed_at: isNowCompleted ? new Date().toISOString() : null,
-            }
-            console.log(
-              `--- PATCH (Status): Подія ${eventId} тепер ${isNowCompleted ? 'Завершена' : 'В процесі'} ---`
-            )
-            return updated
-          }
-          return event
-        })
+        prev.map(e => (e.id === eventId ? updatedEvent : e))
       )
-      setIsModalOpen(false)
-      setActiveEvent(null)
-    } catch (err) {
-      console.error('Помилка зміни статусу:', err)
+
+      if (isModalOpen) {
+        setIsModalOpen(false)
+        setActiveEvent(null)
+      }
+    } catch (err: any) {
+      const msg =
+        typeof err.message === 'object'
+          ? JSON.stringify(err.message)
+          : err.message
+
+      setApiError(msg)
     }
-  }
-
-  const createPersonalEvent = async (data: any) => {
-    const newEvent = {
-      id: crypto.randomUUID(),
-      ...data,
-      is_completed: false,
-      type: 'personal',
-      isPersonal: true,
-    }
-    console.log('--- POST: Створення нової події ---', newEvent)
-    setPersonalEvents(prev => [...prev, newEvent])
-    setIsModalAddEventOpen(false)
-  }
-
-  const handleSaveNewEvent = (data: any) => {
-    // виклик сервісу: await eventService.create(data)
-    const newEvent = {
-      id: crypto.randomUUID(),
-      title: data.title,
-      description: data.description,
-      date: data.date,
-      importance: data.importance,
-      link: data.link,
-      is_completed: false,
-      type: 'personal',
-      isPersonal: true,
-    }
-
-    console.log('--- ПІДГОТОВКА ДО ЗБЕРЕЖЕННЯ В БД ---')
-    console.log(JSON.stringify(newEvent, null, 2))
-
-    setPersonalEvents(prev => [...prev, newEvent])
-    setIsModalAddEventOpen(false)
-    // викликати refreshStats або аналогічний метод, якщо дані на бекенді
   }
 
   const openConfirmDelete = (id: string) => {
@@ -267,13 +301,17 @@ const CalendarPage = () => {
     setIsConfirmDeleteOpen(true)
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (eventIdToDelete) {
-      setPersonalEvents(prev => prev.filter(e => e.id !== eventIdToDelete))
-      setIsModalOpen(false)
+      await deletePersonalEvent(eventIdToDelete)
       setIsConfirmDeleteOpen(false)
       setEventIdToDelete(null)
     }
+  }
+
+  const safeTimeFormat = (dateValue: any) => {
+    const date = new Date(dateValue)
+    return isNaN(date.getTime()) ? '12:00' : format(date, 'HH:mm')
   }
 
   const selectedDateEvents = useMemo(() => {
@@ -291,7 +329,6 @@ const CalendarPage = () => {
       link: newEventData.link,
     })
     setIsModalAddEventOpen(true)
-    console.log(newEventData)
   }
 
   if (loadingProfile && loading) {
@@ -314,23 +351,8 @@ const CalendarPage = () => {
     role: profileData.user.role,
   }
 
-  const handleToggleCompleteEvent = (eventId: string) => {
-    setPersonalEvents(prev =>
-      prev.map(event => {
-        if (event.id === eventId) {
-          const isNowCompleted = !event.is_completed
-          return {
-            ...event,
-            is_completed: isNowCompleted,
-            completed_at: isNowCompleted ? new Date().toISOString() : null,
-          }
-        }
-        return event
-      })
-    )
-
-    setIsModalOpen(false)
-    setActiveEvent(null)
+  const handleToggleCompleteEvent = async (eventId: string) => {
+    await togglePersonalEventStatus(eventId)
   }
 
   return (
@@ -348,12 +370,12 @@ const CalendarPage = () => {
           title={t('Навчальний календар')}
           description={t('Відстежуйте свій прогрес та важливі дати курсу')}
         />
-        {error && (
+        {(error || apiError) && (
           <div className="flex flex-col mx-6">
             <Alert className="border-destructive bg-destructive/10 text-destructive mt-6 h-auto">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-destructive">
-                {error}
+                {error ? error : apiError}
               </AlertDescription>
             </Alert>
           </div>
@@ -619,22 +641,42 @@ const CalendarPage = () => {
         </div>
         <Modal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={activeEvent?.course.title}
+          onClose={() => {
+            setIsModalOpen(false)
+            setIsEditing(false)
+          }}
+          title={isEditing ? t('Редагувати подію') : activeEvent?.course.title}
         >
-          {activeEvent && (
-            <SelectedEvent
-              course={activeEvent.course}
-              userStatus={
-                activeEvent.course.user_status
-                  ? activeEvent.course.user_status
-                  : activeEvent.user_status
-              }
-              isPersonalEvent={activeEvent.isPersonal}
-              onDelete={openConfirmDelete}
-              onComplete={handleToggleCompleteEvent}
-            />
-          )}
+          {activeEvent &&
+            (isEditing ? (
+              <AddNewEvent
+                initialDate={
+                  activeEvent.user_status?.date || new Date().toISOString()
+                }
+                defaultValues={{
+                  title: activeEvent.course.title,
+                  description: activeEvent.course.description,
+                  importance: activeEvent.course.importance,
+                  link: activeEvent.course.link,
+                  time: safeTimeFormat(activeEvent.user_status?.date),
+                }}
+                onSave={handleUpdateEvent}
+                onCancel={() => setIsEditing(false)}
+              />
+            ) : (
+              <SelectedEvent
+                course={activeEvent.course}
+                userStatus={
+                  activeEvent.course.user_status
+                    ? activeEvent.course.user_status
+                    : activeEvent.user_status
+                }
+                isPersonalEvent={activeEvent.isPersonal}
+                onDelete={openConfirmDelete}
+                onComplete={handleToggleCompleteEvent}
+                onEdit={handleEditClick}
+              />
+            ))}
         </Modal>
         <Modal
           isOpen={isModalAddEventOpen}
@@ -643,7 +685,7 @@ const CalendarPage = () => {
         >
           <AddNewEvent
             initialDate={selectedDate.toISOString()}
-            onSave={handleSaveNewEvent}
+            onSave={createPersonalEvent}
             onCancel={() => setIsModalAddEventOpen(false)}
           />
         </Modal>

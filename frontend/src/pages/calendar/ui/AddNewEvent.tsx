@@ -22,12 +22,14 @@ interface AddNewEventProps {
   initialDate: string
   onSave: (data: any) => void
   onCancel: () => void
+  defaultValues?: any
 }
 
 export const AddNewEvent = ({
   initialDate,
   onSave,
   onCancel,
+  defaultValues,
 }: AddNewEventProps) => {
   const { t } = useI18n()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -48,12 +50,12 @@ export const AddNewEvent = ({
   })
 
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    title: defaultValues?.title || '',
+    description: defaultValues?.description || '',
     date: initialDate,
-    time: currentTime,
-    importance: 'medium',
-    link: '',
+    time: defaultValues?.time || currentTime,
+    importance: defaultValues?.importance || 'medium',
+    link: defaultValues?.link || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {

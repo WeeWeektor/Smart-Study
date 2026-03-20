@@ -17,7 +17,10 @@ class PersonalEventSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'completed_at']
 
     def create(self, validated_data):
-        user = self.context['request'].user
+        user = self.context.get('user')
+        if not user:
+            user = self.context['request'].user
+
         calendar, _ = BaseUserCalendar.objects.get_or_create(user=user)
         validated_data['calendar'] = calendar
         return super().create(validated_data)

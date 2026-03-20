@@ -50,7 +50,7 @@ class PersonalEvent(CalendarEventBase):
         verbose_name=_("Calendar")
     )
     title = models.CharField(_("Title"), max_length=255)
-    description = models.TextField(_("Description"), blank=True, max_length=1000)
+    description = models.TextField(_("Description"), blank=True, null=True, max_length=1000, default="")
 
     importance = models.CharField(
         _("Importance"),
