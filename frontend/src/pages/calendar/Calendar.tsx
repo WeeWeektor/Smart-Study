@@ -40,7 +40,11 @@ import { CourseHeader } from '@/widgets/course'
 import { Sidebar } from '@/widgets'
 import { useProfileData } from '@/shared/hooks'
 import { AddNewEvent, SelectedEvent } from '@/pages/calendar/ui'
-import { getImportanceColor } from './lib/utils'
+import {
+  getImportanceColor,
+  getImportanceColorBackground,
+  getImportanceHoverColor,
+} from './lib/utils'
 import { calendarApiService } from '@/pages/calendar/api'
 
 const CalendarPage = () => {
@@ -93,9 +97,6 @@ const CalendarPage = () => {
   useEffect(() => {
     fetchPersonalEvents()
   }, [])
-
-  // TODO - трабли з кольорами
-  // TODO - аиправити проблеми з наведенням на прапорці
 
   const events = useMemo(() => {
     const courseEvents = rawStats
@@ -402,6 +403,15 @@ const CalendarPage = () => {
               >
                 {days.map((day, idx) => {
                   const dayEvents = events.filter(e => isSameDay(e.date, day))
+                  const topEvent =
+                    dayEvents.find(e => e.importance === 'high') ||
+                    dayEvents.find(e => e.importance === 'medium') ||
+                    dayEvents.find(e => e.importance === 'low')
+                  const hoverClass =
+                    topEvent && topEvent.isPersonal
+                      ? getImportanceHoverColor(topEvent.importance)
+                      : 'hover:border-brand-400 dark:hover:border-brand-100'
+
                   const isSelected = isSameDay(day, selectedDate)
                   const isToday = isSameDay(day, new Date())
                   const isCurrentMonth = isSameMonth(day, currentMonth)
@@ -415,6 +425,7 @@ const CalendarPage = () => {
                       ${!isCurrentMonth ? 'opacity-30 bg-slate-50/50 dark:bg-slate-900/10' : 'bg-card hover:border-brand-400'}
                       ${isSelected ? 'border-brand-600 ring-2 ring-brand-500/20 z-10' : 'border-slate-100 dark:border-slate-800'}
                       ${isToday ? 'bg-brand-500/10 dark:bg-brand-200/10' : ''}
+                      ${hoverClass}
                     `}
                     >
                       <span
@@ -427,7 +438,7 @@ const CalendarPage = () => {
                         {dayEvents.slice(0, 2).map((e, i) => (
                           <div
                             key={i}
-                            className={`h-1.5 w-full rounded-full ${
+                            className={`h-1.5 w-full rounded-full dark:text-white text-black  ${
                               e.isPersonal
                                 ? getImportanceColor(e.importance)
                                 : e.type === 'completed'
@@ -496,16 +507,16 @@ const CalendarPage = () => {
                     ).map(event => (
                       <div
                         key={event.id}
-                        className={`group p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden ${
+                        className={`group p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden dark:text-white text-black  ${
                           event.isPersonal
-                            ? 'border-amber-200 bg-amber-50/30 dark:border-amber-900/50 dark:bg-amber-900/10 hover:border-amber-400'
+                            ? `${getImportanceColorBackground(event.importance)} ${getImportanceHoverColor(event.importance)}`
                             : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-brand-200'
                         } hover:scale-[1.01]`}
                         onClick={() => handleEventClick(event.id)}
                       >
                         {event.isPersonal && (
                           <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 z-10 ${getImportanceColor(event.importance)}`}
+                            className={`absolute left-0 top-0 bottom-0 w-1.5 z-10 dark:text-white text-black  ${getImportanceColor(event.importance)}`}
                             title={t(`Приорітет: ${event.importance}`)}
                           />
                         )}
@@ -536,7 +547,7 @@ const CalendarPage = () => {
 
                             {event.isPersonal && (
                               <Badge
-                                className={`border-none ${getImportanceColor(event.importance)}`}
+                                className={`border-none dark:text-white text-black  ${getImportanceColor(event.importance)}`}
                               >
                                 {t('Приорітет')}:{' '}
                                 {getImportanceText(event.importance)}

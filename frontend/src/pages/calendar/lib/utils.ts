@@ -1,13 +1,13 @@
 export const getImportanceColor = (importance: string) => {
   switch (importance) {
     case 'high':
-      return 'bg-red-500 text-white'
+      return 'bg-red-500'
     case 'medium':
-      return 'bg-amber-500 text-white'
+      return 'bg-amber-500'
     case 'low':
-      return 'bg-green-500 text-white'
+      return 'bg-green-500'
     default:
-      return 'bg-brand-500 text-white'
+      return 'bg-brand-500'
   }
 }
 
@@ -49,5 +49,18 @@ export const getImportanceColorBackground = (
         return 'bg-brand-100 dark:bg-brand-900/30'
       }
       return 'bg-brand-50 dark:bg-brand-900/10 border-brand-100 dark:border-brand-900/50'
+  }
+}
+
+export const getImportanceHoverColor = (importance: string) => {
+  switch (importance) {
+    case 'high':
+      return 'hover:border-red-400 dark:hover:border-red-700'
+    case 'medium':
+      return 'hover:border-amber-400 dark:hover:border-amber-700'
+    case 'low':
+      return 'hover:border-green-400 dark:hover:border-green-700'
+    default:
+      return 'hover:border-brand-400 dark:hover:border-brand-600'
   }
 }

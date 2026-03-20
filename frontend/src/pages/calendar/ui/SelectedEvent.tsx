@@ -89,11 +89,7 @@ export const SelectedEvent = ({
 
         <Badge
           variant={userStatus.is_completed ? 'default' : 'secondary'}
-          className={
-            userStatus.is_completed
-              ? 'bg-green-600'
-              : `${getImportanceColor(course.importance)}`
-          }
+          className={`dark:text-white text-black ${userStatus.is_completed ? 'bg-green-600' : `${getImportanceColor(course.importance)}`}`}
         >
           {isPersonalEvent
             ? t(course.importance || 'medium')
