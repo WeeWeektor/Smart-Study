@@ -39,13 +39,18 @@ import { useI18n } from '@/shared/lib'
 import { CourseHeader } from '@/widgets/course'
 import { Sidebar } from '@/widgets'
 import { useProfileData } from '@/shared/hooks'
-import { AddNewEvent, SelectedEvent } from '@/pages/calendar/ui'
+import {
+  AddNewEvent,
+  PlaningCompletionOfTheCourse,
+  SelectedEvent,
+} from '@/pages/calendar/ui'
 import {
   getImportanceColor,
   getImportanceColorBackground,
   getImportanceHoverColor,
 } from './lib/utils'
 import { calendarApiService } from '@/pages/calendar/api'
+import { useLocation } from 'react-router-dom'
 
 const CalendarPage = () => {
   const { t } = useI18n()
@@ -75,6 +80,9 @@ const CalendarPage = () => {
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const location = useLocation()
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false)
+  const [planCourseData, setPlanCourseData] = useState<any>(null)
   const INITIAL_VISIBLE_COUNT = 3
 
   const handleEditClick = () => {
@@ -97,6 +105,18 @@ const CalendarPage = () => {
   useEffect(() => {
     fetchPersonalEvents()
   }, [])
+
+  useEffect(() => {
+    if (location.state?.openPlanModal) {
+      setPlanCourseData({
+        id: location.state.courseId,
+        title: location.state.courseTitle,
+      })
+      setIsPlanModalOpen(true)
+
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   const events = useMemo(() => {
     const courseEvents = rawStats
@@ -140,6 +160,21 @@ const CalendarPage = () => {
   const rowsCount = useMemo(() => {
     return days.length / 7
   }, [days])
+
+  const handleSaveCoursePlan = async (data: any) => {
+    try {
+      const payload = {
+        ...data,
+        event_date: data.date,
+        link: `${window.location.origin}/course/${planCourseData.id}`,
+      }
+      await calendarApiService.createEvent(payload)
+      fetchPersonalEvents()
+      setIsPlanModalOpen(false)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const handleEventClick = (eventId: string) => {
     const courseData = [
@@ -706,6 +741,20 @@ const CalendarPage = () => {
           )}
           buttonText={t('Видалити')}
         />
+        <Modal
+          isOpen={isPlanModalOpen}
+          onClose={() => setIsPlanModalOpen(false)}
+          title={t('Планування проходження курсу')}
+        >
+          {planCourseData && (
+            <PlaningCompletionOfTheCourse
+              courseId={planCourseData.id}
+              courseTitle={planCourseData.title}
+              onSave={handleSaveCoursePlan}
+              onCancel={() => setIsPlanModalOpen(false)}
+            />
+          )}
+        </Modal>
       </main>
     </div>
   )

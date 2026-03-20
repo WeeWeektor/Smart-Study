@@ -164,6 +164,16 @@ const CourseReview = () => {
     fetchEnrollment()
   }, [id, isUserEnrolled, isOwner])
 
+  const handlePlanClick = () => {
+    navigate('/calendar', {
+      state: {
+        openPlanModal: true,
+        courseId: id,
+        courseTitle: course?.course.title,
+      },
+    })
+  }
+
   const { averageRating, distribution } = useReviewStats(reviews)
 
   const flatCourseElements = useMemo(() => {
@@ -618,6 +628,7 @@ const CourseReview = () => {
                 setIsConfirmDelOpen={setIsConfirmDelOpen}
                 isEnrolling={isEnrolling}
                 isCourseOwner={isOwner}
+                onPlanCourse={handlePlanClick}
               />
             </>
           )}

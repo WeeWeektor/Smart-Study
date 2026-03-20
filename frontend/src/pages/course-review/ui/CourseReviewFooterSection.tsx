@@ -3,6 +3,7 @@ import { Button, Card, CardContent, ConfirmModal } from '@/shared/ui'
 import {
   ArrowRight,
   BarChart,
+  CalendarDays,
   FileText,
   Heart,
   Loader2,
@@ -31,6 +32,7 @@ interface CourseFooterSectionProps {
   setIsConfirmDelOpen: (open: boolean) => void
   isEnrolling?: boolean
   isCourseOwner: boolean
+  onPlanCourse?: () => void
 }
 
 export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
@@ -50,6 +52,7 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
   setIsConfirmDelOpen,
   isEnrolling = false,
   isCourseOwner,
+  onPlanCourse,
 }) => {
   const { t } = useI18n()
 
@@ -183,19 +186,32 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
               {t('Переглянути знову')}
             </Button>
           ) : userStatus === 'in_progress' ? (
-            <Button
-              onClick={onStartCourse}
-              size="lg"
-              className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[160px] shadow-md shadow-brand-600/20"
-              disabled={isEnrolling}
-            >
-              {isEnrolling ? (
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              ) : (
-                <ArrowRight className="w-5 h-5 mr-2" />
-              )}{' '}
-              {t('Продовжити навчання')}
-            </Button>
+            <>
+              <Button
+                onClick={onPlanCourse}
+                variant="outline"
+                size="lg"
+                className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
+                disabled={isEnrolling}
+              >
+                <CalendarDays className="w-5 h-5 mr-2" />
+                {t('Запланувати проходження')}
+              </Button>
+
+              <Button
+                onClick={onStartCourse}
+                size="lg"
+                className="w-60 bg-brand-600 hover:bg-brand-700 min-w-[160px] shadow-md shadow-brand-600/20"
+                disabled={isEnrolling}
+              >
+                {isEnrolling ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRight className="w-5 h-5 mr-2" />
+                )}{' '}
+                {t('Продовжити навчання')}
+              </Button>
+            </>
           ) : (
             <>
               {!isCourseOwner &&
