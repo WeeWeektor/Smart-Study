@@ -37,6 +37,18 @@ export const SelectedEvent = ({
   const { t } = useI18n()
   const navigate = useNavigate()
 
+  const formatDateSafely = (dateStr: string) => {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return t('Дата відсутня')
+    return d.toLocaleDateString()
+  }
+
+  const formatTimeSafely = (dateStr: string) => {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return '--:--'
+    return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+  }
+
   return (
     <div
       className="space-y-6 max-h-[80vh] overflow-y-auto backdrop-blur-sm
@@ -101,9 +113,9 @@ export const SelectedEvent = ({
             {isPersonalEvent ? t('Дата події') : t('Дата запису')}
           </p>
           <p className="text-sm font-semibold">
-            {new Date(
+            {formatDateSafely(
               isPersonalEvent ? userStatus.date : userStatus.enrolled_at
-            ).toLocaleDateString()}
+            )}
           </p>
         </div>
 
@@ -120,10 +132,7 @@ export const SelectedEvent = ({
               <Clock
                 className={`w - 4 h-4 ${getImportanceColorText(course.importance)}`}
               />
-              {new Date(userStatus.date).toLocaleTimeString('uk-UA', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatTimeSafely(userStatus.date)}
             </p>
           </div>
         ) : (

@@ -94,7 +94,6 @@ const CalendarPage = () => {
     fetchPersonalEvents()
   }, [])
 
-  // TODO - трабли з часом в модалках
   // TODO - трабли з кольорами
   // TODO - аиправити проблеми з наведенням на прапорці
 
@@ -166,9 +165,9 @@ const CalendarPage = () => {
         },
         user_status: {
           progress: 0,
-          enrolled_at: personalData.date,
+          enrolled_at: personalData.event_date,
           is_completed: personalData.is_completed,
-          date: personalData.date,
+          date: personalData.event_date,
         },
       })
       setIsModalOpen(true)
@@ -222,6 +221,7 @@ const CalendarPage = () => {
         ...updatedData,
         description: updatedData.description ?? '',
         link: updatedData.link ?? '',
+        event_date: updatedData.date || activeEvent.user_status.date,
       }
 
       if (payload.date) {
@@ -231,7 +231,7 @@ const CalendarPage = () => {
 
       const updatedFullList = await calendarApiService.updateEvent(
         activeEvent.course.id,
-        updatedData
+        payload
       )
 
       setPersonalEvents(updatedFullList)
