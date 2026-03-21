@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { normalizeCourseStructure } from '@/shared/lib/course/normalizeStructure.ts'
 import { format } from 'date-fns'
+import { uk } from 'date-fns/locale'
 
 interface PlaningProps {
   courseId: string
@@ -41,7 +42,6 @@ export const PlaningCompletionOfTheCourse = ({
   const { t } = useI18n()
 
   const [error, setError] = useState<string | null>(null)
-
   const [selectedModuleId, setSelectedModuleId] = useState<string>('all')
   const [planMode, setPlanMode] = useState<'once' | 'schedule'>('once')
 
@@ -68,72 +68,86 @@ export const PlaningCompletionOfTheCourse = ({
     if (courseStructure) {
       const normalized = normalizeCourseStructure(courseStructure)
       setStructure(normalized)
-      console.log(normalized)
     }
   }, [courseStructure])
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(''), 15000)
+      const timer = setTimeout(() => setError(null), 15000)
       return () => clearTimeout(timer)
     }
   }, [error])
 
-  const totalLessonsCount = useMemo(() => {
-    if (!structure || structure.length === 0) return 0
-
-    const getItemsCount = (item: any) => {
-      if (
-        item.type === 'lesson' ||
-        item.type === 'module-test' ||
-        item.type === 'course-test'
-      )
-        return 1
-      if (item.children) {
-        return item.children.reduce(
-          (acc: number, child: any) => acc + getItemsCount(child),
-          0
-        )
-      }
-      return 0
+  const collectItems = (item: any, parentModuleId?: string) => {
+    const itemData = {
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      moduleId: parentModuleId,
     }
 
+    if (
+      item.type === 'lesson' ||
+      item.type === 'module-test' ||
+      item.type === 'course-test'
+    ) {
+      return [itemData]
+    }
+
+    if (item.children) {
+      const currentModuleId = item.type === 'module' ? item.id : parentModuleId
+      return item.children.flatMap((child: any) =>
+        collectItems(child, currentModuleId)
+      )
+    }
+
+    return []
+  }
+
+  const itemsToSchedule = useMemo(() => {
+    if (!structure.length) return []
+
     if (selectedModuleId === 'all') {
-      return structure.reduce((acc, item) => acc + getItemsCount(item), 0)
+      return structure.flatMap(item => collectItems(item))
     }
 
     const mod = structure.find(m => m.id === selectedModuleId)
-    return mod ? getItemsCount(mod) : 0
+    return mod ? collectItems(mod) : []
   }, [selectedModuleId, structure])
+
+  const totalLessonsCount = itemsToSchedule.length
+
+  const endDatePreview = useMemo(() => {
+    if (
+      planMode === 'once' ||
+      totalLessonsCount === 0 ||
+      selectedDays.length === 0
+    )
+      return null
+
+    let count = 0
+    const [year, month, day] = startDate.split('-').map(Number)
+    const tempDate = new Date(year, month - 1, day)
+
+    while (count < totalLessonsCount) {
+      if (selectedDays.includes(tempDate.getDay())) {
+        count += lessonsPerDay
+      }
+      if (count < totalLessonsCount) {
+        tempDate.setDate(tempDate.getDate() + 1)
+      }
+      if (tempDate.getFullYear() > 2030) break
+    }
+    return format(tempDate, 'd MMMM yyyy', { locale: uk })
+  }, [startDate, selectedDays, lessonsPerDay, totalLessonsCount, planMode])
 
   const generatePlan = () => {
     const planEvents: any[] = []
-    let itemsToSchedule: any[] = []
 
-    const collectItems = (item: any, parentTitle?: string) => {
-      if (
-        item.type === 'lesson' ||
-        item.type === 'module-test' ||
-        item.type === 'course-test'
-      ) {
-        return [{ ...item, parentTitle }]
-      }
-      if (item.children) {
-        return item.children.flatMap((child: any) =>
-          collectItems(child, item.title)
-        )
-      }
-      return []
+    if (itemsToSchedule.length === 0 && planMode === 'schedule') {
+      setError(t('Немає елементів для планування'))
+      return
     }
-
-    if (selectedModuleId === 'all') {
-      itemsToSchedule = structure.flatMap(item => collectItems(item))
-    } else {
-      const mod = structure.find(m => m.id === selectedModuleId)
-      if (mod) itemsToSchedule = collectItems(mod)
-    }
-
-    if (itemsToSchedule.length === 0) return
 
     if (planMode === 'once') {
       planEvents.push({
@@ -141,6 +155,7 @@ export const PlaningCompletionOfTheCourse = ({
         event_date: `${startDate}T${startTime}:00`,
         note: `${t('Дедлайн')}: ${courseTitle}`,
         type: 'course_event',
+        link: `${window.location.origin}/course/${courseId}`,
       })
     } else {
       let currentIdx = 0
@@ -154,9 +169,7 @@ export const PlaningCompletionOfTheCourse = ({
       }
 
       while (currentIdx < itemsToSchedule.length) {
-        const dayOfWeek = tempDate.getDay()
-
-        if (selectedDays.includes(dayOfWeek)) {
+        if (selectedDays.includes(tempDate.getDay())) {
           for (
             let i = 0;
             i < lessonsPerDay && currentIdx < itemsToSchedule.length;
@@ -166,19 +179,25 @@ export const PlaningCompletionOfTheCourse = ({
             const eventDate = new Date(tempDate)
             eventDate.setHours(hours, minutes, 0, 0)
 
-            planEvents.push({
+            const eventBody: any = {
               course: courseId,
-              module_id:
-                selectedModuleId !== 'all'
-                  ? selectedModuleId
-                  : item.parentTitle
-                    ? item.id
-                    : undefined,
-              lesson_id: item.id,
               event_date: format(eventDate, "yyyy-MM-dd'T'HH:mm:ss"),
               note: `${item.type === 'lesson' ? t('Урок') : t('Тест')}: ${item.title}`,
               type: 'course_event',
-            })
+              link: `${window.location.origin}/course/${courseId}`,
+            }
+
+            if (item.moduleId) eventBody.module_id = item.moduleId
+
+            if (item.type === 'lesson') {
+              eventBody.lesson_id = item.id
+            } else if (item.type === 'module-test') {
+              eventBody.module_test_id = item.id
+            } else if (item.type === 'course-test') {
+              eventBody.course_test_id = item.id
+            }
+
+            planEvents.push(eventBody)
             currentIdx++
           }
         }
@@ -192,7 +211,7 @@ export const PlaningCompletionOfTheCourse = ({
 
   return (
     <div
-      className="space-y-6 overflow-y-auto max-h-[80vh] p-2 backdrop-blur-sm
+      className="space-y-6 overflow-y-auto max-h-[80vh] p-2 backdrop-blur-sm overflow-x-hidden
                  dark:scrollbar-slate-800
                  scrollbar-thin
                  scrollbar-track-transparent
@@ -218,11 +237,15 @@ export const PlaningCompletionOfTheCourse = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('Весь курс повністю')}</SelectItem>
-            {structure.map(m => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.title}
-              </SelectItem>
-            ))}
+            {structure
+              .filter(i => i.type === 'module')
+              .map(m => (
+                <SelectItem key={m.id} value={m.id}>
+                  <span className="block truncate max-w-[250px] sm:max-w-[350px]">
+                    {t('Модуль')}: {m.title}
+                  </span>
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </section>
@@ -252,7 +275,7 @@ export const PlaningCompletionOfTheCourse = ({
                     variant={
                       selectedDays.includes(day.id) ? 'default' : 'outline'
                     }
-                    className={`flex-1 h-10 p-0 text-xs ${selectedDays.includes(day.id) ? 'bg-brand-600' : ''}`}
+                    className={`flex-1 h-10 p-0 text-xs ${selectedDays.includes(day.id) ? 'bg-brand-600 text-white' : ''}`}
                     onClick={() =>
                       setSelectedDays(prev =>
                         prev.includes(day.id)
@@ -304,14 +327,23 @@ export const PlaningCompletionOfTheCourse = ({
                 <Input
                   type="number"
                   min="1"
-                  max="5"
+                  max={totalLessonsCount > 10 ? 10 : totalLessonsCount}
                   value={lessonsPerDay}
-                  onChange={e => setLessonsPerDay(parseInt(e.target.value))}
+                  onChange={e =>
+                    setLessonsPerDay(parseInt(e.target.value) || 1)
+                  }
                   className="w-20"
                 />
-                <span className="text-sm text-muted-foreground">
-                  {t('Всього занять')}: {totalLessonsCount}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold">
+                    {t('Всього занять')}: {totalLessonsCount}
+                  </span>
+                  {endDatePreview && (
+                    <span className="text-[11px] text-brand-600 font-medium">
+                      🏁 {t('Завершення')}: {endDatePreview}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -348,8 +380,9 @@ export const PlaningCompletionOfTheCourse = ({
           {t('Скасувати')}
         </Button>
         <Button
-          className="flex-1 bg-brand-600 hover:bg-brand-700 gap-2"
+          className="flex-1 bg-brand-600 hover:bg-brand-700 text-white gap-2"
           onClick={generatePlan}
+          disabled={totalLessonsCount === 0 && planMode === 'schedule'}
         >
           {t('Сформувати графік')} <ChevronRight className="w-4 h-4" />
         </Button>

@@ -178,7 +178,7 @@ const CalendarPage = () => {
       }
       // await calendarApiService.createEvent(payload)
 
-      console.log('Course plan saved with data:', payload)
+      console.log('Course plan saved with data:', payload) // TODO
 
       fetchPersonalEvents()
       setIsPlanModalOpen(false)

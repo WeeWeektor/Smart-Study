@@ -104,7 +104,7 @@ export const AddNewEvent = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 p-1 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto backdrop-blur-sm
+      className="space-y-5 p-1 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto overflow-x-hidden backdrop-blur-sm
                  dark:scrollbar-slate-800
                  scrollbar-thin
                  scrollbar-track-transparent
