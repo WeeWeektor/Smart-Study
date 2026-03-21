@@ -107,6 +107,13 @@ const CalendarPage = () => {
   }, [])
 
   useEffect(() => {
+    if (apiError) {
+      const timer = setTimeout(() => setApiError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [apiError])
+
+  useEffect(() => {
     if (location.state?.openPlanModal) {
       setPlanCourseData({
         id: location.state.courseId,

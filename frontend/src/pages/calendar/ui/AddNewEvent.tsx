@@ -42,6 +42,13 @@ export const AddNewEvent = ({
     return () => clearTimeout(timer)
   }, [])
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
+
   // TODO localize time format based on user locale
   const currentTime = new Date().toLocaleTimeString('uk-UA', {
     hour: '2-digit',
@@ -147,27 +154,28 @@ export const AddNewEvent = ({
         <div className="space-y-2">
           <Label htmlFor="time">{t('Час події')} *</Label>
           <div className="relative group">
-            <div className="flex items-end justify-end w-full absolute rigth-6 pr-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
-              <Clock className="w-4 h-4" />
-            </div>
-
             <Input
               id="time"
               type="time"
               value={formData.time}
               onChange={e => setFormData({ ...formData, time: e.target.value })}
-              className="block w-full pr-3 h-10 cursor-pointer dark:bg-slate-900/50"
+              className="block w-full h-10 dark:bg-slate-900/ pr-10 custom-input-icon cursor-pointer"
               required
             />
+            <div className="flex items-end justify-end w-full absolute rigth-6 pr-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
         <Label>{t('Дата')}</Label>
-        <div className="flex h-10 items-center rounded-md border border-input px-3 py-2 text-sm text-muted-foreground bg-slate-50 dark:bg-slate-900/50">
-          <CalendarIcon className="mr-2 h-4 w-4" />
+        <div className="relative group flex h-10 items-center rounded-md border border-input px-3 py-2 text-sm text-muted-foreground bg-slate-50 dark:bg-slate-900/50">
           {new Date(formData.date).toLocaleDateString()}
+          <div className="flex items-end justify-end w-full absolute rigth-6 pr-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
+            <CalendarIcon className="h-4 w-4" />
+          </div>
         </div>
       </div>
 

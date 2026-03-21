@@ -13,7 +13,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/shared/ui'
-import { Calendar, ChevronRight, Layers } from 'lucide-react'
+import {
+  Calendar,
+  CalendarIcon,
+  ChevronRight,
+  Clock,
+  Layers,
+} from 'lucide-react'
 import { normalizeCourseStructure } from '@/shared/lib/course/normalizeStructure.ts'
 import { format } from 'date-fns'
 
@@ -25,9 +31,6 @@ interface PlaningProps {
   onCancel: () => void
 }
 
-// TODO - додати іконки для дати та часу
-// TODO - error замість alert
-
 export const PlaningCompletionOfTheCourse = ({
   courseId,
   courseTitle,
@@ -36,6 +39,8 @@ export const PlaningCompletionOfTheCourse = ({
   onCancel,
 }: PlaningProps) => {
   const { t } = useI18n()
+
+  const [error, setError] = useState<string | null>(null)
 
   const [selectedModuleId, setSelectedModuleId] = useState<string>('all')
   const [planMode, setPlanMode] = useState<'once' | 'schedule'>('once')
@@ -66,6 +71,13 @@ export const PlaningCompletionOfTheCourse = ({
       console.log(normalized)
     }
   }, [courseStructure])
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const totalLessonsCount = useMemo(() => {
     if (!structure || structure.length === 0) return 0
@@ -137,7 +149,7 @@ export const PlaningCompletionOfTheCourse = ({
       const [hours, minutes] = startTime.split(':').map(Number)
 
       if (selectedDays.length === 0) {
-        console.error(t('Оберіть хоча б один день тижня'))
+        setError(t('Оберіть хоча б один день тижня'))
         return
       }
 
@@ -191,6 +203,11 @@ export const PlaningCompletionOfTheCourse = ({
                  scrollbar-thumb-rounded-full
                  transition-colors"
     >
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm font-medium border border-red-200">
+          {error}
+        </div>
+      )}
       <section className="space-y-3">
         <Label className="text-brand-600 font-bold flex items-center gap-2">
           <Layers className="w-4 h-4" /> {t('Обсяг навчання')}
@@ -253,19 +270,31 @@ export const PlaningCompletionOfTheCourse = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs">{t('Початок (дата)')}</Label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                />
+                <div className="relative group">
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="pr-10 custom-input-icon cursor-pointer"
+                  />
+                  <div className="flex items-end justify-end w-full absolute rigth-6 pr-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
+                    <CalendarIcon className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">{t('Час занять')}</Label>
-                <Input
-                  type="time"
-                  value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                />
+                <div className="relative group">
+                  <Input
+                    type="time"
+                    value={startTime}
+                    onChange={e => setStartTime(e.target.value)}
+                    className="pr-10 custom-input-icon cursor-pointer"
+                  />
+                  <div className="flex items-end justify-end w-full absolute rigth-6 pr-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -288,16 +317,28 @@ export const PlaningCompletionOfTheCourse = ({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-left-2">
-            <Input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-            />
-            <Input
-              type="time"
-              value={startTime}
-              onChange={e => setStartTime(e.target.value)}
-            />
+            <div className="relative group">
+              <Input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="pr-10 custom-input-icon cursor-pointer"
+              />
+              <div className="flex items-end justify-end w-full absolute rigth-6 pr-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
+                <CalendarIcon className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="relative group">
+              <Input
+                type="time"
+                value={startTime}
+                onChange={e => setStartTime(e.target.value)}
+                className="pr-10 custom-input-icon cursor-pointer"
+              />
+              <div className="flex items-end justify-end w-full absolute rigth-6 pr-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
           </div>
         )}
       </section>
