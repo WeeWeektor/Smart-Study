@@ -1,6 +1,6 @@
 import json
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from common import LocalizedView
 from common.decorators import login_required_async
 from common.utils import sanitize_input
-from users_calendar.services.course_event_service import CreateCourseEvent
+from users_calendar.services.course_event_service import CreateCourseEvent, DeleteCourseEvents
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -57,6 +57,16 @@ class CoursePlaningListCreateView(LocalizedView):
 class CoursePlaningDetailView(LocalizedView):
     @login_required_async
     async def delete(self, request, pk):
-        pass
+        try:
+            service = DeleteCourseEvents(user=request.user, event_id=pk)
+            success = await service.delete_events()
+
+            if success:
+                return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+            return JsonResponse({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # TODO : позначати як пройдено при завершенні уроку, модуля, курсу, тесту

@@ -185,7 +185,6 @@ const CalendarPage = () => {
 
   const handleSaveCoursePlan = async (data: any) => {
     try {
-      console.log(data)
       const response =
         await courseCalendarApiService.bulkCreateCourseEvents(data)
 
