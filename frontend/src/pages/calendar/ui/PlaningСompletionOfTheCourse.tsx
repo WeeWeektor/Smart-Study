@@ -155,7 +155,7 @@ export const PlaningCompletionOfTheCourse = ({
         event_date: `${startDate}T${startTime}:00`,
         note: `${t('Дедлайн')}: ${courseTitle}`,
         type: 'course_event',
-        link: `${window.location.origin}/course/${courseId}`,
+        link: `${window.location.origin}/course-review/${courseId}`,
       })
     } else {
       let currentIdx = 0
@@ -184,7 +184,7 @@ export const PlaningCompletionOfTheCourse = ({
               event_date: format(eventDate, "yyyy-MM-dd'T'HH:mm:ss"),
               note: `${item.type === 'lesson' ? t('Урок') : t('Тест')}: ${item.title}`,
               type: 'course_event',
-              link: `${window.location.origin}/course/${courseId}`,
+              link: `${window.location.origin}/course-review/${courseId}`,
             }
 
             if (item.moduleId) eventBody.module_id = item.moduleId

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from courses.models import Module, Lesson, Test
 from .models import BaseUserCalendar, PersonalEvent, CourseCalendarEvent
 
 
@@ -31,11 +32,25 @@ class CourseCalendarEventSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='course.title', read_only=True)
     event_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%z")
 
+    module_id = serializers.PrimaryKeyRelatedField(
+        queryset=Module.objects.all(), source='module', required=False, allow_null=True
+    )
+    lesson_id = serializers.PrimaryKeyRelatedField(
+        queryset=Lesson.objects.all(), source='lesson', required=False, allow_null=True
+    )
+    module_test_id = serializers.PrimaryKeyRelatedField(
+        queryset=Test.objects.all(), source='module_test', required=False, allow_null=True
+    )
+    course_test_id = serializers.PrimaryKeyRelatedField(
+        queryset=Test.objects.all(), source='course_test', required=False, allow_null=True
+    )
+
     class Meta:
         model = CourseCalendarEvent
         fields = [
-            'id', 'course', 'course_title', 'event_date',
-            'note', 'is_personal'
+            'id', 'course', 'course_title', 'module_id', 'lesson_id',
+            'module_test_id', 'course_test_id', 'event_date',
+            'note', 'link', 'is_completed', 'is_personal'
         ]
         read_only_fields = ['id']
 

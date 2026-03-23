@@ -39,9 +39,26 @@ class PersonalEventAdmin(admin.ModelAdmin):
 
 @admin.register(CourseCalendarEvent)
 class CourseCalendarEventAdmin(admin.ModelAdmin):
-    list_display = ('course', 'get_user', 'event_date', 'created_at')
-    list_filter = ('course', 'event_date', 'calendar__user')
-    search_fields = ('course__title', 'note', 'calendar__user__email')
+    list_display = ('course', 'get_content_type', 'get_user', 'event_date', 'is_completed')
+    list_filter = ('course', 'is_completed', 'event_date', 'calendar__user')
+    search_fields = ('course__title', 'note', 'calendar__user__email', 'lesson__title')
+
+    raw_id_fields = (
+        'course', 'module', 'lesson', 'module_test', 'course_test'
+    )
+
+    fieldsets = (
+        (_('Links'), {
+            'fields': ('calendar', 'course', 'module', 'lesson', 'module_test', 'course_test')
+        }),
+        (_('Event Details'), {
+            'fields': ('event_date', 'note', 'link', 'is_completed')
+        }),
+        (_('System'), {
+            'fields': ('id', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
 
     readonly_fields = ('id', 'created_at', 'updated_at')
 
@@ -49,3 +66,11 @@ class CourseCalendarEventAdmin(admin.ModelAdmin):
         return obj.calendar.user.email
 
     get_user.short_description = _('User')
+
+    def get_content_type(self, obj):
+        if obj.lesson: return f"📖 {obj.lesson.title}"
+        if obj.module_test: return f"📝 Test: {obj.module_test.title}"
+        if obj.course_test: return f"🏆 Final: {obj.course_test.title}"
+        return "---"
+
+    get_content_type.short_description = _('Content')

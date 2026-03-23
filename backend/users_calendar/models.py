@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from courses.models import Course
+from courses.models import Course, Module, Lesson, Test
 
 
 class BaseUserCalendar(models.Model):
@@ -97,7 +97,24 @@ class CourseCalendarEvent(CalendarEventBase):
         related_name="calendar_events",
         verbose_name=_("Course")
     )
+
+    module = models.ForeignKey(
+        Module, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    lesson = models.ForeignKey(
+        Lesson, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    module_test = models.ForeignKey(
+        Test, on_delete=models.SET_NULL, null=True, blank=True, related_name="module_test_events"
+    )
+    course_test = models.ForeignKey(
+        Test, on_delete=models.SET_NULL, null=True, blank=True, related_name="course_test_events"
+    )
+
     note = models.CharField(_("Note"), max_length=255, blank=True)
+    link = models.URLField(_("Link"), null=True, blank=True)
+
+    is_completed = models.BooleanField(_("Is completed"), default=False)
 
     def __str__(self):
         return f"{self.course.title} - {self.calendar.user.email}"

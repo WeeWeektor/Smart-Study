@@ -134,7 +134,7 @@ export const SelectedCoursePlaningEvent = ({
       <div className="flex flex-col gap-3 pt-2">
         <Button
           className="w-full bg-brand-600 hover:bg-brand-700 text-white gap-2 h-12 text-base shadow-lg shadow-brand-500/20"
-          onClick={() => navigate(`/course-review/${event.course}`)}
+          onClick={() => navigate(`/course-review/${event.course.id}`)}
         >
           <BookOpen className="w-5 h-5" />
           {t('Перейти до виконання')}

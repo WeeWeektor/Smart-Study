@@ -50,7 +50,10 @@ import {
   getImportanceColorBackground,
   getImportanceHoverColor,
 } from './lib/utils'
-import { calendarApiService } from '@/pages/calendar/api'
+import {
+  calendarApiService,
+  courseCalendarApiService,
+} from '@/pages/calendar/api'
 import { useLocation } from 'react-router-dom'
 
 const CalendarPage = () => {
@@ -76,7 +79,7 @@ const CalendarPage = () => {
     link: '',
   })
   const [personalEvents, setPersonalEvents] = useState<any[]>([])
-  const [localPlannedEvents, setLocalPlannedEvents] = useState<any[]>([])
+  const [coursePlannedEvents, setCoursePlannedEvents] = useState<any[]>([])
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
   const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null)
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
@@ -105,7 +108,7 @@ const CalendarPage = () => {
   }
 
   useEffect(() => {
-    fetchPersonalEvents()
+    fetchAllEvents()
   }, [])
 
   useEffect(() => {
@@ -147,22 +150,28 @@ const CalendarPage = () => {
         }))
       : []
 
-    const allCustomEvents = [...personalEvents, ...localPlannedEvents]
-
-    const personalMapped = allCustomEvents.map(e => ({
+    const personalMapped = personalEvents.map(e => ({
       ...e,
       date: new Date(e.event_date),
-      isPersonal: e.type !== 'course_event',
-      isCoursePlan: e.type === 'course_event',
+      isPersonal: true,
+      isCoursePlan: false,
       type: e.is_completed ? 'completed' : 'enrolled',
-      title: e.note || e.title,
-      importance: e.importance || 'medium',
+      title: e.title,
+      importance: e.importance,
     }))
 
-    return [...courseEvents, ...personalMapped]
-  }, [rawStats, personalEvents, localPlannedEvents])
+    const coursePlanMapped = coursePlannedEvents.map(e => ({
+      ...e,
+      date: new Date(e.event_date),
+      isPersonal: false,
+      isCoursePlan: true,
+      type: e.is_completed ? 'completed' : 'enrolled',
+      title: e.note || e.title,
+      importance: 'medium',
+    }))
 
-  // TODO немає бути кнопки для завершення завдання вона має автоматично позначатись як завершено коли користувач пройшов той урок чи тест чи курс взагалі якщо додано
+    return [...courseEvents, ...personalMapped, ...coursePlanMapped]
+  }, [rawStats, personalEvents, coursePlannedEvents])
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 })
@@ -176,24 +185,11 @@ const CalendarPage = () => {
 
   const handleSaveCoursePlan = async (data: any) => {
     try {
-      const eventsWithIds = data.map((ev, idx) => ({
-        ...ev,
-        id: `temp-${idx}-${Date.now()}`,
-        is_completed: false,
-      }))
+      console.log(data)
+      const response =
+        await courseCalendarApiService.bulkCreateCourseEvents(data)
 
-      setLocalPlannedEvents(eventsWithIds)
-
-      const payload = {
-        ...data,
-        event_date: data.date,
-        link: `${window.location.origin}/course/${planCourseData.id}`,
-      }
-      // await calendarApiService.createEvent(payload)
-
-      console.log('Course plan saved with data:', payload) // TODO
-
-      fetchPersonalEvents()
+      setCoursePlannedEvents(response.events)
       setIsPlanModalOpen(false)
     } catch (err) {
       setApiError(
@@ -216,27 +212,37 @@ const CalendarPage = () => {
       return
     }
 
-    const eventData = [...personalEvents, ...localPlannedEvents].find(
-      e => e.id === eventId
-    )
-    if (eventData) {
-      const isPlan = eventData.type === 'course_event'
+    const personalData = personalEvents.find(e => e.id === eventId)
+    if (personalData) {
       setActiveEvent({
-        ...eventData,
-        isPersonal: !isPlan,
-        isCoursePlan: isPlan,
+        isPersonal: true,
         course: {
-          title: isPlan ? eventData.note || eventData.title : eventData.title,
-          description: eventData.description || '',
-          id: isPlan ? eventData.course : eventData.id,
-          importance: eventData.importance,
-          link: eventData.link,
+          title: personalData.title,
+          description: personalData.description,
+          id: personalData.id,
+          importance: personalData.importance,
+          link: personalData.link,
         },
         user_status: {
           progress: 0,
-          enrolled_at: eventData.event_date,
-          is_completed: eventData.is_completed,
-          date: eventData.event_date,
+          enrolled_at: personalData.event_date,
+          is_completed: personalData.is_completed,
+          date: personalData.event_date,
+        },
+      })
+      setIsModalOpen(true)
+    }
+
+    const planData = coursePlannedEvents.find(e => e.id === eventId)
+    if (planData) {
+      setActiveEvent({
+        ...planData,
+        isPersonal: false,
+        isCoursePlan: true,
+        course: { id: planData.course, title: planData.course_title },
+        user_status: {
+          is_completed: planData.is_completed,
+          date: planData.event_date,
         },
       })
       setIsModalOpen(true)
@@ -248,17 +254,16 @@ const CalendarPage = () => {
     setIsEventsExpanded(false)
   }
 
-  const fetchPersonalEvents = async () => {
+  const fetchAllEvents = async () => {
     try {
-      const data = await calendarApiService.getEvents()
-      setPersonalEvents(data)
+      const [personal, courses] = await Promise.all([
+        calendarApiService.getEvents(),
+        courseCalendarApiService.getCourseEvents(),
+      ])
+      setPersonalEvents(personal)
+      setCoursePlannedEvents(courses)
     } catch (err: any) {
-      const msg =
-        typeof err.message === 'object'
-          ? JSON.stringify(err.message)
-          : err.message
-
-      setApiError(msg)
+      setApiError(err.message)
     }
   }
 
@@ -320,8 +325,11 @@ const CalendarPage = () => {
 
   const deletePersonalEvent = async (eventId: string) => {
     try {
-      if (eventId.toString().startsWith('temp-')) {
-        setLocalPlannedEvents(prev => prev.filter(e => e.id !== eventId)) // TODO
+      const isPlan = coursePlannedEvents.some(e => e.id === eventId)
+
+      if (isPlan) {
+        await courseCalendarApiService.deleteCourseEvent(eventId)
+        setCoursePlannedEvents(prev => prev.filter(e => e.id !== eventId))
       } else {
         await calendarApiService.deleteEvent(eventId)
         setPersonalEvents(prev => prev.filter(e => e.id !== eventId))
