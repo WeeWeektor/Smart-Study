@@ -42,6 +42,7 @@ import { useProfileData } from '@/shared/hooks'
 import {
   AddNewEvent,
   PlaningCompletionOfTheCourse,
+  SelectedCoursePlaningEvent,
   SelectedEvent,
 } from '@/pages/calendar/ui'
 import {
@@ -75,6 +76,7 @@ const CalendarPage = () => {
     link: '',
   })
   const [personalEvents, setPersonalEvents] = useState<any[]>([])
+  const [localPlannedEvents, setLocalPlannedEvents] = useState<any[]>([])
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
   const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null)
   const [isEventsExpanded, setIsEventsExpanded] = useState(false)
@@ -145,19 +147,22 @@ const CalendarPage = () => {
         }))
       : []
 
-    const personalMapped = personalEvents.map(e => ({
+    const allCustomEvents = [...personalEvents, ...localPlannedEvents]
+
+    const personalMapped = allCustomEvents.map(e => ({
       ...e,
       date: new Date(e.event_date),
-      isPersonal: e.is_personal ?? true,
+      isPersonal: e.type !== 'course_event',
+      isCoursePlan: e.type === 'course_event',
       type: e.is_completed ? 'completed' : 'enrolled',
-      title: e.title,
-      description: e.description,
-      link: e.link,
-      importance: e.importance,
+      title: e.note || e.title,
+      importance: e.importance || 'medium',
     }))
 
     return [...courseEvents, ...personalMapped]
-  }, [rawStats, personalEvents])
+  }, [rawStats, personalEvents, localPlannedEvents])
+
+  // TODO немає бути кнопки для завершення завдання вона має автоматично позначатись як завершено коли користувач пройшов той урок чи тест чи курс взагалі якщо додано
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 })
@@ -171,6 +176,14 @@ const CalendarPage = () => {
 
   const handleSaveCoursePlan = async (data: any) => {
     try {
+      const eventsWithIds = data.map((ev, idx) => ({
+        ...ev,
+        id: `temp-${idx}-${Date.now()}`,
+        is_completed: false,
+      }))
+
+      setLocalPlannedEvents(eventsWithIds)
+
       const payload = {
         ...data,
         event_date: data.date,
@@ -183,7 +196,11 @@ const CalendarPage = () => {
       fetchPersonalEvents()
       setIsPlanModalOpen(false)
     } catch (err) {
-      console.error(err)
+      setApiError(
+        t('Помилка при створенні графіка') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err))
+      )
     }
   }
 
@@ -199,22 +216,27 @@ const CalendarPage = () => {
       return
     }
 
-    const personalData = personalEvents.find(e => e.id === eventId)
-    if (personalData) {
+    const eventData = [...personalEvents, ...localPlannedEvents].find(
+      e => e.id === eventId
+    )
+    if (eventData) {
+      const isPlan = eventData.type === 'course_event'
       setActiveEvent({
-        isPersonal: true,
+        ...eventData,
+        isPersonal: !isPlan,
+        isCoursePlan: isPlan,
         course: {
-          title: personalData.title,
-          description: personalData.description,
-          id: personalData.id,
-          importance: personalData.importance,
-          link: personalData.link,
+          title: isPlan ? eventData.note || eventData.title : eventData.title,
+          description: eventData.description || '',
+          id: isPlan ? eventData.course : eventData.id,
+          importance: eventData.importance,
+          link: eventData.link,
         },
         user_status: {
           progress: 0,
-          enrolled_at: personalData.event_date,
-          is_completed: personalData.is_completed,
-          date: personalData.event_date,
+          enrolled_at: eventData.event_date,
+          is_completed: eventData.is_completed,
+          date: eventData.event_date,
         },
       })
       setIsModalOpen(true)
@@ -298,9 +320,13 @@ const CalendarPage = () => {
 
   const deletePersonalEvent = async (eventId: string) => {
     try {
-      await calendarApiService.deleteEvent(eventId)
+      if (eventId.toString().startsWith('temp-')) {
+        setLocalPlannedEvents(prev => prev.filter(e => e.id !== eventId)) // TODO
+      } else {
+        await calendarApiService.deleteEvent(eventId)
+        setPersonalEvents(prev => prev.filter(e => e.id !== eventId))
+      }
 
-      setPersonalEvents(prev => prev.filter(e => e.id !== eventId))
       setIsModalOpen(false)
       setActiveEvent(null)
     } catch (err: any) {
@@ -615,9 +641,11 @@ const CalendarPage = () => {
                         <p className="text-xs text-muted-foreground italic line-clamp-1">
                           {event.isPersonal
                             ? event.description || t('Без опису')
-                            : event.type === 'completed'
-                              ? t('Курс успішно завершено')
-                              : t('Дата початку навчання')}
+                            : event.isCoursePlan
+                              ? t('План навчання курсу')
+                              : event.type === 'completed'
+                                ? t('Курс успішно завершено')
+                                : t('Дата початку навчання')}
                         </p>
                       </div>
                     ))}
@@ -698,7 +726,13 @@ const CalendarPage = () => {
             setIsModalOpen(false)
             setIsEditing(false)
           }}
-          title={isEditing ? t('Редагувати подію') : activeEvent?.course.title}
+          title={
+            isEditing
+              ? t('Редагувати подію')
+              : activeEvent?.isCoursePlan
+                ? t('План заняття')
+                : activeEvent?.course?.title
+          }
         >
           {activeEvent &&
             (isEditing ? (
@@ -707,14 +741,21 @@ const CalendarPage = () => {
                   activeEvent.user_status?.date || new Date().toISOString()
                 }
                 defaultValues={{
-                  title: activeEvent.course.title,
-                  description: activeEvent.course.description,
-                  importance: activeEvent.course.importance,
-                  link: activeEvent.course.link,
+                  title: activeEvent.course?.title || activeEvent.title,
+                  description:
+                    activeEvent.course?.description || activeEvent.description,
+                  importance:
+                    activeEvent.course?.importance || activeEvent.importance,
+                  link: activeEvent.course?.link || activeEvent.link,
                   time: safeTimeFormat(activeEvent.user_status?.date),
                 }}
                 onSave={handleUpdateEvent}
                 onCancel={() => setIsEditing(false)}
+              />
+            ) : activeEvent.isCoursePlan ? (
+              <SelectedCoursePlaningEvent
+                event={activeEvent}
+                onDelete={openConfirmDelete}
               />
             ) : (
               <SelectedEvent
