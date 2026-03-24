@@ -568,7 +568,7 @@ const CourseReview = () => {
           {activeElement || isElementLoading ? (
             <ActiveCourseElement
               activeElement={activeElement}
-              onStatsRefresh={refreshStats}
+              // onStatsRefresh={refreshStats}
               isLoading={isElementLoading}
               onBack={() => {
                 setActiveElement(null)

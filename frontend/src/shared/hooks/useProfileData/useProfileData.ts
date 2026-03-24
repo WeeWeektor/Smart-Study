@@ -16,6 +16,9 @@ class ProfileStore {
     completedTopics: number
     certificates: number
   }
+  private statsPromise: Promise<void> | null = null
+  private isProfileFetching = false
+  private isStatsFetching = false
 
   subscribe(listener: () => void) {
     this.listeners.push(listener)
@@ -29,6 +32,9 @@ class ProfileStore {
   }
 
   private async doLoadProfile() {
+    if (this.isProfileFetching) return
+    this.isProfileFetching = true
+
     try {
       this.loading = true
       this.error = ''
@@ -50,28 +56,36 @@ class ProfileStore {
       this.error = 'Помилка завантаження профілю'
     } finally {
       this.loading = false
+      this.isProfileFetching = false
       this.notify()
     }
   }
 
   async loadLearningStats() {
-    if (this.statsLoaded) return
+    if (this.isStatsFetching || (this.statsLoaded && !this.statsPromise)) return
 
-    try {
-      const response = await profileService.getLearningStats()
+    if (this.statsPromise) return this.statsPromise
 
-      if (response.status === 'success' && response.data) {
-        this.learningStats = {
-          ...this.learningStats,
-          ...response.data,
+    this.isStatsFetching = true
+
+    this.statsPromise = (async () => {
+      try {
+        const response = await profileService.getLearningStats()
+        if (response.status === 'success' && response.data) {
+          this.learningStats = { ...this.learningStats, ...response.data }
+          this.statsLoaded = true
+          console.log('Статистику оновлено:', this.learningStats)
+          this.notify()
         }
-        this.statsLoaded = true
-        console.log('Статистику оновлено:', this.learningStats)
-        this.notify()
+      } catch (error) {
+        console.error('Помилка завантаження статистики:', error)
+      } finally {
+        this.statsPromise = null
+        this.isStatsFetching = false
       }
-    } catch (error) {
-      console.error('Помилка завантаження статистики:', error)
-    }
+    })()
+
+    return this.statsPromise
   }
 
   async loadProfile() {
@@ -79,9 +93,7 @@ class ProfileStore {
       return this.loadPromise
     }
 
-    if (this.hasLoaded) {
-      return
-    }
+    if (this.hasLoaded || this.loading) return
 
     this.loadPromise = this.doLoadProfile()
 
@@ -142,7 +154,9 @@ export const useProfileData = () => {
       forceUpdate({})
     })
 
-    profileStore.loadProfile()
+    if (!profileStore.getProfileData() && !profileStore.isLoading()) {
+      profileStore.loadProfile()
+    }
 
     return unsubscribe
   }, [])

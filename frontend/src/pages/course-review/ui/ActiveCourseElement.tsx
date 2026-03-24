@@ -136,7 +136,6 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
           (Date.now() - lessonStartTimeRef.current) / 1000
         )
         onComplete(lessonId, 'lesson', timeSpent)
-        onStatsRefresh?.()
       }
     }
 
@@ -220,7 +219,7 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
     if (isPreviewMode) {
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      const mockResult = {
+      return {
         passed: true,
         score: 100,
         max_score: 100,
@@ -231,8 +230,6 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
         finished_at: new Date().toISOString(),
         attempt_id: 'preview-attempt',
       }
-
-      return mockResult
     }
 
     try {
@@ -644,7 +641,6 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
             <TestPlayer
               testData={testDataForPlayer}
               onBack={() => setIsTestStarted(false)}
-              onStatsRefresh={onStatsRefresh}
               onFinishCourse={timeSpent => {
                 if (test) {
                   if (!isPreviewMode) {
