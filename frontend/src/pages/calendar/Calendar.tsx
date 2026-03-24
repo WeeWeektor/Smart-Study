@@ -407,6 +407,21 @@ const CalendarPage = () => {
     setIsModalAddEventOpen(true)
   }
 
+  const getCourseProgress = (courseId: string) => {
+    if (!rawStats) return 0
+
+    const allCourses = [
+      ...(rawStats.enrolled_list || []),
+      ...(rawStats.completed_list || []),
+    ]
+
+    const courseData = allCourses.find(item => item.course?.id === courseId)
+
+    return courseData?.course?.user_status?.progress
+      ? Math.round(courseData.course.user_status.progress)
+      : 0
+  }
+
   if (loadingProfile && loading) {
     return <LoadingProfile message={t('Завантаження...')} />
   }
@@ -636,7 +651,9 @@ const CalendarPage = () => {
 
                           {!event.isPersonal && (
                             <span className="text-xs font-bold text-brand-600">
-                              {event.progress}%
+                              {event.isCoursePlan
+                                ? `${getCourseProgress(event.course)}%`
+                                : `${event.progress}%`}
                             </span>
                           )}
                         </div>

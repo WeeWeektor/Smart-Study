@@ -84,6 +84,11 @@ class UserCourseEnrollmentView(LocalizedView):
                 finished_course=finished_course
             )
 
+            if element_type == 'lesson' and is_completed:
+                from users_calendar.services.complete_course_event import MarkCalendarEventComplete
+                completion = MarkCalendarEventComplete(user=request.user, lesson_id=element_id)
+                await completion.execute()
+
             from courses.services.cache_service import invalidate_courses_by_user_id_cache, \
                 invalidate_course_enrollment_status_cache
             await invalidate_courses_by_user_id_cache(user_id)

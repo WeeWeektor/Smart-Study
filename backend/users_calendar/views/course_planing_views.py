@@ -68,5 +68,3 @@ class CoursePlaningDetailView(LocalizedView):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-# TODO : позначати як пройдено при завершенні уроку, модуля, курсу, тесту

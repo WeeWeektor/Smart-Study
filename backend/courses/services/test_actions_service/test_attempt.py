@@ -32,6 +32,22 @@ async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: li
     if test_type in ["course_test", "module_test"] and enrollment:
         await _update_course_progress(user_id, test_id, enrollment, calculation_result['passed'], time_spent)
 
+        if calculation_result['passed']:
+            from users_calendar.services.complete_course_event import MarkCalendarEventComplete
+
+            completion_params = {
+                "user": enrollment.user,
+                "module_id": test.module_id if hasattr(test, 'module_id') else None,
+            }
+
+            if test_type == "course_test":
+                completion_params["course_test_id"] = test.id
+            else:
+                completion_params["module_test_id"] = test.id
+
+            completion = MarkCalendarEventComplete(**completion_params)
+            await completion.execute()
+
     return {
         "id": str(attempt.id),
         "score": calculation_result['total_score'],
@@ -43,30 +59,25 @@ async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: li
 
 
 async def _get_test_and_enrollment(user_id, test_id, test_type: str):
-    """
-    Повертає кортеж (test, enrollment). Enrollment може бути None для публічних тестів.
-    """
-    enrollment = None
+    def get_data():
+        if test_type == "course_test":
+            test_obj = Test.objects.select_related("course").get(id=test_id)
+            enrollment_obj = UserCourseEnrollment.objects.select_related("user").get(
+                user_id=user_id, course_id=test_obj.course_id
+            )
+        elif test_type == "module_test":
+            test_obj = Test.objects.select_related("module__course").get(id=test_id)
+            enrollment_obj = UserCourseEnrollment.objects.select_related("user").get(
+                user_id=user_id, course_id=test_obj.module.course_id
+            )
+        elif test_type == "public":
+            test_obj = Test.objects.get(id=test_id)
+            enrollment_obj = None
+        else:
+            raise ValueError("Invalid test type")
+        return test_obj, enrollment_obj
 
-    if test_type == "course_test":
-        test = await Test.objects.select_related("course").aget(id=test_id)
-        enrollment = await UserCourseEnrollment.objects.aget(
-            user_id=user_id, course_id=test.course_id
-        )
-
-    elif test_type == "module_test":
-        test = await Test.objects.select_related("module__course").aget(id=test_id)
-        enrollment = await UserCourseEnrollment.objects.aget(
-            user_id=user_id, course_id=test.module.course_id
-        )
-
-    elif test_type == "public":
-        test = await Test.objects.aget(id=test_id)
-
-    else:
-        raise ValueError("Invalid test type")
-
-    return test, enrollment
+    return await sync_to_async(get_data, thread_sensitive=True)()
 
 
 def _calculate_score_and_details(test, questions_list: list, user_answers: list) -> dict:
@@ -129,37 +140,35 @@ def _calculate_score_and_details(test, questions_list: list, user_answers: list)
 
 
 async def _create_attempt_entry(user_id, test, enrollment, test_type, result: dict, time_spent_seconds: int = 0):
-    """
-    Створення запису про спробу в БД.
-    """
-    if test_type == "public":
-        prev_attempts_count = await TestAttempt.objects.filter(
-            user_id=user_id, test=test
-        ).acount()
-    else:
-        prev_attempts_count = await TestAttempt.objects.filter(
-            enrollment=enrollment, test=test
-        ).acount()
+    def save_to_db():
+        if test_type == "public":
+            prev_attempts_count = TestAttempt.objects.filter(
+                user_id=user_id, test=test
+            ).count()
+        else:
+            prev_attempts_count = TestAttempt.objects.filter(
+                enrollment=enrollment, test=test, user_id=user_id
+            ).count()
 
-    attempt_number = prev_attempts_count + 1
+        attempt_number = prev_attempts_count + 1
+        completed_at = timezone.now()
+        time_spent_delta = timedelta(seconds=int(time_spent_seconds))
+        started_at = completed_at - time_spent_delta
 
-    completed_at = timezone.now()
-    time_spent_delta = timedelta(seconds=int(time_spent_seconds))
-    started_at = completed_at - time_spent_delta
+        return TestAttempt.objects.create(
+            enrollment=enrollment,
+            user_id=user_id,
+            test=test,
+            score=result['total_score'],
+            passed=result['passed'],
+            attempt_number=attempt_number,
+            attempt_details=result['processed_details'],
+            started_at=started_at,
+            completed_at=completed_at,
+            time_spent=time_spent_delta
+        )
 
-    attempt = await TestAttempt.objects.acreate(
-        enrollment=enrollment,
-        user_id=user_id if test_type == "public" else None,
-        test=test,
-        score=result['total_score'],
-        passed=result['passed'],
-        attempt_number=attempt_number,
-        attempt_details=result['processed_details'],
-        started_at=started_at,
-        completed_at=completed_at,
-        time_spent=time_spent_delta
-    )
-    return attempt
+    return await sync_to_async(save_to_db, thread_sensitive=True)()
 
 
 async def _update_course_progress(user_id, test_id, enrollment, is_passed, time_spent):
@@ -167,10 +176,14 @@ async def _update_course_progress(user_id, test_id, enrollment, is_passed, time_
     Оновлення прогресу користувача на курсі.
     """
     from courses.services.course_by_user import update_enrollment_progress_sync
-    await sync_to_async(update_enrollment_progress_sync)(
+
+    course_id_str = str(enrollment.course_id)
+    test_id_str = str(test_id)
+
+    await sync_to_async(update_enrollment_progress_sync, thread_sensitive=True)(
         user_id=user_id,
-        course_id=str(enrollment.course_id),
-        element_id=str(test_id),
+        course_id=course_id_str,
+        element_id=test_id_str,
         time_spent_seconds=time_spent,
         element_type="test",
         is_completed=is_passed,

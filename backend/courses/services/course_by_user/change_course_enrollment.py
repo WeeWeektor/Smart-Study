@@ -56,5 +56,6 @@ def update_enrollment_progress_sync(user_id,
         "progress": float(enrollment.progress),
         "is_completed": enrollment.completed,
         "time_spent": str(enrollment.time_spent),
-        "element_id": element_id
+        "element_id": element_id,
+        "element_type": element_type
     }
