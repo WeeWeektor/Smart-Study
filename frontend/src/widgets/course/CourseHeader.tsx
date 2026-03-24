@@ -13,6 +13,8 @@ interface CourseHeaderProps {
   actionInfo?: boolean
   actionText?: [string, string] | string
   actionsBackPage?: ReactNode
+  icon?: ReactNode
+  user_is_login?: boolean
 }
 
 export const CourseHeader = ({
@@ -25,14 +27,23 @@ export const CourseHeader = ({
   actionInfo,
   actionText,
   actionsBackPage,
+  icon,
+  user_is_login = true,
 }: CourseHeaderProps) => {
   const { t } = useI18n()
 
   return (
     <EditableHeader
+      is_user_login={user_is_login}
       title={title}
       description={description}
-      icon={<BookOpen className="w-6 h-6 text-brand-600 dark:text-brand-400" />}
+      icon={
+        icon ? (
+          icon
+        ) : (
+          <BookOpen className="w-6 h-6 text-brand-600 dark:text-brand-400" />
+        )
+      }
       actions={
         (action && (
           <Button

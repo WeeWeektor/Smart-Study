@@ -32,6 +32,7 @@ class ProfileStore {
   }
 
   private async doLoadProfile() {
+    if (this.loading) return
     if (this.isProfileFetching) return
     this.isProfileFetching = true
 
@@ -62,6 +63,7 @@ class ProfileStore {
   }
 
   async loadLearningStats() {
+    if (this.isStatsFetching) return
     if (this.isStatsFetching || (this.statsLoaded && !this.statsPromise)) return
 
     if (this.statsPromise) return this.statsPromise

@@ -64,7 +64,6 @@ class TokenManager {
       error => {
         if (error.response?.status === 401) {
           this.removeToken()
-          window.location.href = '/login'
         }
         return Promise.reject(error)
       }

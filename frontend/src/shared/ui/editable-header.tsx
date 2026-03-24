@@ -1,6 +1,7 @@
 import { Button, ThemeToggle } from '@/shared/ui'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Bell } from 'lucide-react'
+import { NotificationModal } from '@/widgets/notificatiion'
 
 interface EditableHeaderProps {
   title: string
@@ -8,6 +9,7 @@ interface EditableHeaderProps {
   icon: ReactNode
   actions?: ReactNode
   actionsBackPage?: ReactNode
+  is_user_login?: boolean
 }
 
 export const EditableHeader = ({
@@ -16,7 +18,12 @@ export const EditableHeader = ({
   icon,
   actions,
   actionsBackPage,
+  is_user_login,
 }: EditableHeaderProps) => {
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+
+  // TODO отримувати сповіщення з бд так як userStatus ....
+
   return (
     <header className="bg-card border-b border-border text-card-foreground">
       <div className="px-6 py-4">
@@ -39,13 +46,25 @@ export const EditableHeader = ({
           <div className="flex items-center space-x-4">
             {actions}
             <ThemeToggle variant="secondary" size="default" />
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-            </Button>
+            {is_user_login && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="relative"
+                onClick={() => setIsNotificationsOpen(true)}
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-card"></span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
+
+      <NotificationModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
     </header>
   )
 }
