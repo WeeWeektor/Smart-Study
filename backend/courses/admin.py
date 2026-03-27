@@ -15,7 +15,6 @@ from .models import (
     CourseReview,
     Certificate,
     Wishlist,
-    CourseAnnouncement,
 )
 
 
@@ -190,14 +189,6 @@ class WishlistAdmin(admin.ModelAdmin):
     list_display = ("user", "course", "added_at")
     search_fields = ("user__email", "course__title")
     raw_id_fields = ("user", "course")
-
-
-@admin.register(CourseAnnouncement)
-class CourseAnnouncementAdmin(admin.ModelAdmin):
-    list_display = ("course", "title", "is_important", "created_at")
-    search_fields = ("title", "content", "course__title")
-    list_filter = ("is_important",)
-    raw_id_fields = ("course",)
 
 
 @admin.register(CourseMeta)

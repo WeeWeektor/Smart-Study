@@ -1,7 +1,8 @@
 import { Button, ThemeToggle } from '@/shared/ui'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { NotificationModal } from '@/widgets/notificatiion'
+import { useNotifications } from '@/shared/hooks/useNotificationData'
 
 interface EditableHeaderProps {
   title: string
@@ -12,6 +13,8 @@ interface EditableHeaderProps {
   is_user_login?: boolean
 }
 
+// TODO додати в profile header логіку показу повідомлень
+
 export const EditableHeader = ({
   title,
   description,
@@ -21,8 +24,13 @@ export const EditableHeader = ({
   is_user_login,
 }: EditableHeaderProps) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const { unreadCount, fetchNotifications } = useNotifications(!!is_user_login)
 
-  // TODO отримувати сповіщення з бд так як userStatus ....
+  useEffect(() => {
+    if (is_user_login) {
+      fetchNotifications()
+    }
+  }, [is_user_login, fetchNotifications])
 
   return (
     <header className="bg-card border-b border-border text-card-foreground">
@@ -54,7 +62,9 @@ export const EditableHeader = ({
                 onClick={() => setIsNotificationsOpen(true)}
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-card"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-card"></span>
+                )}
               </Button>
             )}
           </div>

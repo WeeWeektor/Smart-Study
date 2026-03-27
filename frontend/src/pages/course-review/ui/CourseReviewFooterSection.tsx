@@ -7,6 +7,7 @@ import {
   FileText,
   Heart,
   Loader2,
+  MessageCirclePlusIcon,
   RefreshCw,
   Rocket,
   Trash2,
@@ -141,6 +142,20 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
     </Button>
   )
 
+  const AddMessageToCourseStudents = () => (
+    // TODO: add real action to modal with form to send message to students and api call
+    <Button
+      onClick={onShowStatistics}
+      variant="outline"
+      size="lg"
+      className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 hover:text-brand-800 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
+      disabled={isEnrolling}
+    >
+      <MessageCirclePlusIcon className="w-5 h-5 mr-2" />
+      {t('Повідомлення студентам')}
+    </Button>
+  )
+
   return (
     <Card className="mt-8 border-t-4 border-t-brand-600 shadow-lg bg-slate-50 dark:bg-slate-900/50">
       <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -168,7 +183,12 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
         </div>
 
         <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end min-w-[200px]">
-          {isCourseOwner && <StatisticsButton />}
+          {isCourseOwner && (
+            <>
+              <StatisticsButton />
+              <AddMessageToCourseStudents />
+            </>
+          )}
 
           {userStatus === 'completed' ? (
             <Button

@@ -1,7 +1,6 @@
 from .base import BaseModel
 from .certificate import Certificate
 from .course import Course
-from .course_announcement import CourseAnnouncement
 from .course_meta import CourseMeta
 from .course_review import CourseReview
 from .course_version import CourseVersion
@@ -27,5 +26,4 @@ __all__ = [
     "CourseReview",
     "Certificate",
     "Wishlist",
-    "CourseAnnouncement",
 ]
