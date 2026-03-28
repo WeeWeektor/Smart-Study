@@ -11,6 +11,7 @@ from common.decorators import login_required_async
 from common.utils import sanitize_input
 from users_calendar.services.course_event_service import CreateCourseEvent, DeleteCourseEvents
 
+# TODO переглянути всі gettext
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class CoursePlaningListCreateView(LocalizedView):
@@ -70,13 +71,5 @@ class CoursePlaningDetailView(LocalizedView):
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# TODO повідомлення користувачу про календар
-# TODO повідомлення від власника курсу для студентів цього курсу
-# архів повідомлень якщо повідомлення старші за 30 днів їх просто додавати в архів і не показувти в основному списку
-# при відкритті архіву тільки толді робити запит і кешувати на 1 годину
-# це для повідомлень курсу а для повідомлень від календаря можна зробити окрему модель і там зберігати всі повідомлення і теж робити архівування старих повідомлень
-# старе повідомлення для календаря це 7 днів, для курсу 30 днів
-
 # TODO якщо змінилось в календарі щось тоді оновлювати сповіщення також
-
 # TODO баг: якщо пройти пару уроків\тестів і потім створити запис в календар цих уроків вони ніколи пройденими не стануть тільки якщо створити запис в календарі до проходження уроку\тесту тоді вони будуть відмічені як пройдені

@@ -13,6 +13,8 @@ from users_calendar.services.personal_event_service import CreatePersonalEvent, 
     DeletePersonalEvents
 
 
+# TODO переглянути всі gettext
+
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class PersonalEventListCreateView(LocalizedView):
     @login_required_async
