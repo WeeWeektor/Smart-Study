@@ -53,8 +53,8 @@ class CourseOwnerNotifications:
                 notification_type=NotificationsType.MESSAGE_FROM_COURSE_OWNER,
                 title=title,
                 message=message,
-                personal_link=personal_link,
-                link_text=link_text,
+                personal_link=personal_link or '',
+                link_text=link_text or '',
                 is_important=True
             ) for sid in student_ids
         ]

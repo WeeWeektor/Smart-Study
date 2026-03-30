@@ -41,9 +41,6 @@ const Index = () => {
   const [showDeleteAccountSuccess, hideDeleteAccountSuccess] =
     useUrlParamNotification('showDeleteAccountSuccess')
 
-  // TODO якщо робитиму useCalendar то можна буде юзати його для отримання курсових подій і показувати їх в календарі на головній
-  // TODO типу події на сьогодні (+ кнопка на завтра)
-
   const displayCourses = useMemo(() => {
     if (!rawStats) return []
 

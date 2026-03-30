@@ -18,5 +18,3 @@ export interface NotificationItemInterface {
   external_url: string | null
   action_text: string
 }
-
-// TODO валідація по довжені на фронті

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Bell, Clock, X } from 'lucide-react'
 import { useI18n } from '@/shared/lib'
 import { Button } from '@/shared/ui'
@@ -9,8 +9,6 @@ interface NotificationModalProps {
   isOpen: boolean
   onClose: () => void
 }
-
-// TODO скролбар під тему
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
   isOpen,
@@ -24,9 +22,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     syncReadStatusWithServer,
     isArchivedView,
     markAsReadLocally,
-    loading,
   } = useNotifications(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) fetchNotifications(false)
@@ -89,6 +85,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         <div
           className="flex-1 overflow-y-auto p-6 dark:bg-slate-900/30 bg-slate-50/50 rounded-b-xl space-y-4
                  dark:scrollbar-slate-800
+                 scrollbar-thin
                  scrollbar-track-transparent
                  scrollbar-thumb-gray-300
                  dark:scrollbar-thumb-slate-700

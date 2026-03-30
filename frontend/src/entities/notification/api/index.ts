@@ -1,1 +1,4 @@
-export { notificationApiService } from './notification.service'
+export {
+  notificationApiService,
+  type CourseAnnouncementInterface,
+} from './notification.service'

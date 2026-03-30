@@ -3,10 +3,6 @@ import type { NotificationItemInterface } from '@/widgets/notificatiion'
 import { useI18n } from '@/shared/lib'
 import { notificationApiService } from '@/entities/notification/api'
 
-// TODO Історія відправлених
-// TODO зберігати повідомлення: додати перехід(кнопку перейти) тоді автор курсу вже бачитеме повідомлення зможе його перевірити і додати радіобокс перед пубілкацією з попередженням що все більше не зможе йоого редагувати нехай шляпа перевірить і тоді кнопку опублікувати
-// TODO при отриманні сповіщень від сервера, оновлювати стан сповіщень та кількість непрочитаних
-
 export const useNotifications = (isAuthorized: boolean) => {
   const { t } = useI18n()
   const [notifications, setNotifications] = useState<

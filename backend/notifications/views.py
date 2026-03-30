@@ -67,8 +67,8 @@ class CourseAnnouncementView(LocalizedAPIView):
             body_data = json.loads(request.body)
             title = sanitize_input(body_data.get('title'))
             message = sanitize_input(body_data.get('message'))
-            personal_link = body_data.get('personal_link')
-            link_text = sanitize_input(body_data.get('link_text', ''))
+            personal_link = sanitize_input(body_data.get('personal_link', '')) or ''
+            link_text = sanitize_input(body_data.get('link_text', '')) or ''
 
             if not title or not message:
                 return JsonResponse(

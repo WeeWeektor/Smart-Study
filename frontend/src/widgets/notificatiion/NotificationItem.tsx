@@ -95,10 +95,10 @@ export const NotificationItem = ({
       </div>
 
       <div className="mb-3">
-        <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-brand-600 transition-colors leading-tight">
+        <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-1 group-hover:text-brand-600 transition-colors leading-tight break-words">
           {notification.title}
         </h4>
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-snug">
+        <p className="text-sm text-muted-foreground leading-snug whitespace-pre-wrap break-words">
           {notification.message}
         </p>
       </div>

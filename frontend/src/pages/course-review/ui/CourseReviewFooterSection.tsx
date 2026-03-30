@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Button, Card, CardContent, ConfirmModal } from '@/shared/ui'
 import {
   ArrowRight,
@@ -15,6 +15,9 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/shared/lib'
 import { type CourseResponse } from '@/features/course'
+import { notificationApiService } from '@/entities/notification/api'
+import { CourseAnnouncementsModal } from '@/pages/course-review/ui/CourseAnnouncementsModal.tsx'
+import { CreateAnnouncementModal } from '@/pages/course-review/ui/CreateAnnouncementModal.tsx'
 
 interface CourseFooterSectionProps {
   course: CourseResponse | null
@@ -57,7 +60,17 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
 }) => {
   const { t } = useI18n()
 
+  const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false)
+  const [isCreateAnnouncementOpen, setIsCreateAnnouncementOpen] =
+    useState(false)
+
   if (!course || !course.course) return null
+
+  const handleSendAnnouncement = async (data: any) => {
+    if (!course.course.id) return
+    await notificationApiService.postAnnouncement(course.course.id, data)
+    setIsAnnouncementsOpen(true)
+  }
 
   if (!course.course.is_published) {
     return (
@@ -143,12 +156,11 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
   )
 
   const AddMessageToCourseStudents = () => (
-    // TODO: add real action to modal with form to send message to students and api call
     <Button
-      onClick={onShowStatistics}
+      onClick={() => setIsAnnouncementsOpen(true)}
       variant="outline"
       size="lg"
-      className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 hover:text-brand-800 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
+      className="w-60 min-w-[180px] border-brand-200 text-brand-700 hover:bg-brand-50 dark:border-brand-900/50 dark:hover:bg-brand-900/20"
       disabled={isEnrolling}
     >
       <MessageCirclePlusIcon className="w-5 h-5 mr-2" />
@@ -187,6 +199,22 @@ export const CourseFooterSection: React.FC<CourseFooterSectionProps> = ({
             <>
               <StatisticsButton />
               <AddMessageToCourseStudents />
+
+              <CourseAnnouncementsModal
+                isOpen={isAnnouncementsOpen}
+                onClose={() => setIsAnnouncementsOpen(false)}
+                courseId={course.course.id}
+                onOpenCreate={() => {
+                  setIsAnnouncementsOpen(false)
+                  setIsCreateAnnouncementOpen(true)
+                }}
+              />
+
+              <CreateAnnouncementModal
+                isOpen={isCreateAnnouncementOpen}
+                onClose={() => setIsCreateAnnouncementOpen(false)}
+                onSend={handleSendAnnouncement}
+              />
             </>
           )}
 
