@@ -67,10 +67,6 @@ export const NotificationItem = ({
         } 
         hover:border-brand-500/50 hover:shadow-md`}
     >
-      {!notification.is_read && (
-        <div className="absolute top-4 right-4 w-2.5 h-2.5 bg-brand-600 rounded-full animate-pulse" />
-      )}
-
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-wrap gap-2 items-center">
           <Badge
@@ -79,6 +75,13 @@ export const NotificationItem = ({
           >
             {currentConfig.badge}
           </Badge>
+
+          {!notification.is_read && (
+            <div className="relative flex h-4 w-4 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-brand-600"></span>
+            </div>
+          )}
 
           {notification.source_name && (
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground opacity-70">
@@ -133,7 +136,13 @@ export const NotificationItem = ({
 
         <span className="ml-auto text-[10px] text-muted-foreground flex items-center gap-1 opacity-60 font-medium">
           <Clock className="w-3 h-3" />
-          {new Date(notification.sent_at).toLocaleDateString()}
+          {new Date(notification.sent_at).toLocaleString('uk-UA', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </span>
       </div>
     </div>
