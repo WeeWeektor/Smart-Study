@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Bell, Clock, X } from 'lucide-react'
 import { useI18n } from '@/shared/lib'
 import { Button } from '@/shared/ui'
@@ -23,8 +23,10 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     fetchNotifications,
     syncReadStatusWithServer,
     isArchivedView,
+    markAsReadLocally,
     loading,
   } = useNotifications(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) fetchNotifications(false)
@@ -99,7 +101,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
             notifications.map(notification => (
               <NotificationItem
                 key={notification.id}
-                onMarkRead={} // TODO
+                onMarkRead={() => markAsReadLocally(notification.id)}
                 notification={notification}
               />
             ))

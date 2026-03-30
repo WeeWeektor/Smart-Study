@@ -19,6 +19,16 @@ export const useNotifications = (isAuthorized: boolean) => {
 
   const pendingReadIds = useRef<Set<string>>(new Set())
 
+  const updateState = useCallback(
+    (data: NotificationItemInterface[], archived: boolean) => {
+      setNotifications(data)
+      if (!archived) {
+        setUnreadCount(data.filter(n => !n.is_read).length)
+      }
+    },
+    []
+  )
+
   const fetchNotifications = useCallback(
     async (archived = false) => {
       if (!isAuthorized) return
@@ -27,7 +37,7 @@ export const useNotifications = (isAuthorized: boolean) => {
       setIsArchivedView(archived)
       try {
         const data = await notificationApiService.getNotifications(archived)
-        setNotifications(data)
+        updateState(data, archived)
         if (!archived) {
           setUnreadCount(data.filter(n => !n.is_read).length)
         }
@@ -39,7 +49,7 @@ export const useNotifications = (isAuthorized: boolean) => {
         setLoading(false)
       }
     },
-    [isAuthorized, t]
+    [isAuthorized, t, updateState]
   )
 
   const markAsReadLocally = useCallback((id: string) => {
@@ -60,25 +70,31 @@ export const useNotifications = (isAuthorized: boolean) => {
 
     const idsToSend = Array.from(pendingReadIds.current)
     try {
-      // await notificationService.markAsRead(idsToSend)
+      const updatedData = await notificationApiService.markAsRead({
+        notification_ids: idsToSend,
+      })
+      updateState(updatedData, isArchivedView)
       pendingReadIds.current.clear()
-      // Після масового оновлення бекенд скине кеш,
-      // тому за бажанням можна перефетчити дані:
-      // await fetchNotifications()
     } catch (err) {
-      console.error('Failed to sync notifications status', err)
+      setError(
+        t('Помилка при оновленні статусів') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err))
+      )
     }
-  }, [fetchNotifications])
+  }, [isArchivedView, t, updateState])
 
   const markAllAsRead = async () => {
     try {
-      // await notificationService.markAllAsRead()
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
-      setUnreadCount(0)
+      const updatedData = await notificationApiService.markAllAsRead()
+      updateState(updatedData, isArchivedView)
       pendingReadIds.current.clear()
     } catch (err) {
-      console.log(err)
-      setError(t('Помилка при оновленні статусів'))
+      setError(
+        t('Помилка при оновленні статусів') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err))
+      )
     }
   }
 
@@ -97,6 +113,6 @@ export const useNotifications = (isAuthorized: boolean) => {
     fetchNotifications,
     markAsReadLocally,
     markAllAsRead,
-    syncReadStatusWithServer, // Викликати при закритті модалки
+    syncReadStatusWithServer,
   }
 }

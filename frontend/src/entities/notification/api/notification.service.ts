@@ -32,13 +32,18 @@ class NotificationApiService {
     }
   }
 
-  async markAsRead(data: MarkReadDto): Promise<void> {
+  async markAsRead(data: MarkReadDto): Promise<NotificationItemInterface[]> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
-      await apiClient.post('/notifications/mark-read/', data, {
-        headers: { 'X-CSRFToken': csrfToken || '' },
-        withCredentials: true,
-      })
+      const response = await apiClient.post<NotificationItemInterface[]>(
+        '/notifications/mark_as_read/',
+        { ...data, mark_all: false },
+        {
+          headers: { 'X-CSRFToken': csrfToken || '' },
+          withCredentials: true,
+        }
+      )
+      return response.data
     } catch (error) {
       throw handleApiCalendarError(
         error,
@@ -48,17 +53,18 @@ class NotificationApiService {
     }
   }
 
-  async markAllAsRead(): Promise<void> {
+  async markAllAsRead(): Promise<NotificationItemInterface[]> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
-      await apiClient.post(
-        '/notifications/mark-all-read/',
-        {},
+      const response = await apiClient.post<NotificationItemInterface[]>(
+        '/notifications/mark_as_read/',
+        { mark_all: true },
         {
           headers: { 'X-CSRFToken': csrfToken || '' },
           withCredentials: true,
         }
       )
+      return response.data
     } catch (error) {
       throw handleApiCalendarError(
         error,
