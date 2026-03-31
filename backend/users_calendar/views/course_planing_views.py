@@ -1,4 +1,5 @@
 import json
+from gettext import gettext as _
 
 from django.http import JsonResponse, HttpResponse
 from django.utils.decorators import method_decorator
@@ -11,7 +12,6 @@ from common.decorators import login_required_async
 from common.utils import sanitize_input
 from users_calendar.services.course_event_service import CreateCourseEvent, DeleteCourseEvents
 
-# TODO переглянути всі gettext
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class CoursePlaningListCreateView(LocalizedView):
@@ -47,7 +47,7 @@ class CoursePlaningListCreateView(LocalizedView):
             }, status=status.HTTP_201_CREATED)
 
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid JSON")}, status=status.HTTP_400_BAD_REQUEST)
         except DRFValidationError as e:
             return JsonResponse(e.detail, status=status.HTTP_400_BAD_REQUEST, safe=False)
         except Exception as e:
@@ -65,7 +65,7 @@ class CoursePlaningDetailView(LocalizedView):
             if success:
                 return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
-            return JsonResponse({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"error": _("Event not found")}, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

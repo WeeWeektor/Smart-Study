@@ -33,15 +33,15 @@ class NotificationAdmin(admin.ModelAdmin):
     readonly_fields = ('sent_at', 'id')
 
     fieldsets = (
-        (_('Основна інформація'), {
+        (_('Key information'), {
             'fields': ('id', 'user', 'notification_type', 'is_important', 'is_read')
         }),
-        (_('Контент'), {
+        (_('Content'), {
             'fields': ('title', 'message', 'sent_at')
         }),
-        (_('Зв’язки та посилання'), {
+        (_('Links and references'), {
             'fields': ('course', 'event', 'personal_link', 'link_text'),
-            'description': _('Виберіть об’єкт курсу або події, або вкажіть зовнішнє посилання.')
+            'description': _('Select a course or event, or provide an external link.')
         }),
     )
 
@@ -53,15 +53,15 @@ class NotificationAdmin(admin.ModelAdmin):
     user_email.short_description = _('User Email')
     user_email.admin_order_field = 'user__email'
 
-    @admin.action(description=_("Позначити вибрані як прочитані"))
+    @admin.action(description=_("Mark selected items as read"))
     def mark_as_read_action(self, request, queryset):
         queryset.update(is_read=True)
-        self.message_user(request, _("Вибрані сповіщення оновлено."))
+        self.message_user(request, _("Your selected notifications have been updated."))
 
-    @admin.action(description=_("Позначити вибрані як НЕпрочитані"))
+    @admin.action(description=_("Mark selected items as unread"))
     def mark_as_unread_action(self, request, queryset):
         queryset.update(is_read=False)
-        self.message_user(request, _("Статус сповіщень змінено на 'непрочитано'."))
+        self.message_user(request, _("The status of the notifications has been changed to 'unread'."))
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'course', 'event')

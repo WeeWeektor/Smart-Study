@@ -243,7 +243,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'daily-morning-reminder': {
         'task': 'notifications.tasks.send_daily_reminders_task',
-        'schedule': crontab(hour=15, minute=42),
+        'schedule': crontab(hour=8, minute=0),
     },
 }
 

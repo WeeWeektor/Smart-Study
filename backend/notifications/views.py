@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
+from gettext import gettext as _
 
 from common import LocalizedAPIView
 from common.decorators import login_required_async
@@ -29,12 +30,10 @@ class NotificationView(LocalizedAPIView):
             data = await cache_service.get_notifications_cache()
             return JsonResponse(data, status=status.HTTP_200_OK, safe=False)
         except ValidationError:
-            return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid parameters")}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-# TODO переглянути всі gettext
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class CourseAnnouncementView(LocalizedAPIView):
@@ -57,10 +56,10 @@ class CourseAnnouncementView(LocalizedAPIView):
             return JsonResponse(data, status=status.HTTP_200_OK, safe=False)
 
         except ValidationError:
-            return JsonResponse({"error": "Invalid course ID"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid course ID")}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse(
-                {"error": f"Failed to fetch course announcements: {str(e)}"},
+                {"error": f"{_("Failed to fetch course announcements")}: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -77,7 +76,7 @@ class CourseAnnouncementView(LocalizedAPIView):
 
             if not title or not message:
                 return JsonResponse(
-                    {"error": "Title and message are required"},
+                    {"error": _("Title and message are required")},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -91,19 +90,19 @@ class CourseAnnouncementView(LocalizedAPIView):
 
             if count == 0:
                 return JsonResponse(
-                    {"message": "No students to notify"},
+                    {"message": _("No students to notify")},
                     status=status.HTTP_200_OK
                 )
 
             return JsonResponse(updated_history, status=status.HTTP_201_CREATED, safe=False)
 
         except ValidationError:
-            return JsonResponse({"error": "Invalid course ID"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid course ID")}, status=status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid JSON")}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse(
-                {"error": f"Failed to post announcement: {str(e)}"},
+                {"error": f"{_("Failed to post announcement")}: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -138,8 +137,8 @@ class MarkNotificationsAsReadView(LocalizedAPIView):
             )
 
         except ValidationError:
-            return JsonResponse({"error": "Invalid notification IDs"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid notification IDs")}, status=status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": _("Invalid JSON")}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

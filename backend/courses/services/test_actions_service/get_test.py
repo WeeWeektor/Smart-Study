@@ -46,27 +46,6 @@ async def get_public_tests_by_author(author_id) -> Union[dict, list]:
 
 async def get_public_tests(cate: Union[list, None], level: Union[str, None]) -> Union[dict, list]:
     try:
-        # if not cate:
-        #     if not level:
-        #         tests = await sync_to_async(lambda: list(Test.objects.select_related("owner").filter(is_public=True)))()
-        #     else:
-        #         tests = await sync_to_async(lambda: list(Test.objects
-        #                                                  .select_related("owner")
-        #                                                  .filter(level=level, is_public=True)
-        #                                                  ))()
-        # else:
-        #     if not level:
-        #         tests = await sync_to_async(lambda: list(Test.objects
-        #                                                  .select_related("owner")
-        #                                                  .filter(category__in=cate, is_public=True)
-        #                                                  ))()
-        #     else:
-        #         tests = await sync_to_async(lambda: list(
-        #             Test.objects
-        #             .select_related("owner")
-        #             .filter(category__in=cate, level=level, is_public=True)
-        #         ))()
-
         qs = Test.objects.select_related("owner").filter(is_public=True)
 
         if cate:

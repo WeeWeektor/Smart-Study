@@ -14,8 +14,3 @@ class LessonView(LocalizedView):
         else:
             lesson_data = await get_cached_instance_by_id("lesson", "courses_get", lesson_id)
             return success_response(data=lesson_data, message=gettext("Lesson retrieved successfully"))
-
-
-    async def post(self, request):  #  TODO Можливо видалити цей метод і подібні йому якщо курси та структура курсів будуть створюватися тільки через курс сервіс
-        print(request.POST.get("data"))
-        return success_response("Post request received")

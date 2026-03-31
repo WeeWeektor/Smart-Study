@@ -37,7 +37,7 @@ class CourseOwnerNotifications:
             "link_text": item['link_text'],
             "recipients_count": item['recipients_count'],
             "notification_type": "message_from_course_owner",
-            "action_text": item['link_text'] or "Переглянути"
+            "action_text": item['link_text'] or _("View")
         } for item in raw_data]
 
     async def get_notifications(self):

@@ -30,10 +30,6 @@ class ModuleView(LocalizedView):
             return error_response(f"{gettext("Error creating module:")} {str(e)}", status=500)
 
     @permission_module_required
-    async def patch(self, request, module_id):
-        pass
-
-    @permission_module_required
     async def delete(self, request, module_id):
         try:
             uuid_obj = validate_uuid(module_id)

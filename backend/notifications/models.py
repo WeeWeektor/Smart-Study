@@ -58,7 +58,7 @@ class Notification(models.Model):
         max_length=50,
         blank=True,
         default="",
-        help_text=_("Текст на кнопці для персонального посилання")
+        help_text=_("Text on the button for a personalised link")
     )
 
     class Meta:
@@ -81,10 +81,10 @@ class Notification(models.Model):
 
     def clean(self):
         if self.notification_type == NotificationsType.EVENT_REMINDER and not self.event:
-            raise ValidationError(_("Для нагадування про подію необхідно вказати івент."))
+            raise ValidationError(_("To set a reminder for the event, you must specify the event."))
 
         if self.notification_type == NotificationsType.MESSAGE_FROM_COURSE_OWNER and not self.course:
-            raise ValidationError(_("Повідомлення від власника курсу повинно мати прив'язку до курсу."))
+            raise ValidationError(_("A message from the course owner must be linked to the course."))
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -116,7 +116,7 @@ class Notification(models.Model):
         if self.link_text:
             return self.link_text
         if self.personal_link:
-            return _("Перейти за посиланням")
+            return _("Click here")
         if self.course:
-            return _("До курсу")
-        return _("Переглянути")
+            return _("To the course")
+        return _("View")
