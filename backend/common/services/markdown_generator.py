@@ -19,7 +19,7 @@ class MarkdownHelper:
 
     @staticmethod
     def comment(content: str) -> str:
-        return f"\n***{_('Методичний коментар')}:** {content}*\n\n"
+        return f"\n***{_('Methodological notes')}:** {content}*\n\n"
 
     @staticmethod
     def image(url: str, alt_text: str = "Image") -> str:
@@ -32,7 +32,7 @@ class MarkdownHelper:
             f'  <source src="{url}" type="video/mp4">\n'
             f'  [{title}]({url})\n'
             f'</video>\n\n'
-            f'*[🔗 {_("Відкрити відео окремо")}]({url})*\n\n'
+            f'*[🔗 {_("Open the video separately")}]({url})*\n\n'
         )
 
     @staticmethod
@@ -85,7 +85,7 @@ class MarkdownHelper:
             return cls.comment(str(data))
 
         if block_type in ['text', 'assignment']:
-            prefix = f"### {_('Завдання')}:\n" if block_type == 'assignment' else ""
+            prefix = f"### {_('Task')}:\n" if block_type == 'assignment' else ""
             return cls.text(f"{prefix}{str(data)}")
 
         if block_type == 'code':
@@ -93,25 +93,25 @@ class MarkdownHelper:
 
         if block_type in ['link', 'live']:
             link_url = data if isinstance(data, str) else url
-            link_title = _("Приєднатися до зустрічі") if block_type == 'live' else _("Корисне посилання")
+            link_title = _("Join the meeting") if block_type == 'live' else _("Useful link")
             return cls.file_link(link_url, title=link_title, file_type=block_type)
 
         if not url:
             return ""
 
         if block_type == 'video':
-            return cls.video(url, title=_("Відео уроку"))
+            return cls.video(url, title=_("Video lesson"))
 
         if block_type == 'audio':
-            return cls.audio(url, title=_("Аудіозапис"))
+            return cls.audio(url, title=_("Audio recording"))
 
         if block_type == 'image':
             return cls.image(url)
 
         if block_type == 'presentation':
-            return cls.file_link(url, title=_("Завантажити презентацію"), file_type='presentation')
+            return cls.file_link(url, title=_("Download the presentation"), file_type='presentation')
 
         if block_type == 'document':
-            return cls.file_link(url, title=_("Завантажити документ"), file_type='document')
+            return cls.file_link(url, title=_("Download the document"), file_type='document')
 
         return cls.text(str(data))
