@@ -1,5 +1,6 @@
 import json
 
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -27,6 +28,8 @@ class NotificationView(LocalizedAPIView):
         try:
             data = await cache_service.get_notifications_cache()
             return JsonResponse(data, status=status.HTTP_200_OK, safe=False)
+        except ValidationError:
+            return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -53,6 +56,8 @@ class CourseAnnouncementView(LocalizedAPIView):
 
             return JsonResponse(data, status=status.HTTP_200_OK, safe=False)
 
+        except ValidationError:
+            return JsonResponse({"error": "Invalid course ID"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse(
                 {"error": f"Failed to fetch course announcements: {str(e)}"},
@@ -92,6 +97,8 @@ class CourseAnnouncementView(LocalizedAPIView):
 
             return JsonResponse(updated_history, status=status.HTTP_201_CREATED, safe=False)
 
+        except ValidationError:
+            return JsonResponse({"error": "Invalid course ID"}, status=status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -130,7 +137,11 @@ class MarkNotificationsAsReadView(LocalizedAPIView):
                 safe=False
             )
 
+        except ValidationError:
+            return JsonResponse({"error": "Invalid notification IDs"}, status=status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # TODO нагадування про персональні події на сьогодні

@@ -1,6 +1,8 @@
-from asgiref.sync import sync_to_async
-from django.db.models import Count
+from gettext import gettext as _
 
+from asgiref.sync import sync_to_async
+from django.db.models import Count, Max
+from notifications.tasks import send_bulk_notification_email_task
 from notifications.models import Notification, NotificationsType
 
 
@@ -15,8 +17,11 @@ class CourseOwnerNotifications:
                 course_id=self.course_id,
                 notification_type=NotificationsType.MESSAGE_FROM_COURSE_OWNER
             )
-            .values('title', 'message', 'sent_at', 'personal_link', 'link_text')
-            .annotate(recipients_count=Count('id'))
+            .values('title', 'message', 'personal_link', 'link_text')
+            .annotate(
+                recipients_count=Count('id'),
+                sent_at=Max('sent_at')
+            )
             .order_by('-sent_at')
         )
         return list(queryset)
@@ -61,23 +66,44 @@ class CourseOwnerNotifications:
         Notification.objects.bulk_create(notifications)
         return len(notifications)
 
+    @staticmethod
+    def __get_recipient_emails(student_ids):
+        from users.models import UserSettings
+        return list(
+            UserSettings.objects.filter(
+                user_id__in=student_ids,
+                email_notifications=True,
+            )
+            .select_related('user')
+            .exclude(user__email='')
+            .values_list('user__email', flat=True)
+        )
+
     async def post_notification(self, title, message, personal_link=None, link_text=None):
         student_ids = await self.__get_enrolled_students_ids()
-
         if not student_ids:
-            return 0
+            return 0, []
 
         count = await sync_to_async(self.__execute_bulk_create)(
             student_ids, title, message, personal_link, link_text
         )
 
+        recipient_emails = await sync_to_async(self.__get_recipient_emails)(student_ids)
+        if recipient_emails:
+            send_bulk_notification_email_task.delay(
+                recipient_list=recipient_emails,
+                title=f"{_('New notification')}: {title}",
+                message=message,
+                personal_link=personal_link,
+                link_text=link_text
+            )
+
         from notifications.services.cache_service import CourseOwnerNotificationCache
         cache_service = CourseOwnerNotificationCache(course_id=self.course_id, owner=self.owner)
+
+        await cache_service.invalidate_for_users_cache(student_ids)
         await cache_service.invalidate_course_owner_notification_cache()
 
         updated_data = await cache_service.get_course_owner_notification_cache()
-
-        # TODO signals або інвалідація кешу для користувачів тут
-
 
         return count, updated_data

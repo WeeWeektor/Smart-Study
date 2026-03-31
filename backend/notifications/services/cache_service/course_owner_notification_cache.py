@@ -33,3 +33,12 @@ class CourseOwnerNotificationCache(BaseCache):
     async def invalidate_course_owner_notification_cache(self):
         await sync_to_async(self.cache.delete)(self.key, version=self.CACHE_VERSION)
         self.logger.info(f"Cache invalidated for owner {self.owner.id} and course {self.course_id}")
+
+    async def invalidate_for_users_cache(self, user_ids: list):
+        keys = []
+        for uid in user_ids:
+            keys.append(self.get_user_cache_key(user_id=uid))
+            keys.append(self.get_user_archived_cache_key(user_id=uid))
+
+        if keys:
+            await sync_to_async(self.cache.delete_many)(keys, version=self.CACHE_VERSION)

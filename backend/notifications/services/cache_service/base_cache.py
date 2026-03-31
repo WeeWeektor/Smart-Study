@@ -13,6 +13,14 @@ class BaseCache:
     def __init__(self, key):
         self.key = key
 
+    @staticmethod
+    def get_user_cache_key(user_id):
+        return f'notifications:current:user_{user_id}'
+
+    @staticmethod
+    def get_user_archived_cache_key(user_id):
+        return f'notifications:archived:user_{user_id}'
+
     async def register_key(self):
         task = asyncio.create_task(self._do_register())
         self._background_tasks.add(task)

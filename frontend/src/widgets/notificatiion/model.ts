@@ -1,7 +1,7 @@
 export type NotificationType =
   | 'event_reminder'
   | 'message_from_course_owner'
-  | 'achievement_unlocked' // TODO відправка на бек при отриманні досягнення
+  | 'achievement_unlocked'
   | 'default'
 
 export interface NotificationItemInterface {

@@ -12,9 +12,8 @@ class NotificationsCache(BaseCache):
         self.user = user
         self.archived_notifications = kwargs.get('archived_notifications', False)
 
-        self.active_key = f'notifications:current:user_{user.id}'
-        self.archived_key = f'notifications:archived:user_{user.id}'
-        current_key = self.active_key if not self.archived_notifications else self.archived_key
+        current_key = self.get_user_cache_key(
+            user.id) if not self.archived_notifications else self.get_user_archived_cache_key(user.id)
 
         super().__init__(key=current_key)
         self.cache = caches[self.CACHE_NAME]
@@ -34,6 +33,6 @@ class NotificationsCache(BaseCache):
         return data
 
     async def invalidate_notifications_cache(self):
-        keys = [self.active_key, self.archived_key]
+        keys = [self.get_user_cache_key(self.user.id), self.get_user_archived_cache_key(self.user.id)]
         await sync_to_async(self.cache.delete_many)(keys, version=self.CACHE_VERSION)
         self.logger.info(f"Cache invalidated for user {self.user.id}")
