@@ -241,6 +241,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'courses.tasks.train_course_recommendations',
         'schedule': crontab(hour=3, minute=0),
     },
+    'daily-morning-reminder': {
+        'task': 'notifications.tasks.send_daily_reminders_task',
+        'schedule': crontab(hour=15, minute=42),
+    },
 }
 
 # Static Files

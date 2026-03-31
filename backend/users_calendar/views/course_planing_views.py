@@ -69,6 +69,3 @@ class CoursePlaningDetailView(LocalizedView):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# TODO якщо змінилось в календарі щось тоді оновлювати сповіщення також
