@@ -1,5 +1,4 @@
 from asgiref.sync import sync_to_async
-from django.core.cache import caches
 
 from notifications.services.cache_service.base_cache import BaseCache
 from notifications.services.user_notification_service import UserNotifications
@@ -16,7 +15,6 @@ class NotificationsCache(BaseCache):
             user.id) if not self.archived_notifications else self.get_user_archived_cache_key(user.id)
 
         super().__init__(key=current_key)
-        self.cache = caches[self.CACHE_NAME]
 
     async def get_notifications_cache(self):
         data = await sync_to_async(self.cache.get)(self.key, version=self.CACHE_VERSION, default=None)

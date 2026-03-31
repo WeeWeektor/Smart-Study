@@ -143,5 +143,3 @@ class MarkNotificationsAsReadView(LocalizedAPIView):
             return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # TODO нагадування про персональні події на сьогодні
