@@ -13,7 +13,7 @@ interface EditableHeaderProps {
   is_user_login?: boolean
 }
 
-// TODO додати в profile header логіку показу повідомлень
+// TODO викладач отримує не ті повідомлення (студенту приходять в 8 ранку і викладач іх тоже бачить)
 
 export const EditableHeader = ({
   title,

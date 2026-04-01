@@ -11,7 +11,7 @@ import { ensureCsrfToken } from '@/shared/lib'
 class ProfileService {
   private t = ClassTranslator.translate
 
-  async getProfile(): Promise<ApiResponse<ProfileData>> {
+  async getProfile(): Promise<ApiResponse<ProfileData | null>> {
     try {
       const csrfToken = await ensureCsrfToken(this.t)
 
@@ -27,7 +27,14 @@ class ProfileService {
         status: 'success',
         message: this.t('Профіль завантажено успішно'),
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        return {
+          data: null as any,
+          status: 'error',
+          message: 'Unauthorized',
+        }
+      }
       console.error(this.t('Помилка завантаження профілю:'), error)
       throw new Error(this.t('Не вдалося завантажити профіль') + error)
     }

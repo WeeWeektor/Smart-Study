@@ -36,8 +36,8 @@ const EmailVerification = () => {
           )
 
           setTimeout(() => {
-            navigate('/profile?emailVerified=true')
-          }, 1000)
+            navigate('/login?emailVerified=true')
+          }, 10000)
         } else {
           setStatus('error')
           setMessage(t('Помилка підтвердження email. Перевірте посилання.'))
@@ -76,10 +76,10 @@ const EmailVerification = () => {
               </h2>
               <p className="text-muted-foreground mb-4">{message}</p>
               <Button
-                onClick={() => navigate('/profile?emailVerified=true')}
+                onClick={() => navigate('/login?emailVerified=true')}
                 className="w-full bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
               >
-                {t('Перейти до профілю')}
+                {t('Перейти до входу')}
               </Button>
             </div>
           ) : (

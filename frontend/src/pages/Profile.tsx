@@ -298,6 +298,7 @@ const Profile = () => {
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
           disabledSave={isSaveDisabled}
+          is_user_login={true}
         />
 
         <main className="p-6">

@@ -106,6 +106,12 @@ class ProfileStore {
     }
   }
 
+  stopLoading() {
+    this.loading = false
+    this.isProfileFetching = false
+    this.notify()
+  }
+
   async refreshProfile() {
     this.hasLoaded = false
     await this.loadProfile()
@@ -156,8 +162,17 @@ export const useProfileData = () => {
       forceUpdate({})
     })
 
-    if (!profileStore.getProfileData() && !profileStore.isLoading()) {
-      profileStore.loadProfile()
+    const hasSession =
+      document.cookie.includes('sessionid') ||
+      document.cookie.includes('csrftoken') ||
+      localStorage.getItem('token')
+
+    if (!hasSession) {
+      profileStore.stopLoading()
+    } else {
+      if (!profileStore.getProfileData() && !profileStore.isLoading()) {
+        profileStore.loadProfile()
+      }
     }
 
     return unsubscribe

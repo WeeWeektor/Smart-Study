@@ -10,6 +10,7 @@ interface ProfileHeaderProps {
   onSave: () => void
   onCancel: () => void
   disabledSave?: boolean
+  is_user_login?: boolean
 }
 
 export const ProfileHeader = ({
@@ -19,6 +20,7 @@ export const ProfileHeader = ({
   onSave,
   onCancel,
   disabledSave,
+  is_user_login = true,
 }: ProfileHeaderProps) => {
   const { t } = useI18n()
 
@@ -65,6 +67,7 @@ export const ProfileHeader = ({
       description={t('Керуйте своїм профілем та налаштуваннями')}
       icon={<User className="w-6 h-6 text-brand-600 dark:text-brand-400" />}
       actions={actions}
+      is_user_login={is_user_login}
     />
   )
 }

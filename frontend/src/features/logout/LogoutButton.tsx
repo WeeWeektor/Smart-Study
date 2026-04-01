@@ -1,18 +1,15 @@
-import { useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { Button } from '@/shared/ui'
 import { authService } from '../auth'
 
 export const LogoutButton = () => {
-  const navigate = useNavigate()
-
   const handleLogout = async () => {
     try {
       await authService.logout()
-      navigate('/?showLogoutSuccess=true')
+      window.location.assign('/?showLogoutSuccess=true')
     } catch (error) {
       console.error('Logout failed:', error)
-      navigate('/?showLogoutSuccess=true')
+      window.location.assign('/?showLogoutSuccess=true')
     }
   }
 

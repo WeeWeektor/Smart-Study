@@ -29,8 +29,9 @@ const Index = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { profileData, loading, learningStats } = useProfileData()
-  const { loading: loading_course_status, rawStats } = useUserCoursesStatus()
   const isAuthorized = !!profileData
+  const { loading: loading_course_status, rawStats } =
+    useUserCoursesStatus(isAuthorized)
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
