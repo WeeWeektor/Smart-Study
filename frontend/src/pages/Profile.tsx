@@ -226,12 +226,12 @@ const Profile = () => {
   const handleDeleteAccount = async () => {
     try {
       await profileService.deleteProfile()
-      navigate('/?showDeleteAccountSuccess=true')
+      window.location.assign('/?showDeleteAccountSuccess=true')
     } catch (error) {
       setError(
         error instanceof Error ? error.message : t('Помилка видалення акаунта')
       )
-      navigate('/?showDeleteAccountSuccess=true')
+      window.location.assign('/?showDeleteAccountSuccess=true')
     }
   }
 
