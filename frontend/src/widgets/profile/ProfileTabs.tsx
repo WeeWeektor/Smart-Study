@@ -347,8 +347,10 @@ export const ProfileTabs = ({
                   </div>
                 ))
               ) : (
-                <div className="text-center py-10 text-muted-foreground">
-                  {t('Ви ще не розпочали жодного курсу')}
+                <div className="col-span-2 py-10 text-center border-2 border-dashed rounded-xl">
+                  <p className="text-muted-foreground">
+                    {t('Ви ще не розпочали жодного курсу')}
+                  </p>
                 </div>
               )}
             </div>
