@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useI18n } from '@/shared/lib'
+import { getFormattedTime, useI18n } from '@/shared/lib'
 import {
   Button,
   Input,
@@ -49,12 +49,7 @@ export const AddNewEvent = ({
     }
   }, [error])
 
-  // TODO localize time format based on user locale
-  const currentTime = new Date().toLocaleTimeString('uk-UA', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
+  const currentTime = getFormattedTime(useI18n().language)
 
   const [formData, setFormData] = useState({
     title: defaultValues?.title || '',

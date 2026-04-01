@@ -11,7 +11,7 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns'
-import { uk } from 'date-fns/locale'
+import { enUS, uk } from 'date-fns/locale'
 import {
   AlertCircle,
   ChevronDown,
@@ -57,7 +57,7 @@ import {
 import { useLocation } from 'react-router-dom'
 
 const CalendarPage = () => {
-  const { t } = useI18n()
+  const { t, language } = useI18n()
   const { rawStats, loading } = useUserCoursesStatus()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -442,6 +442,8 @@ const CalendarPage = () => {
     role: profileData.user.role,
   }
 
+  const locale = language === 'uk' ? uk : language === 'en' ? enUS : uk
+
   const handleToggleCompleteEvent = async (eventId: string) => {
     await togglePersonalEventStatus(eventId)
   }
@@ -475,7 +477,15 @@ const CalendarPage = () => {
           <Card className="lg:col-span-8 shadow-md border-border bg-slate-300 dark:bg-slate-700 h-min">
             <CardContent className="p-4 sm:p-6">
               <div className="grid grid-cols-7 gap-px mb-4">
-                {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'].map(d => (
+                {[
+                  t('Пн'),
+                  t('Вт'),
+                  t('Ср'),
+                  t('Чт'),
+                  t('Пт'),
+                  t('Сб'),
+                  t('Нд'),
+                ].map(d => (
                   <div
                     key={d}
                     className="text-center text-xs font-bold text-muted-foreground py-2 text-black dark:text-white uppercase tracking-widest"
@@ -564,7 +574,7 @@ const CalendarPage = () => {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <div className="px-4 font-bold min-w-[140px] text-center capitalize">
-                {format(currentMonth, 'LLLL yyyy', { locale: uk })}
+                {format(currentMonth, 'LLLL yyyy', { locale: locale })}
               </div>
               <Button
                 variant="ghost"
@@ -578,7 +588,7 @@ const CalendarPage = () => {
               <CardHeader className="border-b pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Clock className="w-5 h-5 text-brand-600" />
-                  {format(selectedDate, 'd MMMM', { locale: uk })}
+                  {format(selectedDate, 'd MMMM', { locale: locale })}
                   <div className="flex items-end justify-end ring-0 ml-auto">
                     <Button
                       variant="ghost"
