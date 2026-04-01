@@ -1,17 +1,6 @@
-import { useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
 import { useI18n } from '@/shared/lib'
 
 const NotFound = () => {
-  const location = useLocation()
-
-  useEffect(() => {
-    console.error(
-      '404 Error: User attempted to access non-existent route:',
-      location.pathname
-    )
-  }, [location.pathname])
-
   const { t } = useI18n()
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

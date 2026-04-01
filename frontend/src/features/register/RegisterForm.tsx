@@ -52,7 +52,6 @@ export const RegisterForm = () => {
     const facebookCredential = searchParams.get('facebook_credential')
 
     if (googleName && googleSurname && googleEmail && googleCredential) {
-      console.log('[RegisterForm] Отримано Google дані з URL параметрів')
       setFormData(prev => ({
         ...prev,
         name: googleName,
@@ -71,7 +70,6 @@ export const RegisterForm = () => {
       googleEmail &&
       facebookCredential
     ) {
-      console.log('[RegisterForm] Отримано Facebook дані з URL параметрів')
       setFormData(prev => ({
         ...prev,
         name: googleName,
@@ -104,11 +102,6 @@ export const RegisterForm = () => {
     credential: string
     provider: 'google' | 'facebook'
   }) => {
-    console.log(
-      '[RegisterForm] handleSocialDataReceived викликано з даними:',
-      data
-    )
-
     setFormData(prev => ({
       ...prev,
       name: data.name,
@@ -121,12 +114,10 @@ export const RegisterForm = () => {
     }))
 
     if (data.provider === 'google') {
-      console.log('[RegisterForm] Встановлюємо Google credential')
       setGoogleCredential(data.credential)
       setIsGoogleRegistration(true)
       setIsFacebookRegistration(false)
     } else {
-      console.log('[RegisterForm] Встановлюємо Facebook credential')
       setFacebookCredential(data.credential)
       setIsFacebookRegistration(true)
       setIsGoogleRegistration(false)
@@ -139,18 +130,13 @@ export const RegisterForm = () => {
     user?: any
     message?: string
   }) => {
-    console.log('[RegisterForm] handleUserExists викликано з даними:', userData)
-
     if (userData.access) {
-      console.log('[RegisterForm] Встановлюємо access токен')
       tokenService.setToken(userData.access)
     }
     if (userData.refresh) {
-      console.log('[RegisterForm] Встановлюємо refresh токен')
       tokenService.setRefreshToken(userData.refresh)
     }
 
-    console.log('[RegisterForm] Перенаправляємо на /profile')
     navigate('/profile')
   }
 
@@ -199,14 +185,6 @@ export const RegisterForm = () => {
           return
         }
 
-        console.log('[RegisterForm] Відправляємо соціальну реєстрацію:', {
-          provider,
-          role: formData.role,
-          name: formData.name,
-          surname: formData.surname,
-          email: formData.email,
-        })
-
         const response = await authService.providerOAuth({
           credential,
           provider,
@@ -252,8 +230,6 @@ export const RegisterForm = () => {
         navigate('/profile')
       }
     } catch (error: any) {
-      console.error('Registration error:', error)
-
       let errorMessage = t('Помилка при створенні акаунта')
 
       if (error.response) {

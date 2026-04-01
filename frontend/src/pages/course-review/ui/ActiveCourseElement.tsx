@@ -263,7 +263,6 @@ export const ActiveCourseElement: React.FC<ActiveCourseElementProps> = ({
 
       return response.result
     } catch (error) {
-      console.log('Помилка при надсиланні тесту:', error)
       throw error
     }
   }

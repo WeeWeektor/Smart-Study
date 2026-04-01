@@ -189,7 +189,6 @@ const Profile = () => {
         }
       }
     } catch (error) {
-      console.error('Помилка оновлення профілю:', error)
       setError(
         error instanceof Error ? error.message : t('Помилка оновлення профілю')
       )

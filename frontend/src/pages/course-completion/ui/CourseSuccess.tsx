@@ -74,7 +74,6 @@ export const CourseSuccess = ({
           }
         }
       } catch (e) {
-        console.error('Failed to check results:', e)
         if (isMounted) setCanShowResults(false)
       } finally {
         if (isMounted) setChecking(false)

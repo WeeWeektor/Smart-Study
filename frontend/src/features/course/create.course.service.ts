@@ -129,7 +129,6 @@ class CreateCourseService {
 
       return { message: response.data.message, status: response.status }
     } catch (error: unknown) {
-      console.error(error)
       throw handleApiError(
         error,
         'Не вдалось оновити курс: ',

@@ -30,8 +30,6 @@ export const LoginForm = () => {
     credential: string
     provider?: 'google' | 'facebook'
   }) => {
-    console.log('[LoginForm] Отримано соціальні дані:', data)
-
     const params = new URLSearchParams({
       name: data.name,
       surname: data.surname,
@@ -47,8 +45,6 @@ export const LoginForm = () => {
     user?: any
     message?: string
   }) => {
-    console.log('[LoginForm] Користувач існує:', data)
-
     if (data.access) {
       tokenService.setToken(data.access)
     }

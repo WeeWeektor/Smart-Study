@@ -45,9 +45,7 @@ class ChoicesStore {
       const response = await choicesGetService.getChoices()
       this.choicesData = response
       this.hasLoaded = true
-      console.log('Choices завантажено:', response)
     } catch (error) {
-      console.error('Помилка завантаження choices:', error)
       this.error = 'Помилка завантаження choices'
     } finally {
       this.loading = false

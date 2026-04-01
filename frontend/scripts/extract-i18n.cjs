@@ -74,9 +74,6 @@ function main() {
   const tree = buildFlatTree(allKeys)
   writeTs('en', tree)
   writeTs('uk', tree)
-  console.log(
-    `Extracted ${allKeys.size} keys into translations/en.ts and uk.ts`
-  )
 }
 
 main()

@@ -565,7 +565,6 @@ const CreateCourse = () => {
       let response
 
       if (isEditMode && id) {
-        console.log('Відправляємо на оновлення з даними:', coursePayload)
         response = await createCourseService.updateCourse({
           courseId: id,
           requestData: coursePayload,

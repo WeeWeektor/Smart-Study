@@ -48,12 +48,10 @@ class ProfileStore {
         this.hasLoaded = true
 
         await this.loadLearningStats()
-        console.log('Профіль завантажено:', response.data)
       } else {
         this.error = 'Не вдалося завантажити профіль'
       }
     } catch (error) {
-      console.error('Помилка завантаження профілю:', error)
       this.error = 'Помилка завантаження профілю'
     } finally {
       this.loading = false
@@ -76,11 +74,9 @@ class ProfileStore {
         if (response.status === 'success' && response.data) {
           this.learningStats = { ...this.learningStats, ...response.data }
           this.statsLoaded = true
-          console.log('Статистику оновлено:', this.learningStats)
           this.notify()
         }
       } catch (error) {
-        console.error('Помилка завантаження статистики:', error)
       } finally {
         this.statsPromise = null
         this.isStatsFetching = false

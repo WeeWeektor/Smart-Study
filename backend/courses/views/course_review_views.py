@@ -47,8 +47,6 @@ class CourseReviewView(LocalizedView):
             else:
                 data[k] = v
 
-        print(data)
-
         try:
             review = await create_review_of_course(data, request.user)
             review_json = await sync_to_async(build_course_review_json)(review)

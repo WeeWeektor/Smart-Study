@@ -389,7 +389,6 @@ const CourseReview = () => {
         handleSidebarItemClick(firstElement.id, firstElement.type)
       }
     } catch (error) {
-      console.error(error)
       setCourseError(
         error instanceof Error ? error.message : t('Не вдалось розпочати курс')
       )

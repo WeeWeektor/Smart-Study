@@ -48,15 +48,7 @@ export function useSocialAuth({
     loadingSetter(true)
     handleError('')
 
-    console.log(
-      '[SocialAuth] handleSocialAuth викликано для провайдера:',
-      provider
-    )
-    console.log('[SocialAuth] Дані користувача:', userData)
-
     try {
-      console.log('[SocialAuth] Спроба входу з існуючим користувачем...')
-
       const loginRes = await authService.providerOAuth({
         credential,
         provider,
@@ -64,11 +56,7 @@ export function useSocialAuth({
         surname: userData.surname,
       })
 
-      console.log('[SocialAuth] Відповідь від authService:', loginRes)
-
       if (loginRes.user) {
-        console.log('[SocialAuth] Користувач існує, виконуємо вхід')
-
         if (loginRes.access) {
           tokenService.setToken(loginRes.access)
         }
@@ -77,18 +65,12 @@ export function useSocialAuth({
         }
 
         if (onUserExists) {
-          console.log('[SocialAuth] Викликаємо onUserExists callback')
           onUserExists(loginRes)
         } else {
-          console.log('[SocialAuth] Перенаправляємо на /profile')
           window.location.href = '/profile'
         }
         return
       }
-
-      console.log(
-        '[SocialAuth] Користувач не існує, перенаправляємо на реєстрацію'
-      )
 
       const params = new URLSearchParams({
         name: userData.name,
@@ -109,8 +91,6 @@ export function useSocialAuth({
 
       window.location.href = `/register?${params.toString()}`
     } catch (error: any) {
-      console.error('[SocialAuth] Помилка в handleSocialAuth:', error)
-
       if (
         error.response?.status === 400 &&
         (error.response?.data?.error?.includes(
@@ -120,10 +100,6 @@ export function useSocialAuth({
             'You must specify role and surname'
           ))
       ) {
-        console.log(
-          '[SocialAuth] Користувач не існує, перенаправляємо на реєстрацію'
-        )
-
         const params = new URLSearchParams({
           name: userData.name,
           surname: userData.surname,
@@ -172,26 +148,9 @@ export function useSocialAuth({
   }, [])
 
   useEffect(() => {
-    const initFacebookSDK = () => {
-      try {
-        // @ts-ignore
-        if (window.FB) {
-          console.log('[FacebookAuth] Facebook SDK завантажено')
-        } else {
-          console.warn('[FacebookAuth] Facebook SDK не завантажено')
-        }
-      } catch (error: any) {
-        console.error(
-          '[FacebookAuth] Помилка ініціалізації Facebook SDK:',
-          error
-        )
-      }
-    }
-
     const checkFacebookSDK = setInterval(() => {
       // @ts-ignore
       if (window.FB) {
-        initFacebookSDK()
         clearInterval(checkFacebookSDK)
       }
     }, 100)
@@ -206,17 +165,8 @@ export function useSocialAuth({
   }, [])
 
   const handleGoogleResponse = async (response: any) => {
-    console.log(
-      '[GoogleAuth] handleGoogleResponse викликано з response:',
-      response
-    )
-
     const userData = decodeGoogleJWT(response.credential)
-    console.log('[GoogleAuth] Дані користувача після декодування:', userData)
-
-    console.log('[GoogleAuth] Викликаємо handleSocialAuth для Google...')
     await handleSocialAuth('google', response.credential, userData)
-    console.log('[GoogleAuth] handleSocialAuth для Google завершено')
   }
 
   const decodeGoogleJWT = (credential: string) => {
@@ -235,30 +185,23 @@ export function useSocialAuth({
       )
       const payload = JSON.parse(jsonPayload)
 
-      console.log('[GoogleAuth] Успішно декодовано JWT payload:', payload)
-
       return {
         name: payload.given_name || '',
         surname: payload.family_name || '',
         email: payload.email || '',
       }
     } catch (jwtErr) {
-      console.error('[GoogleAuth] Некоректний JWT:', credential, jwtErr)
       throw new Error(t('Некоректний токен Google. Спробуйте ще раз.'))
     }
   }
 
   const handleFacebookResponse = (response: any) => {
-    console.log('[FacebookAuth] Facebook response:', response)
-
     if (response.status === 'connected') {
       // @ts-ignore
       window.FB.api(
         '/me',
         { fields: 'name,email,first_name,last_name' },
         (userInfo: any) => {
-          console.log('[FacebookAuth] User info:', userInfo)
-
           const userData = {
             name: userInfo.first_name || userInfo.name?.split(' ')[0] || '',
             surname:
@@ -267,12 +210,6 @@ export function useSocialAuth({
               '',
             email: userInfo.email || '',
           }
-
-          console.log('[FacebookAuth] Оброблені дані користувача:', userData)
-          console.log(
-            '[FacebookAuth] Викликаємо handleSocialAuth для Facebook...'
-          )
-
           handleSocialAuth(
             'facebook',
             response.authResponse.accessToken,
@@ -281,7 +218,6 @@ export function useSocialAuth({
         }
       )
     } else {
-      console.log('[FacebookAuth] Користувач не авторизувався')
       handleError(t('Facebook авторизація не вдалася'))
     }
   }
@@ -323,23 +259,17 @@ export function useSocialAuth({
     try {
       // @ts-ignore
       if (window.FB) {
-        console.log('[FacebookAuth] Запуск Facebook авторизації...')
         // @ts-ignore
         window.FB.login(handleFacebookResponse, {
           scope: 'email,public_profile',
           return_scopes: true,
         })
       } else {
-        console.error('[FacebookAuth] Facebook SDK не завантажено')
         handleError(
           t('Facebook SDK не завантажено. Спробуйте оновити сторінку.')
         )
       }
     } catch (error: any) {
-      console.error(
-        '[FacebookAuth] Помилка запуску Facebook авторизації:',
-        error
-      )
       handleError(t('Помилка запуску Facebook авторизації'))
     }
   }

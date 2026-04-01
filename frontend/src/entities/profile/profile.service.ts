@@ -35,7 +35,6 @@ class ProfileService {
           message: 'Unauthorized',
         }
       }
-      console.error(this.t('Помилка завантаження профілю:'), error)
       throw new Error(this.t('Не вдалося завантажити профіль') + error)
     }
   }
@@ -63,7 +62,6 @@ class ProfileService {
         message: this.t('Профіль оновлено успішно'),
       }
     } catch (error) {
-      console.error(this.t('Помилка оновлення профілю:'), error)
       throw new Error(this.t('Не вдалося оновити профіль') + error)
     }
   }
@@ -94,7 +92,6 @@ class ProfileService {
         message: this.t('Фото профілю завантажено успішно'),
       }
     } catch (error) {
-      console.error(this.t('Помилка завантаження фото профілю:'), error)
       throw new Error(this.t('Не вдалося завантажити фото профілю: ') + error)
     }
   }
@@ -111,7 +108,6 @@ class ProfileService {
       })
       tokenService.removeToken()
     } catch (error) {
-      console.error(this.t('Помилка видалення профілю:'), error)
       throw new Error(this.t('Не вдалося видалити профіль') + error)
     }
   }
@@ -134,7 +130,6 @@ class ProfileService {
           withCredentials: true,
         }
       )
-      console.log(response)
 
       return {
         data: response.data,
@@ -142,7 +137,6 @@ class ProfileService {
         message: this.t('Пароль змінено успішно'),
       }
     } catch (error) {
-      console.error(this.t('Помилка зміни паролю:'), error)
       throw new Error(this.t('Не вдалося змінити пароль') + ': ' + error)
     }
   }
@@ -172,7 +166,6 @@ class ProfileService {
         message: this.t('Статистику завантажено успішно'),
       }
     } catch (error) {
-      console.error(this.t('Помилка завантаження статистики:'), error)
       throw new Error(
         this.t('Не вдалося завантажити статистику навчання') + error
       )

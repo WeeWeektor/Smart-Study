@@ -8,7 +8,6 @@ export const LogoutButton = () => {
       await authService.logout()
       window.location.assign('/?showLogoutSuccess=true')
     } catch (error) {
-      console.error('Logout failed:', error)
       window.location.assign('/?showLogoutSuccess=true')
     }
   }

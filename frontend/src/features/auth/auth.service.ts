@@ -91,12 +91,7 @@ class AuthService {
         message: this.t('Вхід успішний'),
       }
     } catch (error: unknown) {
-      console.error('Помилка входу:', error)
-
       if (axios.isAxiosError(error) && error.response) {
-        console.error('Дані відповіді:', error.response.data)
-        console.error('Статус відповіді:', error.response.status)
-
         if (error.response.status === 401) {
           throw new Error(this.t('Невірний email або пароль'))
         } else if (error.response.status === 400) {
@@ -188,8 +183,6 @@ class AuthService {
         }
       }
     } catch (error: unknown) {
-      console.error('Помилка реєстрації:', error)
-
       if (axios.isAxiosError(error)) {
         if (error.response && error.response.status === 409) {
           throw new Error(this.t('Користувач з таким email вже існує'))
@@ -251,8 +244,6 @@ class AuthService {
         ),
       }
     } catch (error: unknown) {
-      console.error('Помилка відновлення паролю:', error)
-
       if (axios.isAxiosError(error) && error.response?.status === 429) {
         throw new Error(this.t('Забагато спроб. Спробуйте пізніше.'))
       } else if (error instanceof Error) {
@@ -346,24 +337,10 @@ class AuthService {
     user?: User
     message?: string
   }> {
-    console.log('[AuthService] providerOAuth викликано з даними:', {
-      provider: data.provider,
-      hasCredential: !!data.credential,
-      role: data.role,
-      name: data.name,
-      surname: data.surname,
-    })
-
     const csrfToken = await ensureCsrfToken(this.t)
     if (!csrfToken) {
-      console.error('[AuthService] Не вдалося отримати CSRF токен')
       throw new Error(this.t('Не вдалося отримати CSRF токен'))
     }
-
-    console.log(
-      '[AuthService] CSRF токен отримано, робимо запит до:',
-      `/auth/${data.provider}-oauth/`
-    )
 
     try {
       const response = await apiClient.post(
@@ -377,15 +354,9 @@ class AuthService {
         }
       )
 
-      console.log('[AuthService] Відповідь сервера:', response.data)
       return response.data
     } catch (error: any) {
       console.error('[AuthService] Помилка в providerOAuth:', error)
-      console.error('[AuthService] Деталі помилки:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      })
       throw error
     }
   }
