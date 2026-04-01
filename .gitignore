@@ -99,7 +99,7 @@ __pycache__/
 
 # React/Vite specific
 .vite/
-/backend/docker-compose.yml
+/backend/docker-compose.local.yml
 /gen/
 /postgres_data/
 /backend/locale/en/LC_MESSAGES/django.mo
