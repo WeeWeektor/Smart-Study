@@ -1,0 +1,139 @@
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: smartStudy_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./backend/staticfiles:/var/html/static:ro
+      - ./backend/media:/var/html/media:ro
+      - frontend_dist:/var/html/frontend:ro
+    depends_on:
+      - backend
+      - frontend_builder
+    networks:
+      - smartStudy_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartStudy_redis
+    restart: always
+    env_file:
+      - ./backend/.env
+    command: >
+      sh -c "redis-server --requirepass $${REDIS_PASSWORD}"
+    networks:
+      - smartStudy_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: smartStudy_postgres
+    restart: always
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5444:5432"
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${DATABASE_NAME} -U $${DATABASE_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartStudy_network
+
+  mongodb:
+    image: mongo:6
+    container_name: smartStudy_mongodb
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - smartStudy_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smartStudy_backend
+    env_file:
+      - ./backend/.env
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_NAME}
+      - MONGODB_URI=${MONGO_DB_URI}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - DEBUG=False
+    volumes:
+      - ./backend/staticfiles:/app/staticfiles
+      - ./backend/media:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - smartStudy_network
+
+  frontend_builder:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://smart-study.me/api
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+    container_name: smartStudy_frontend_builder
+    volumes:
+      - frontend_dist:/var/html/frontend
+    networks:
+      - smartStudy_network
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smartStudy_celery_worker
+    command: celery -A smartStudy_backend worker --loglevel=info
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - smartStudy_network
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smartStudy_celery_beat
+    command: celery -A smartStudy_backend beat --loglevel=info
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    networks:
+      - smartStudy_network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  frontend_dist:
+
+networks:
+  smartStudy_network:
+    driver: bridge

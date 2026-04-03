@@ -3,8 +3,8 @@ import sys
 from pathlib import Path
 
 from celery.schedules import crontab
-from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
+from pytz import UTC
 
 # Load environment variables
 load_dotenv()
@@ -37,9 +37,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'social_django',
-    'sslserver',
     'channels',
-    'silk',
 
     'core',
     'users',
@@ -47,6 +45,10 @@ INSTALLED_APPS = [
     'users_calendar',
     'notifications',
 ]
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_AUTH = f":{os.getenv('REDIS_PASSWORD')}@" if os.getenv('REDIS_PASSWORD') else ""
 
 CHANNEL_LAYERS = {
     'default': {
@@ -60,7 +62,6 @@ CHANNEL_LAYERS = {
 
 # Middleware
 MIDDLEWARE = [
-    "silk.middleware.SilkyMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -82,6 +83,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost:5173",
     "http://127.0.0.1:5173",
     "https://127.0.0.1:5173",
+    "https://smart-study.me",
+    "https://www.smart-study.me",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = [
@@ -219,7 +222,7 @@ LANGUAGES = [
 ]
 
 LANGUAGE_CODE = 'en'
-TIME_ZONE = 'Europe/Kiev'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 USE_L10N = True
@@ -229,11 +232,17 @@ LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
 CSRF_TRUSTED_ORIGINS = [
     'https://localhost:5173',
     'https://localhost:8000',
     'https://127.0.0.1:5173',
     'https://127.0.0.1:8000',
+    "https://smart-study.me",
+    "https://www.smart-study.me",
 ]
 
 CELERY_BEAT_SCHEDULE = {
@@ -293,9 +302,9 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_NAME = 'csrftoken'
 
-BASE_URL = 'https://127.0.0.1:8000'
+BASE_URL = os.getenv('BASE_URL', 'https://smart-study.me')
 DEFAULT_FROM_EMAIL = 'noreply@smartstudy.com'
-FRONTEND_URL = "https://localhost:5173"
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://smart-study.me')
 ALLOWED_ROLES = ['admin', 'student', 'teacher']
 
 SESSION_COOKIE_SAMESITE = 'Lax'
@@ -307,34 +316,37 @@ LANGUAGE_COOKIE_PATH = '/'
 LANGUAGE_COOKIE_SECURE = SESSION_COOKIE_SECURE
 LANGUAGE_COOKIE_SAMESITE = 'Lax'
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 * 10
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800 * 10
+
 TESTING = 'test' in sys.argv or 'pytest' in sys.modules
 
-if TESTING:
-    SUPABASE_USERS_PROFILE_PICTURES_BUCKET = os.getenv("SUPABASE_BUCKET")
-
-    MIDDLEWARE = [
-        m for m in MIDDLEWARE
-        if not any(skip in m.lower() for skip in ['silk'])
-    ]
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'test_smartstudy',
-            'USER': 'test_user',
-            'PASSWORD': 'test_pass',
-            'HOST': 'localhost',
-            'PORT': '5433',
-            'TEST': {
-                'NAME': 'test_smartstudy_test',
-            }
-        }
-    }
+# if TESTING:
+#     SUPABASE_USERS_PROFILE_PICTURES_BUCKET = os.getenv("SUPABASE_BUCKET")
+#
+#     MIDDLEWARE = [
+#         m for m in MIDDLEWARE
+#         if not any(skip in m.lower() for skip in ['silk'])
+#     ]
+#
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'NAME': 'test_smartstudy',
+#             'USER': 'test_user',
+#             'PASSWORD': 'test_pass',
+#             'HOST': 'localhost',
+#             'PORT': '5433',
+#             'TEST': {
+#                 'NAME': 'test_smartstudy_test',
+#             }
+#         }
+#     }
 
 # CELERY SETTINGS
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_BROKER_URL = f'redis://{REDIS_AUTH}{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_AUTH}{REDIS_HOST}:{REDIS_PORT}/0'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Europe/Kiev'
+CELERY_TIMEZONE = 'UTC'

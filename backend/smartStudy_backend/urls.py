@@ -6,7 +6,6 @@ from smartStudy_backend import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('silk/', include('silk.urls', namespace='silk')),
     path('api/auth/', include('users.auth_urls', namespace='auth_urls')),
     path('api/user/', include('users.user_urls', namespace='user_urls')),
     path('api/user-calendar/', include('users_calendar.urls', namespace='user_calendar_urls')),

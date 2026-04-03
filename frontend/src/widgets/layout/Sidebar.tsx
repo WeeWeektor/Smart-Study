@@ -25,6 +25,15 @@ interface SidebarProps {
   onCollapseChange?: (isCollapsed: boolean) => void
 }
 
+interface NavLinkItem {
+  icon: any
+  text: string
+  to?: string
+  href?: string
+  isExternal?: boolean
+  subItems?: { to: string; text: string }[]
+}
+
 export const Sidebar = ({
   userInfo,
   isCollapsible = false,
@@ -64,7 +73,7 @@ export const Sidebar = ({
     }
   }
 
-  const navLinks = [
+  const navLinks: NavLinkItem[] = [
     { to: '/', icon: Home, text: t('Головна') },
     {
       icon: BookOpen,
@@ -84,9 +93,10 @@ export const Sidebar = ({
 
   if (userInfo.role === 'admin') {
     navLinks.push({
-      to: `https://localhost:8000/admin/?lang=${localStorage.getItem(LANGUAGE_STORAGE_KEY)}`,
+      href: `/admin/?lang=${localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'uk'}`,
       icon: Home,
       text: t('Адмін панель'),
+      isExternal: true,
     })
   }
 
@@ -157,6 +167,21 @@ export const Sidebar = ({
                   </span>
                 )}
               </div>
+            ) : link.isExternal ? (
+              <a
+                href={link.href}
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap text-muted-foreground hover:text-foreground hover:bg-muted ${
+                  isCollapsed ? 'justify-center' : ''
+                }`}
+                title={isCollapsed ? link.text : ''}
+              >
+                {link.icon && <link.icon className="w-5 h-5 shrink-0" />}
+                <span
+                  className={`ml-3 transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}
+                >
+                  {link.text}
+                </span>
+              </a>
             ) : (
               <Link
                 to={link.to!}

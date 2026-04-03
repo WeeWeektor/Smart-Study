@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://localhost:8000/api'
+export const API_BASE_URL = '/api'
 
 export const APP_CONFIG = {
   name: 'Smart Study',

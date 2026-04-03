@@ -1,23 +1,50 @@
-from django.utils.translation import gettext
-from django.core.cache import cache, caches
-from django.http import JsonResponse
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+from django.core.cache import caches
+from django.http import JsonResponse, HttpResponse
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.translation import gettext
+
 from common.utils import get_language_from_request, validate_language
 from smartStudy_backend import settings
 
 
 class LanguageMiddleware:
+    sync_capable = True
+    async_capable = True
+
     def __init__(self, get_response):
         self.get_response = get_response
+        if iscoroutinefunction(self.get_response):
+            markcoroutinefunction(self)
 
-    def __call__(self, request):
+    async def __call__(self, request):
         language = get_language_from_request(request)
         language = validate_language(language)
         translation.activate(language)
         request.LANGUAGE_CODE = language
 
-        response = self.get_response(request)
+        if request.path.startswith('/admin/') and 'lang' in request.GET:
+            response = HttpResponse("""
+                        <html>
+                        <body>
+                            <script>
+                                const url = new URL(window.location);
+                                url.searchParams.delete('lang');
+                                window.location.href = url.href; 
+                            </script>
+                        </body>
+                        </html>
+                    """)
+            response.set_cookie('django_language', language)
+            return response
+
+        if iscoroutinefunction(self.get_response):
+            response = await self.get_response(request)
+        else:
+            response = self.get_response(request)
+
+        response['X-Current-Language'] = language
 
         if hasattr(response, 'set_cookie'):
             response.set_cookie(
@@ -36,6 +63,9 @@ class LanguageMiddleware:
 
 
 class RateLimitMiddleware(MiddlewareMixin):
+    sync_capable = True
+    async_capable = True
+
     RATE_LIMIT_CONFIG = {
         '/api/auth/login/': {'max_attempts': 5, 'window': 300, 'key_prefix': 'login'},
         '/api/auth/register/': {'max_attempts': 3, 'window': 600, 'key_prefix': 'register'},
@@ -105,6 +135,9 @@ class RateLimitMiddleware(MiddlewareMixin):
 
 
 class SessionSecurityMiddleware(MiddlewareMixin):
+    sync_capable = True
+    async_capable = True
+
     PROTECTED_ENDPOINTS = [
         '/api/user/profile/',
         '/api/user/change-password/',
@@ -154,11 +187,16 @@ class SessionSecurityMiddleware(MiddlewareMixin):
 
 
 class SecurityHeadersMiddleware(MiddlewareMixin):
-    @staticmethod
-    def process_response(request, response):
-        if hasattr(response, '__setitem__'):
-            response['X-Frame-Options'] = 'DENY'
-            response['X-Content-Type-Options'] = 'nosniff'
-            response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-            response['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    sync_capable = True
+    async_capable = True
+
+    def process_response(self, request, response):
+        response['X-Frame-Options'] = 'DENY'
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+
+        if not settings.DEBUG:
+            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+
         return response
