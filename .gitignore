@@ -106,8 +106,6 @@ __pycache__/
 /backend/locale/uk/LC_MESSAGES/django.mo
 /backend/docker-compose.test.yml
 
-/docs/
-
 # Celery beat schedule file
 celerybeat-schedule
 celerybeat.pid
