@@ -79,10 +79,6 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://127.0.0.1:5173",
     "https://smart-study.me",
     "https://www.smart-study.me",
 ]
@@ -237,10 +233,6 @@ USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://localhost:5173',
-    'https://localhost:8000',
-    'https://127.0.0.1:5173',
-    'https://127.0.0.1:8000',
     "https://smart-study.me",
     "https://www.smart-study.me",
 ]
@@ -273,7 +265,14 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 # HTTPS & Security Settings
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    CSRF_TRUSTED_ORIGINS = [
+        "https://smart-study.me",
+        "https://www.smart-study.me",
+    ]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 else:
     SECURE_SSL_REDIRECT = False
 
