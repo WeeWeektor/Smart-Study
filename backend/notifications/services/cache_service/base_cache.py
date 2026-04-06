@@ -1,0 +1,46 @@
+import asyncio
+import logging
+
+from asgiref.sync import sync_to_async
+from django.core.cache import caches
+
+from common.services import register_cache_key
+
+
+class BaseCache:
+    logger = logging.getLogger(__name__)
+    _background_tasks = set()
+    CACHE_NAME = "calendar_events"
+    CACHE_VERSION = 1
+
+    def __init__(self, key):
+        self.key = key
+        self.cache = caches[self.CACHE_NAME]
+
+    @staticmethod
+    def get_user_cache_key(user_id):
+        return f'notifications:current:user_{user_id}'
+
+    @staticmethod
+    def get_user_archived_cache_key(user_id):
+        return f'notifications:archived:user_{user_id}'
+
+    async def invalidate_for_users_cache(self, user_ids: list):
+        keys = set()
+        for uid in user_ids:
+            keys.add(self.get_user_cache_key(user_id=uid))
+            keys.add(self.get_user_archived_cache_key(user_id=uid))
+
+        if keys:
+            await sync_to_async(self.cache.delete_many)(list(keys), version=self.CACHE_VERSION)
+
+    async def register_key(self):
+        task = asyncio.create_task(self._do_register())
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    async def _do_register(self):
+        try:
+            await register_cache_key(self.key, self.CACHE_NAME)
+        except Exception as e:
+            self.logger.error(f"Failed to register cache key {self.key}: {e}")

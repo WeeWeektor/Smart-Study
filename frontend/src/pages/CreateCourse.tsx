@@ -1,0 +1,943 @@
+import {
+  formatDurationForBackend,
+  parseDurationFromISO,
+  useI18n,
+} from '@/shared/lib'
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
+  CollapsibleSection,
+  ConfirmModal,
+  type CourseStructure,
+  CreateMTOfCourse,
+  ErrorProfile,
+  Input,
+  Label,
+  LoadingProfile,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from '@/shared/ui'
+import { CourseHeader } from '@/widgets/course'
+import { Sidebar } from '@/widgets/layout'
+import {
+  AlertCircle,
+  ArrowLeft,
+  Globe,
+  Loader2,
+  Save,
+  Undo,
+} from 'lucide-react'
+import { useProfileData } from '@/shared/hooks'
+import { useEffect, useState } from 'react'
+import { useChoicesData } from '@/shared/hooks/useChoiceData'
+import { useNavigate, useParams } from 'react-router-dom'
+import CourseDurationPicker from '@/shared/ui/duration-picker.tsx'
+import { createCourseService, getCourseService } from '@/features/course'
+import { parseMarkdownToBlocks } from '@/features/lesson-type-fields'
+import { getCourseStructureDiff } from '@/features/course/lib/get-changed-data.ts'
+
+interface Option {
+  value: string
+  label: string
+}
+
+const CreateCourse = () => {
+  const { t } = useI18n()
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+
+  const isEditMode = !!id
+
+  const { profileData, loading, error, refreshProfile } = useProfileData()
+  const {
+    choicesData,
+    loading: choicesLoading,
+    error: choicesError,
+    refreshChoices,
+  } = useChoicesData()
+
+  const [createCourseError, setCreateCourseError] = useState<string>('')
+  const [categories, setCategories] = useState<Option[]>([])
+  const [levels, setLevels] = useState<Option[]>([])
+  const [categoryLessonType, setCategoryLessonType] = useState<Option[]>([])
+  const [isSaving, setIsSaving] = useState(false)
+
+  const [courseStateTitle, setCourseStateTitle] = useState<string>('')
+  const [courseStateDescription, setCourseStateDescription] =
+    useState<string>('')
+  const [courseStateCategory, setCourseStateCategory] = useState<string>('')
+  const [courseStateImage, setCourseStateImage] = useState<string>('')
+  const [courseStateImageFile, setCourseStateImageFile] = useState<File | null>(
+    null
+  )
+  const [courseStateLevel, setCourseStateLevel] = useState<string>('')
+  const [courseStateTimeToComplete, setCourseStateTimeToComplete] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+  })
+  const [courseStateLanguage, setCourseStateLanguage] = useState<string>('')
+
+  const [showPreview, setShowPreview] = useState<boolean>(false)
+  const [showCanselModal, setShowCanselModal] = useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
+
+  const [initialDataSnapshot, setInitialDataSnapshot] = useState<string>('')
+  const [courseStructure, setCourseStructure] = useState<CourseStructure>({
+    type: 'course',
+    courseStructure: [],
+  })
+
+  useEffect(() => {
+    if (choicesData) {
+      const categoriesData: Option[] = Object.entries(
+        choicesData.category[0]
+      ).map(([key, label]) => ({
+        value: key,
+        label,
+      }))
+      const levelsData: Option[] = Object.entries(choicesData.levels[0]).map(
+        ([key, label]) => ({
+          value: key,
+          label,
+        })
+      )
+      const lessonTypesData: Option[] = Object.entries(
+        choicesData.lesson_content_types[0]
+      ).map(([key, label]) => ({
+        value: key,
+        label,
+      }))
+
+      setCategories(categoriesData)
+      setLevels(levelsData)
+      setCategoryLessonType(lessonTypesData)
+    }
+  }, [choicesData])
+
+  useEffect(() => {
+    const fetchCourseForEdit = async () => {
+      if (!id) return
+
+      try {
+        const response = await getCourseService.getCourse({
+          course_id: id,
+          for_edit: true,
+        })
+        const courseData = response.course
+
+        setCourseStateTitle(courseData.title)
+        setCourseStateDescription(courseData.description)
+        setCourseStateCategory(courseData.category)
+        setCourseStateLevel(courseData.details.level)
+        setCourseStateLanguage(courseData.details.course_language)
+
+        if (courseData.cover_image) {
+          setCourseStateImage(courseData.cover_image)
+          setShowPreview(true)
+        }
+
+        if (courseData.details.time_to_complete) {
+          const duration = parseDurationFromISO(
+            courseData.details.time_to_complete
+          )
+          setCourseStateTimeToComplete(duration)
+        }
+
+        if (courseData.structure) {
+          const backendStructure = courseData.structure
+
+          let rawStructure = []
+          if (Array.isArray(backendStructure.courseStructure)) {
+            rawStructure = backendStructure.courseStructure
+          }
+
+          const hydratedStructure = rawStructure.map((item: any) => {
+            const normalizeQuestions = (
+              questionsFromBackend: any[],
+              testType: 'course-test' | 'module-test'
+            ) => {
+              if (!Array.isArray(questionsFromBackend)) return []
+
+              const BASE_IMAGE_PATH = import.meta.env
+                .VITE_COURSE_QUESTION_IMAGE_PATH
+
+              return questionsFromBackend.map(q => {
+                let finalImageUrl = q.image_url
+
+                if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+                  finalImageUrl = `${BASE_IMAGE_PATH}course-cover-pictures/${courseData.id}/${testType}/${finalImageUrl}`
+                }
+
+                return {
+                  ...q,
+                  correctAnswers: q.correct_answers || q.correctAnswers || [],
+                  image_url: finalImageUrl || null,
+                }
+              })
+            }
+
+            if (item.type === 'module') {
+              let children = []
+
+              if (Array.isArray(item.moduleStructure)) {
+                children = item.moduleStructure
+              } else if (
+                backendStructure[`moduleStructure_order_${item.order}`]
+              ) {
+                children =
+                  backendStructure[`moduleStructure_order_${item.order}`]
+              }
+
+              const mappedChildren = children.map((child: any) => {
+                if (child.type === 'lesson') {
+                  const typeCategory =
+                    child.content_type || child.typeCategory || 'text'
+                  let contentBlocks = []
+                  let extractedComment = child.comment || ''
+
+                  if (child.content) {
+                    contentBlocks = parseMarkdownToBlocks(child.content)
+
+                    if (
+                      contentBlocks.length > 0 &&
+                      contentBlocks[0].type === 'title'
+                    )
+                      contentBlocks.shift()
+                    if (
+                      contentBlocks.length > 0 &&
+                      contentBlocks[0].type === 'description'
+                    )
+                      contentBlocks.shift()
+
+                    const commentIndex = contentBlocks.findIndex(
+                      b => b.type === 'comment'
+                    )
+                    if (commentIndex !== -1) {
+                      extractedComment = contentBlocks[commentIndex].data
+                      contentBlocks.splice(commentIndex, 1)
+                    }
+                  } else {
+                    contentBlocks = child.contentBlocks || []
+                  }
+
+                  return {
+                    ...child,
+                    typeCategory: typeCategory,
+                    duration: child.duration
+                      ? parseDurationFromISO(child.duration)
+                      : { days: 0, hours: 0, minutes: 0 },
+                    description: child.description || '',
+                    comment: extractedComment || '',
+                    contentBlocks: contentBlocks,
+                    singleContentData: child.singleContentData || null,
+                  }
+                }
+                if (child.type === 'module-test' || child.type === 'test') {
+                  return {
+                    ...child,
+                    type: 'module-test',
+                    questions: normalizeQuestions(
+                      child.questions,
+                      'module-test'
+                    ),
+                    questions_len: child.questions_len || 0,
+                    description: child.description || '',
+                    time_limit: child.time_limit || 0,
+                    count_attempts: child.count_attempts || 1,
+                    pass_score: child.pass_score || 50,
+                    random_questions: child.random_questions || false,
+                    show_correct_answers: child.show_correct_answers || false,
+                  }
+                }
+                return child
+              })
+
+              return {
+                ...item,
+                moduleStructure: mappedChildren,
+              }
+            }
+
+            if (item.type === 'course-test' || item.type === 'test') {
+              return {
+                ...item,
+                type: 'course-test',
+                questions: normalizeQuestions(item.questions, 'course-test'),
+                questions_len: item.questions_len || 0,
+                description: item.description || '',
+                time_limit: item.time_limit || 0,
+                count_attempts: item.count_attempts || 1,
+                pass_score: item.pass_score || 50,
+                random_questions: item.random_questions || false,
+                show_correct_answers: item.show_correct_answers || false,
+              }
+            }
+
+            return item
+          })
+
+          setCourseStructure({
+            type: 'course',
+            courseStructure: hydratedStructure,
+          })
+
+          const dummyFormData = new FormData()
+          const initialFormattedStructure =
+            createCourseService.processStructureAndExtractFiles(
+              hydratedStructure,
+              dummyFormData
+            )
+
+          const initialSnapshotObj = {
+            title: courseData.title || '',
+            description: courseData.description || '',
+            category: courseData.category || '',
+            is_published: courseData.is_published || false,
+            level: courseData.details?.level || '',
+            course_language: courseData.details?.course_language || '',
+            time_to_complete: courseData.details?.time_to_complete
+              ? formatDurationForBackend(
+                  parseDurationFromISO(courseData.details.time_to_complete)
+                    .days,
+                  parseDurationFromISO(courseData.details.time_to_complete)
+                    .hours,
+                  parseDurationFromISO(courseData.details.time_to_complete)
+                    .minutes
+                )
+              : '00:00:00',
+            structure: initialFormattedStructure,
+          }
+          setInitialDataSnapshot(JSON.stringify(initialSnapshotObj))
+        }
+      } catch (err) {
+        setCreateCourseError(
+          t('Не вдалося завантажити дані курсу для редагування')
+        )
+        console.error(err)
+      }
+    }
+
+    if (id && profileData) {
+      fetchCourseForEdit()
+    }
+  }, [id, profileData, t])
+
+  useEffect(() => {
+    if (createCourseError) {
+      const timer = setTimeout(() => setCreateCourseError(''), 15000)
+      return () => clearTimeout(timer)
+    }
+  }, [createCourseError])
+
+  if (loading || choicesLoading) {
+    return <LoadingProfile message={t('Завантаження...')} />
+  }
+
+  if (isSaving) {
+    return (
+      <LoadingProfile
+        message={t('Зберігаємо ваш курс... Зачекайте, будь ласка')}
+      />
+    )
+  }
+
+  if (error || choicesError || !profileData) {
+    return (
+      <ErrorProfile
+        error={
+          error || choicesError || t('Помилка завантаження даних користувача')
+        }
+        onRetry={() => {
+          refreshProfile()
+          refreshChoices()
+        }}
+      />
+    )
+  }
+
+  const userInfo = {
+    name: profileData.user.name,
+    surname: profileData.user.surname,
+    email: profileData.user.email,
+    role: profileData.user.role,
+  }
+
+  const handleBackPage = () => {
+    navigate('/my-created-courses')
+  }
+
+  const handleCancelCreateCourse = () => {
+    setShowCanselModal(true)
+  }
+
+  const handleConfirmCancelCreateCourse = () => {
+    setCourseStateTitle('')
+    setCourseStateCategory('')
+    setCourseStateLevel('')
+    setCourseStateLanguage('')
+    setCourseStateImage('')
+    setShowPreview(false)
+    setCourseStateTimeToComplete({ days: 0, hours: 0, minutes: 0 })
+    setCourseStateDescription('')
+    setShowCanselModal(false)
+    handleBackPage()
+  }
+
+  const enrichWithOrder = (structure: any[]) => {
+    return structure.map((item, index) => {
+      const enrichedItem = { ...item, order: index + 1 }
+
+      if (item.type === 'module' && Array.isArray(item.moduleStructure)) {
+        enrichedItem.moduleStructure = item.moduleStructure.map(
+          (child: any, childIndex: number) => ({
+            ...child,
+            order: childIndex + 1,
+          })
+        )
+      }
+      return enrichedItem
+    })
+  }
+
+  const handleSaveCourse = async (publish: boolean = false) => {
+    try {
+      setIsSaving(true)
+
+      if (
+        courseStateTimeToComplete.days < 0 ||
+        courseStateTimeToComplete.hours < 0 ||
+        courseStateTimeToComplete.hours > 23 ||
+        courseStateTimeToComplete.minutes < 0 ||
+        courseStateTimeToComplete.minutes > 59
+      ) {
+        setCreateCourseError(
+          t('Невірний формат часу. Перевірте введені значення.')
+        )
+        setIsSaving(false)
+        return
+      }
+
+      if (courseStructure.courseStructure.length === 0 && publish) {
+        setCreateCourseError(t('Структура курсу не може бути порожньою.'))
+        setIsSaving(false)
+        return
+      }
+
+      const hasEmptyModuleTitle = courseStructure.courseStructure.some(
+        item =>
+          item.type === 'module' && (!item.title || item.title.trim() === '')
+      )
+
+      if (hasEmptyModuleTitle) {
+        setCreateCourseError(
+          t('Перевірте структуру курсу. Є порожні назви модулів.')
+        )
+        setIsSaving(false)
+        return
+      }
+
+      const fullyOrderedStructure = enrichWithOrder(
+        courseStructure.courseStructure
+      )
+
+      let currentInfoObj = {
+        title: courseStateTitle,
+        description: courseStateDescription,
+        category: courseStateCategory,
+        is_published: publish,
+        level: courseStateLevel,
+        course_language: courseStateLanguage,
+        time_to_complete: formatDurationForBackend(
+          courseStateTimeToComplete.days,
+          courseStateTimeToComplete.hours,
+          courseStateTimeToComplete.minutes
+        ),
+      }
+
+      let change_info = true
+      let change_structure = true
+      let finalStructureToSend = fullyOrderedStructure
+
+      if (isEditMode && initialDataSnapshot) {
+        const initialData = JSON.parse(initialDataSnapshot)
+        const changedInfo: any = {}
+        let infoHasChanged = false
+
+        Object.keys(currentInfoObj).forEach(key => {
+          const newVal = (currentInfoObj as any)[key]
+          const oldVal = initialData[key]
+
+          if (newVal !== oldVal) {
+            changedInfo[key] = newVal
+            infoHasChanged = true
+          }
+        })
+
+        const imageChanged = courseStateImageFile !== null
+        if (imageChanged) infoHasChanged = true
+
+        const diffStructure = getCourseStructureDiff(
+          fullyOrderedStructure,
+          initialData.structure
+        )
+
+        const enrichedDiff = diffStructure.map((diffItem: any) => {
+          const sourceItem = fullyOrderedStructure.find(
+            s =>
+              (s.module_id && s.module_id === diffItem.module_id) ||
+              (s.test_id && s.test_id === diffItem.test_id)
+          )
+
+          if (sourceItem) {
+            const result = { ...diffItem, order: sourceItem.order }
+
+            if (sourceItem.type === 'module' && diffItem.moduleStructure) {
+              result.moduleStructure = diffItem.moduleStructure.map(
+                (childDiff: any) => {
+                  const sourceChild = sourceItem.moduleStructure.find(
+                    (c: any) =>
+                      (c.lesson_id && c.lesson_id === childDiff.lesson_id) ||
+                      (c.test_id && c.test_id === childDiff.test_id)
+                  )
+
+                  if (sourceChild) {
+                    if (
+                      sourceChild.type === 'lesson' &&
+                      childDiff.action === 'update'
+                    ) {
+                      return {
+                        ...childDiff,
+                        order: sourceChild.order,
+                        title: sourceChild.title,
+                        description: sourceChild.description,
+                        comment: sourceChild.comment,
+                        contentBlocks: sourceChild.contentBlocks,
+                        typeCategory: sourceChild.typeCategory,
+                        singleContentData: sourceChild.singleContentData,
+                      }
+                    }
+                    return { ...childDiff, order: sourceChild.order }
+                  }
+                  return childDiff
+                }
+              )
+            }
+            return result
+          }
+          return diffItem
+        })
+
+        const structureChanged = enrichedDiff.length > 0
+
+        if (!infoHasChanged && !structureChanged) {
+          handleCancelCreateCourse()
+          navigate(
+            `/my-created-courses/?Message=${encodeURIComponent(
+              t('Змін не виявлено. Курс залишився без змін.')
+            )}&Status=200&Action=update`
+          )
+          return
+        }
+
+        change_info = infoHasChanged
+        change_structure = structureChanged
+
+        currentInfoObj = { ...changedInfo }
+        finalStructureToSend = enrichedDiff
+      }
+
+      const coursePayload = {
+        ...currentInfoObj,
+        cover_imageFile: courseStateImageFile,
+        courseStructure: finalStructureToSend,
+        change_info_course: change_info,
+        change_structure_course: change_structure,
+      }
+
+      let response
+
+      if (isEditMode && id) {
+        response = await createCourseService.updateCourse({
+          courseId: id,
+          requestData: coursePayload,
+        })
+      } else {
+        response = await createCourseService.createCourse(coursePayload)
+      }
+
+      if (response.status === 200 || response.status === 201) {
+        handleCancelCreateCourse()
+        navigate(
+          `/my-created-courses/?Message=${encodeURIComponent(
+            response.message
+          )}&Status=${response.status}&Action=${isEditMode ? 'update' : 'create'}`
+        )
+      } else {
+        setCreateCourseError(
+          t('Помилка при збереженні курсу. ') + response.message
+        )
+      }
+    } catch (error) {
+      setCreateCourseError(
+        error instanceof Error
+          ? error.message
+          : t('Помилка при збереженні курсу. ')
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handlePublishCourse = () => {
+    setShowPublishModal(true)
+  }
+
+  const handleConfirmPublishCourse = async () => {
+    setShowPublishModal(false)
+    await handleSaveCourse(true)
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Sidebar userInfo={userInfo} />
+
+      <div className="ml-64">
+        <CourseHeader
+          title={isEditMode ? t('Редагування курсу') : t('Створення курсу')}
+          description={
+            isEditMode
+              ? t('Внесіть зміни до вашого курсу')
+              : t('Створюйте новий курс з нами!')
+          }
+          createCourse={true}
+          actionOnClick={[
+            handleCancelCreateCourse,
+            () => handleSaveCourse(false),
+            handlePublishCourse,
+          ]}
+          actionInfo={isSaving}
+          actionText={[t('Скасувати'), t('Зберегти курс')]}
+          actionsBackPage={
+            <Button variant="outline" size="icon" onClick={handleBackPage}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          }
+        />
+
+        <main className="p-6">
+          <div className="w-full max-w-6xl relative mx-auto">
+            {createCourseError && (
+              <Alert className="mb-6 border-destructive bg-destructive/10">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-destructive">
+                  {createCourseError}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          <div className="flex flex-wrap justify-center">
+            <CollapsibleSection title={t('Основна інформація про курс')}>
+              <Card
+                key={'course-main-info-card'}
+                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
+              >
+                <CardContent className="p-6 text-slate-700 dark:text-slate-200">
+                  <div className="gap-6">
+                    <div>
+                      <Label htmlFor="title">{t('Назва курсу *')}</Label>
+                      <Input
+                        id="title"
+                        value={courseStateTitle}
+                        onChange={e => setCourseStateTitle(e.target.value)}
+                        placeholder={t('Введіть назву курсу')}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div>
+                      <Label htmlFor="category">{t('Категорія *')}</Label>
+                      <Select
+                        value={courseStateCategory}
+                        onValueChange={value => setCourseStateCategory(value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder={t('Оберіть категорію')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map(category => (
+                            <SelectItem
+                              key={category.value}
+                              value={category.value}
+                            >
+                              {category.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="level">{t('Рівень *')}</Label>
+                      <Select
+                        value={courseStateLevel}
+                        onValueChange={value => setCourseStateLevel(value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder={t('Оберіть рівень')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {levels.map(level => (
+                            <SelectItem key={level.value} value={level.value}>
+                              {level.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="language">{t('Мова курсу *')}</Label>
+                      <Input
+                        id="language"
+                        value={courseStateLanguage}
+                        onChange={e => setCourseStateLanguage(e.target.value)}
+                        placeholder={t('Введіть мову курсу')}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div>
+                      <Label>{t('Зображення курсу')}</Label>
+                      <div className="flex flex-col gap-2 mt-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="course-image-input"
+                          className="hidden"
+                          onChange={e => {
+                            if (e.target.files && e.target.files[0]) {
+                              const file = e.target.files[0]
+                              setCourseStateImage(URL.createObjectURL(file))
+                              setCourseStateImageFile(file)
+                              setShowPreview(true)
+                            }
+                          }}
+                        />
+
+                        <Button
+                          variant="outline"
+                          className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => {
+                            const input = document.getElementById(
+                              'course-image-input'
+                            ) as HTMLInputElement
+                            input?.click()
+                          }}
+                        >
+                          {courseStateImage
+                            ? t('Змінити зображення')
+                            : t('Завантажити зображення')}
+                        </Button>
+
+                        {courseStateImage && (
+                          <Button
+                            variant="outline"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                            size="sm"
+                            onClick={() => setShowPreview(prev => !prev)}
+                          >
+                            {showPreview
+                              ? t('Сховати прев’ю')
+                              : t('Переглянути прев’ю')}
+                          </Button>
+                        )}
+
+                        {courseStateImage && showPreview && (
+                          <img
+                            src={courseStateImage}
+                            alt="Preview"
+                            className="w-full max-w-xs h-auto rounded-md border border-gray-300 mt-2 mx-auto"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <CourseDurationPicker
+                        value={courseStateTimeToComplete}
+                        onChange={setCourseStateTimeToComplete}
+                        maxDays={30}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <Label htmlFor="description">{t('Опис курсу *')}</Label>
+                    <Textarea
+                      id="description"
+                      value={courseStateDescription}
+                      onChange={e => setCourseStateDescription(e.target.value)}
+                      placeholder={t('Детально опишіть курс...')}
+                      rows={4}
+                      className="mt-1"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </CollapsibleSection>
+          </div>
+
+          <div className="w-full max-w-6xl relative mx-auto mt-6">
+            <CreateMTOfCourse
+              courseStructure={courseStructure}
+              setCourseStructure={setCourseStructure}
+              lessonContentTypes={categoryLessonType}
+            />
+          </div>
+
+          <div className="flex flex-wrap justify-center mt-6">
+            <CollapsibleSection title={t('Збереження та публікація')}>
+              <Card
+                key={'course-save-publish-card'}
+                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 dark:hover:shadow-gray-700"
+              >
+                <CardContent className="p-6 text-slate-700 dark:text-slate-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div className="flex justify-center md:justify-start">
+                      <Label
+                        htmlFor="cancelcreatecourse"
+                        className="text-center md:text-left"
+                      >
+                        {t(
+                          'Очистити форму і повернутись на сторінку створених курсів'
+                        )}
+                      </Label>
+                    </div>
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        className="w-60 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={handleCancelCreateCourse}
+                        disabled={isSaving}
+                      >
+                        <Undo className="w-4 h-4 mr-2" />
+                        {t('Скасувати')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 items-center">
+                    <div className="flex justify-center md:justify-start">
+                      <Label
+                        htmlFor="savecourse"
+                        className="text-center md:text-left"
+                      >
+                        {isEditMode
+                          ? t('Зберегти зміни курсу')
+                          : t(
+                              'Зберегти поточний стан курсу (курс можна буде редагувати пізніше)'
+                            )}
+                      </Label>
+                    </div>
+                    <div className="flex justify-center">
+                      <Button
+                        className="w-60 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+                        onClick={() => handleSaveCourse(false)}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {t('Збереження...')}
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            {t('Зберегти')}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 items-center">
+                    <div className="flex justify-center md:justify-start">
+                      <Label
+                        htmlFor="publishcourse"
+                        className="text-center md:text-left"
+                      >
+                        {isEditMode
+                          ? t(
+                              'Зберегти зміни та опублікувати (якщо курс був у чернетці)'
+                            )
+                          : t('Зберегти поточний стан курсу і опублікувати')}
+                      </Label>
+                    </div>
+                    <div className="flex justify-center">
+                      <Button
+                        className="w-60 bg-brand-600 dark:bg-brand-500 hover:bg-brand-700 dark:hover:bg-brand-400 text-white"
+                        onClick={handlePublishCourse}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {t('Публікація...')}
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="w-4 h-4 mr-2" />
+                            {t('Опублікувати')}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </CollapsibleSection>
+          </div>
+        </main>
+      </div>
+
+      {showCanselModal && (
+        <ConfirmModal
+          isOpen={showCanselModal}
+          onConfirm={handleConfirmCancelCreateCourse}
+          onClose={() => setShowCanselModal(false)}
+          title={
+            isEditMode
+              ? t('Скасувати редагування?')
+              : t('Ви дійсно бажаєте скасувати створення курсу?')
+          }
+          description={t('Всі незбережені зміни будуть втрачені')}
+          buttonText={t('Повернутись до курсів')}
+        />
+      )}
+      {showPublishModal && (
+        <ConfirmModal
+          isOpen={showPublishModal}
+          onConfirm={handleConfirmPublishCourse}
+          onClose={() => setShowPublishModal(false)}
+          title={t('Публікація курсу')}
+          description={t(
+            'Після публікації курс стане доступним для студентів.'
+          )}
+          buttonText={t('Опублікувати курс')}
+        />
+      )}
+    </div>
+  )
+}
+
+export default CreateCourse

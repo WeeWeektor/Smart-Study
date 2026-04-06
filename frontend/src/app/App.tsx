@@ -1,0 +1,90 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import {
+  CoursesCatalog,
+  EmailVerification,
+  ForgotPassword,
+  Index,
+  Login,
+  MyCourseCatalog,
+  TeacherCourses,
+  NotFound,
+  PrivacyPolicy,
+  Profile,
+  Register,
+  ResetPassword,
+  TermsOfService,
+  CreateCourse,
+  CourseReview,
+  CourseCompletion,
+  VerifyPage,
+  CourseStatisticsForTeacher,
+  Calendar,
+} from '@/pages'
+import { tokenService } from '@/shared/api'
+import { useEffect } from 'react'
+import { useTheme } from '@/shared/hooks/use-theme'
+import { I18nProvider } from '@/shared/lib/i18n/context'
+
+const App = () => {
+  const [theme] = useTheme()
+
+  useEffect(() => {
+    tokenService.initializeToken()
+  }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [theme])
+
+  return (
+    <I18nProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
+
+          <Route
+            path="/my-courses-subscriptions"
+            element={<MyCourseCatalog />}
+          />
+          <Route path="/find-new-courses" element={<CoursesCatalog />} />
+          <Route path="/my-created-courses" element={<TeacherCourses />} />
+          <Route
+            path="/courses/teacher/:name/:id"
+            element={<TeacherCourses />}
+          />
+          <Route path="/course-review/:id" element={<CourseReview />} />
+          <Route path="/course-completion/:id" element={<CourseCompletion />} />
+
+          <Route path="/create-course" element={<CreateCourse />} />
+          <Route path="/create-course/:id" element={<CreateCourse />} />
+
+          <Route path="/calendar" element={<Calendar />} />
+
+          <Route
+            path="/course-statistics/:id"
+            element={<CourseStatisticsForTeacher />}
+          />
+
+          <Route path="/verify/:id" element={<VerifyPage />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </I18nProvider>
+  )
+}
+
+export default App

@@ -1,0 +1,1894 @@
+# SmartStudy Ukrainian Translation.
+# Copyright (C) 2026 SmartStudy Team
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SmartStudy 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-31 16:30+0300\n"
+"PO-Revision-Date: 2026-03-31 16:45+0300\n"
+"Last-Translator: Gemini\n"
+"Language-Team: Ukrainian\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: .\common\decorators\login_required_async.py:14
+msgid "The user is not authorized."
+msgstr "Користувач не авторизований."
+
+#: .\common\middleware.py:62
+msgid "Too many requests. Try again later."
+msgstr "Занадто багато запитів. Спробуйте пізніше."
+
+#: .\common\middleware.py:127
+msgid "Session security violation. Please login again."
+msgstr "Порушення безпеки сеансу. Будь ласка, увійдіть знову."
+
+#: .\common\services\markdown_generator.py:22
+msgid "Methodological notes"
+msgstr "Методичні вказівки"
+
+#: .\common\services\markdown_generator.py:35
+msgid "Open the video separately"
+msgstr "Відкрити відео окремо"
+
+#: .\common\services\markdown_generator.py:88
+msgid "Task"
+msgstr "Завдання"
+
+#: .\common\services\markdown_generator.py:96
+msgid "Join the meeting"
+msgstr "Приєднатися до зустрічі"
+
+#: .\common\services\markdown_generator.py:96
+msgid "Useful link"
+msgstr "Корисне посилання"
+
+#: .\common\services\markdown_generator.py:103
+msgid "Video lesson"
+msgstr "Відеоурок"
+
+#: .\common\services\markdown_generator.py:106
+msgid "Audio recording"
+msgstr "Аудіозапис"
+
+#: .\common\services\markdown_generator.py:112
+msgid "Download the presentation"
+msgstr "Завантажити презентацію"
+
+#: .\common\services\markdown_generator.py:115
+msgid "Download the document"
+msgstr "Завантажити документ"
+
+#: .\common\services\picture_service.py:23
+msgid "Unsupported instance type"
+msgstr "Тип об'єкта не підтримується"
+
+#: .\common\services\picture_service.py:44
+msgid "Unable to delete previous photo:"
+msgstr "Неможливо видалити попереднє фото:"
+
+#: .\common\services\picture_service.py:67
+#: .\courses\services\structure_course_module_action_service\save_files_in_supabase.py:56
+msgid "Failed to upload file:"
+msgstr "Не вдалося завантажити файл:"
+
+#: .\common\services\picture_service.py:105
+msgid "Error when deleting a file from Supabase:"
+msgstr "Помилка під час видалення файлу з Supabase:"
+
+#: .\common\services\picture_service.py:106
+msgid "Unable to delete image:"
+msgstr "Неможливо видалити зображення:"
+
+#: .\common\services\picture_validation_service.py:67
+msgid "File extension not allowed."
+msgstr "Розширення файлу не дозволено."
+
+#: .\common\services\picture_validation_service.py:115
+msgid "File signature does not match declared type"
+msgstr "Підпис файлу не відповідає заявленому типу"
+
+#: .\common\utils\paginate_list.py:15
+msgid "Page number must be >= 1"
+msgstr "Номер сторінки має бути >= 1"
+
+#: .\common\utils\sanitize_input.py:31
+msgid "NoSQL injection pattern detected: "
+msgstr "Виявлено шаблон ін'єкції NoSQL: "
+
+#: .\common\utils\send_template_email.py:12
+msgid "Unable to create activation token."
+msgstr "Неможливо створити токен активації."
+
+#: .\common\utils\send_template_email.py:16
+msgid "Congratulations,"
+msgstr "Вітаємо,"
+
+#: .\common\utils\send_template_email.py:16
+msgid "Congratulations!"
+msgstr "Вітаємо!"
+
+#: .\common\utils\status_response.py:10
+msgid "Successfully"
+msgstr "Успішно"
+
+#: .\common\utils\status_response.py:10
+msgid "success"
+msgstr "успішно"
+
+#: .\common\utils\validate_uuid.py:16
+msgid "Invalid UUID format"
+msgstr "Неправильний формат UUID"
+
+#: .\common\utils\validate_uuid.py:18
+msgid "Invalid UUID type"
+msgstr "Неправильний тип UUID"
+
+#: .\core\admin.py:20 .\core\admin.py:23
+msgid "Smart Study"
+msgstr "Smart Study"
+
+#: .\core\admin.py:22
+msgid "Site administration"
+msgstr "Адміністрування сайту"
+
+#: .\courses\admin.py:60
+#, python-format
+msgid "%d course(s) published."
+msgstr "%d курс(ів) опубліковано."
+
+#: .\courses\admin.py:62
+msgid "Publish selected courses"
+msgstr "Опублікувати вибрані курси"
+
+#: .\courses\admin.py:69
+#, python-format
+msgid "%d version snapshot(s) created."
+msgstr "Створено %d знімків версій."
+
+#: .\courses\admin.py:71
+msgid "Create version snapshot(s)"
+msgstr "Створити знімки версій"
+
+#: .\courses\admin.py:93 .\notifications\admin.py:39
+#: .\users_calendar\admin.py:76
+msgid "Content"
+msgstr "Вміст"
+
+#: .\courses\admin.py:112 .\courses\models\test.py:162
+msgid "Public"
+msgstr "Публічний"
+
+#: .\courses\admin.py:114
+msgid "Context"
+msgstr "Контекст"
+
+#: .\courses\admin.py:137
+#, python-format
+msgid "%d enrollment(s) marked as completed."
+msgstr "%d реєстрацій позначено як завершені."
+
+#: .\courses\admin.py:139
+msgid "Mark selected enrollments as completed"
+msgstr "Позначити вибрані реєстрації як завершені"
+
+#: .\courses\admin.py:167
+#, python-format
+msgid "%d review(s) verified."
+msgstr "%d відгуків верифіковано."
+
+#: .\courses\admin.py:169
+msgid "Verify selected reviews"
+msgstr "Верифікувати вибрані відгуки"
+
+#: .\courses\admin.py:182
+#, python-format
+msgid "%d certificate(s) revoked."
+msgstr "%d сертифікатів анульовано."
+
+#: .\courses\admin.py:184
+msgid "Revoke selected certificates"
+msgstr "Анулювати вибрані сертифікати"
+
+#: .\courses\apps.py:8 .\courses\models\course.py:134
+msgid "Courses"
+msgstr "Курси"
+
+#: .\courses\choices.py:4
+msgid "Beginner"
+msgstr "Початківець"
+
+#: .\courses\choices.py:5
+msgid "Intermediate"
+msgstr "Середній рівень"
+
+#: .\courses\choices.py:6
+msgid "Advanced"
+msgstr "Просунутий рівень"
+
+#: .\courses\choices.py:11
+msgid "Not Started"
+msgstr "Не розпочато"
+
+#: .\courses\choices.py:12
+msgid "In Progress"
+msgstr "В процесі"
+
+#: .\courses\choices.py:13 .\courses\models\enrollment.py:54
+msgid "Completed"
+msgstr "Завершено"
+
+#: .\courses\choices.py:27
+msgid "Programming"
+msgstr "Програмування"
+
+#: .\courses\choices.py:28
+msgid "Data Science"
+msgstr "Наука про дані"
+
+#: .\courses\choices.py:29
+msgid "Design"
+msgstr "Дизайн"
+
+#: .\courses\choices.py:30
+msgid "Marketing"
+msgstr "Маркетинг"
+
+#: .\courses\choices.py:31
+msgid "Business"
+msgstr "Бізнес"
+
+#: .\courses\choices.py:32
+msgid "Personal Development"
+msgstr "Особистий розвиток"
+
+#: .\courses\choices.py:33
+msgid "Health & Fitness"
+msgstr "Здоров'я та фітнес"
+
+#: .\courses\choices.py:34
+msgid "Music"
+msgstr "Музика"
+
+#: .\courses\choices.py:35
+msgid "Photography"
+msgstr "Фотографія"
+
+#: .\courses\choices.py:36
+msgid "Language Learning"
+msgstr "Вивчення мов"
+
+#: .\courses\choices.py:41
+msgid "Video"
+msgstr "Відео"
+
+#: .\courses\choices.py:42
+msgid "Audio"
+msgstr "Аудіо"
+
+#: .\courses\choices.py:43
+msgid "Document"
+msgstr "Документ"
+
+#: .\courses\choices.py:44
+msgid "Presentation"
+msgstr "Презентація"
+
+#: .\courses\choices.py:45 .\users_calendar\models.py:62
+#: .\users_calendar\models.py:115
+msgid "Link"
+msgstr "Посилання"
+
+#: .\courses\choices.py:46
+msgid "Custom"
+msgstr "Свій варіант"
+
+#: .\courses\choices.py:51
+msgid "Active"
+msgstr "Активний"
+
+#: .\courses\choices.py:52
+msgid "Revoked"
+msgstr "Анульований"
+
+#: .\courses\choices.py:53
+msgid "Expired"
+msgstr "Протермінований"
+
+#: .\courses\decorators\course_decorators.py:15
+msgid "Course ID not provided."
+msgstr "ID курсу не вказано."
+
+#: .\courses\decorators\module_decorators.py:24
+msgid "Course ID not provided for module creation."
+msgstr "ID курсу не вказано для створення модуля."
+
+#: .\courses\decorators\module_decorators.py:31
+msgid "Module ID not provided."
+msgstr "ID модуля не вказано."
+
+#: .\courses\decorators\role_decorators.py:13
+msgid "Only teachers can make changes to courses."
+msgstr "Тільки викладачі можуть вносити зміни до курсів."
+
+#: .\courses\decorators\test_decorators.py:27
+msgid "No data provided for test creation."
+msgstr "Не надано даних для створення тесту."
+
+#: .\courses\decorators\test_decorators.py:38
+msgid "Cannot determine target course or module."
+msgstr "Неможливо визначити цільовий курс або модуль."
+
+#: .\courses\decorators\test_decorators.py:46
+#: .\courses\decorators\validators.py:71
+msgid "Test not found."
+msgstr "Тест не знайдено."
+
+#: .\courses\decorators\test_decorators.py:55
+msgid "Test is not linked to course or module."
+msgstr "Тест не прив'язаний до курсу або модуля."
+
+#: .\courses\decorators\validators.py:18
+#: .\courses\views\certificate_views.py:39
+#: .\courses\views\course_statistic_for_owner.py:28
+#: .\courses\views\user_course_enrollment_views.py:59
+msgid "Course not found."
+msgstr "Курс не знайдено."
+
+#: .\courses\decorators\validators.py:25
+msgid "Cannot modify a published course."
+msgstr "Неможливо редагувати опублікований курс."
+
+#: .\courses\decorators\validators.py:37 .\courses\decorators\validators.py:54
+msgid "Module not found."
+msgstr "Модуль не знайдено."
+
+#: .\courses\decorators\validators.py:61
+msgid "Cannot modify modules of a published course."
+msgstr "Неможливо редагувати модулі опублікованого курсу."
+
+#: .\courses\models\certificate.py:36 .\courses\models\course_review.py:19
+#: .\courses\models\enrollment.py:43 .\courses\models\test_attempt.py:42
+#: .\courses\models\wishlist.py:29 .\notifications\models.py:22
+#: .\users\admin.py:57 .\users\models.py:51 .\users\models.py:61
+#: .\users\models.py:65 .\users\models.py:92 .\users_calendar\admin.py:37
+#: .\users_calendar\admin.py:68
+msgid "User"
+msgstr "Користувач"
+
+#: .\courses\models\certificate.py:42 .\courses\models\course.py:129
+#: .\courses\models\course.py:133 .\courses\models\course_meta.py:42
+#: .\courses\models\course_review.py:13 .\courses\models\course_version.py:57
+#: .\courses\models\enrollment.py:44 .\courses\models\module.py:32
+#: .\courses\models\test.py:59 .\courses\models\wishlist.py:35
+#: .\notifications\models.py:31 .\users_calendar\models.py:98
+msgid "Course"
+msgstr "Курс"
+
+#: .\courses\models\certificate.py:44
+msgid "Issued at"
+msgstr "Видано"
+
+#: .\courses\models\certificate.py:45
+msgid "Certificate ID"
+msgstr "ID сертифіката"
+
+#: .\courses\models\certificate.py:46
+msgid "Is valid"
+msgstr "Дійсний"
+
+#: .\courses\models\certificate.py:55 .\courses\models\certificate.py:69
+#: .\users\models.py:78
+msgid "Certificate"
+msgstr "Сертифікат"
+
+#: .\courses\models\certificate.py:56
+msgid "Certificates"
+msgstr "Сертифікати"
+
+#: .\courses\models\course.py:44 .\courses\models\course_version.py:36
+msgid "Course title"
+msgstr "Назва курсу"
+
+#: .\courses\models\course.py:45 .\courses\models\course_version.py:37
+msgid "Course description"
+msgstr "Опис курсу"
+
+#: .\courses\models\course.py:46 .\courses\models\course_version.py:38
+#: .\courses\models\test.py:96
+msgid "Category"
+msgstr "Категорія"
+
+#: .\courses\models\course.py:51 .\courses\models\course_version.py:39
+msgid "Course owner"
+msgstr "Власник курсу"
+
+#: .\courses\models\course.py:53 .\courses\models\course_version.py:40
+msgid "Cover image URL"
+msgstr "URL обкладинки"
+
+#: .\courses\models\course.py:54
+msgid "Is published"
+msgstr "Опубліковано"
+
+#: .\courses\models\course.py:55 .\courses\models\course_review.py:26
+#: .\users\models.py:43
+msgid "Created at"
+msgstr "Створено"
+
+#: .\courses\models\course.py:56
+msgid "Published at"
+msgstr "Опубліковано о"
+
+#: .\courses\models\course.py:57
+msgid "Updated at"
+msgstr "Оновлено"
+
+#: .\courses\models\course.py:58
+msgid "Course version"
+msgstr "Версія курсу"
+
+#: .\courses\models\course.py:59
+msgid "Mongo id for course structure"
+msgstr "Mongo ID структури курсу"
+
+#: .\courses\models\course.py:64
+msgid "Image not found."
+msgstr "Зображення не знайдено."
+
+#: .\courses\models\course_meta.py:43
+msgid "Total modules"
+msgstr "Всього модулів"
+
+#: .\courses\models\course_meta.py:44
+msgid "Total lessons"
+msgstr "Всього уроків"
+
+#: .\courses\models\course_meta.py:45
+msgid "Total tests"
+msgstr "Всього тестів"
+
+#: .\courses\models\course_meta.py:46
+msgid "Time to complete course"
+msgstr "Час на проходження курсу"
+
+#: .\courses\models\course_meta.py:47
+msgid "Course language"
+msgstr "Мова курсу"
+
+#: .\courses\models\course_meta.py:53
+msgid "Course rating"
+msgstr "Рейтинг курсу"
+
+#: .\courses\models\course_meta.py:55
+msgid "Course level"
+msgstr "Рівень курсу"
+
+#: .\courses\models\course_meta.py:56
+msgid "Count is completed course"
+msgstr "Кількість завершених курсів"
+
+#: .\courses\models\course_meta.py:57
+msgid "Count active course"
+msgstr "Кількість активних курсів"
+
+#: .\courses\models\course_meta.py:58
+msgid "Review count"
+msgstr "Кількість відгуків"
+
+#: .\courses\models\course_meta.py:59
+msgid "Feedback summary"
+msgstr "Резюме відгуків"
+
+#: .\courses\models\course_meta.py:119
+msgid "CourseMeta"
+msgstr "Мета-дані курсу"
+
+#: .\courses\models\course_meta.py:123
+msgid "Course detail"
+msgstr "Деталі курсу"
+
+#: .\courses\models\course_meta.py:124
+msgid "Course details"
+msgstr "Деталі курсу"
+
+#: .\courses\models\course_review.py:23
+msgid "Rating (1-5)"
+msgstr "Оцінка (1-5)"
+
+#: .\courses\models\course_review.py:25
+msgid "Comment"
+msgstr "Коментар"
+
+#: .\courses\models\course_review.py:27
+msgid "Is verified"
+msgstr "Верифіковано"
+
+#: .\courses\models\course_review.py:31
+msgid "Course Review"
+msgstr "Відгук про курс"
+
+#: .\courses\models\course_review.py:32
+msgid "Course Reviews"
+msgstr "Відгуки про курс"
+
+#: .\courses\models\course_version.py:34
+msgid "Original course ID"
+msgstr "ID оригінального курсу"
+
+#: .\courses\models\course_version.py:35
+msgid "Version number"
+msgstr "Номер версії"
+
+#: .\courses\models\course_version.py:41
+msgid "Course snapshot data"
+msgstr "Дані знімка курсу"
+
+#: .\courses\models\course_version.py:42
+msgid "Version created at"
+msgstr "Версію створено о"
+
+#: .\courses\models\course_version.py:46
+msgid "Course Version"
+msgstr "Версія курсу"
+
+#: .\courses\models\course_version.py:47
+msgid "Course Versions"
+msgstr "Версії курсу"
+
+#: .\courses\models\enrollment.py:45
+msgid "Course version at enrollment"
+msgstr "Версія курсу на момент запису"
+
+#: .\courses\models\enrollment.py:46
+msgid "Enrolled at"
+msgstr "Записано"
+
+#: .\courses\models\enrollment.py:52
+msgid "Progress"
+msgstr "Прогрес"
+
+#: .\courses\models\enrollment.py:55 .\courses\models\lesson_progress.py:43
+#: .\courses\models\test_attempt.py:52 .\users_calendar\models.py:64
+msgid "Completed at"
+msgstr "Завершено о"
+
+#: .\courses\models\enrollment.py:56 .\courses\models\lesson_progress.py:44
+#: .\courses\models\test_attempt.py:53
+msgid "Time spent"
+msgstr "Витрачений час"
+
+#: .\courses\models\enrollment.py:103
+msgid "User Course Enrollment"
+msgstr "Запис користувача на курс"
+
+#: .\courses\models\enrollment.py:104
+msgid "User Course Enrollments"
+msgstr "Записи користувачів на курси"
+
+#: .\courses\models\lesson.py:18 .\courses\models\module.py:38
+#: .\courses\models\module.py:42 .\courses\models\test.py:67
+msgid "Module"
+msgstr "Модуль"
+
+#: .\courses\models\lesson.py:22
+msgid "Lesson title"
+msgstr "Назва уроку"
+
+#: .\courses\models\lesson.py:28
+msgid "Lesson description"
+msgstr "Опис уроку"
+
+#: .\courses\models\lesson.py:34
+msgid "Lesson content type"
+msgstr "Тип вмісту уроку"
+
+#: .\courses\models\lesson.py:39
+msgid "Content (Markdown)"
+msgstr "Вміст (Markdown)"
+
+#: .\courses\models\lesson.py:42
+msgid "Lesson order"
+msgstr "Порядок уроку"
+
+#: .\courses\models\lesson.py:46
+msgid "Lesson duration"
+msgstr "Тривалість уроку"
+
+#: .\courses\models\lesson.py:53
+msgid "Content length exceeds 7000 characters."
+msgstr "Довжина вмісту перевищує 7000 символів."
+
+#: .\courses\models\lesson.py:61 .\courses\models\lesson.py:65
+#: .\courses\models\lesson_progress.py:40
+msgid "Lesson"
+msgstr "Урок"
+
+#: .\courses\models\lesson.py:66
+msgid "Lessons"
+msgstr "Уроки"
+
+#: .\courses\models\lesson_progress.py:34 .\courses\models\test_attempt.py:35
+msgid "Enrollment"
+msgstr "Запис"
+
+#: .\courses\models\lesson_progress.py:42 .\courses\models\test_attempt.py:51
+msgid "Started at"
+msgstr "Розпочато о"
+
+#: .\courses\models\lesson_progress.py:45
+msgid "Completion percentage"
+msgstr "Відсоток завершення"
+
+#: .\courses\models\lesson_progress.py:46
+msgid "Notes"
+msgstr "Нотатки"
+
+#: .\courses\models\lesson_progress.py:50
+msgid "Lesson Progress"
+msgstr "Прогрес уроку"
+
+#: .\courses\models\lesson_progress.py:51
+msgid "Lesson Progresses"
+msgstr "Прогреси уроків"
+
+#: .\courses\models\module.py:33
+msgid "Module title"
+msgstr "Назва модуля"
+
+#: .\courses\models\module.py:34
+msgid "Module order"
+msgstr "Порядок модуля"
+
+#: .\courses\models\module.py:35
+msgid "Mongo id for module structure"
+msgstr "Mongo ID структури модуля"
+
+#: .\courses\models\module.py:43
+msgid "Modules"
+msgstr "Модулі"
+
+#: .\courses\models\test.py:69
+msgid "Test title"
+msgstr "Назва тесту"
+
+#: .\courses\models\test.py:70
+msgid "Test description"
+msgstr "Опис тесту"
+
+#: .\courses\models\test.py:71
+msgid "Time limit (in minutes)"
+msgstr "Обмеження часу (хв)"
+
+#: .\courses\models\test.py:72
+msgid "Count attempts"
+msgstr "Кількість спроб"
+
+#: .\courses\models\test.py:76
+msgid "Pass score"
+msgstr "Прохідний бал"
+
+#: .\courses\models\test.py:78
+msgid "Randomize questions"
+msgstr "Перемішувати питання"
+
+#: .\courses\models\test.py:79
+msgid "Show correct answers"
+msgstr "Показувати правильні відповіді"
+
+#: .\courses\models\test.py:80
+msgid "Mongo document ID"
+msgstr "Mongo Document ID"
+
+#: .\courses\models\test.py:81
+msgid "Test order"
+msgstr "Порядок тесту"
+
+#: .\courses\models\test.py:82
+msgid "Is public"
+msgstr "Публічний"
+
+#: .\courses\models\test.py:89
+msgid "Test owner (public tests only)"
+msgstr "Власник тесту (тільки публічні)"
+
+#: .\courses\models\test.py:104
+msgid "Test level"
+msgstr "Рівень тесту"
+
+#: .\courses\models\test.py:140
+msgid "Public test cannot be linked to course or module"
+msgstr "Публічний тест не може бути прив'язаний до курсу чи модуля"
+
+#: .\courses\models\test.py:142
+msgid "Public test must have an owner"
+msgstr "Публічний тест повинен мати власника"
+
+#: .\courses\models\test.py:146
+msgid "Non-public test must be linked to either course or module"
+msgstr "Непублічний тест має бути прив'язаний до курсу або модуля"
+
+#: .\courses\models\test.py:148
+msgid "Test cannot be linked to both course and module"
+msgstr "Тест не може бути прив'язаний одночасно і до курсу, і до модуля"
+
+#: .\courses\models\test.py:150
+msgid "Module must belong to the specified course"
+msgstr "Модуль повинен належати вказаному курсу"
+
+#: .\courses\models\test.py:165 .\courses\models\test.py:169
+#: .\courses\models\test_attempt.py:49
+msgid "Test"
+msgstr "Тест"
+
+#: .\courses\models\test.py:170
+msgid "Tests"
+msgstr "Тести"
+
+#: .\courses\models\test_attempt.py:54
+msgid "Score"
+msgstr "Бал"
+
+#: .\courses\models\test_attempt.py:55
+msgid "Passed"
+msgstr "Пройдено"
+
+#: .\courses\models\test_attempt.py:56
+msgid "Attempt Number"
+msgstr "Номер спроби"
+
+#: .\courses\models\test_attempt.py:57
+msgid "Attempt Details"
+msgstr "Деталі спроби"
+
+#: .\courses\models\test_attempt.py:61
+msgid "Test Attempt"
+msgstr "Спроба тесту"
+
+#: .\courses\models\test_attempt.py:62
+msgid "Test Attempts"
+msgstr "Спроби тесту"
+
+#: .\courses\models\wishlist.py:37
+msgid "Added at"
+msgstr "Додано"
+
+#: .\courses\models\wishlist.py:41
+msgid "Wishlist"
+msgstr "Список бажаного"
+
+#: .\courses\models\wishlist.py:42
+msgid "Wishlists"
+msgstr "Списки бажаного"
+
+#: .\courses\services\cache_service\category_level_all_for_instance_cache.py:67
+#: .\courses\services\cache_service\category_level_all_for_instance_cache.py:68
+#: .\courses\services\cache_service\instance_by_id_cache.py:56
+#: .\courses\services\cache_service\instance_by_id_cache.py:57
+#: .\courses\services\cache_service\instance_cache_by_id_author.py:58
+#: .\courses\services\cache_service\instance_cache_by_id_author.py:59
+msgid "Unsupported instance type for caching"
+msgstr "Непідтримуваний тип об'єкта для кешування"
+
+#: .\courses\services\cache_service\instance_by_id_cache.py:91
+#: .\users\services\profile_cache_service.py:250
+#: .\users\services\profile_cache_service.py:282
+#: .\users\services\profile_cache_service.py:291
+msgid "successfully"
+msgstr "успішно"
+
+#: .\courses\services\cache_service\instance_by_id_cache.py:91
+#: .\users\services\profile_cache_service.py:250
+#: .\users\services\profile_cache_service.py:282
+#: .\users\services\profile_cache_service.py:291
+msgid "key not found"
+msgstr "ключ не знайдено"
+
+#: .\courses\services\course_actions_service\get_courses.py:60
+#: .\courses\services\test_actions_service\get_test.py:36
+msgid "Author not found"
+msgstr "Автор не знайдений"
+
+#: .\courses\services\course_actions_service\get_courses.py:64
+#: .\courses\services\course_actions_service\get_courses.py:66
+msgid "Error receiving courses by author id"
+msgstr "Помилка отримання курсів за ID автора"
+
+#: .\courses\services\course_actions_service\get_courses.py:97
+msgid "Error retrieving courses from DB:"
+msgstr "Помилка отримання курсів з БД:"
+
+#: .\courses\services\course_actions_service\get_courses.py:98
+msgid "Error retrieving courses from DB"
+msgstr "Помилка отримання курсів з БД"
+
+#: .\courses\services\course_actions_service\get_courses.py:115
+#: .\courses\views\course_views.py:124 .\courses\views\course_views.py:138
+#: .\courses\views\course_views.py:157
+msgid "Course not found"
+msgstr "Курс не знайдено"
+
+#: .\courses\services\course_actions_service\get_courses.py:117
+#: .\courses\services\course_actions_service\get_courses.py:119
+msgid "Error receiving courses by id"
+msgstr "Помилка отримання курсів за ID"
+
+#: .\courses\services\course_actions_service\publish_course.py:13
+msgid "Missing required field for publish: cover_image"
+msgstr "Відсутнє обов'язкове поле для публікації: cover_image"
+
+#: .\courses\services\course_actions_service\publish_course.py:31
+msgid "Cannot publish a course without content."
+msgstr "Неможливо опублікувати курс без вмісту."
+
+#: .\courses\services\course_actions_service\remove_course.py:39
+msgid "A published course cannot be deleted. Published courses can only be edited."
+msgstr "Опублікований курс неможливо видалити. Їх можна лише редагувати."
+
+#: .\courses\services\course_actions_service\remove_course.py:83
+msgid "All draft data for the course has been deleted; the published version remains."
+msgstr "Всі чернетки курсу видалено; опублікована версія залишається."
+
+#: .\courses\services\course_actions_service\remove_course.py:93
+msgid "Course deleted successfully."
+msgstr "Курс успішно видалено."
+
+#: .\courses\services\course_actions_service\update_course.py:32
+msgid "No changes detected to update the course."
+msgstr "Змін для оновлення курсу не виявлено."
+
+#: .\courses\services\course_review_actions_service\get_reviews.py:35
+#: .\courses\services\course_review_actions_service\get_reviews.py:37
+msgid "Error receiving review of courses"
+msgstr "Помилка отримання відгуків про курси"
+
+#: .\courses\services\lesson_actions_service\create_markdown.py:78
+msgid "Link URL is missing for lesson type 'link'"
+msgstr "Відсутній URL для уроку типу 'link'"
+
+#: .\courses\services\lesson_actions_service\get_lesson.py:22
+msgid "Lesson not found"
+msgstr "Урок не знайдено"
+
+#: .\courses\services\lesson_actions_service\get_lesson.py:26
+#: .\courses\services\lesson_actions_service\get_lesson.py:28
+msgid "Error receiving lesson"
+msgstr "Помилка отримання уроку"
+
+#: .\courses\services\module_actons_service\remove_module.py:40
+msgid "Module deleted successfully"
+msgstr "Модуль успішно видалено"
+
+#: .\courses\services\parsers.py:18
+msgid "Error parsing multipart data:"
+msgstr "Помилка розбору multipart даних:"
+
+#: .\courses\services\structure_course_module_action_service\save_files_in_supabase.py:34
+msgid "File validation error:"
+msgstr "Помилка валідації файлу:"
+
+#: .\courses\services\structure_course_module_action_service\structure_utils.py:22
+msgid "target_type must be 'course' or 'module'"
+msgstr "target_type має бути 'course' або 'module'"
+
+#: .\courses\services\test_actions_service\get_test.py:40
+#: .\courses\services\test_actions_service\get_test.py:42
+msgid "Error receiving public tests by author id"
+msgstr "Помилка отримання публічних тестів за ID автора"
+
+#: .\courses\services\test_actions_service\get_test.py:74
+#: .\courses\services\test_actions_service\get_test.py:75
+msgid "Error receiving public tests"
+msgstr "Помилка отримання публічних тестів"
+
+#: .\courses\services\test_actions_service\get_test.py:111
+msgid "Insufficient parameters to retrieve the test"
+msgstr "Недостатньо параметрів для отримання тесту"
+
+#: .\courses\services\test_actions_service\get_test.py:122
+msgid "Test not found"
+msgstr "Тест не знайдено"
+
+#: .\courses\services\test_actions_service\get_test.py:124
+#: .\courses\services\test_actions_service\get_test.py:126
+msgid "Error receiving test by id"
+msgstr "Помилка отримання тесту за ID"
+
+#: .\courses\services\test_actions_service\prepare_test_for_actions.py:20
+#: .\courses\services\test_actions_service\prepare_test_for_actions.py:32
+msgid "Invalid test type"
+msgstr "Неправильний тип тесту"
+
+#: .\courses\services\test_actions_service\prepare_test_for_actions.py:37
+#: .\courses\views\user_course_enrollment_views.py:130
+msgid "Unknown error"
+msgstr "Невідома помилка"
+
+#: .\courses\services\test_actions_service\update_test.py:12
+msgid "Test updated successfully."
+msgstr "Тест успішно оновлено."
+
+#: .\courses\services\test_actions_service\validators.py:39
+msgid "Cannot add/delete/edit test in a published course"
+msgstr "Неможливо додати/видалити/редагувати тест в опублікованому курсі"
+
+#: .\courses\services\test_actions_service\validators.py:43
+msgid "This test cannot be deleted/edited because it is part of a course version"
+msgstr "Цей тест неможливо видалити/редагувати, оскільки він є частиною версії курсу"
+
+#: .\courses\services\validators.py:15
+msgid "Rating must be between 1 and 5"
+msgstr "Оцінка має бути від 1 до 5"
+
+#: .\courses\services\validators.py:25
+msgid "Missing required field for publish:"
+msgstr "Відсутнє обов'язкове поле для публікації:"
+
+#: .\courses\services\validators.py:44
+msgid "Missing required field for public test:"
+msgstr "Відсутнє обов'язкове поле для публічного тесту:"
+
+#: .\courses\services\validators.py:48
+msgid "Missing required field for course/module test:"
+msgstr "Відсутнє обов'язкове поле для тесту курсу/модуля:"
+
+#: .\courses\services\validators.py:67
+msgid "Missing required field:"
+msgstr "Відсутнє обов'язкове поле:"
+
+#: .\courses\services\validators.py:78
+msgid ", "
+msgstr ", "
+
+#: .\courses\services\validators.py:103
+msgid "question text must be a non-empty string"
+msgstr "текст питання має бути непорожнім рядком"
+
+#: .\courses\services\validators.py:112
+msgid "All correct answers must be present in choices"
+msgstr "Всі правильні відповіді мають бути присутні серед варіантів"
+
+#: .\courses\views\certificate_views.py:28
+msgid "Certificate created successfully."
+msgstr "Сертифікат успішно створено."
+
+#: .\courses\views\certificate_views.py:28
+msgid "Certificate already exist."
+msgstr "Сертифікат вже існує."
+
+#: .\courses\views\certificate_views.py:78
+msgid "Certificate not found."
+msgstr "Сертифікат не знайдено."
+
+#: .\courses\views\certificate_views.py:91
+msgid "Certificate verification successful."
+msgstr "Верифікація сертифіката успішна."
+
+#: .\courses\views\course_recommendations_views.py:19
+msgid "Invalid status parameter. Must be 'passed' or 'failed'."
+msgstr "Неправильний параметр статусу. Має бути 'passed' або 'failed'."
+
+#: .\courses\views\course_recommendations_views.py:27
+msgid "Invalid limit parameter. Must be an integer or in the interval from 1 to 100"
+msgstr "Неправильний параметр ліміту. Має бути цілим числом від 1 до 100"
+
+#: .\courses\views\course_review_views.py:24
+msgid "course_id parameter is required."
+msgstr "параметр course_id є обов'язковим."
+
+#: .\courses\views\course_review_views.py:56
+msgid "Review created successfully."
+msgstr "Відгук успішно створено."
+
+#: .\courses\views\course_review_views.py:62
+msgid "Error creating course review:"
+msgstr "Помилка створення відгуку про курс:"
+
+#: .\courses\views\course_statistic_for_owner.py:30
+msgid "An error occurred while fetching course statistics:"
+msgstr "Виникла помилка під час отримання статистики курсу:"
+
+#: .\courses\views\course_views.py:96
+msgid "Course created successfully"
+msgstr "Курс успішно створено"
+
+#: .\courses\views\course_views.py:103
+msgid "Error creating course:"
+msgstr "Помилка створення курсу:"
+
+#: .\courses\views\course_views.py:126
+msgid "Error updating course:"
+msgstr "Помилка оновлення курсу:"
+
+#: .\courses\views\course_views.py:140
+msgid "Course deletion error:"
+msgstr "Помилка видалення курсу:"
+
+#: .\courses\views\course_views.py:151
+msgid "Course published successfully"
+msgstr "Курс успішно опубліковано"
+
+#: .\courses\views\course_views.py:159
+msgid "Error publishing course:"
+msgstr "Помилка публікації курсу:"
+
+#: .\courses\views\courses_by_user_views.py:17
+msgid "user id parameter is required."
+msgstr "параметр user id є обов'язковим."
+
+#: .\courses\views\courses_by_user_views.py:27
+msgid "Error retrieving courses"
+msgstr "Помилка отримання курсів"
+
+#: .\courses\views\lesson_views.py:13 .\courses\views\test_views.py:68
+msgid "Invalid request"
+msgstr "Неправильний запит"
+
+#: .\courses\views\lesson_views.py:16
+msgid "Lesson retrieved successfully"
+msgstr "Урок успішно отримано"
+
+#: .\courses\views\module_views.py:24
+msgid "Module created successfully."
+msgstr "Модуль успішно створено."
+
+#: .\courses\views\module_views.py:30
+msgid "Error creating module:"
+msgstr "Помилка створення модуля:"
+
+#: .\courses\views\module_views.py:40
+msgid "Module deletion error:"
+msgstr "Помилка видалення модуля:"
+
+#: .\courses\views\test_views.py:56
+msgid "Unsupported test type"
+msgstr "Тип тесту не підтримується"
+
+#: .\courses\views\test_views.py:67
+msgid "Test retrieved successfully"
+msgstr "Тест успішно отримано"
+
+#: .\courses\views\test_views.py:82
+msgid "Test created successfully."
+msgstr "Тест успішно створено."
+
+#: .\courses\views\test_views.py:91
+msgid "Error creating test:"
+msgstr "Помилка створення тесту:"
+
+#: .\courses\views\test_views.py:99
+msgid "No data provided for update"
+msgstr "Даних для оновлення не надано"
+
+#: .\courses\views\test_views.py:112 .\courses\views\test_views.py:124
+msgid "Test deletion error:"
+msgstr "Помилка видалення тесту:"
+
+#: .\courses\views\user_course_enrollment_views.py:28
+#: .\courses\views\user_course_enrollment_views.py:151
+msgid "Enrollment not found"
+msgstr "Запис не знайдено"
+
+#: .\courses\views\user_course_enrollment_views.py:48
+msgid "Enrollment created successfully."
+msgstr "Запис успішно створено."
+
+#: .\courses\views\user_course_enrollment_views.py:48
+msgid "User already enrolled."
+msgstr "Користувач вже записаний."
+
+#: .\courses\views\user_course_enrollment_views.py:100
+msgid "Progress updated successfully"
+msgstr "Прогрес успішно оновлено"
+
+#: .\courses\views\user_course_enrollment_views.py:105
+#: .\notifications\views.py:102 .\notifications\views.py:142
+#: .\users_calendar\views\course_planing_views.py:50
+msgid "Invalid JSON"
+msgstr "Неправильний JSON"
+
+#: .\courses\views\user_course_enrollment_views.py:121
+msgid "Error retrieving enrollment status"
+msgstr "Помилка отримання статусу запису"
+
+#: .\courses\views\user_course_enrollment_views.py:126
+msgid "Enrollment status retrieved successfully"
+msgstr "Статус запису успішно отримано"
+
+#: .\courses\views\user_wishlist_views.py:18
+msgid "user id and course id parameters are required."
+msgstr "параметри user id та course id є обов'язковими."
+
+#: .\courses\views\user_wishlist_views.py:39
+msgid "Course added to wishlist successfully."
+msgstr "Курс успішно додано до списку бажаного."
+
+#: .\courses\views\user_wishlist_views.py:40
+msgid "Error add course to wishlist of users:"
+msgstr "Помилка додавання курсу до списку бажаного:"
+
+#: .\courses\views\user_wishlist_views.py:49
+msgid "Course removed from wishlist successfully."
+msgstr "Курс успішно видалено зі списку бажаного."
+
+#: .\courses\views\user_wishlist_views.py:50
+msgid "Error remove course from wishlist of users:"
+msgstr "Помилка видалення курсу зі списку бажаного:"
+
+#: .\notifications\admin.py:36
+msgid "Key information"
+msgstr "Ключова інформація"
+
+#: .\notifications\admin.py:42
+msgid "Links and references"
+msgstr "Посилання та джерела"
+
+#: .\notifications\admin.py:44
+msgid "Select a course or event, or provide an external link."
+msgstr "Виберіть курс, подію або вкажіть зовнішнє посилання."
+
+#: .\notifications\admin.py:53
+msgid "User Email"
+msgstr "Email користувача"
+
+#: .\notifications\admin.py:56
+msgid "Mark selected items as read"
+msgstr "Позначити вибране як прочитане"
+
+#: .\notifications\admin.py:59
+msgid "Your selected notifications have been updated."
+msgstr "Вибрані сповіщення було оновлено."
+
+#: .\notifications\admin.py:61
+msgid "Mark selected items as unread"
+msgstr "Позначити вибране як непрочитане"
+
+#: .\notifications\admin.py:64
+msgid "The status of the notifications has been changed to 'unread'."
+msgstr "Статус сповіщень було змінено на 'непрочитане'."
+
+#: .\notifications\apps.py:8 .\notifications\models.py:67
+msgid "Notifications"
+msgstr "Сповіщення"
+
+#: .\notifications\models.py:9 .\users_calendar\tasks.py:46
+msgid "Event reminder"
+msgstr "Нагадування про подію"
+
+#: .\notifications\models.py:10
+msgid "Message from course owner"
+msgstr "Повідомлення від власника курсу"
+
+#: .\notifications\models.py:11
+msgid "Achievement unlocked"
+msgstr "Досягнення отримано"
+
+#: .\notifications\models.py:12
+msgid "Default"
+msgstr "За замовчуванням"
+
+#: .\notifications\models.py:39 .\users_calendar\models.py:79
+msgid "Personal event"
+msgstr "Особиста подія"
+
+#: .\notifications\models.py:42
+msgid "Sent at"
+msgstr "Надіслано"
+
+#: .\notifications\models.py:44
+msgid "Notification type"
+msgstr "Тип сповіщення"
+
+#: .\notifications\models.py:49
+msgid "Is important"
+msgstr "Важливо"
+
+#: .\notifications\models.py:50
+msgid "Is read"
+msgstr "Прочитано"
+
+#: .\notifications\models.py:52 .\users_calendar\models.py:52
+msgid "Title"
+msgstr "Заголовок"
+
+#: .\notifications\models.py:53
+msgid "Message"
+msgstr "Повідомлення"
+
+#: .\notifications\models.py:55
+msgid "External Link"
+msgstr "Зовнішнє посилання"
+
+#: .\notifications\models.py:57
+msgid "Link Text"
+msgstr "Текст посилання"
+
+#: .\notifications\models.py:61
+msgid "Text on the button for a personalised link"
+msgstr "Текст на кнопці для персонального посилання"
+
+#: .\notifications\models.py:66 .\users\admin.py:110
+msgid "Notification"
+msgstr "Сповіщення"
+
+#: .\notifications\models.py:84
+msgid "To set a reminder for the event, you must specify the event."
+msgstr "Щоб встановити нагадування, необхідно вказати подію."
+
+#: .\notifications\models.py:87
+msgid "A message from the course owner must be linked to the course."
+msgstr "Повідомлення від власника курсу має бути прив'язане до курсу."
+
+#: .\notifications\models.py:119
+msgid "Click here"
+msgstr "Натисніть тут"
+
+#: .\notifications\models.py:121
+msgid "To the course"
+msgstr "До курсу"
+
+#: .\notifications\models.py:122
+#: .\notifications\services\course_owner_notification_service\course_owner_notifications.py:40
+msgid "View"
+msgstr "Переглянути"
+
+#: .\notifications\services\course_owner_notification_service\course_owner_notifications.py:95
+msgid "New notification"
+msgstr "Нове сповіщення"
+
+#: .\notifications\views.py:33
+msgid "Invalid parameters"
+msgstr "Неправильні параметри"
+
+#: .\notifications\views.py:59 .\notifications\views.py:100
+msgid "Invalid course ID"
+msgstr "Неправильний ID курсу"
+
+#: .\notifications\views.py:62
+msgid "Failed to fetch course announcements"
+msgstr "Не вдалося отримати оголошення курсу"
+
+#: .\notifications\views.py:79
+msgid "Title and message are required"
+msgstr "Заголовок та повідомлення є обов'язковими"
+
+#: .\notifications\views.py:93
+msgid "No students to notify"
+msgstr "Немає студентів для сповіщення"
+
+#: .\notifications\views.py:105
+msgid "Failed to post announcement"
+msgstr "Не вдалося опублікувати оголошення"
+
+#: .\notifications\views.py:140
+msgid "Invalid notification IDs"
+msgstr "Неправильні ID сповіщень"
+
+#: .\users\admin.py:8
+msgid "Позначити як активні"
+msgstr "Позначити як активні"
+
+#: .\users\admin.py:27
+msgid "Personal information"
+msgstr "Особиста інформація"
+
+#: .\users\admin.py:28
+msgid "Access rights"
+msgstr "Права доступу"
+
+#: .\users\admin.py:29
+msgid "Additional"
+msgstr "Додатково"
+
+#: .\users\admin.py:62 .\users\models.py:34
+msgid "Email"
+msgstr "Електронна пошта"
+
+#: .\users\admin.py:84 .\users\admin.py:109
+msgid "Basic information"
+msgstr "Основна інформація"
+
+#: .\users\admin.py:85
+msgid "Profile details"
+msgstr "Деталі профілю"
+
+#: .\users\admin.py:86 .\users_calendar\models.py:53
+msgid "Description"
+msgstr "Опис"
+
+#: .\users\admin.py:111
+msgid "Privacy"
+msgstr "Конфіденційність"
+
+#: .\users\apps.py:8 .\users\models.py:52
+msgid "Users"
+msgstr "Користувачі"
+
+#: .\users\models.py:12
+msgid "The Email field must be set"
+msgstr "Поле «Електронна пошта» має бути заповнене"
+
+#: .\users\models.py:31
+msgid "Name"
+msgstr "Ім'я"
+
+#: .\users\models.py:32
+msgid "Surname"
+msgstr "Прізвище"
+
+#: .\users\models.py:33
+msgid "Phone number"
+msgstr "Номер телефону"
+
+#: .\users\models.py:35
+msgid "Is email verified"
+msgstr "Верифікована електронна пошта"
+
+#: .\users\models.py:36
+msgid "Role"
+msgstr "Роль"
+
+#: .\users\models.py:37
+msgid "Admin"
+msgstr "Адміністратор"
+
+#: .\users\models.py:38
+msgid "Student"
+msgstr "Студент"
+
+#: .\users\models.py:39
+msgid "Teacher"
+msgstr "Вчитель"
+
+#: .\users\models.py:41
+msgid "Is active"
+msgstr "Активований"
+
+#: .\users\models.py:42
+msgid "Is staff"
+msgstr "Персонал"
+
+#: .\users\models.py:67
+msgid "Profile Picture URL"
+msgstr "URL фотографії профілю"
+
+#: .\users\models.py:68
+msgid "Location"
+msgstr "Місцезнаходження"
+
+#: .\users\models.py:69
+msgid "Organization"
+msgstr "Організація"
+
+#: .\users\models.py:70
+msgid "Specialization"
+msgstr "Спеціалізація"
+
+#: .\users\models.py:72
+msgid "Education Level"
+msgstr "Рівень освіти"
+
+#: .\users\models.py:74
+msgid "Bachelor"
+msgstr "Бакалавр"
+
+#: .\users\models.py:75
+msgid "Master"
+msgstr "Магістр"
+
+#: .\users\models.py:76
+msgid "Doctor of Science"
+msgstr "Доктор наук"
+
+#: .\users\models.py:77
+msgid "Diploma"
+msgstr "Диплом"
+
+#: .\users\models.py:80
+msgid "About me"
+msgstr "Про мене"
+
+#: .\users\models.py:84
+msgid "User Profile"
+msgstr "Профіль користувача"
+
+#: .\users\models.py:85
+msgid "User Profiles"
+msgstr "Профілі користувачів"
+
+#: .\users\models.py:88
+msgid "Profile"
+msgstr "Профіль"
+
+#: .\users\models.py:94
+msgid "Email notifications"
+msgstr "Email повідомлення"
+
+#: .\users\models.py:95
+msgid "Push notifications"
+msgstr "Push повідомлення"
+
+#: .\users\models.py:96
+msgid "Deadline reminders"
+msgstr "Нагадування про дедлайни"
+
+#: .\users\models.py:97
+msgid "Show profile to others"
+msgstr "Показувати профіль іншим"
+
+#: .\users\models.py:98
+msgid "Show achievements"
+msgstr "Показувати досягнення"
+
+#: .\users\models.py:102 .\users\models.py:103
+msgid "User Settings"
+msgstr "Налаштування користувача"
+
+#: .\users\models.py:106
+msgid "Settings"
+msgstr "Налаштування"
+
+#: .\users\services\oauth_service.py:35
+msgid "Invalid Facebook token"
+msgstr "Недійсний токен Facebook"
+
+#: .\users\services\oauth_service.py:47
+msgid "Facebook API error: "
+msgstr "Помилка API Facebook: "
+
+#: .\users\services\oauth_service.py:72
+msgid "Unknown OAuth provider"
+msgstr "Невідомий постачальник OAuth"
+
+#: .\users\services\oauth_service.py:108
+msgid "Successful authorization via"
+msgstr "Успішна авторизація через"
+
+#: .\users\services\oauth_service.py:108 .\users\services\oauth_service.py:149
+msgid "(session)"
+msgstr "(сесія)"
+
+#: .\users\services\oauth_service.py:112
+msgid "You must specify role and surname"
+msgstr "Ви повинні вказати роль і прізвище"
+
+#: .\users\services\oauth_service.py:116 .\users\views.py:88
+msgid "Incorrect role. Acceptable values:"
+msgstr "Неправильна роль. Прийнятні значення:"
+
+#: .\users\services\oauth_service.py:149
+msgid "Successful registration and authorization via"
+msgstr "Успішна реєстрація та авторизація через"
+
+#: .\users\services\profile_cache_service.py:100
+msgid "Error receiving user settings"
+msgstr "Помилка отримання налаштувань користувача"
+
+#: .\users\services\profile_cache_service.py:171
+msgid "Error receiving user profile"
+msgstr "Помилка отримання профілю користувача"
+
+#: .\users\services\profile_cache_service.py:250
+msgid "Invalidating the user existence cache for email:"
+msgstr "Інвалідація кешу існування користувача для email:"
+
+#: .\users\services\profile_cache_service.py:262
+msgid "Deleted"
+msgstr "Видалено"
+
+#: .\users\services\profile_cache_service.py:262
+msgid "cached user records"
+msgstr "кешовані записи користувачів"
+
+#: .\users\services\profile_cache_service.py:273
+msgid "Complete invalidation of caches for the user"
+msgstr "Повна інвалідація кешів користувача"
+
+#: .\users\services\profile_cache_service.py:273
+msgid "records"
+msgstr "записи"
+
+#: .\users\services\profile_cache_service.py:282
+msgid "Disabled settings cache for user"
+msgstr "Вимкнено кеш налаштувань користувача"
+
+#: .\users\services\profile_cache_service.py:291
+msgid "Disabled profile cache for user"
+msgstr "Вимкнено кеш профілю користувача"
+
+#: .\users\services\profile_cache_service.py:303
+msgid "Cache warmed up for the user"
+msgstr "Кеш прогріто для користувача"
+
+#: .\users\services\profile_cache_service.py:305
+msgid "Error while warming up the user cache"
+msgstr "Помилка під час прогріву кешу користувача"
+
+#: .\users\tests\test_utils\test_csrf_token.py:27
+#: .\users\utils\csrf_token.py:14
+msgid "CSRF cookie set"
+msgstr "CSRF cookie встановлено"
+
+#: .\users\tests\test_views\test_auth_views.py:75
+#: .\users\tests\test_views\test_auth_views.py:92
+#: .\users\tests\test_views\test_auth_views.py:109 .\users\views.py:178
+msgid "Required fields are missing: email or password."
+msgstr "Не заповнено обов'язкові поля: email або пароль."
+
+#: .\users\tests\test_views\test_auth_views.py:148
+#: .\users\tests\test_views\test_auth_views.py:552 .\users\views.py:191
+msgid "Incorrect email or password."
+msgstr "Неправильний email або пароль."
+
+#: .\users\tests\test_views\test_auth_views.py:170 .\users\views.py:194
+#: .\users\views.py:289
+msgid "Account is inactive."
+msgstr "Обліковий запис неактивний."
+
+#: .\users\tests\test_views\test_auth_views.py:194 .\users\views.py:197
+#: .\users\views.py:292
+msgid "Email not confirmed. Please check your email."
+msgstr "Email не підтверджено. Будь ласка, перевірте свою пошту."
+
+#: .\users\tests\test_views\test_auth_views.py:204
+#: .\users\tests\test_views\test_auth_views.py:1031 .\users\views.py:131
+#: .\users\views.py:219 .\users\views.py:303 .\users\views.py:362
+#: .\users\views.py:411 .\users\views.py:472
+msgid "Invalid JSON format."
+msgstr "Неправильний формат JSON."
+
+#: .\users\tests\test_views\test_auth_views.py:347 .\users\views.py:221
+msgid "Login error:"
+msgstr "Помилка входу:"
+
+#: .\users\tests\test_views\test_auth_views.py:998 .\users\views.py:91
+msgid "First and last names cannot be left blank."
+msgstr "Ім'я та прізвище не можуть бути порожніми."
+
+#: .\users\tests\test_views\test_auth_views.py:1020 .\users\views.py:129
+msgid "Email already registered."
+msgstr "Цей email вже зареєстровано."
+
+#: .\users\tests\test_views\test_auth_views.py:1309 .\users\views.py:165
+msgid "The confirmation link has expired."
+msgstr "Термін дії посилання для підтвердження закінчився."
+
+#: .\users\tests\test_views\test_auth_views.py:1325 .\users\views.py:167
+msgid "Invalid token for confirmation."
+msgstr "Недійсний токен для підтвердження."
+
+#: .\users\tests\test_views\test_auth_views.py:1346 .\users\views.py:163
+#: .\users\views.py:286 .\users\views.py:323 .\users\views.py:356
+msgid "No user with this email address was found."
+msgstr "Користувача з таким email не знайдено."
+
+#: .\users\tests\test_views\test_auth_views.py:1370 .\users\views.py:150
+msgid "Email already confirmed."
+msgstr "Email вже підтверджено."
+
+#: .\users\tests\test_views\test_oauth_views.py:94
+#: .\users\tests\test_views\test_oauth_views.py:113
+#: .\users\tests\test_views\test_oauth_views.py:132
+#: .\users\tests\test_views\test_oauth_views.py:375
+#: .\users\tests\test_views\test_oauth_views.py:441 .\users\views.py:234
+msgid "No credential provided"
+msgstr "Повноваження не надані"
+
+#: .\users\user_utils.py:11
+msgid "Email confirmation for SmartStudy"
+msgstr "Підтвердження email для SmartStudy"
+
+#: .\users\user_utils.py:21
+msgid "Password recovery for SmartStudy"
+msgstr "Відновлення пароля для SmartStudy"
+
+#: .\users\utils\email_templates.py:10 .\users\utils\email_templates.py:29
+msgid "Thank you for registering with SmartStudy!"
+msgstr "Дякуємо за реєстрацію в SmartStudy!"
+
+#: .\users\utils\email_templates.py:11
+msgid "To complete your registration and activate your account, please confirm your email address."
+msgstr "Для завершення реєстрації та активації акаунту, будь ласка, підтвердьте свій email."
+
+#: .\users\utils\email_templates.py:14
+msgid "Confirm email"
+msgstr "Підтвердити email"
+
+#: .\users\utils\email_templates.py:17 .\users\utils\email_templates.py:36
+msgid "If you have not registered with SmartStudy, please disregard this letter."
+msgstr "Якщо ви не реєструвалися в SmartStudy, проігноруйте цей лист."
+
+#: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:38
+#: .\users\utils\email_templates.py:57 .\users\utils\email_templates.py:77
+msgid "Sincerely,"
+msgstr "З повагою,"
+
+#: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:57
+msgid "The SmartStudy team"
+msgstr "Команда SmartStudy"
+
+#: .\users\utils\email_templates.py:32
+msgid "To complete your registration and activate your account, please confirm your email address by clicking on the link:"
+msgstr "Щоб активувати свій акаунт, підтвердьте email за посиланням:"
+
+#: .\users\utils\email_templates.py:39 .\users\utils\email_templates.py:78
+msgid "The SmartStudy Team"
+msgstr "Команда SmartStudy"
+
+#: .\users\utils\email_templates.py:49 .\users\utils\email_templates.py:69
+msgid "You have received this letter because a request has been made to reset the password for your SmartStudy account."
+msgstr "Ви отримали цей лист, оскільки було надіслано запит на скидання пароля для вашого акаунту SmartStudy."
+
+#: .\users\utils\email_templates.py:50
+msgid "To reset your password, please follow the link below:"
+msgstr "Щоб скинути пароль, перейдіть за посиланням нижче:"
+
+#: .\users\utils\email_templates.py:53
+msgid "Reset password"
+msgstr "Скинути пароль"
+
+#: .\users\utils\email_templates.py:56 .\users\utils\email_templates.py:75
+msgid "If you did not request a password reset, please ignore this email."
+msgstr "Якщо ви не запитували скидання пароля, проігноруйте цей лист."
+
+#: .\users\utils\email_templates.py:72
+msgid "To reset your password, please follow this link:"
+msgstr "Щоб скинути пароль, перейдіть за цим посиланням:"
+
+#: .\users\utils\validators.py:7 .\users\utils\validators.py:29
+msgid "Incorrect email format."
+msgstr "Неправильний формат email."
+
+#: .\users\utils\validators.py:11
+msgid "The phone number must contain between 10 and 15 digits, including the prefix."
+msgstr "Номер телефону має містити від 10 до 15 цифр, включаючи префікс."
+
+#: .\users\views.py:49
+msgid "Required field missing:"
+msgstr "Відсутнє обов'язкове поле:"
+
+#: .\users\views.py:84
+msgid "Error during validation:"
+msgstr "Помилка під час валідації:"
+
+#: .\users\views.py:126
+msgid "Please confirm your email address."
+msgstr "Будь ласка, підтвердьте свою електронну пошту."
+
+#: .\users\views.py:133
+msgid "Error during registration:"
+msgstr "Помилка під час реєстрації:"
+
+#: .\users\views.py:143
+msgid "Invalid token. The ‘token’ parameter is missing."
+msgstr "Недійсний токен. Параметр ‘token’ відсутній."
+
+#: .\users\views.py:268
+msgid "No email address provided."
+msgstr "Email не вказано."
+
+#: .\users\views.py:279
+msgid "A password reset request has been sent. Please check your email or try again in 5 minutes."
+msgstr "Запит на скидання пароля надіслано. Перевірте пошту або спробуйте знову за 5 хвилин."
+
+#: .\users\views.py:299
+msgid "Please check your email for a password reset link."
+msgstr "Перевірте пошту для отримання посилання на скидання пароля."
+
+#: .\users\views.py:301
+msgid "Missing field: email"
+msgstr "Відсутнє поле: email"
+
+#: .\users\views.py:305
+msgid "Error processing request:"
+msgstr "Помилка обробки запиту:"
+
+#: .\users\views.py:315
+msgid "No token to reset the password."
+msgstr "Відсутній токен для скидання пароля."
+
+#: .\users\views.py:325 .\users\views.py:358
+msgid "The token for resetting the password has expired."
+msgstr "Термін дії токена для скидання пароля закінчився."
+
+#: .\users\views.py:327 .\users\views.py:360
+msgid "Invalid token for password reset."
+msgstr "Недійсний токен для скидання пароля."
+
+#: .\users\views.py:335
+msgid "Required fields are missing: token or password."
+msgstr "Відсутні обов'язкові поля: токен або пароль."
+
+#: .\users\views.py:354
+msgid "Password reset successful."
+msgstr "Пароль успішно скинуто."
+
+#: .\users\views.py:364
+msgid "Error when resetting password:"
+msgstr "Помилка скидання пароля:"
+
+#: .\users\views.py:372
+msgid "You have successfully logged out."
+msgstr "Ви успішно вийшли з системи."
+
+#: .\users\views.py:384
+msgid "Required fields are missing: current_password, new_password, or confirm_password."
+msgstr "Відсутні поля: поточний пароль, новий пароль або підтвердження."
+
+#: .\users\views.py:391
+msgid "The new password and password confirmation do not match."
+msgstr "Новий пароль та підтвердження не збігаються."
+
+#: .\users\views.py:400
+msgid "Incorrect current password."
+msgstr "Неправильний поточний пароль."
+
+#: .\users\views.py:409
+msgid "Password successfully changed."
+msgstr "Пароль успішно змінено."
+
+#: .\users\views.py:413
+msgid "Error when changing password:"
+msgstr "Помилка зміни пароля:"
+
+#: .\users\views.py:424
+msgid "Error retrieving profile:"
+msgstr "Помилка отримання профілю:"
+
+#: .\users\views.py:431
+msgid "File not found."
+msgstr "Файл не знайдено."
+
+#: .\users\views.py:445
+msgid "Avatar successfully uploaded."
+msgstr "Аватар успішно завантажено."
+
+#: .\users\views.py:451
+msgid "Error loading avatar:"
+msgstr "Помилка завантаження аватара:"
+
+#: .\users\views.py:467
+msgid "Profile successfully updated."
+msgstr "Профіль успішно оновлено."
+
+#: .\users\views.py:479
+msgid "Error updating profile:"
+msgstr "Помилка оновлення профілю:"
+
+#: .\users\views.py:498
+msgid "Your account has been successfully deleted."
+msgstr "Ваш акаунт успішно видалено."
+
+#: .\users\views.py:500
+msgid "Error when deleting an account:"
+msgstr "Помилка видалення акаунта:"
+
+#: .\users\views.py:513
+msgid "User not found."
+msgstr "Користувача не знайдено."
+
+#: .\users\views.py:515
+msgid "Error retrieving user info:"
+msgstr "Помилка отримання інформації про користувача:"
+
+#: .\users\views.py:529
+msgid "Object not found."
+msgstr "Об'єкт не знайдено."
+
+#: .\users\views.py:531
+msgid "Error retrieving user stats:"
+msgstr "Помилка отримання статистики користувача:"
+
+#: .\users_calendar\admin.py:20
+msgid "Main Information"
+msgstr "Основна інформація"
+
+#: .\users_calendar\admin.py:23
+msgid "Date & Status"
+msgstr "Дата та статус"
+
+#: .\users_calendar\admin.py:26
+msgid "Additional Details"
+msgstr "Додаткові деталі"
+
+#: .\users_calendar\admin.py:51
+msgid "Links"
+msgstr "Посилання"
+
+#: .\users_calendar\admin.py:54
+msgid "Event Details"
+msgstr "Деталі події"
+
+#: .\users_calendar\admin.py:57
+msgid "System"
+msgstr "Система"
+
+#: .\users_calendar\apps.py:8
+msgid "Users Calendar"
+msgstr "Календар користувачів"
+
+#: .\users_calendar\models.py:17
+msgid "Calendar owner"
+msgstr "Власник календаря"
+
+#: .\users_calendar\models.py:21 .\users_calendar\models.py:50
+#: .\users_calendar\models.py:92
+msgid "Calendar"
+msgstr "Календар"
+
+#: .\users_calendar\models.py:25
+msgid "User calendar"
+msgstr "Календар користувача"
+
+#: .\users_calendar\models.py:26
+msgid "User calendars"
+msgstr "Календарі користувачів"
+
+#: .\users_calendar\models.py:30
+msgid "Low"
+msgstr "Низький"
+
+#: .\users_calendar\models.py:31
+msgid "Medium"
+msgstr "Середній"
+
+#: .\users_calendar\models.py:32
+msgid "High"
+msgstr "Високий"
+
+#: .\users_calendar\models.py:37
+msgid "Event date"
+msgstr "Дата події"
+
+#: .\users_calendar\models.py:56
+msgid "Importance"
+msgstr "Важливість"
+
+#: .\users_calendar\models.py:63 .\users_calendar\models.py:117
+msgid "Is completed"
+msgstr "Завершено"
+
+#: .\users_calendar\models.py:80 .\users_calendar\tasks.py:36
+msgid "Personal events"
+msgstr "Особисті події"
+
+#: .\users_calendar\models.py:114
+msgid "Note"
+msgstr "Примітка"
+
+#: .\users_calendar\models.py:125
+msgid "Course event"
+msgstr "Подія курсу"
+
+#: .\users_calendar\models.py:126
+msgid "Course events"
+msgstr "Події курсу"
+
+#: .\users_calendar\tasks.py:55
+msgid "Curriculum"
+msgstr "Навчальний план"
+
+#: .\users_calendar\tasks.py:57
+msgid "Testing"
+msgstr "Тестування"
+
+#: .\users_calendar\tasks.py:64
+msgid "Time to learn!"
+msgstr "Час навчатися!"
+
+#: .\users_calendar\tasks.py:73
+msgid "Your plan for today"
+msgstr "Ваш план на сьогодні"
+
+#: .\users_calendar\tasks.py:76
+msgid "Open the calendar"
+msgstr "Відкрити календар"
+
+#: .\users_calendar\views\course_planing_views.py:68
+msgid "Event not found"
+msgstr "Подію не знайдено"

@@ -1,0 +1,1924 @@
+# SmartStudy English Translation.
+# Copyright (C) 2026 SmartStudy Team
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SmartStudy 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-31 16:30+0300\n"
+"PO-Revision-Date: 2026-03-31 17:00+0300\n"
+"Last-Translator: Gemini\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\common\decorators\login_required_async.py:14
+msgid "The user is not authorized."
+msgstr "The user is not authorized."
+
+#: .\common\middleware.py:62
+msgid "Too many requests. Try again later."
+msgstr "Too many requests. Try again later."
+
+#: .\common\middleware.py:127
+msgid "Session security violation. Please login again."
+msgstr "Session security violation. Please login again."
+
+#: .\common\services\markdown_generator.py:22
+msgid "Methodological notes"
+msgstr "Methodological notes"
+
+#: .\common\services\markdown_generator.py:35
+msgid "Open the video separately"
+msgstr "Open the video separately"
+
+#: .\common\services\markdown_generator.py:88
+msgid "Task"
+msgstr "Task"
+
+#: .\common\services\markdown_generator.py:96
+msgid "Join the meeting"
+msgstr "Join the meeting"
+
+#: .\common\services\markdown_generator.py:96
+msgid "Useful link"
+msgstr "Useful link"
+
+#: .\common\services\markdown_generator.py:103
+msgid "Video lesson"
+msgstr "Video lesson"
+
+#: .\common\services\markdown_generator.py:106
+msgid "Audio recording"
+msgstr "Audio recording"
+
+#: .\common\services\markdown_generator.py:112
+msgid "Download the presentation"
+msgstr "Download the presentation"
+
+#: .\common\services\markdown_generator.py:115
+msgid "Download the document"
+msgstr "Download the document"
+
+#: .\common\services\picture_service.py:23
+msgid "Unsupported instance type"
+msgstr "Unsupported instance type"
+
+#: .\common\services\picture_service.py:44
+msgid "Unable to delete previous photo:"
+msgstr "Unable to delete previous photo:"
+
+#: .\common\services\picture_service.py:67
+#: .\courses\services\structure_course_module_action_service\save_files_in_supabase.py:56
+msgid "Failed to upload file:"
+msgstr "Failed to upload file:"
+
+#: .\common\services\picture_service.py:105
+msgid "Error when deleting a file from Supabase:"
+msgstr "Error when deleting a file from Supabase:"
+
+#: .\common\services\picture_service.py:106
+msgid "Unable to delete image:"
+msgstr "Unable to delete image:"
+
+#: .\common\services\picture_validation_service.py:67
+msgid "File extension not allowed."
+msgstr "File extension not allowed."
+
+#: .\common\services\picture_validation_service.py:115
+msgid "File signature does not match declared type"
+msgstr "File signature does not match declared type"
+
+#: .\common\utils\paginate_list.py:15
+msgid "Page number must be >= 1"
+msgstr "Page number must be >= 1"
+
+#: .\common\utils\sanitize_input.py:31
+msgid "NoSQL injection pattern detected: "
+msgstr "NoSQL injection pattern detected: "
+
+#: .\common\utils\send_template_email.py:12
+msgid "Unable to create activation token."
+msgstr "Unable to create activation token."
+
+#: .\common\utils\send_template_email.py:16
+msgid "Congratulations,"
+msgstr "Congratulations,"
+
+#: .\common\utils\send_template_email.py:16
+msgid "Congratulations!"
+msgstr "Congratulations!"
+
+#: .\common\utils\status_response.py:10
+msgid "Successfully"
+msgstr "Successfully"
+
+#: .\common\utils\status_response.py:10
+msgid "success"
+msgstr "Success"
+
+#: .\common\utils\validate_uuid.py:16
+msgid "Invalid UUID format"
+msgstr "Invalid UUID format"
+
+#: .\common\utils\validate_uuid.py:18
+msgid "Invalid UUID type"
+msgstr "Invalid UUID type"
+
+#: .\core\admin.py:20 .\core\admin.py:23
+msgid "Smart Study"
+msgstr "Smart Study"
+
+#: .\core\admin.py:22
+msgid "Site administration"
+msgstr "Site administration"
+
+#: .\courses\admin.py:60
+#, python-format
+msgid "%d course(s) published."
+msgstr "%d course(s) published."
+
+#: .\courses\admin.py:62
+msgid "Publish selected courses"
+msgstr "Publish selected courses"
+
+#: .\courses\admin.py:69
+#, python-format
+msgid "%d version snapshot(s) created."
+msgstr "%d version snapshot(s) created."
+
+#: .\courses\admin.py:71
+msgid "Create version snapshot(s)"
+msgstr "Create version snapshot(s)"
+
+#: .\courses\admin.py:93 .\notifications\admin.py:39
+#: .\users_calendar\admin.py:76
+msgid "Content"
+msgstr "Content"
+
+#: .\courses\admin.py:112 .\courses\models\test.py:162
+msgid "Public"
+msgstr "Public"
+
+#: .\courses\admin.py:114
+msgid "Context"
+msgstr "Context"
+
+#: .\courses\admin.py:137
+#, python-format
+msgid "%d enrollment(s) marked as completed."
+msgstr "%d enrollment(s) marked as completed."
+
+#: .\courses\admin.py:139
+msgid "Mark selected enrollments as completed"
+msgstr "Mark selected enrollments as completed"
+
+#: .\courses\admin.py:167
+#, python-format
+msgid "%d review(s) verified."
+msgstr "%d review(s) verified."
+
+#: .\courses\admin.py:169
+msgid "Verify selected reviews"
+msgstr "Verify selected reviews"
+
+#: .\courses\admin.py:182
+#, python-format
+msgid "%d certificate(s) revoked."
+msgstr "%d certificate(s) revoked."
+
+#: .\courses\admin.py:184
+msgid "Revoke selected certificates"
+msgstr "Revoke selected certificates"
+
+#: .\courses\apps.py:8 .\courses\models\course.py:134
+msgid "Courses"
+msgstr "Courses"
+
+#: .\courses\choices.py:4
+msgid "Beginner"
+msgstr "Beginner"
+
+#: .\courses\choices.py:5
+msgid "Intermediate"
+msgstr "Intermediate"
+
+#: .\courses\choices.py:6
+msgid "Advanced"
+msgstr "Advanced"
+
+#: .\courses\choices.py:11
+msgid "Not Started"
+msgstr "Not Started"
+
+#: .\courses\choices.py:12
+msgid "In Progress"
+msgstr "In Progress"
+
+#: .\courses\choices.py:13 .\courses\models\enrollment.py:54
+msgid "Completed"
+msgstr "Completed"
+
+#: .\courses\choices.py:27
+msgid "Programming"
+msgstr "Programming"
+
+#: .\courses\choices.py:28
+msgid "Data Science"
+msgstr "Data Science"
+
+#: .\courses\choices.py:29
+msgid "Design"
+msgstr "Design"
+
+#: .\courses\choices.py:30
+msgid "Marketing"
+msgstr "Marketing"
+
+#: .\courses\choices.py:31
+msgid "Business"
+msgstr "Business"
+
+#: .\courses\choices.py:32
+msgid "Personal Development"
+msgstr "Personal Development"
+
+#: .\courses\choices.py:33
+msgid "Health & Fitness"
+msgstr "Health & Fitness"
+
+#: .\courses\choices.py:34
+msgid "Music"
+msgstr "Music"
+
+#: .\courses\choices.py:35
+msgid "Photography"
+msgstr "Photography"
+
+#: .\courses\choices.py:36
+msgid "Language Learning"
+msgstr "Language Learning"
+
+#: .\courses\choices.py:41
+msgid "Video"
+msgstr "Video"
+
+#: .\courses\choices.py:42
+msgid "Audio"
+msgstr "Audio"
+
+#: .\courses\choices.py:43
+msgid "Document"
+msgstr "Document"
+
+#: .\courses\choices.py:44
+msgid "Presentation"
+msgstr "Presentation"
+
+#: .\courses\choices.py:45 .\users_calendar\models.py:62
+#: .\users_calendar\models.py:115
+msgid "Link"
+msgstr "Link"
+
+#: .\courses\choices.py:46
+msgid "Custom"
+msgstr "Custom"
+
+#: .\courses\choices.py:51
+msgid "Active"
+msgstr "Active"
+
+#: .\courses\choices.py:52
+msgid "Revoked"
+msgstr "Revoked"
+
+#: .\courses\choices.py:53
+msgid "Expired"
+msgstr "Expired"
+
+#: .\courses\decorators\course_decorators.py:15
+msgid "Course ID not provided."
+msgstr "Course ID not provided."
+
+#: .\courses\decorators\module_decorators.py:24
+msgid "Course ID not provided for module creation."
+msgstr "Course ID not provided for module creation."
+
+#: .\courses\decorators\module_decorators.py:31
+msgid "Module ID not provided."
+msgstr "Module ID not provided."
+
+#: .\courses\decorators\role_decorators.py:13
+msgid "Only teachers can make changes to courses."
+msgstr "Only teachers can make changes to courses."
+
+#: .\courses\decorators\test_decorators.py:27
+msgid "No data provided for test creation."
+msgstr "No data provided for test creation."
+
+#: .\courses\decorators\test_decorators.py:38
+msgid "Cannot determine target course or module."
+msgstr "Cannot determine target course or module."
+
+#: .\courses\decorators\test_decorators.py:46
+#: .\courses\decorators\validators.py:71
+msgid "Test not found."
+msgstr "Test not found."
+
+#: .\courses\decorators\test_decorators.py:55
+msgid "Test is not linked to course or module."
+msgstr "Test is not linked to course or module."
+
+#: .\courses\decorators\validators.py:18
+#: .\courses\views\certificate_views.py:39
+#: .\courses\views\course_statistic_for_owner.py:28
+#: .\courses\views\user_course_enrollment_views.py:59
+msgid "Course not found."
+msgstr "Course not found."
+
+#: .\courses\decorators\validators.py:25
+msgid "Cannot modify a published course."
+msgstr "Cannot modify a published course."
+
+#: .\courses\decorators\validators.py:37 .\courses\decorators\validators.py:54
+msgid "Module not found."
+msgstr "Module not found."
+
+#: .\courses\decorators\validators.py:61
+msgid "Cannot modify modules of a published course."
+msgstr "Cannot modify modules of a published course."
+
+#: .\courses\models\certificate.py:36 .\courses\models\course_review.py:19
+#: .\courses\models\enrollment.py:43 .\courses\models\test_attempt.py:42
+#: .\courses\models\wishlist.py:29 .\notifications\models.py:22
+#: .\users\admin.py:57 .\users\models.py:51 .\users\models.py:61
+#: .\users\models.py:65 .\users\models.py:92 .\users_calendar\admin.py:37
+#: .\users_calendar\admin.py:68
+msgid "User"
+msgstr "User"
+
+#: .\courses\models\certificate.py:42 .\courses\models\course.py:129
+#: .\courses\models\course.py:133 .\courses\models\course_meta.py:42
+#: .\courses\models\course_review.py:13 .\courses\models\course_version.py:57
+#: .\courses\models\enrollment.py:44 .\courses\models\module.py:32
+#: .\courses\models\test.py:59 .\courses\models\wishlist.py:35
+#: .\notifications\models.py:31 .\users_calendar\models.py:98
+msgid "Course"
+msgstr "Course"
+
+#: .\courses\models\certificate.py:44
+msgid "Issued at"
+msgstr "Issued at"
+
+#: .\courses\models\certificate.py:45
+msgid "Certificate ID"
+msgstr "Certificate ID"
+
+#: .\courses\models\certificate.py:46
+msgid "Is valid"
+msgstr "Is valid"
+
+#: .\courses\models\certificate.py:55 .\courses\models\certificate.py:69
+#: .\users\models.py:78
+msgid "Certificate"
+msgstr "Certificate"
+
+#: .\courses\models\certificate.py:56
+msgid "Certificates"
+msgstr "Certificates"
+
+#: .\courses\models\course.py:44 .\courses\models\course_version.py:36
+msgid "Course title"
+msgstr "Course title"
+
+#: .\courses\models\course.py:45 .\courses\models\course_version.py:37
+msgid "Course description"
+msgstr "Course description"
+
+#: .\courses\models\course.py:46 .\courses\models\course_version.py:38
+#: .\courses\models\test.py:96
+msgid "Category"
+msgstr "Category"
+
+#: .\courses\models\course.py:51 .\courses\models\course_version.py:39
+msgid "Course owner"
+msgstr "Course owner"
+
+#: .\courses\models\course.py:53 .\courses\models\course_version.py:40
+msgid "Cover image URL"
+msgstr "Cover image URL"
+
+#: .\courses\models\course.py:54
+msgid "Is published"
+msgstr "Is published"
+
+#: .\courses\models\course.py:55 .\courses\models\course_review.py:26
+#: .\users\models.py:43
+msgid "Created at"
+msgstr "Created at"
+
+#: .\courses\models\course.py:56
+msgid "Published at"
+msgstr "Published at"
+
+#: .\courses\models\course.py:57
+msgid "Updated at"
+msgstr "Updated at"
+
+#: .\courses\models\course.py:58
+msgid "Course version"
+msgstr "Course version"
+
+#: .\courses\models\course.py:59
+msgid "Mongo id for course structure"
+msgstr "Mongo id for course structure"
+
+#: .\courses\models\course.py:64
+msgid "Image not found."
+msgstr "Image not found."
+
+#: .\courses\models\course_meta.py:43
+msgid "Total modules"
+msgstr "Total modules"
+
+#: .\courses\models\course_meta.py:44
+msgid "Total lessons"
+msgstr "Total lessons"
+
+#: .\courses\models\course_meta.py:45
+msgid "Total tests"
+msgstr "Total tests"
+
+#: .\courses\models\course_meta.py:46
+msgid "Time to complete course"
+msgstr "Time to complete course"
+
+#: .\courses\models\course_meta.py:47
+msgid "Course language"
+msgstr "Course language"
+
+#: .\courses\models\course_meta.py:53
+msgid "Course rating"
+msgstr "Course rating"
+
+#: .\courses\models\course_meta.py:55
+msgid "Course level"
+msgstr "Course level"
+
+#: .\courses\models\course_meta.py:56
+msgid "Count is completed course"
+msgstr "Count is completed course"
+
+#: .\courses\models\course_meta.py:57
+msgid "Count active course"
+msgstr "Count active course"
+
+#: .\courses\models\course_meta.py:58
+msgid "Review count"
+msgstr "Review count"
+
+#: .\courses\models\course_meta.py:59
+msgid "Feedback summary"
+msgstr "Feedback summary"
+
+#: .\courses\models\course_meta.py:119
+msgid "CourseMeta"
+msgstr "CourseMeta"
+
+#: .\courses\models\course_meta.py:123
+msgid "Course detail"
+msgstr "Course detail"
+
+#: .\courses\models\course_meta.py:124
+msgid "Course details"
+msgstr "Course details"
+
+#: .\courses\models\course_review.py:23
+msgid "Rating (1-5)"
+msgstr "Rating (1-5)"
+
+#: .\courses\models\course_review.py:25
+msgid "Comment"
+msgstr "Comment"
+
+#: .\courses\models\course_review.py:27
+msgid "Is verified"
+msgstr "Is verified"
+
+#: .\courses\models\course_review.py:31
+msgid "Course Review"
+msgstr "Course Review"
+
+#: .\courses\models\course_review.py:32
+msgid "Course Reviews"
+msgstr "Course Reviews"
+
+#: .\courses\models\course_version.py:34
+msgid "Original course ID"
+msgstr "Original course ID"
+
+#: .\courses\models\course_version.py:35
+msgid "Version number"
+msgstr "Version number"
+
+#: .\courses\models\course_version.py:41
+msgid "Course snapshot data"
+msgstr "Course snapshot data"
+
+#: .\courses\models\course_version.py:42
+msgid "Version created at"
+msgstr "Version created at"
+
+#: .\courses\models\course_version.py:46
+msgid "Course Version"
+msgstr "Course Version"
+
+#: .\courses\models\course_version.py:47
+msgid "Course Versions"
+msgstr "Course Versions"
+
+#: .\courses\models\enrollment.py:45
+msgid "Course version at enrollment"
+msgstr "Course version at enrollment"
+
+#: .\courses\models\enrollment.py:46
+msgid "Enrolled at"
+msgstr "Enrolled at"
+
+#: .\courses\models\enrollment.py:52
+msgid "Progress"
+msgstr "Progress"
+
+#: .\courses\models\enrollment.py:55 .\courses\models\lesson_progress.py:43
+#: .\courses\models\test_attempt.py:52 .\users_calendar\models.py:64
+msgid "Completed at"
+msgstr "Completed at"
+
+#: .\courses\models\enrollment.py:56 .\courses\models\lesson_progress.py:44
+#: .\courses\models\test_attempt.py:53
+msgid "Time spent"
+msgstr "Time spent"
+
+#: .\courses\models\enrollment.py:103
+msgid "User Course Enrollment"
+msgstr "User Course Enrollment"
+
+#: .\courses\models\enrollment.py:104
+msgid "User Course Enrollments"
+msgstr "User Course Enrollments"
+
+#: .\courses\models\lesson.py:18 .\courses\models\module.py:38
+#: .\courses\models\module.py:42 .\courses\models\test.py:67
+msgid "Module"
+msgstr "Module"
+
+#: .\courses\models\lesson.py:22
+msgid "Lesson title"
+msgstr "Lesson title"
+
+#: .\courses\models\lesson.py:28
+msgid "Lesson description"
+msgstr "Lesson description"
+
+#: .\courses\models\lesson.py:34
+msgid "Lesson content type"
+msgstr "Lesson content type"
+
+#: .\courses\models\lesson.py:39
+msgid "Content (Markdown)"
+msgstr "Content (Markdown)"
+
+#: .\courses\models\lesson.py:42
+msgid "Lesson order"
+msgstr "Lesson order"
+
+#: .\courses\models\lesson.py:46
+msgid "Lesson duration"
+msgstr "Lesson duration"
+
+#: .\courses\models\lesson.py:53
+msgid "Content length exceeds 7000 characters."
+msgstr "Content length exceeds 7000 characters."
+
+#: .\courses\models\lesson.py:61 .\courses\models\lesson.py:65
+#: .\courses\models\lesson_progress.py:40
+msgid "Lesson"
+msgstr "Lesson"
+
+#: .\courses\models\lesson.py:66
+msgid "Lessons"
+msgstr "Lessons"
+
+#: .\courses\models\lesson_progress.py:34 .\courses\models\test_attempt.py:35
+msgid "Enrollment"
+msgstr "Enrollment"
+
+#: .\courses\models\lesson_progress.py:42 .\courses\models\test_attempt.py:51
+msgid "Started at"
+msgstr "Started at"
+
+#: .\courses\models\lesson_progress.py:45
+msgid "Completion percentage"
+msgstr "Completion percentage"
+
+#: .\courses\models\lesson_progress.py:46
+msgid "Notes"
+msgstr "Notes"
+
+#: .\courses\models\lesson_progress.py:50
+msgid "Lesson Progress"
+msgstr "Lesson Progress"
+
+#: .\courses\models\lesson_progress.py:51
+msgid "Lesson Progresses"
+msgstr "Lesson Progresses"
+
+#: .\courses\models\module.py:33
+msgid "Module title"
+msgstr "Module title"
+
+#: .\courses\models\module.py:34
+msgid "Module order"
+msgstr "Module order"
+
+#: .\courses\models\module.py:35
+msgid "Mongo id for module structure"
+msgstr "Mongo id for module structure"
+
+#: .\courses\models\module.py:43
+msgid "Modules"
+msgstr "Modules"
+
+#: .\courses\models\test.py:69
+msgid "Test title"
+msgstr "Test title"
+
+#: .\courses\models\test.py:70
+msgid "Test description"
+msgstr "Test description"
+
+#: .\courses\models\test.py:71
+msgid "Time limit (in minutes)"
+msgstr "Time limit (in minutes)"
+
+#: .\courses\models\test.py:72
+msgid "Count attempts"
+msgstr "Count attempts"
+
+#: .\courses\models\test.py:76
+msgid "Pass score"
+msgstr "Pass score"
+
+#: .\courses\models\test.py:78
+msgid "Randomize questions"
+msgstr "Randomize questions"
+
+#: .\courses\models\test.py:79
+msgid "Show correct answers"
+msgstr "Show correct answers"
+
+#: .\courses\models\test.py:80
+msgid "Mongo document ID"
+msgstr "Mongo document ID"
+
+#: .\courses\models\test.py:81
+msgid "Test order"
+msgstr "Test order"
+
+#: .\courses\models\test.py:82
+msgid "Is public"
+msgstr "Is public"
+
+#: .\courses\models\test.py:89
+msgid "Test owner (public tests only)"
+msgstr "Test owner (public tests only)"
+
+#: .\courses\models\test.py:104
+msgid "Test level"
+msgstr "Test level"
+
+#: .\courses\models\test.py:140
+msgid "Public test cannot be linked to course or module"
+msgstr "Public test cannot be linked to course or module"
+
+#: .\courses\models\test.py:142
+msgid "Public test must have an owner"
+msgstr "Public test must have an owner"
+
+#: .\courses\models\test.py:146
+msgid "Non-public test must be linked to either course or module"
+msgstr "Non-public test must be linked to either course or module"
+
+#: .\courses\models\test.py:148
+msgid "Test cannot be linked to both course and module"
+msgstr "Test cannot be linked to both course and module"
+
+#: .\courses\models\test.py:150
+msgid "Module must belong to the specified course"
+msgstr "Module must belong to the specified course"
+
+#: .\courses\models\test.py:165 .\courses\models\test.py:169
+#: .\courses\models\test_attempt.py:49
+msgid "Test"
+msgstr "Test"
+
+#: .\courses\models\test.py:170
+msgid "Tests"
+msgstr "Tests"
+
+#: .\courses\models\test_attempt.py:54
+msgid "Score"
+msgstr "Score"
+
+#: .\courses\models\test_attempt.py:55
+msgid "Passed"
+msgstr "Passed"
+
+#: .\courses\models\test_attempt.py:56
+msgid "Attempt Number"
+msgstr "Attempt Number"
+
+#: .\courses\models\test_attempt.py:57
+msgid "Attempt Details"
+msgstr "Attempt Details"
+
+#: .\courses\models\test_attempt.py:61
+msgid "Test Attempt"
+msgstr "Test Attempt"
+
+#: .\courses\models\test_attempt.py:62
+msgid "Test Attempts"
+msgstr "Test Attempts"
+
+#: .\courses\models\wishlist.py:37
+msgid "Added at"
+msgstr "Added at"
+
+#: .\courses\models\wishlist.py:41
+msgid "Wishlist"
+msgstr "Wishlist"
+
+#: .\courses\models\wishlist.py:42
+msgid "Wishlists"
+msgstr "Wishlists"
+
+#: .\courses\services\cache_service\category_level_all_for_instance_cache.py:67
+#: .\courses\services\cache_service\category_level_all_for_instance_cache.py:68
+#: .\courses\services\cache_service\instance_by_id_cache.py:56
+#: .\courses\services\cache_service\instance_by_id_cache.py:57
+#: .\courses\services\cache_service\instance_cache_by_id_author.py:58
+#: .\courses\services\cache_service\instance_cache_by_id_author.py:59
+msgid "Unsupported instance type for caching"
+msgstr "Unsupported instance type for caching"
+
+#: .\courses\services\cache_service\instance_by_id_cache.py:91
+#: .\users\services\profile_cache_service.py:250
+#: .\users\services\profile_cache_service.py:282
+#: .\users\services\profile_cache_service.py:291
+msgid "successfully"
+msgstr "successfully"
+
+#: .\courses\services\cache_service\instance_by_id_cache.py:91
+#: .\users\services\profile_cache_service.py:250
+#: .\users\services\profile_cache_service.py:282
+#: .\users\services\profile_cache_service.py:291
+msgid "key not found"
+msgstr "key not found"
+
+#: .\courses\services\course_actions_service\get_courses.py:60
+#: .\courses\services\test_actions_service\get_test.py:36
+msgid "Author not found"
+msgstr "Author not found"
+
+#: .\courses\services\course_actions_service\get_courses.py:64
+#: .\courses\services\course_actions_service\get_courses.py:66
+msgid "Error receiving courses by author id"
+msgstr "Error receiving courses by author id"
+
+#: .\courses\services\course_actions_service\get_courses.py:97
+msgid "Error retrieving courses from DB:"
+msgstr "Error retrieving courses from DB:"
+
+#: .\courses\services\course_actions_service\get_courses.py:98
+msgid "Error retrieving courses from DB"
+msgstr "Error retrieving courses from DB"
+
+#: .\courses\services\course_actions_service\get_courses.py:115
+#: .\courses\views\course_views.py:124 .\courses\views\course_views.py:138
+#: .\courses\views\course_views.py:157
+msgid "Course not found"
+msgstr "Course not found"
+
+#: .\courses\services\course_actions_service\get_courses.py:117
+#: .\courses\services\course_actions_service\get_courses.py:119
+msgid "Error receiving courses by id"
+msgstr "Error receiving courses by id"
+
+#: .\courses\services\course_actions_service\publish_course.py:13
+msgid "Missing required field for publish: cover_image"
+msgstr "Missing required field for publish: cover_image"
+
+#: .\courses\services\course_actions_service\publish_course.py:31
+msgid "Cannot publish a course without content."
+msgstr "Cannot publish a course without content."
+
+#: .\courses\services\course_actions_service\remove_course.py:39
+msgid ""
+"A published course cannot be deleted. Published courses can only be edited."
+msgstr ""
+"A published course cannot be deleted. Published courses can only be edited."
+
+#: .\courses\services\course_actions_service\remove_course.py:83
+msgid ""
+"All draft data for the course has been deleted; the published version "
+"remains."
+msgstr ""
+"All draft data for the course has been deleted; the published version "
+"remains."
+
+#: .\courses\services\course_actions_service\remove_course.py:93
+msgid "Course deleted successfully."
+msgstr "Course deleted successfully."
+
+#: .\courses\services\course_actions_service\update_course.py:32
+msgid "No changes detected to update the course."
+msgstr "No changes detected to update the course."
+
+#: .\courses\services\course_review_actions_service\get_reviews.py:35
+#: .\courses\services\course_review_actions_service\get_reviews.py:37
+msgid "Error receiving review of courses"
+msgstr "Error receiving review of courses"
+
+#: .\courses\services\lesson_actions_service\create_markdown.py:78
+msgid "Link URL is missing for lesson type 'link'"
+msgstr "Link URL is missing for lesson type 'link'"
+
+#: .\courses\services\lesson_actions_service\get_lesson.py:22
+msgid "Lesson not found"
+msgstr "Lesson not found"
+
+#: .\courses\services\lesson_actions_service\get_lesson.py:26
+#: .\courses\services\lesson_actions_service\get_lesson.py:28
+msgid "Error receiving lesson"
+msgstr "Error receiving lesson"
+
+#: .\courses\services\module_actons_service\remove_module.py:40
+msgid "Module deleted successfully"
+msgstr "Module deleted successfully"
+
+#: .\courses\services\parsers.py:18
+msgid "Error parsing multipart data:"
+msgstr "Error parsing multipart data:"
+
+#: .\courses\services\structure_course_module_action_service\save_files_in_supabase.py:34
+msgid "File validation error:"
+msgstr "File validation error:"
+
+#: .\courses\services\structure_course_module_action_service\structure_utils.py:22
+msgid "target_type must be 'course' or 'module'"
+msgstr "target_type must be 'course' or 'module'"
+
+#: .\courses\services\test_actions_service\get_test.py:40
+#: .\courses\services\test_actions_service\get_test.py:42
+msgid "Error receiving public tests by author id"
+msgstr "Error receiving public tests by author id"
+
+#: .\courses\services\test_actions_service\get_test.py:74
+#: .\courses\services\test_actions_service\get_test.py:75
+msgid "Error receiving public tests"
+msgstr "Error receiving public tests"
+
+#: .\courses\services\test_actions_service\get_test.py:111
+msgid "Insufficient parameters to retrieve the test"
+msgstr "Insufficient parameters to retrieve the test"
+
+#: .\courses\services\test_actions_service\get_test.py:122
+msgid "Test not found"
+msgstr "Test not found"
+
+#: .\courses\services\test_actions_service\get_test.py:124
+#: .\courses\services\test_actions_service\get_test.py:126
+msgid "Error receiving test by id"
+msgstr "Error receiving test by id"
+
+#: .\courses\services\test_actions_service\prepare_test_for_actions.py:20
+#: .\courses\services\test_actions_service\prepare_test_for_actions.py:32
+msgid "Invalid test type"
+msgstr "Invalid test type"
+
+#: .\courses\services\test_actions_service\prepare_test_for_actions.py:37
+#: .\courses\views\user_course_enrollment_views.py:130
+msgid "Unknown error"
+msgstr "Unknown error"
+
+#: .\courses\services\test_actions_service\update_test.py:12
+msgid "Test updated successfully."
+msgstr "Test updated successfully."
+
+#: .\courses\services\test_actions_service\validators.py:39
+msgid "Cannot add/delete/edit test in a published course"
+msgstr "Cannot add/delete/edit test in a published course"
+
+#: .\courses\services\test_actions_service\validators.py:43
+msgid ""
+"This test cannot be deleted/edited because it is part of a course version"
+msgstr ""
+"This test cannot be deleted/edited because it is part of a course version"
+
+#: .\courses\services\validators.py:15
+msgid "Rating must be between 1 and 5"
+msgstr "Rating must be between 1 and 5"
+
+#: .\courses\services\validators.py:25
+msgid "Missing required field for publish:"
+msgstr "Missing required field for publish:"
+
+#: .\courses\services\validators.py:44
+msgid "Missing required field for public test:"
+msgstr "Missing required field for public test:"
+
+#: .\courses\services\validators.py:48
+msgid "Missing required field for course/module test:"
+msgstr "Missing required field for course/module test:"
+
+#: .\courses\services\validators.py:67
+msgid "Missing required field:"
+msgstr "Missing required field:"
+
+#: .\courses\services\validators.py:78
+msgid ", "
+msgstr ", "
+
+#: .\courses\services\validators.py:103
+msgid "question text must be a non-empty string"
+msgstr "question text must be a non-empty string"
+
+#: .\courses\services\validators.py:112
+msgid "All correct answers must be present in choices"
+msgstr "All correct answers must be present in choices"
+
+#: .\courses\views\certificate_views.py:28
+msgid "Certificate created successfully."
+msgstr "Certificate created successfully."
+
+#: .\courses\views\certificate_views.py:28
+msgid "Certificate already exist."
+msgstr "Certificate already exist."
+
+#: .\courses\views\certificate_views.py:78
+msgid "Certificate not found."
+msgstr "Certificate not found."
+
+#: .\courses\views\certificate_views.py:91
+msgid "Certificate verification successful."
+msgstr "Certificate verification successful."
+
+#: .\courses\views\course_recommendations_views.py:19
+msgid "Invalid status parameter. Must be 'passed' or 'failed'."
+msgstr "Invalid status parameter. Must be 'passed' or 'failed'."
+
+#: .\courses\views\course_recommendations_views.py:27
+msgid ""
+"Invalid limit parameter. Must be an integer or in the interval from 1 to 100"
+msgstr ""
+"Invalid limit parameter. Must be an integer or in the interval from 1 to 100"
+
+#: .\courses\views\course_review_views.py:24
+msgid "course_id parameter is required."
+msgstr "course_id parameter is required."
+
+#: .\courses\views\course_review_views.py:56
+msgid "Review created successfully."
+msgstr "Review created successfully."
+
+#: .\courses\views\course_review_views.py:62
+msgid "Error creating course review:"
+msgstr "Error creating course review:"
+
+#: .\courses\views\course_statistic_for_owner.py:30
+msgid "An error occurred while fetching course statistics:"
+msgstr "An error occurred while fetching course statistics:"
+
+#: .\courses\views\course_views.py:96
+msgid "Course created successfully"
+msgstr "Course created successfully"
+
+#: .\courses\views\course_views.py:103
+msgid "Error creating course:"
+msgstr "Error creating course:"
+
+#: .\courses\views\course_views.py:126
+msgid "Error updating course:"
+msgstr "Error updating course:"
+
+#: .\courses\views\course_views.py:140
+msgid "Course deletion error:"
+msgstr "Course deletion error:"
+
+#: .\courses\views\course_views.py:151
+msgid "Course published successfully"
+msgstr "Course published successfully"
+
+#: .\courses\views\course_views.py:159
+msgid "Error publishing course:"
+msgstr "Error publishing course:"
+
+#: .\courses\views\courses_by_user_views.py:17
+msgid "user id parameter is required."
+msgstr "user id parameter is required."
+
+#: .\courses\views\courses_by_user_views.py:27
+msgid "Error retrieving courses"
+msgstr "Error retrieving courses"
+
+#: .\courses\views\lesson_views.py:13 .\courses\views\test_views.py:68
+msgid "Invalid request"
+msgstr "Invalid request"
+
+#: .\courses\views\lesson_views.py:16
+msgid "Lesson retrieved successfully"
+msgstr "Lesson retrieved successfully"
+
+#: .\courses\views\module_views.py:24
+msgid "Module created successfully."
+msgstr "Module created successfully."
+
+#: .\courses\views\module_views.py:30
+msgid "Error creating module:"
+msgstr "Error creating module:"
+
+#: .\courses\views\module_views.py:40
+msgid "Module deletion error:"
+msgstr "Module deletion error:"
+
+#: .\courses\views\test_views.py:56
+msgid "Unsupported test type"
+msgstr "Unsupported test type"
+
+#: .\courses\views\test_views.py:67
+msgid "Test retrieved successfully"
+msgstr "Test retrieved successfully"
+
+#: .\courses\views\test_views.py:82
+msgid "Test created successfully."
+msgstr "Test created successfully."
+
+#: .\courses\views\test_views.py:91
+msgid "Error creating test:"
+msgstr "Error creating test:"
+
+#: .\courses\views\test_views.py:99
+msgid "No data provided for update"
+msgstr "No data provided for update"
+
+#: .\courses\views\test_views.py:112 .\courses\views\test_views.py:124
+msgid "Test deletion error:"
+msgstr "Test deletion error:"
+
+#: .\courses\views\user_course_enrollment_views.py:28
+#: .\courses\views\user_course_enrollment_views.py:151
+msgid "Enrollment not found"
+msgstr "Enrollment not found"
+
+#: .\courses\views\user_course_enrollment_views.py:48
+msgid "Enrollment created successfully."
+msgstr "Enrollment created successfully."
+
+#: .\courses\views\user_course_enrollment_views.py:48
+msgid "User already enrolled."
+msgstr "User already enrolled."
+
+#: .\courses\views\user_course_enrollment_views.py:100
+msgid "Progress updated successfully"
+msgstr "Progress updated successfully"
+
+#: .\courses\views\user_course_enrollment_views.py:105
+#: .\notifications\views.py:102 .\notifications\views.py:142
+#: .\users_calendar\views\course_planing_views.py:50
+msgid "Invalid JSON"
+msgstr "Invalid JSON"
+
+#: .\courses\views\user_course_enrollment_views.py:121
+msgid "Error retrieving enrollment status"
+msgstr "Error retrieving enrollment status"
+
+#: .\courses\views\user_course_enrollment_views.py:126
+msgid "Enrollment status retrieved successfully"
+msgstr "Enrollment status retrieved successfully"
+
+#: .\courses\views\user_wishlist_views.py:18
+msgid "user id and course id parameters are required."
+msgstr "user id and course id parameters are required."
+
+#: .\courses\views\user_wishlist_views.py:39
+msgid "Course added to wishlist successfully."
+msgstr "Course added to wishlist successfully."
+
+#: .\courses\views\user_wishlist_views.py:40
+msgid "Error add course to wishlist of users:"
+msgstr "Error add course to wishlist of users:"
+
+#: .\courses\views\user_wishlist_views.py:49
+msgid "Course removed from wishlist successfully."
+msgstr "Course removed from wishlist successfully."
+
+#: .\courses\views\user_wishlist_views.py:50
+msgid "Error remove course from wishlist of users:"
+msgstr "Error remove course from wishlist of users:"
+
+#: .\notifications\admin.py:36
+msgid "Key information"
+msgstr "Key information"
+
+#: .\notifications\admin.py:42
+msgid "Links and references"
+msgstr "Links and references"
+
+#: .\notifications\admin.py:44
+msgid "Select a course or event, or provide an external link."
+msgstr "Select a course or event, or provide an external link."
+
+#: .\notifications\admin.py:53
+msgid "User Email"
+msgstr "User Email"
+
+#: .\notifications\admin.py:56
+msgid "Mark selected items as read"
+msgstr "Mark selected items as read"
+
+#: .\notifications\admin.py:59
+msgid "Your selected notifications have been updated."
+msgstr "Your selected notifications have been updated."
+
+#: .\notifications\admin.py:61
+msgid "Mark selected items as unread"
+msgstr "Mark selected items as unread"
+
+#: .\notifications\admin.py:64
+msgid "The status of the notifications has been changed to 'unread'."
+msgstr "The status of the notifications has been changed to 'unread'."
+
+#: .\notifications\apps.py:8 .\notifications\models.py:67
+msgid "Notifications"
+msgstr "Notifications"
+
+#: .\notifications\models.py:9 .\users_calendar\tasks.py:46
+msgid "Event reminder"
+msgstr "Event reminder"
+
+#: .\notifications\models.py:10
+msgid "Message from course owner"
+msgstr "Message from course owner"
+
+#: .\notifications\models.py:11
+msgid "Achievement unlocked"
+msgstr "Achievement unlocked"
+
+#: .\notifications\models.py:12
+msgid "Default"
+msgstr "Default"
+
+#: .\notifications\models.py:39 .\users_calendar\models.py:79
+msgid "Personal event"
+msgstr "Personal event"
+
+#: .\notifications\models.py:42
+msgid "Sent at"
+msgstr "Sent at"
+
+#: .\notifications\models.py:44
+msgid "Notification type"
+msgstr "Notification type"
+
+#: .\notifications\models.py:49
+msgid "Is important"
+msgstr "Is important"
+
+#: .\notifications\models.py:50
+msgid "Is read"
+msgstr "Is read"
+
+#: .\notifications\models.py:52 .\users_calendar\models.py:52
+msgid "Title"
+msgstr "Title"
+
+#: .\notifications\models.py:53
+msgid "Message"
+msgstr "Message"
+
+#: .\notifications\models.py:55
+msgid "External Link"
+msgstr "External Link"
+
+#: .\notifications\models.py:57
+msgid "Link Text"
+msgstr "Link Text"
+
+#: .\notifications\models.py:61
+msgid "Text on the button for a personalised link"
+msgstr "Text on the button for a personalised link"
+
+#: .\notifications\models.py:66 .\users\admin.py:110
+msgid "Notification"
+msgstr "Notification"
+
+#: .\notifications\models.py:84
+msgid "To set a reminder for the event, you must specify the event."
+msgstr "To set a reminder for the event, you must specify the event."
+
+#: .\notifications\models.py:87
+msgid "A message from the course owner must be linked to the course."
+msgstr "A message from the course owner must be linked to the course."
+
+#: .\notifications\models.py:119
+msgid "Click here"
+msgstr "Click here"
+
+#: .\notifications\models.py:121
+msgid "To the course"
+msgstr "To the course"
+
+#: .\notifications\models.py:122
+#: .\notifications\services\course_owner_notification_service\course_owner_notifications.py:40
+msgid "View"
+msgstr "View"
+
+#: .\notifications\services\course_owner_notification_service\course_owner_notifications.py:95
+msgid "New notification"
+msgstr "New notification"
+
+#: .\notifications\views.py:33
+msgid "Invalid parameters"
+msgstr "Invalid parameters"
+
+#: .\notifications\views.py:59 .\notifications\views.py:100
+msgid "Invalid course ID"
+msgstr "Invalid course ID"
+
+#: .\notifications\views.py:62
+msgid "Failed to fetch course announcements"
+msgstr "Failed to fetch course announcements"
+
+#: .\notifications\views.py:79
+msgid "Title and message are required"
+msgstr "Title and message are required"
+
+#: .\notifications\views.py:93
+msgid "No students to notify"
+msgstr "No students to notify"
+
+#: .\notifications\views.py:105
+msgid "Failed to post announcement"
+msgstr "Failed to post announcement"
+
+#: .\notifications\views.py:140
+msgid "Invalid notification IDs"
+msgstr "Invalid notification IDs"
+
+#: .\users\admin.py:8
+msgid "Позначити як активні"
+msgstr "Mark as active"
+
+#: .\users\admin.py:27
+msgid "Personal information"
+msgstr "Personal information"
+
+#: .\users\admin.py:28
+msgid "Access rights"
+msgstr "Access rights"
+
+#: .\users\admin.py:29
+msgid "Additional"
+msgstr "Additional"
+
+#: .\users\admin.py:62 .\users\models.py:34
+msgid "Email"
+msgstr "Email"
+
+#: .\users\admin.py:84 .\users\admin.py:109
+msgid "Basic information"
+msgstr "Basic information"
+
+#: .\users\admin.py:85
+msgid "Profile details"
+msgstr "Profile details"
+
+#: .\users\admin.py:86 .\users_calendar\models.py:53
+msgid "Description"
+msgstr "Description"
+
+#: .\users\admin.py:111
+msgid "Privacy"
+msgstr "Privacy"
+
+#: .\users\apps.py:8 .\users\models.py:52
+msgid "Users"
+msgstr "Users"
+
+#: .\users\models.py:12
+msgid "The Email field must be set"
+msgstr "The Email field must be set"
+
+#: .\users\models.py:31
+msgid "Name"
+msgstr "Name"
+
+#: .\users\models.py:32
+msgid "Surname"
+msgstr "Surname"
+
+#: .\users\models.py:33
+msgid "Phone number"
+msgstr "Phone number"
+
+#: .\users\models.py:35
+msgid "Is email verified"
+msgstr "Is email verified"
+
+#: .\users\models.py:36
+msgid "Role"
+msgstr "Role"
+
+#: .\users\models.py:37
+msgid "Admin"
+msgstr "Admin"
+
+#: .\users\models.py:38
+msgid "Student"
+msgstr "Student"
+
+#: .\users\models.py:39
+msgid "Teacher"
+msgstr "Teacher"
+
+#: .\users\models.py:41
+msgid "Is active"
+msgstr "Is active"
+
+#: .\users\models.py:42
+msgid "Is staff"
+msgstr "Is staff"
+
+#: .\users\models.py:67
+msgid "Profile Picture URL"
+msgstr "Profile Picture URL"
+
+#: .\users\models.py:68
+msgid "Location"
+msgstr "Location"
+
+#: .\users\models.py:69
+msgid "Organization"
+msgstr "Organization"
+
+#: .\users\models.py:70
+msgid "Specialization"
+msgstr "Specialization"
+
+#: .\users\models.py:72
+msgid "Education Level"
+msgstr "Education Level"
+
+#: .\users\models.py:74
+msgid "Bachelor"
+msgstr "Bachelor"
+
+#: .\users\models.py:75
+msgid "Master"
+msgstr "Master"
+
+#: .\users\models.py:76
+msgid "Doctor of Science"
+msgstr "Doctor of Science"
+
+#: .\users\models.py:77
+msgid "Diploma"
+msgstr "Diploma"
+
+#: .\users\models.py:80
+msgid "About me"
+msgstr "About me"
+
+#: .\users\models.py:84
+msgid "User Profile"
+msgstr "User Profile"
+
+#: .\users\models.py:85
+msgid "User Profiles"
+msgstr "User Profiles"
+
+#: .\users\models.py:88
+msgid "Profile"
+msgstr "Profile"
+
+#: .\users\models.py:94
+msgid "Email notifications"
+msgstr "Email notifications"
+
+#: .\users\models.py:95
+msgid "Push notifications"
+msgstr "Push notifications"
+
+#: .\users\models.py:96
+msgid "Deadline reminders"
+msgstr "Deadline reminders"
+
+#: .\users\models.py:97
+msgid "Show profile to others"
+msgstr "Show profile to others"
+
+#: .\users\models.py:98
+msgid "Show achievements"
+msgstr "Show achievements"
+
+#: .\users\models.py:102 .\users\models.py:103
+msgid "User Settings"
+msgstr "User Settings"
+
+#: .\users\models.py:106
+msgid "Settings"
+msgstr "Settings"
+
+#: .\users\services\oauth_service.py:35
+msgid "Invalid Facebook token"
+msgstr "Invalid Facebook token"
+
+#: .\users\services\oauth_service.py:47
+msgid "Facebook API error: "
+msgstr "Facebook API error: "
+
+#: .\users\services\oauth_service.py:72
+msgid "Unknown OAuth provider"
+msgstr "Unknown OAuth provider"
+
+#: .\users\services\oauth_service.py:108
+msgid "Successful authorization via"
+msgstr "Successful authorization via"
+
+#: .\users\services\oauth_service.py:108 .\users\services\oauth_service.py:149
+msgid "(session)"
+msgstr "(session)"
+
+#: .\users\services\oauth_service.py:112
+msgid "You must specify role and surname"
+msgstr "You must specify role and surname"
+
+#: .\users\services\oauth_service.py:116 .\users\views.py:88
+msgid "Incorrect role. Acceptable values:"
+msgstr "Incorrect role. Acceptable values:"
+
+#: .\users\services\oauth_service.py:149
+msgid "Successful registration and authorization via"
+msgstr "Successful registration and authorization via"
+
+#: .\users\services\profile_cache_service.py:100
+msgid "Error receiving user settings"
+msgstr "Error receiving user settings"
+
+#: .\users\services\profile_cache_service.py:171
+msgid "Error receiving user profile"
+msgstr "Error receiving user profile"
+
+#: .\users\services\profile_cache_service.py:250
+msgid "Invalidating the user existence cache for email:"
+msgstr "Invalidating the user existence cache for email:"
+
+#: .\users\services\profile_cache_service.py:262
+msgid "Deleted"
+msgstr "Deleted"
+
+#: .\users\services\profile_cache_service.py:262
+msgid "cached user records"
+msgstr "cached user records"
+
+#: .\users\services\profile_cache_service.py:273
+msgid "Complete invalidation of caches for the user"
+msgstr "Complete invalidation of caches for the user"
+
+#: .\users\services\profile_cache_service.py:273
+msgid "records"
+msgstr "records"
+
+#: .\users\services\profile_cache_service.py:282
+#: .\users\services\profile_cache_service.py:291
+msgid "Disabled profile cache for user"
+msgstr "Disabled profile cache for user"
+
+#: .\users\services\profile_cache_service.py:303
+msgid "Cache warmed up for the user"
+msgstr "Cache warmed up for the user"
+
+#: .\users\services\profile_cache_service.py:305
+msgid "Error while warming up the user cache"
+msgstr "Error while warming up the user cache"
+
+#: .\users\tests\test_utils\test_csrf_token.py:27
+#: .\users\utils\csrf_token.py:14
+msgid "CSRF cookie set"
+msgstr "CSRF cookie set"
+
+#: .\users\tests\test_views\test_auth_views.py:75
+#: .\users\tests\test_views\test_auth_views.py:92
+#: .\users\tests\test_views\test_auth_views.py:109 .\users\views.py:178
+msgid "Required fields are missing: email or password."
+msgstr "Required fields are missing: email or password."
+
+#: .\users\tests\test_views\test_auth_views.py:148
+#: .\users\tests\test_views\test_auth_views.py:552 .\users\views.py:191
+msgid "Incorrect email or password."
+msgstr "Incorrect email or password."
+
+#: .\users\tests\test_views\test_auth_views.py:170 .\users\views.py:194
+#: .\users\views.py:289
+msgid "Account is inactive."
+msgstr "Account is inactive."
+
+#: .\users\tests\test_views\test_auth_views.py:194 .\users\views.py:197
+#: .\users\views.py:292
+msgid "Email not confirmed. Please check your email."
+msgstr "Email not confirmed. Please check your email."
+
+#: .\users\tests\test_views\test_auth_views.py:204
+#: .\users\tests\test_views\test_auth_views.py:1031 .\users\views.py:131
+#: .\users\views.py:219 .\users\views.py:303 .\users\views.py:362
+#: .\users\views.py:411 .\users\views.py:472
+msgid "Invalid JSON format."
+msgstr "Invalid JSON format."
+
+#: .\users\tests\test_views\test_auth_views.py:347 .\users\views.py:221
+msgid "Login error:"
+msgstr "Login error:"
+
+#: .\users\tests\test_views\test_auth_views.py:998 .\users\views.py:91
+msgid "First and last names cannot be left blank."
+msgstr "First and last names cannot be left blank."
+
+#: .\users\tests\test_views\test_auth_views.py:1020 .\users\views.py:129
+msgid "Email already registered."
+msgstr "Email already registered."
+
+#: .\users\tests\test_views\test_auth_views.py:1309 .\users\views.py:165
+msgid "The confirmation link has expired."
+msgstr "The confirmation link has expired."
+
+#: .\users\tests\test_views\test_auth_views.py:1325 .\users\views.py:167
+msgid "Invalid token for confirmation."
+msgstr "Invalid token for confirmation."
+
+#: .\users\tests\test_views\test_auth_views.py:1346 .\users\views.py:163
+#: .\users\views.py:286 .\users\views.py:323 .\users\views.py:356
+msgid "No user with this email address was found."
+msgstr "No user with this email address was found."
+
+#: .\users\tests\test_views\test_auth_views.py:1370 .\users\views.py:150
+msgid "Email already confirmed."
+msgstr "Email already confirmed."
+
+#: .\users\tests\test_views\test_oauth_views.py:94
+#: .\users\tests\test_views\test_oauth_views.py:113
+#: .\users\tests\test_views\test_oauth_views.py:132
+#: .\users\tests\test_views\test_oauth_views.py:375
+#: .\users\tests\test_views\test_oauth_views.py:441 .\users\views.py:234
+msgid "No credential provided"
+msgstr "No credential provided"
+
+#: .\users\user_utils.py:11
+msgid "Email confirmation for SmartStudy"
+msgstr "Email confirmation for SmartStudy"
+
+#: .\users\user_utils.py:21
+msgid "Password recovery for SmartStudy"
+msgstr "Password recovery for SmartStudy"
+
+#: .\users\utils\email_templates.py:10 .\users\utils\email_templates.py:29
+msgid "Thank you for registering with SmartStudy!"
+msgstr "Thank you for registering with SmartStudy!"
+
+#: .\users\utils\email_templates.py:11
+msgid ""
+"To complete your registration and activate your account, please confirm your "
+"email address."
+msgstr ""
+"To complete your registration and activate your account, please confirm your "
+"email address."
+
+#: .\users\utils\email_templates.py:14
+msgid "Confirm email"
+msgstr "Confirm email"
+
+#: .\users\utils\email_templates.py:17 .\users\utils\email_templates.py:36
+msgid ""
+"If you have not registered with SmartStudy, please disregard this letter."
+msgstr ""
+"If you have not registered with SmartStudy, please disregard this letter."
+
+#: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:38
+#: .\users\utils\email_templates.py:57 .\users\utils\email_templates.py:77
+msgid "Sincerely,"
+msgstr "Sincerely,"
+
+#: .\users\utils\email_templates.py:18 .\users\utils\email_templates.py:57
+msgid "The SmartStudy team"
+msgstr "The SmartStudy team"
+
+#: .\users\utils\email_templates.py:32
+msgid ""
+"To complete your registration and activate your account, please confirm your "
+"email address by clicking on the link:"
+msgstr ""
+"To complete your registration and activate your account, please confirm your "
+"email address by clicking on the link:"
+
+#: .\users\utils\email_templates.py:39 .\users\utils\email_templates.py:78
+msgid "The SmartStudy Team"
+msgstr "The SmartStudy Team"
+
+#: .\users\utils\email_templates.py:49 .\users\utils\email_templates.py:69
+msgid ""
+"You have received this letter because a request has been made to reset the "
+"password for your SmartStudy account."
+msgstr ""
+"You have received this letter because a request has been made to reset the "
+"password for your SmartStudy account."
+
+#: .\users\utils\email_templates.py:50
+msgid "To reset your password, please follow the link below:"
+msgstr "To reset your password, please follow the link below:"
+
+#: .\users\utils\email_templates.py:53
+msgid "Reset password"
+msgstr "Reset password"
+
+#: .\users\utils\email_templates.py:56 .\users\utils\email_templates.py:75
+msgid "If you did not request a password reset, please ignore this email."
+msgstr "If you did not request a password reset, please ignore this email."
+
+#: .\users\utils\email_templates.py:72
+msgid "To reset your password, please follow this link:"
+msgstr "To reset your password, please follow this link:"
+
+#: .\users\utils\validators.py:7 .\users\utils\validators.py:29
+msgid "Incorrect email format."
+msgstr "Incorrect email format."
+
+#: .\users\utils\validators.py:11
+msgid ""
+"The phone number must contain between 10 and 15 digits, including the prefix."
+msgstr ""
+"The phone number must contain between 10 and 15 digits, including the prefix."
+
+#: .\users\views.py:49
+msgid "Required field missing:"
+msgstr "Required field missing:"
+
+#: .\users\views.py:84
+msgid "Error during validation:"
+msgstr "Error during validation:"
+
+#: .\users\views.py:126
+msgid "Please confirm your email address."
+msgstr "Please confirm your email address."
+
+#: .\users\views.py:133
+msgid "Error during registration:"
+msgstr "Error during registration:"
+
+#: .\users\views.py:143
+msgid "Invalid token. The ‘token’ parameter is missing."
+msgstr "Invalid token. The ‘token’ parameter is missing."
+
+#: .\users\views.py:268
+msgid "No email address provided."
+msgstr "No email address provided."
+
+#: .\users\views.py:279
+msgid ""
+"A password reset request has been sent. Please check your email or try again "
+"in 5 minutes."
+msgstr ""
+"A password reset request has been sent. Please check your email or try again "
+"in 5 minutes."
+
+#: .\users\views.py:299
+msgid "Please check your email for a password reset link."
+msgstr "Please check your email for a password reset link."
+
+#: .\users\views.py:301
+msgid "Missing field: email"
+msgstr "Missing field: email"
+
+#: .\users\views.py:305
+msgid "Error processing request:"
+msgstr "Error processing request:"
+
+#: .\users\views.py:315
+msgid "No token to reset the password."
+msgstr "No token to reset the password."
+
+#: .\users\views.py:325 .\users\views.py:358
+msgid "The token for resetting the password has expired."
+msgstr "The token for resetting the password has expired."
+
+#: .\users\views.py:327 .\users\views.py:360
+msgid "Invalid token for password reset."
+msgstr "Invalid token for password reset."
+
+#: .\users\views.py:335
+msgid "Required fields are missing: token or password."
+msgstr "Required fields are missing: token or password."
+
+#: .\users\views.py:354
+msgid "Password reset successful."
+msgstr "Password reset successful."
+
+#: .\users\views.py:364
+msgid "Error when resetting password:"
+msgstr "Error when resetting password:"
+
+#: .\users\views.py:372
+msgid "You have successfully logged out."
+msgstr "You have successfully logged out."
+
+#: .\users\views.py:384
+msgid ""
+"Required fields are missing: current_password, new_password, or "
+"confirm_password."
+msgstr ""
+"Required fields are missing: current_password, new_password, or "
+"confirm_password."
+
+#: .\users\views.py:391
+msgid "The new password and password confirmation do not match."
+msgstr "The new password and password confirmation do not match."
+
+#: .\users\views.py:400
+msgid "Incorrect current password."
+msgstr "Incorrect current password."
+
+#: .\users\views.py:409
+msgid "Password successfully changed."
+msgstr "Password successfully changed."
+
+#: .\users\views.py:413
+msgid "Error when changing password:"
+msgstr "Error when changing password:"
+
+#: .\users\views.py:424
+msgid "Error retrieving profile:"
+msgstr "Error retrieving profile:"
+
+#: .\users\views.py:431
+msgid "File not found."
+msgstr "File not found."
+
+#: .\users\views.py:445
+msgid "Avatar successfully uploaded."
+msgstr "Avatar successfully uploaded."
+
+#: .\users\views.py:451
+msgid "Error loading avatar:"
+msgstr "Error loading avatar:"
+
+#: .\users\views.py:467
+msgid "Profile successfully updated."
+msgstr "Profile successfully updated."
+
+#: .\users\views.py:479
+msgid "Error updating profile:"
+msgstr "Error updating profile:"
+
+#: .\users\views.py:498
+msgid "Your account has been successfully deleted."
+msgstr "Your account has been successfully deleted."
+
+#: .\users\views.py:500
+msgid "Error when deleting an account:"
+msgstr "Error when deleting an account:"
+
+#: .\users\views.py:513
+msgid "User not found."
+msgstr "User not found."
+
+#: .\users\views.py:515
+msgid "Error retrieving user info:"
+msgstr "Error retrieving user info:"
+
+#: .\users\views.py:529
+msgid "Object not found."
+msgstr "Object not found."
+
+#: .\users\views.py:531
+msgid "Error retrieving user stats:"
+msgstr "Error retrieving user stats:"
+
+#: .\users_calendar\admin.py:20
+msgid "Main Information"
+msgstr "Main Information"
+
+#: .\users_calendar\admin.py:23
+msgid "Date & Status"
+msgstr "Date & Status"
+
+#: .\users_calendar\admin.py:26
+msgid "Additional Details"
+msgstr "Additional Details"
+
+#: .\users_calendar\admin.py:51
+msgid "Links"
+msgstr "Links"
+
+#: .\users_calendar\admin.py:54
+msgid "Event Details"
+msgstr "Event Details"
+
+#: .\users_calendar\admin.py:57
+msgid "System"
+msgstr "System"
+
+#: .\users_calendar\apps.py:8
+msgid "Users Calendar"
+msgstr "Users Calendar"
+
+#: .\users_calendar\models.py:17
+msgid "Calendar owner"
+msgstr "Calendar owner"
+
+#: .\users_calendar\models.py:21 .\users_calendar\models.py:50
+#: .\users_calendar\models.py:92
+msgid "Calendar"
+msgstr "Calendar"
+
+#: .\users_calendar\models.py:25
+msgid "User calendar"
+msgstr "User calendar"
+
+#: .\users_calendar\models.py:26
+msgid "User calendars"
+msgstr "User calendars"
+
+#: .\users_calendar\models.py:30
+msgid "Low"
+msgstr "Low"
+
+#: .\users_calendar\models.py:31
+msgid "Medium"
+msgstr "Medium"
+
+#: .\users_calendar\models.py:32
+msgid "High"
+msgstr "High"
+
+#: .\users_calendar\models.py:37
+msgid "Event date"
+msgstr "Event date"
+
+#: .\users_calendar\models.py:56
+msgid "Importance"
+msgstr "Importance"
+
+#: .\users_calendar\models.py:63 .\users_calendar\models.py:115
+msgid "Is completed"
+msgstr "Is completed"
+
+#: .\users_calendar\models.py:80 .\users_calendar\tasks.py:36
+msgid "Personal events"
+msgstr "Personal events"
+
+#: .\users_calendar\models.py:114
+msgid "Note"
+msgstr "Note"
+
+#: .\users_calendar\models.py:125
+msgid "Course event"
+msgstr "Course event"
+
+#: .\users_calendar\models.py:126
+msgid "Course events"
+msgstr "Course events"
+
+#: .\users_calendar\tasks.py:55
+msgid "Curriculum"
+msgstr "Curriculum"
+
+#: .\users_calendar\tasks.py:57
+msgid "Testing"
+msgstr "Testing"
+
+#: .\users_calendar\tasks.py:64
+msgid "Time to learn!"
+msgstr "Time to learn!"
+
+#: .\users_calendar\tasks.py:73
+msgid "Your plan for today"
+msgstr "Your plan for today"
+
+#: .\users_calendar\tasks.py:76
+msgid "Open the calendar"
+msgstr "Open the calendar"
+
+#: .\users_calendar\views\course_planing_views.py:68
+msgid "Event not found"
+msgstr "Event not found"

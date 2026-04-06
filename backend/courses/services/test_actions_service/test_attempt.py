@@ -1,0 +1,194 @@
+from datetime import timedelta
+
+from asgiref.sync import sync_to_async
+from django.utils import timezone
+
+from common.services import mongo_repo
+from common.utils import validate_uuid
+from courses.models import Test, UserCourseEnrollment, TestAttempt
+
+
+async def submit_test_attempt(user_id, test_id, test_type: str, user_answers: list, time_spent: int):
+    try:
+        user_id = validate_uuid(user_id)
+        test_id = validate_uuid(test_id)
+    except ValueError as e:
+        raise ValueError(str(e))
+
+    test, enrollment = await _get_test_and_enrollment(user_id, test_id, test_type)
+
+    mongo_document = await sync_to_async(mongo_repo.get_document_by_id)("questions_data_for_test", test.test_data_ids)
+
+    if not mongo_document:
+        raise ValueError("Test data not found in database")
+
+    questions_list = mongo_document.get('questions', [])
+    calculation_result = _calculate_score_and_details(test, questions_list, user_answers)
+
+    attempt = await _create_attempt_entry(
+        user_id, test, enrollment, test_type, calculation_result, time_spent
+    )
+
+    if test_type in ["course_test", "module_test"] and enrollment:
+        await _update_course_progress(user_id, test_id, enrollment, calculation_result['passed'], time_spent)
+
+        if calculation_result['passed']:
+            from users_calendar.services.complete_course_event import MarkCalendarEventComplete
+
+            completion_params = {
+                "user": enrollment.user,
+                "module_id": test.module_id if hasattr(test, 'module_id') else None,
+            }
+
+            if test_type == "course_test":
+                completion_params["course_test_id"] = test.id
+            else:
+                completion_params["module_test_id"] = test.id
+
+            completion = MarkCalendarEventComplete(**completion_params)
+            await completion.execute()
+
+    return {
+        "id": str(attempt.id),
+        "score": calculation_result['total_score'],
+        "max_score": calculation_result['max_score'],
+        "passed": calculation_result['passed'],
+        "percent": round(calculation_result['user_percent'], 2),
+        "questions_result": calculation_result['response_details'],
+    }
+
+
+async def _get_test_and_enrollment(user_id, test_id, test_type: str):
+    def get_data():
+        if test_type == "course_test":
+            test_obj = Test.objects.select_related("course").get(id=test_id)
+            enrollment_obj = UserCourseEnrollment.objects.select_related("user").get(
+                user_id=user_id, course_id=test_obj.course_id
+            )
+        elif test_type == "module_test":
+            test_obj = Test.objects.select_related("module__course").get(id=test_id)
+            enrollment_obj = UserCourseEnrollment.objects.select_related("user").get(
+                user_id=user_id, course_id=test_obj.module.course_id
+            )
+        elif test_type == "public":
+            test_obj = Test.objects.get(id=test_id)
+            enrollment_obj = None
+        else:
+            raise ValueError("Invalid test type")
+        return test_obj, enrollment_obj
+
+    return await sync_to_async(get_data, thread_sensitive=True)()
+
+
+def _calculate_score_and_details(test, questions_list: list, user_answers: list) -> dict:
+    """
+    Синхронна функція для порівняння відповідей і підрахунку балів.
+    """
+    mongo_map = {q['order']: q for q in questions_list}
+
+    show_answers = getattr(test, 'show_correct_answers', False)
+
+    total_score = 0.0
+    max_score = sum(float(q.get('points', 0)) for q in questions_list)
+
+    processed_details = []
+    response_details = []
+
+    for ans in user_answers:
+        order = ans.get('order')
+        selected = ans.get('selected_options', [])
+
+        question_data = mongo_map.get(order)
+        if not question_data:
+            continue
+
+        correct = question_data.get('correctAnswers', [])
+        points = float(question_data.get('points', 0))
+
+        is_correct = set(selected) == set(correct)
+        awarded = points if is_correct else 0.0
+        total_score += awarded
+
+        db_detail = {
+            "order": order,
+            "question_text": question_data.get('questionText'),
+            "selected_choices": selected,
+            "is_correct": is_correct,
+            "points_awarded": awarded,
+            "max_points": points
+        }
+        processed_details.append(db_detail)
+
+        if show_answers:
+            frontend_detail = db_detail.copy()
+            frontend_detail["correct_choices"] = correct
+            frontend_detail["explanation"] = question_data.get('explanation')
+            response_details.append(frontend_detail)
+
+    pass_threshold_percent = getattr(test, 'pass_score', 0.0)
+    user_percent = (total_score / max_score * 100) if max_score > 0 else 0.0
+    passed = user_percent >= pass_threshold_percent
+
+    return {
+        "total_score": total_score,
+        "max_score": max_score,
+        "user_percent": user_percent,
+        "passed": passed,
+        "processed_details": processed_details,
+        "response_details": response_details
+    }
+
+
+async def _create_attempt_entry(user_id, test, enrollment, test_type, result: dict, time_spent_seconds: int = 0):
+    def save_to_db():
+        if test_type == "public":
+            prev_attempts_count = TestAttempt.objects.filter(
+                user_id=user_id, test=test
+            ).count()
+        else:
+            prev_attempts_count = TestAttempt.objects.filter(
+                enrollment=enrollment, test=test, user_id=user_id
+            ).count()
+
+        attempt_number = prev_attempts_count + 1
+        completed_at = timezone.now()
+        time_spent_delta = timedelta(seconds=int(time_spent_seconds))
+        started_at = completed_at - time_spent_delta
+
+        return TestAttempt.objects.create(
+            enrollment=enrollment,
+            user_id=user_id,
+            test=test,
+            score=result['total_score'],
+            passed=result['passed'],
+            attempt_number=attempt_number,
+            attempt_details=result['processed_details'],
+            started_at=started_at,
+            completed_at=completed_at,
+            time_spent=time_spent_delta
+        )
+
+    return await sync_to_async(save_to_db, thread_sensitive=True)()
+
+
+async def _update_course_progress(user_id, test_id, enrollment, is_passed, time_spent):
+    """
+    Оновлення прогресу користувача на курсі.
+    """
+    from courses.services.course_by_user import update_enrollment_progress_sync
+
+    course_id_str = str(enrollment.course_id)
+    test_id_str = str(test_id)
+
+    await sync_to_async(update_enrollment_progress_sync, thread_sensitive=True)(
+        user_id=user_id,
+        course_id=course_id_str,
+        element_id=test_id_str,
+        time_spent_seconds=time_spent,
+        element_type="test",
+        is_completed=is_passed,
+        finished_course=False,
+    )
+
+    from courses.services.cache_service import invalidate_courses_by_user_id_cache
+    await invalidate_courses_by_user_id_cache(user_id)

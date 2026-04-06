@@ -1,0 +1,110 @@
+import { useCallback, useEffect, useState } from 'react'
+import { getCourseService } from '@/features/course'
+
+let cachedData: {
+  wishlist: Set<string>
+  enrolled: Map<string, number>
+  completed: Set<string>
+  enrolled_list: any[]
+  completed_list: any[]
+} | null = null
+
+let isFetching = false
+const listeners: (() => void)[] = []
+
+export const useUserCoursesStatus = (isAuthorized = true) => {
+  const [loading, setLoading] = useState(false)
+  const [, setTick] = useState(0)
+
+  const fetchData = useCallback(
+    async (force = false) => {
+      if (!isAuthorized || (cachedData && !force) || isFetching) return
+
+      isFetching = true
+      setLoading(true)
+      try {
+        const response = await getCourseService.getMyCourseCatalog()
+        cachedData = {
+          wishlist: new Set(response.in_wishlist.map(i => i.course.id)),
+          enrolled: new Map(
+            response.is_enrolled.map(i => {
+              const progress = (i.course as any).user_status?.progress || 0
+              return [i.course.id, progress]
+            })
+          ),
+          completed: new Set(response.is_completed.map(i => i.course.id)),
+          enrolled_list: response.is_enrolled,
+          completed_list: response.is_completed,
+        }
+        listeners.forEach(l => l())
+      } catch (e) {
+        console.error('Failed to fetch user courses status', e)
+      } finally {
+        setLoading(false)
+        isFetching = false
+      }
+    },
+    [isAuthorized]
+  )
+
+  useEffect(() => {
+    const listener = () => setTick(t => t + 1)
+    listeners.push(listener)
+
+    if (!cachedData && isAuthorized) {
+      fetchData()
+      if (isFetching) setLoading(true)
+    }
+
+    return () => {
+      const index = listeners.indexOf(listener)
+      if (index > -1) listeners.splice(index, 1)
+    }
+  }, [fetchData, isAuthorized])
+
+  const getItemStatus = useCallback(
+    (courseId: string) => {
+      if (!cachedData || !isAuthorized)
+        return {
+          status: undefined,
+          progress: 0,
+          inWishlist: false,
+        }
+
+      let status: 'completed' | 'in_progress' | 'not_started' = 'not_started'
+      let progress = 0
+      const inWishlist = cachedData.wishlist.has(courseId)
+
+      if (cachedData.completed.has(courseId)) {
+        status = 'completed'
+        progress = 100
+      } else if (cachedData.enrolled.has(courseId)) {
+        status = 'in_progress'
+        progress = cachedData.enrolled.get(courseId) || 0
+      }
+
+      return { status, progress, inWishlist }
+    },
+    [isAuthorized]
+  )
+
+  if (!isAuthorized) {
+    return {
+      loading: false,
+      refresh: () => {},
+      getItemStatus: () => ({
+        status: undefined,
+        progress: 0,
+        inWishlist: false,
+      }),
+      rawStats: null,
+    }
+  }
+
+  return {
+    loading: loading || (!cachedData && isFetching),
+    refresh: () => fetchData(true),
+    getItemStatus,
+    rawStats: cachedData,
+  }
+}

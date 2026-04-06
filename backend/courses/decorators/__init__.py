@@ -1,0 +1,4 @@
+from .role_decorators import teacher_required
+from .course_decorators import owner_course_required
+from .test_decorators import permission_test_required
+from .module_decorators import permission_module_required

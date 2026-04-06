@@ -1,0 +1,167 @@
+import logging
+import os
+import time
+import uuid
+
+from asgiref.sync import sync_to_async
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
+
+from common.utils import supabase
+from smartStudy_backend import settings
+
+logger = logging.getLogger(__name__)
+
+
+def _get_bucket(instance_type: str):
+    """Вибір бакету залежно від типу"""
+    if instance_type == "user":
+        return supabase.storage.from_(settings.SUPABASE_USERS_PROFILE_PICTURES_BUCKET)
+    elif instance_type == "course":
+        return supabase.storage.from_(settings.SUPABASE_COURSES_COVER_PICTURES_BUCKET)
+    else:
+        raise ValidationError(gettext("Unsupported instance type"))
+
+
+async def handle_picture(instance, picture, instance_type: str, picture_field: str):
+    """
+    Завантажує фото (для User або Course).
+    :param instance: модель (user_profile чи course)
+    :param picture: файл
+    :param instance_type: 'user' або 'course'
+    :param picture_field: назва поля у моделі ('picture', 'image' тощо)
+    """
+    from common.services import validate_picture_file
+    validate_picture_file(picture)
+
+    instance_id = await sync_to_async(lambda: instance.id)()
+    current_picture = getattr(instance, picture_field, None)
+
+    if current_picture:
+        try:
+            await delete_picture(instance_id, instance_type, delete_folder=False)
+        except (ValidationError, Exception) as e:
+            logger.warning(f"{gettext('Unable to delete previous photo:')} {str(e)}")
+
+    file_extension = picture.name.split('.')
+    unique_filename = f"{uuid.uuid4()}_{int(time.time())}.{file_extension[0]}.{file_extension[1]}"
+    file_path = f"{instance_id}/{unique_filename}"
+
+    try:
+        file_content = await sync_to_async(picture.read)()
+        bucket = _get_bucket(instance_type)
+
+        await sync_to_async(bucket.upload)(
+            path=file_path,
+            file=file_content,
+            file_options={
+                "content-type": picture.content_type,
+                "upsert": "true"
+            }
+        )
+        public_url = await sync_to_async(bucket.get_public_url)(file_path)
+
+        setattr(instance, picture_field, public_url)
+        await sync_to_async(instance.save)()
+    except Exception as e:
+        raise ValidationError(f"{gettext('Failed to upload file:')} {str(e)}")
+
+
+async def delete_picture(instance_id, instance_type: str, delete_folder=False):
+    """
+    Видаляє фото (User або Course).
+    :param instance_id: id моделі
+    :param instance_type: 'user' або 'course'
+    :param delete_folder: чи видаляти всю папку
+    """
+    try:
+        bucket = _get_bucket(instance_type)
+
+        folder_prefix = f"{instance_id}/"
+
+        if delete_folder:
+            all_objects = await get_all_objects_recursive(folder_prefix, bucket)
+
+            if all_objects:
+                await sync_to_async(bucket.remove)(all_objects)
+
+            await sync_to_async(bucket.remove)([str(instance_id)])
+
+        else:
+            items_in_root = await sync_to_async(bucket.list)(folder_prefix)
+
+            if items_in_root:
+                file_paths_to_delete = []
+                for item in items_in_root:
+                    name = item['name']
+
+                    if os.path.splitext(name)[1]:
+                        file_paths_to_delete.append(f"{folder_prefix}{name}")
+
+                if file_paths_to_delete:
+                    await sync_to_async(bucket.remove)(file_paths_to_delete)
+
+    except Exception as e:
+        logger.error(f"{gettext('Error when deleting a file from Supabase:')} {str(e)}")
+        raise ValidationError(f"{gettext('Unable to delete image:')} {str(e)}")
+
+
+async def get_all_objects_recursive(prefix: str, bucket) -> list[str]:
+    """
+    Рекурсивно збирає список ключів ВСІХ об'єктів (файлів та папок)
+    всередині заданого префікса, використовуючи перевірку розширення.
+
+    Повертає список, відсортований для безпечного видалення
+    (файли видаляються перед папками).
+    """
+    objects_to_delete = []
+
+    async def _walk(current_prefix: str):
+        """Внутрішня рекурсивна функція. current_prefix завжди має / на кінці."""
+        try:
+            items = await sync_to_async(bucket.list)(current_prefix)
+            if not items:
+                return
+        except Exception:
+            return
+
+        for item in items:
+            name = item["name"]
+            full_path = f"{current_prefix}{name}"
+
+            is_folder = not os.path.splitext(name)[1]
+
+            if is_folder:
+                await _walk(full_path + "/")
+
+                objects_to_delete.append(full_path)
+            else:
+                objects_to_delete.append(full_path)
+
+    initial_walk_prefix = prefix
+    if not initial_walk_prefix.endswith('/'):
+        initial_walk_prefix += '/'
+
+    await _walk(initial_walk_prefix)
+
+    return list(reversed(objects_to_delete))
+
+
+async def move_supabase_files_batch(course_id, type_data, old_prefix, new_prefix):
+    bucket_name = settings.SUPABASE_COURSES_COVER_PICTURES_BUCKET
+    folder = f"{course_id}/{type_data}"
+    bucket = supabase.storage.from_(bucket_name)
+
+    files = await sync_to_async(bucket.list)(path=folder, options={"search": old_prefix})
+
+    for f in files:
+        if f['name'].startswith(old_prefix):
+            old_path = f"{folder}/{f['name']}"
+            new_name = f['name'].replace(old_prefix, new_prefix)
+            new_path = f"{folder}/{new_name}"
+
+            try:
+                await sync_to_async(bucket.copy)(old_path, new_path)
+                await sync_to_async(bucket.remove)([old_path])
+            except Exception as e:
+                print(f"Error moving file {old_path}: {e}")

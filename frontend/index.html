@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Study</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script
+      async
+      defer
+      crossorigin="anonymous"
+      src="https://connect.facebook.net/uk_UA/sdk.js"
+    ></script>
+    <script>
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: '%VITE_FACEBOOK_APP_ID%',
+          cookie: true,
+          xfbml: true,
+          version: 'v22.0',
+        })
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/app/main.tsx"></script>
+  </body>
+</html>

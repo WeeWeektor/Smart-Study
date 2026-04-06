@@ -1,0 +1,131 @@
+import { ClassTranslator, ensureCsrfToken } from '@/shared/lib'
+import { apiClient, handleApiError } from '@/shared/api'
+
+export interface CourseTestSummary {
+  id: string
+  title: string
+  test_type: 'course_test' | 'module_test'
+  score: number // Найкращий бал користувача
+  pass_score: number // Прохідний бал або 100
+  passed: boolean // Чи зараховано тест
+  attempts_used: number // Скільки разів пробував
+  max_attempts: number // Ліміт (0 = безліміт)
+}
+
+export interface TestHistoryResponse {
+  history: any[]
+  config: {
+    can_attempt: boolean
+    show_correct_answers: boolean
+    randomize_questions: boolean
+    attempts_used: number
+    max_attempts: number | 'unlimited'
+    remaining_attempts: number | 'unlimited'
+  }
+}
+
+export interface TestAnswerPayload {
+  order: number
+  selected_options: string[]
+}
+
+export interface SubmitTestRequest {
+  testId: string
+  test_type: 'course_test' | 'module_test' | 'public'
+  answers: TestAnswerPayload[]
+  timeSpent?: number
+}
+
+export interface QuestionResult {
+  order: number
+  is_correct: boolean
+  points_awarded: number
+  max_points: number
+  selected_choices: string[]
+  explanation?: string | null
+  correct_choices?: string[]
+}
+
+export interface TestResultData {
+  id: string
+  score: number
+  max_score: number
+  passed: boolean
+  percent: number
+  questions_result: QuestionResult[]
+}
+
+export interface SubmitTestResponse {
+  message: string
+  result: TestResultData
+}
+
+class TestAttemptService {
+  private t = ClassTranslator.translate
+
+  async getTestHistory(
+    testId: string,
+    test_type: string
+  ): Promise<TestHistoryResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.get<TestHistoryResponse>(
+        `/test/get-history-test-attempts/${testId}/`,
+        {
+          params: { test_type: test_type },
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+
+      return response.data
+    } catch (error: unknown) {
+      throw handleApiError(
+        error,
+        'Не вдалось отримати історію тестувань: ',
+        this.t,
+        'Невідома помилка при отриманні історії тестів'
+      )
+    }
+  }
+
+  async submitAttempt({
+    testId,
+    test_type,
+    answers,
+    timeSpent,
+  }: SubmitTestRequest): Promise<SubmitTestResponse> {
+    try {
+      const csrfToken = await ensureCsrfToken(this.t)
+
+      const response = await apiClient.post<SubmitTestResponse>(
+        `/test/start-test-attempt/${testId}/`,
+        {
+          test_type,
+          answers,
+          time_spent: timeSpent,
+        },
+        {
+          headers: {
+            'X-CSRFToken': csrfToken || '',
+          },
+          withCredentials: true,
+        }
+      )
+
+      return response.data
+    } catch (error: unknown) {
+      throw handleApiError(
+        error,
+        'Не вдалось відправити відповіді: ',
+        this.t,
+        'Невідома помилка при проходженні тесту'
+      )
+    }
+  }
+}
+
+export const testAttemptService = new TestAttemptService()
