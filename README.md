@@ -1,4 +1,4 @@
-# 🎓 Smart-Study: Платформа для персоналізованого дистанційного навчання
+# 🎓 Smart-Study: Веб-платформа дистанційного навчання з підсистемою формування персоналізованих рекомендацій для подальшого навчання
 
 **Smart-Study** — це сучасна LMS (Learning Management System), розроблена для оптимізації навчального процесу за допомогою інтелектуальних рекомендацій та зручного інтерфейсу.
 
@@ -44,7 +44,9 @@
    git clone https://github.com/WeeWeektor/SmartS-tudy.git
    cd Smart-Study
    ```
-2. Створіть файл .env у корені проекту на основі [прикладу](docs/07_env-example/README.md).
+2. Створіть конфігураційні файли на основі прикладів:
+   - Скопіюйте [backend/.env.example](backend/.env.example) та збережіть як backend/.env
+   - Скопіюйте [frontend/.env.example](frontend/.env.example) та збережіть як frontend/.env
 3. Запустіть контейнери:
    ```bash
    docker-compose up -d --build
