@@ -15,9 +15,10 @@
 
 ### `02_database-design/` (Проєктування баз даних)
 
-- **`hybrid_storage.md`** — Обґрунтування використання гібридного підходу (PostgreSQL для реляційних даних + MongoDB для гнучких структур курсів та тестів).
-- **`er_diagrams.md`** — Схеми бази даних (ER-діаграми) та опис ключових моделей (користувачі, курси, прогрес навчання).
-- **`supabase_storage.md`** — Логіка збереження та доступу до медіафайлів (відео, зображення, сертифікати) через Supabase.
+- **[hybrid_storage.md](02_database-design/hybrid_storage.md)** — Обґрунтування використання гібридного підходу (PostgreSQL для реляційних даних + MongoDB для гнучких структур курсів та тестів).
+- **[postgresql_schema.md](02_database-design/postgresql_schema.md)** — ER-діаграма реляційної БД та опис ключових доменних моделей (користувачі, курси, підписки).
+- **[mongodb_schema.md](02_database-design/mongodb_schema.md)** — Структура NoSQL колекцій для збереження ієрархії навчальних модулів та гнучких структур тестів.
+- **[cache_and_blob_storage.md](02_database-design/cache_and_blob_storage.md)** — Організація In-Memory кешування (Redis) та хмарного файлового сховища (Supabase).
 
 ### `03_ml_recommender/` (Підсистема рекомендацій)
 

@@ -17,7 +17,7 @@
   - **MongoDB:** NoSQL сховище для гнучких структур курсів та даних тестів.
   - **Redis:** Кешування та брокер повідомлень для Celery.
   - **Supabase:** blob storage для зберігання медіафайлів та документів.
-  - **ML & Data Science:** Scikit-learn (TF-IDF векторизація, Косинусна схожість), Pandas, TensorFlow.
+- **ML & Data Science:** Scikit-learn (TF-IDF векторизація, Косинусна схожість), Pandas, TensorFlow.
 - **Infrastructure:** Nginx (Reverse Proxy), Docker Compose, Let's Encrypt (SSL).
 - **Cloud:** Microsoft Azure (Virtual Machines).
 
