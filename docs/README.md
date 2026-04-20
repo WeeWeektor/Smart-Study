@@ -22,9 +22,10 @@
 
 ### `03_ml_recommender/` (Підсистема рекомендацій)
 
-- **`recommendation_engine.md`** — Теоретичне обґрунтування алгоритму Content-Based Filtering (контентна фільтрація).
-- **`ml_pipeline.md`** — Процес обробки даних: використання `stopwords_ua.txt`, TF-IDF векторизація, обчислення косинусної схожості (`course_recommender.py`).
-- **`adaptive_logic.md`** — Логіка адаптації навчального шляху на основі статусу проходження курсу (Passed/Failed).
+- **[recommendation_engine.md](03_ml_recommender/recommendation_engine.md)** — Теоретичне обґрунтування алгоритму Content-Based Filtering (контентна фільтрація).
+- **[ml_pipeline.md](03_ml_recommender/ml_pipeline.md)** — Процес обробки даних: використання `stopwords_ua.txt`, TF-IDF векторизація, обчислення косинусної схожості (`course_recommender.py`).
+- **[adaptive_logic.md](03_ml_recommender/adaptive_logic.md)** — Логіка адаптації навчального шляху на основі статусу проходження курсу (Passed/Failed).
+- **[model_lifecycle_and_integration.md](03_ml_recommender/model_lifecycle_and_integration.md)** - Життєвий цикл моделі: оркестрація процесу тренування, використання Singleton-патерну для кешування в пам'яті (lazy loading) та інтеграція з REST API платформи.
 
 ### `04_api_reference/` (API та Інтеграція)
 
