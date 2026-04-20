@@ -29,22 +29,15 @@
 
 ### `04_api_reference/` (API та Інтеграція)
 
-- **`rest_api_specs.md`** — Опис ключових REST API ендпоінтів, форматів запитів та відповідей.
-- **`auth_flow.md`** — Механізм авторизації та автентифікації (включно із Social Auth та верифікацією email).
-- **`websocket_notifications.md`** _(якщо використовується)_ або опис роботи pull-моделі для системи сповіщень.
+- **[rest_api_specs.md](04_api_reference/rest_api_specs.md)** — Опис ключових REST API ендпоінтів, форматів запитів та відповідей.
+- **[auth_flow.md](04_api_reference/auth_flow.md)** — Механізм авторизації та автентифікації (включно із Social Auth та верифікацією email).
+- **[pull_notifications.md](04_api_reference/pull_notifications.md)** — Опис механізму отримання сповіщень через Pull-модель (polling). Обґрунтування вибору архітектури замість WebSockets, інтеграція з Redis-кешем та життєвий цикл сповіщення.
 
 ### `05_infrastructure/` (Інфраструктура та Розгортання)
 
-- **`deployment_guide.md`** — Інструкція з розгортання проєкту на Microsoft Azure Virtual Machines.
-- **`docker_orchestration.md`** — Опис конфігурації `docker-compose.yml`, взаємодія контейнерів.
-- **`nginx_ssl.md`** — Налаштування Reverse Proxy та SSL сертифікатів.
-
----
-
-## 📌 Примітки
-
-- Архітектурні діаграми та схеми баз даних збережені у форматі `.drawio`. Їх можна редагувати через [diagrams.net](https://app.diagrams.net).
-- Для тестування ендпоінтів локально використовуйте конфігурацію Swagger/Redoc, доступну за адресою `/api/docs/` при запущеному сервері.
+- **[deployment_guide.md](05_infrastructure/deployment_guide.md)** — Інструкція з розгортання проєкту на Microsoft Azure Virtual Machines.
+- **[docker_orchestration.md](05_infrastructure/docker_orchestration.md)** — Опис конфігурації `docker-compose.yml`, взаємодія контейнерів.
+- **[nginx_ssl.md](05_infrastructure/nginx_ssl.md)** — Налаштування Reverse Proxy та SSL сертифікатів.
 
 ---
 
