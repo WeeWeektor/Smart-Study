@@ -31,13 +31,14 @@
 
 - **[rest_api_specs.md](04_api_reference/rest_api_specs.md)** — Опис ключових REST API ендпоінтів, форматів запитів та відповідей.
 - **[auth_flow.md](04_api_reference/auth_flow.md)** — Механізм авторизації та автентифікації (включно із Social Auth та верифікацією email).
-- **[pull_notifications.md](04_api_reference/pull_notifications.md)** — Опис механізму отримання сповіщень через Pull-модель (polling). Обґрунтування вибору архітектури замість WebSockets, інтеграція з Redis-кешем та життєвий цикл сповіщення.
+- **[notifications_architecture.md](04_api_reference/notifications_architecture.md)** — Архітектура підсистеми сповіщень: Pull-модель (polling), Redis-кешування, масові розсилки (bulk operations) та фонове відправлення email через Celery.
 
 ### `05_infrastructure/` (Інфраструктура та Розгортання)
 
 - **[deployment_guide.md](05_infrastructure/deployment_guide.md)** — Інструкція з розгортання проєкту на Microsoft Azure Virtual Machines.
-- **[docker_orchestration.md](05_infrastructure/docker_orchestration.md)** — Опис конфігурації `docker-compose.yml`, взаємодія контейнерів.
-- **[nginx_ssl.md](05_infrastructure/nginx_ssl.md)** — Налаштування Reverse Proxy та SSL сертифікатів.
+- **[docker_orchestration.md](05_infrastructure/docker_orchestration.md)** — Контейнеризація та оркестрація мікросервісів (Docker Compose). Опис топології контейнерів, мережевої ізоляції, конфігурації Nginx Reverse Proxy та ASGI-сервера.
+- **[nginx_gateway.md](05_infrastructure/nginx_gateway.md)** — Конфігурація Nginx як API Gateway, Reverse Proxy для ASGI-бекенду, обробка SSL/TLS (Let's Encrypt) та роздача статики/SPA.
+- **[ssl_renewal_guide.md](05_infrastructure/ssl_renewal_guide.md)** — Інструкція з ручного оновлення SSL-сертифікатів (Let's Encrypt) та обслуговування Nginx (Runbook).
 
 ---
 
